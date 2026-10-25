@@ -51,14 +51,14 @@ async function viewDiary(stockId) {
     const ps = d.photos.filter(p => p.tag === k);
     return `<section class="card diarytag" data-tag="${k}">
       <div class="dthead"><h3>${label}</h3><label class="fridgeplus dtadd" aria-label="Foto hinzufügen: ${label}">+<input type="file" accept="image/*" multiple hidden data-tag="${k}"></label></div>
-      ${ps.length ? `<div class="dtgrid">${ps.map(p => `<span class="dtph"><img src="${thumbs[p.imgId] || ''}" alt="" data-img="${p.imgId}"><button type="button" class="dtdel" data-del="${p.imgId}" aria-label="Foto entfernen">×</button></span>`).join('')}</div>` : '<p class="hint dtempty">Noch kein Foto. Wie sieht der Film hier aus?</p>'}
+      ${ps.length ? `<div class="dtgrid">${ps.map(p => `<span class="dtph"><img src="${thumbs[p.imgId] || ''}" alt="" data-img="${p.imgId}"><button type="button" class="dtdel" data-del="${p.imgId}" aria-label="Foto entfernen">×</button></span>`).join('')}</div>` : '<p class="hint dtempty">Noch kein Foto.</p>'}
     </section>`;
   };
   view.innerHTML = `
     <div class="diaryhead"><span class="stockart">${await filmArt(stock, 56)}</span><div><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">ISO ${U.esc(stock.isoLabel || stock.boxIso || '?')}</span></div></div>
     <div class="card"><label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5" placeholder="Wie verhält sich der Film? Welche ISO, welches Licht, welches Labor?">${U.esc(d.notes || '')}</textarea></label></div>
     <p class="hint pad">Lade für jede Lichtsituation Fotos hoch, die du mit diesem Film gemacht hast.</p>
-    ${DIARY_TAGS.map(card).join('')}`;
+    <div class="diarytags">${DIARY_TAGS.map(card).join('')}</div>`;
   let tmr = null;
   view.querySelector('#dNotes').addEventListener('input', e => { d.notes = e.target.value; clearTimeout(tmr); tmr = setTimeout(save, 400); });
   view.addEventListener('change', async e => {

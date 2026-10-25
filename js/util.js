@@ -258,8 +258,8 @@ Object.assign(U, {
 
 // Kurzes haptisches Signal. Android: Vibration API. iOS Safari kennt die Vibration API nicht;
 // ab iOS 18 gibt das Umschalten eines Schalters (input type=checkbox switch) ein haptisches Signal.
-U.haptic = function () {
-  try { if (navigator.vibrate) { navigator.vibrate(18); return; } } catch (_) {}
+U.haptic = function (pattern = 18) {
+  try { if (navigator.vibrate) { navigator.vibrate(pattern); return; } } catch (_) {}
   try {
     let l = document.getElementById('hapticSw');
     if (!l) {

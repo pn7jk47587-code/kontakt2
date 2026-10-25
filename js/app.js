@@ -131,6 +131,7 @@ function gearDoneButton() {
   done.className = 'donebtn'; done.setAttribute('aria-label', 'Fertig, eine Ebene zurück'); done.innerHTML = ART.check;
   document.body.appendChild(done);
   done.addEventListener('click', () => {
+    try { if (sessionStorage.getItem('kb-newgear')) U.haptic([20, 60, 20]); } catch (_) {}
     let r = null, st = [];
     try { st = JSON.parse(sessionStorage.getItem('kb-return') || '[]'); } catch (_) {}
     while (st.length && (!r || r.hash === location.hash)) r = st.pop();

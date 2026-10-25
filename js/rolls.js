@@ -695,17 +695,23 @@ async function openLeakPicker(roll, done) {
 // Schieberegler: Knopf von links nach rechts ziehen, um die Aktion auszulösen
 function setupSlide(el, onDone) {
   const knob = el.querySelector('.slideknob');
-  let x0 = null, max = 0, pos = 0;
+  let x0 = null, max = 0, pos = 0, armed = false;
   const set = (p, anim) => { pos = p; knob.style.transition = anim ? 'transform .25s ease' : 'none'; knob.style.transform = `translateX(${p}px)`; el.style.setProperty('--p', max ? p / max : 0); };
   knob.addEventListener('pointerdown', e => {
     x0 = e.clientX - pos; max = el.clientWidth - knob.offsetWidth - 8;
     knob.setPointerCapture(e.pointerId); el.classList.add('drag');
+    armed = false; U.haptic(10);
   });
-  knob.addEventListener('pointermove', e => { if (x0 === null) return; set(Math.max(0, Math.min(max, e.clientX - x0))); });
+  knob.addEventListener('pointermove', e => {
+    if (x0 === null) return;
+    set(Math.max(0, Math.min(max, e.clientX - x0)));
+    const hit = pos >= max * 0.85;
+    if (hit !== armed) { armed = hit; if (hit) U.haptic(15); }
+  });
   const end = () => {
     if (x0 === null) return;
     x0 = null; el.classList.remove('drag');
-    if (pos >= max * 0.85) { set(max, true); U.haptic(); setTimeout(() => { onDone(); set(0, true); }, 220); }
+    if (pos >= max * 0.85) { set(max, true); U.haptic([25, 50, 25]); setTimeout(() => { onDone(); set(0, true); }, 220); }
     else set(0, true);
   };
   knob.addEventListener('pointerup', end);

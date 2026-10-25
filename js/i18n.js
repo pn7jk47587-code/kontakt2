@@ -515,6 +515,7 @@ Wie verhält sich der Film? Welche ISO, welches Licht, welches Labor?	How does t
 Lade für jede Lichtsituation Fotos hoch, die du mit diesem Film gemacht hast.	Upload photos you took with this film for each lighting situation.
 Foto hinzufügen: {0}	Add photo: {0}
 Noch kein Foto. Wie sieht der Film hier aus?	No photo yet. What does the film look like here?
+Noch kein Foto.	No photo yet.
 Foto wird gespeichert …	Saving photo …
 {0} Fotos werden gespeichert …	Saving {0} photos …
 Im Filmtagebuch gespeichert	Saved in the film diary

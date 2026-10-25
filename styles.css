@@ -937,7 +937,7 @@ main:has(.quick) { padding-bottom: 90px; }
 .settings input[type=range] { padding: 0; border: 0; background: none; accent-color: var(--teal); }
 
 /* Kameraschrank: neues Gerät leuchtet auf */
-.crow.fresh { animation: freshglow 2.4s ease-out 2; }
+.crow.fresh { animation: freshglow 2.4s ease-out 1; }
 @keyframes freshglow { 0% { box-shadow: 0 0 0 0 rgba(255,210,120,0); } 25% { box-shadow: 0 0 0 4px rgba(255,210,120,.7), 0 0 28px 6px rgba(255,190,90,.55); background: #fffaf0; } 100% { box-shadow: 0 0 0 0 rgba(255,210,120,0); } }
 .fridgeplus { background: var(--glass) !important; border: 1px solid var(--glassline) !important; box-shadow: var(--glassshadow) !important; color: inherit; }
 .fridgeplus.pulse { animation: pluspulse .4s ease-out; }
@@ -1315,3 +1315,12 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .brand { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 18px; }
 .brand img { width: 88px; height: 88px; border-radius: 22px; display: block; box-shadow: 0 6px 20px rgba(29, 26, 38, .25); }
 .brand .wordmark { font-size: 34px; }
+
+/* Filmtagebuch: Lichtsituationen als Raster aus Kacheln statt untereinander */
+.diarytags { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 16px 96px; }
+.diarytags .diarytag { margin: 0; padding: 10px; display: flex; flex-direction: column; min-height: 132px; }
+.diarytags .dthead h3 { font-size: 14px; line-height: 1.2; }
+.diarytags .dthead .fridgeplus { width: 32px; height: 32px; font-size: 20px; flex: 0 0 auto; }
+.diarytags .dtgrid { grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 8px; }
+.diarytags .dtgrid img { border-radius: 8px; }
+.diarytags .dtempty { margin: auto 0 0; font-size: 12px; }
