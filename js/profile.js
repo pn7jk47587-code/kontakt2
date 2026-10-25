@@ -44,8 +44,7 @@ async function viewWelcome() {
       <div class="welcomeav" id="wAv">${await avatarHtml(132, { name: '' })}</div>
       <label class="btn ghost small">Profilbild wählen<input type="file" accept="image/*" hidden id="wPic"></label>
       <h1 class="welcometitle">Willkommen</h1>
-      <p class="hint">Wie heißt du? Der Name steht über deinen Fotos.</p>
-      <input id="wName" autocomplete="nickname" maxlength="40">
+      <input id="wName" autocomplete="nickname" maxlength="40" aria-label="Dein Name">
       <button class="btn wide accent" id="wGo" disabled>Los geht’s</button>
     </div>`;
   const nameIn = view.querySelector('#wName');
@@ -317,7 +316,7 @@ async function viewProfile() {
     await deleteImage(PROFILE.avatarId);
     PROFILE.avatarId = rec.id; await DB.put('meta', PROFILE); route();
   });
-  view.querySelector('#addFridge').addEventListener('click', () => openFridgeModal(null));
+  view.querySelector('#addFridge').addEventListener('click', e => openFridgeModal(null, e.currentTarget));
   view.querySelector('#fSort')?.addEventListener('click', e => {
     const b = e.target.closest('[data-sort]'); if (!b) return;
     try { localStorage.setItem('kb-fridge-sort', b.dataset.sort); } catch (_) {}
@@ -386,6 +385,9 @@ function openSettings() {
         <a class="item" href="#/rechner"><span class="setlink">${ART.moon}Belichtungsrechner für Nachtaufnahmen</span><span class="chev">›</span></a>
         <a class="item" href="#/mehr"><span class="setlink">${ART.save}Sicherung und Speicher</span><span class="chev">›</span></a>
       </div>
+      <div class="sethead">${ART.x}<span>Reset/Test</span></div>
+      <p class="hint" style="margin:0 0 8px">Löscht alle hochgeladenen Fotos, deinen Namen und dein Profilbild. Rollen, Filme, Kameras und Preise bleiben.</p>
+      <button type="button" class="btn danger small" id="resetAll">Fotos, Name und Profilbild löschen</button>
       <div class="modalfoot"><button class="closex" id="setClose" aria-label="Schließen">${ART.x}</button><span></span></div>
     </div>`;
   document.body.appendChild(ov);
@@ -397,6 +399,19 @@ function openSettings() {
   drawLabs();
   ov.querySelector('#labList').addEventListener('click', async e => { const b = e.target.closest('[data-lab]'); if (b) openLabEditor((await getLabs()).find(l => l.id === b.dataset.lab), drawLabs); });
   ov.querySelector('#labNew').addEventListener('click', () => openLabEditor(null, drawLabs));
+  ov.querySelector('#resetAll').addEventListener('click', () => {
+    const cf = document.createElement('div');
+    cf.className = 'modalbg';
+    cf.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="raTitle">
+      <h2 id="raTitle">Wirklich zurücksetzen?</h2>
+      <p class="hint">Alle Fotos, dein Name und dein Profilbild werden gelöscht. Das lässt sich nicht rückgängig machen.</p>
+      <div class="modalfoot"><button class="closex" id="raNo" aria-label="Abbrechen">${ART.x}</button><button class="btn danger" id="raYes">Löschen</button></div>
+    </div>`;
+    document.body.appendChild(cf);
+    cf.querySelector('#raNo').addEventListener('click', () => cf.remove());
+    cf.addEventListener('click', e => { if (e.target === cf) cf.remove(); });
+    cf.querySelector('#raYes').addEventListener('click', async () => { await resetPhotosAndProfile(); cf.remove(); ov.remove(); });
+  });
   const close = () => ov.remove();
   ov.querySelector('#setClose').addEventListener('click', close);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
@@ -417,7 +432,7 @@ function setupLightSettings(root) {
   mark();
 }
 
-async function openFridgeModal(entry) {
+async function openFridgeModal(entry, fromBtn) {
   const isNew = !entry;
   entry = entry || { id: U.uid(), count: 1, format: '135', boughtAt: U.today() };
   const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
@@ -450,7 +465,7 @@ async function openFridgeModal(entry) {
     </div>`;
   document.body.appendChild(ov);
   const $ = id => ov.querySelector('#' + id);
-  const close = () => ov.remove();
+  const close = fromBtn ? growFrom(ov, fromBtn) : () => ov.remove();
   $('frCancel').addEventListener('click', close);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   const filter = () => {
@@ -572,3 +587,27 @@ async function openLabEditor(lab, done) {
 function closeMenu() {}
 
 boot();
+
+/* Reset/Test: alle Bilder löschen, Verweise darauf entfernen, Name und Profilbild zurücksetzen */
+async function resetPhotosAndProfile() {
+  const imgs = await DB.all('images');
+  const ids = new Set(imgs.map(i => i.id));
+  for (const i of imgs) { U.forgetImg(i.id); await DB.del('images', i.id); }
+  const strip = o => {
+    let changed = false;
+    for (const k of Object.keys(o)) {
+      const v = o[k];
+      if (typeof v === 'string' && ids.has(v)) { delete o[k]; changed = true; }
+      else if (v && typeof v === 'object') changed = strip(v) || changed;
+    }
+    return changed;
+  };
+  for (const st of ['frames', 'rolls', 'cameras', 'lenses', 'stocks', 'fridge']) {
+    for (const r of await DB.all(st)) if (strip(r)) await DB.put(st, r);
+  }
+  await DB.del('meta', 'profile');
+  PROFILE = null;
+  U.toast('Zurückgesetzt');
+  location.hash = '#/';
+  route();
+}

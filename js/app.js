@@ -177,7 +177,59 @@ async function goUp() {
   });
 })();
 
+// Offenes Fenster: Hintergrund steht still. Das Fenster selbst federt beim Ziehen nach oben ein Stück mit und schnappt zurück.
+(() => {
+  let lock = null;
+  const OPEN = '.modalbg, .loadsheet';
+  const apply = () => {
+    const open = !!document.querySelector(OPEN);
+    if (open && !lock) {
+      lock = { y: window.scrollY, hash: location.hash };
+      Object.assign(document.body.style, { position: 'fixed', top: -lock.y + 'px', left: '0', right: '0' });
+      document.documentElement.classList.add('locked');
+    } else if (!open && lock) {
+      const { y, hash } = lock; lock = null;
+      Object.assign(document.body.style, { position: '', top: '', left: '', right: '' });
+      document.documentElement.classList.remove('locked');
+      if (location.hash === hash) window.scrollTo(0, y);
+    }
+  };
+  new MutationObserver(apply).observe(document.body, { childList: true });
+  let t = null;
+  const damp = d => Math.sign(d) * Math.min(48, Math.pow(Math.abs(d), 0.72));
+  document.addEventListener('touchstart', e => {
+    if (!lock) return;
+    const m = e.target.closest('.modal, .loadsheet');
+    t = { y: e.touches[0].clientY, m, sc: m ? (m.classList.contains('loadsheet') ? m.querySelector('.lsbody') : m) : null, moved: false };
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!lock || !t) return;
+    if (!t.m) { e.preventDefault(); return; }               // Hintergrund: nichts bewegt sich
+    if (e.target.closest('input[type=range]')) return;
+    const dy = e.touches[0].clientY - t.y, sc = t.sc;
+    const atEnd = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+    if (dy < 0 && atEnd) {                                   // weiter nach oben ziehen, obwohl nichts mehr kommt
+      e.preventDefault();
+      t.moved = true;
+      t.m.style.transition = 'none';
+      t.m.style.translate = `0 ${damp(dy)}px`;
+    }
+  }, { passive: false });
+  document.addEventListener('touchend', () => {
+    if (t?.moved) {
+      const m = t.m;
+      m.style.transition = 'translate .5s cubic-bezier(.2,1.25,.4,1)';
+      m.style.translate = '';
+      setTimeout(() => { m.style.transition = ''; }, 520);
+    }
+    t = null;
+  });
+})();
+
+// Gerade neu angelegte Kamera, Objektiv oder Film: dort gibt es noch keinen Löschen-Knopf
+let FRESH_ID = null;
 async function routeView() {
+  if (FRESH_ID && !location.hash.endsWith('/' + FRESH_ID)) FRESH_ID = null;
   document.body.classList.remove('albummode');
   document.querySelectorAll('.modalbg, .overlay').forEach(x => x.remove());
   document.querySelectorAll('.donebtn, .framenavbtn, .loadsheet').forEach(x => x.remove()); document.body.classList.remove('sheetopen');
@@ -442,6 +494,7 @@ async function viewStock(id) {
   if (id === 'neu') {
     stock = { id: U.uid(), maker: '', name: '', type: 'sw', process: 'SW', boxIso: null, reciprocity: { model: 'unknown' }, builtin: false };
     await DB.put('stocks', stock);
+    FRESH_ID = stock.id;
     location.replace('#/film/' + stock.id);
     return;
   }
@@ -499,7 +552,7 @@ async function viewStock(id) {
     ${field('Datenblatt-Link', 'datasheet', { type: 'url' })}
   </div>
   <div class="card"><h3 class="sub">Rollen mit diesem Film</h3>${rolls.length ? rolls.map(x => `<a class="item" href="#/rolle/${x.id}"><span>${U.esc(x.title || U.fmtDate(x.loadedAt) || 'Rolle')}</span><span class="sub2">EI ${U.esc(x.ei || stock.boxIso || '?')}</span></a>`).join('') : '<p class="hint">Noch keine.</p>'}</div>
-  ${rolls.length ? '' : '<button class="btn danger wide" id="delStock">Film löschen</button>'}`;
+  ${rolls.length || FRESH_ID === stock.id ? '' : '<button class="btn danger wide" id="delStock">Film löschen</button>'}`;
   bind(view.querySelector('#sf'), stock, 'stocks', () => {
     if (stock.reciprocity && stock.reciprocity.p && stock.reciprocity.model === 'unknown') { stock.reciprocity.model = 'custom'; DB.put('stocks', stock); }
     setHeader(U.stockLabel(stock), { back: true });
@@ -644,3 +697,29 @@ async function importZip(file) {
   }
 }
 
+
+/* Ein Fenster zieht sich langsam aus dem Knopf auf, wie „Film einlegen“. Gibt die passende Schließen-Funktion zurück. */
+function growFrom(ov, btn) {
+  const m = ov.querySelector('.modal');
+  if (!m || matchMedia('(prefers-reduced-motion: reduce)').matches) return () => ov.remove();
+  const ease = 'cubic-bezier(.2,.8,.2,1)', dur = 340; // gleiche Dauer und Kurve wie die Karte „Film einlegen“
+  const geo = () => {
+    const a = btn.getBoundingClientRect(), b = m.getBoundingClientRect();
+    return `translate(${a.left - b.left}px, ${a.top - b.top}px) scale(${Math.max(a.width / b.width, .02)}, ${Math.max(a.height / b.height, .02)})`;
+  };
+  m.style.transformOrigin = '0 0';
+  const kids = [...m.children];
+  const start = geo();
+  m.animate([{ transform: start, borderRadius: '999px' }, { transform: 'none', borderRadius: getComputedStyle(m).borderRadius }], { duration: dur, easing: ease });
+  ov.animate([{ backgroundColor: 'transparent', backdropFilter: 'blur(0)' }, {}], { duration: dur, easing: 'ease' });
+  kids.forEach(k => k.animate([{ opacity: 0 }, { opacity: 0, offset: .47 }, { opacity: 1 }], { duration: 380, easing: 'ease' }));
+  let closing = false;
+  return () => {
+    if (closing) return; closing = true;
+    if (!btn.isConnected) { ov.remove(); return; }
+    kids.forEach(k => k.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }));
+    const an = m.animate([{ transform: 'none' }, { transform: geo(), borderRadius: '999px' }], { duration: 320, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+    ov.animate([{}, { backgroundColor: 'transparent', backdropFilter: 'blur(0)' }], { duration: 320, fill: 'forwards' });
+    an.onfinish = () => ov.remove();
+  };
+}

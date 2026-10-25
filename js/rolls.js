@@ -127,9 +127,11 @@ async function openLoadSheet(btn) {
   let big = false;
   const place = t => { sheet.style.top = t + 'px'; sheet.style.height = (window.innerHeight - t - 10) + 'px'; };
   setTimeout(() => sheet.classList.add('settled'), 360);
+  // Nach oben erst nach etwas Weg, zurück erst ganz oben: so springt die Karte beim Hin- und Herscrollen nicht
   bodyEl.addEventListener('scroll', () => {
     if (!sheet.classList.contains('settled')) return;
-    const want = bodyEl.scrollTop > 6;
+    const y = bodyEl.scrollTop;
+    const want = big ? y > 0 : y > 40;
     if (want === big) return;
     big = want; place(big ? bar : to.top);
   }, { passive: true });
@@ -1318,6 +1320,7 @@ async function viewLens(id) {
     l.cameraIds = cams.filter(c => c.mount === l.mount).map(c => c.id);
     await DB.put('lenses', l);
     try { sessionStorage.setItem('kb-newgear', l.id); } catch (_) {}
+    FRESH_ID = l.id;
     location.replace('#/objektiv/' + l.id);
     return;
   }
@@ -1345,7 +1348,7 @@ async function viewLens(id) {
       <div class="camchecks" id="camChecks">${cams.map(c => `<label class="camcheck${c.mount && c.mount !== lens.mount ? ' other' : ''}"><input type="checkbox" value="${c.id}" ${lens.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}<br><span class="sub2">${U.esc(c.mount || 'Bajonett offen')}</span></span></label>`).join('')}</div>
       ${area('Notizen', 'notes', 'Eigenheiten, Filtergewinde, Macken …')}
     </div>
-    ${used ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
+    ${used || FRESH_ID === lens.id ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
     bind(view.querySelector('#lf'), lens, 'lenses', () => {
       view.querySelector('.lensstage').innerHTML = ART.lens(lens, 150);
       setHeader(lensLabel(lens) || 'Objektiv', {});
@@ -1374,6 +1377,7 @@ async function viewCamera(id) {
     const cam = { id: U.uid(), maker: '', name: 'Neue Kamera', format: '135', mount: 'Nikon F', art: { kind: 'slr', body: 'black' } };
     await DB.put('cameras', cam);
     try { sessionStorage.setItem('kb-newgear', cam.id); } catch (_) {}
+    FRESH_ID = cam.id;
     location.replace('#/kamera/' + cam.id);
     return;
   }
@@ -1419,7 +1423,7 @@ async function viewCamera(id) {
     <div class="cabhead"><h3>Objektive für diese Kamera</h3><a class="fridgeplus" href="#/objektiv/neu" aria-label="Objektiv hinzufügen">+</a></div>
     ${camLenses.length ? `<div class="lensrow">${camLenses.map(l => `<a class="lensbtn" href="#/objektiv/${l.id}" aria-label="${U.esc(lensLabel(l))}">${ART.lens(l, 64)}</a>`).join('')}</div>` : '<p class="hint">Noch keine. Im Objektiv lässt sich ankreuzen, an welche Kameras es passt.</p>'}
   </div>
-  ${used ? '' : `<button class="btn danger wide" id="delCam">Kamera löschen</button>`}`;
+  ${used || FRESH_ID === cam.id ? '' : `<button class="btn danger wide" id="delCam">Kamera löschen</button>`}`;
   const sync = async () => {
     view.querySelector('#mfBox').hidden = cam.format !== '120';
     if (!cam.photoId && !SEED_IMG[cam.id]) view.querySelector('#camArt').innerHTML = ART.camera(cam, 150);
