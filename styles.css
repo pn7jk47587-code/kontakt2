@@ -1370,3 +1370,10 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .inactivehint { margin: 0 4px 8px; }
 .crow.inactive { background: transparent; border-style: dashed; }
 .crow.inactive .crowart { opacity: .7; filter: saturate(.4); }
+
+/* Startseite: „In Entwicklung“ und „Fotoalbum“ einklappbar */
+.homefold > h2.sec.foldhead { display: flex; align-items: center; min-height: 36px; padding: 0; cursor: pointer; }
+.homefold > h2.sec .seccount { margin-left: 8px; font-weight: 700; opacity: .7; }
+.homefold > h2.sec .foldchev { margin-left: auto; margin-right: 6px; }
+.homefold > .foldbody { padding-top: 0; }
+.homefold.open > .rolls.foldbody { display: grid; }

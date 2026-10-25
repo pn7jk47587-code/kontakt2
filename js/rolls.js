@@ -69,7 +69,11 @@ async function viewRolls() {
   for (const [g, label] of order) {
     const list = rolls.filter(r => (r.status || 'entwurf') === g);
     if (!list.length) continue;
-    html += `<h2 class="sec sec-${g}"><i></i>${label}</h2><div class="rolls">`;
+    // „In Entwicklung“ und „Fotoalbum“ lassen sich einklappen, der Film in der Kamera bleibt immer sichtbar
+    const foldable = g !== 'entwurf';
+    html += foldable
+      ? `<section class="homefold fold${foldOpen('home-' + g, true) ? ' open' : ''}" data-fold="home-${g}"><h2 class="sec sec-${g} foldhead"><i></i>${label}<span class="seccount">${list.length}</span><span class="foldchev" aria-hidden="true"></span></h2><div class="rolls foldbody">`
+      : `<h2 class="sec sec-${g}"><i></i>${label}</h2><div class="rolls">`;
     for (const r of list) {
       const fr = allFrames.filter(f => f.rollId === r.id).sort((a, b) => a.index - b.index);
       const withImg = fr.filter(f => f.imgId).slice(0, 6);
@@ -91,9 +95,10 @@ async function viewRolls() {
           </div>
         </a>${act}</div>`;
     }
-    html += `</div>`;
+    html += (g !== 'entwurf') ? `</div></section>` : `</div>`;
   }
   view.innerHTML = html;
+  setupFolds(view);
   view.querySelectorAll('[data-dev]').forEach(b => b.addEventListener('click', () => openDevModal(rolls.find(r => r.id === b.dataset.dev), () => route())));
   view.querySelectorAll('[data-pickup]').forEach(b => b.addEventListener('click', () => openPickupModal(rolls.find(r => r.id === b.dataset.pickup), () => route())));
   setupLongPress(view, { rolls, stocks, camMap, allFrames });

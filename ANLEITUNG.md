@@ -55,6 +55,8 @@ Name der Rolle: lässt sich beim Einlegen eingeben und steht danach oben in der 
 
 In der Bildübersicht einer Rolle sitzt der Papierkorb als großer runder Knopf rechts oben neben dem Filmnamen, nicht mehr in der Kopfzeile.
 
+Auf der Startseite lassen sich „In Entwicklung“ und „Fotoalbum“ mit dem Pfeil rechts neben der Überschrift ein- und ausklappen. Neben der Überschrift steht die Zahl der Rollen, die App merkt sich den Zustand. „Film in der Kamera“ bleibt immer offen.
+
 Langes Drücken auf eine Rolle (Startseite): Die Karte hebt sich ab und zeigt Details (Film und ISO, Kamera, Format, Einlegedatum, notierte Bilder oder Scans, Entwicklung, Kosten) und darunter „Löschen“. Ein Tipp daneben legt sie wieder ab. Zum Löschen gibt es außerdem den Papierkorb in der Rollenansicht (rechts neben dem Filmnamen) und oben rechts im Fotoalbum-Raster, außerdem unten im Reiter „Rolle“. Davor fragt die App nach, ob die Rolle wirklich gelöscht werden soll.
 
 Im Fenster „Film entwickeln“ bestätigt ein Haken unten rechts. Ein X gibt es dort nicht, ein Tipp auf die Fläche darüber schließt das Fenster. Bei jedem Wechsel des Stadiums erscheint unten kurz eine Meldung: „Film eingelegt“, „Film in Entwicklung gegeben“ oder zum Beispiel „36 Scans hochgeladen“.
@@ -95,7 +97,7 @@ Filmbibliothek mit Box Speed, Feldern für Community-ISO samt Quelle, eigener IS
 
 Zwischenwerte der Kodak-Tabellen rechnet die App logarithmisch. Das ist eine Näherung, keine Herstellerangabe. Für Portra 160, Ektar 100, Gold 200 und UltraMax 400 sind keine Korrekturwerte hinterlegt. Community-ISO-Werte sind bewusst leer, weil es dafür keine verlässliche Einzelquelle gibt.
 
-Freigestellte Packungsfotos haben außerdem Rollei Infrared 400, Optik Oldschool OptiColour 200, LomoChrome Purple, Kodak Portra 160, 400 und 800, Kodak ColorPlus 200, Kodak Gold 200, ORWO Wolfen NC500 und Lomography Color Negative 800. Das bisherige Bild bei Harman Phoenix 200 zeigte Phoenix II und gehört jetzt zu Phoenix II 200. Phoenix 200 zeigt bis zu einem eigenen Foto die gezeichnete Filmdose.
+Freigestellte Packungsfotos haben außerdem Rollei Infrared 400, Optik Oldschool OptiColour 200, LomoChrome Purple, Kodak Portra 160, 400 und 800, Kodak ColorPlus 200, Kodak Gold 200, ORWO Wolfen NC500, Lomography Color Negative 800 und Kodak Tri-X 400 (Packung „400 TX“). Das bisherige Bild bei Harman Phoenix 200 zeigte Phoenix II und gehört jetzt zu Phoenix II 200. Phoenix 200 zeigt bis zu einem eigenen Foto die gezeichnete Filmdose.
 
 Seit dem 25.10.2026 enthält die Filmliste zusätzlich alle aktuell erhältlichen Kodak-, Ilford- und Lomography-Filme, die vorher fehlten. Kodak verkauft seit 2026 unter zwei Marken. Die alten Namen von Kodak Alaris (Portra, T-Max, ColorPlus, Pro Image) und die neuen von Eastman Kodak (Ektacolor Pro, Ektapan, Kodacolor) stehen deshalb beide in der Liste. Bei den neuen Namen steht im Film, für welchen alten Film die Fachpresse ihn hält. Bestätigt hat Kodak das nicht, deshalb sind keine Schwarzschild-Werte übernommen. Ilfocolor Cine Tone 400 läuft im Prozess ECN-2, nicht C-41. Nur als Planfilm erhältliche Filme wie Kodak Tri-X 320 fehlen, weil die App nur Kleinbild, Mittelformat und 110 kennt. Bei UltraMax 400 ist jetzt nur Kleinbild hinterlegt, bei LomoChrome Purple, Turquoise, Metropolis, Color '92 Sun-Kissed und Classicolor zusätzlich 110. Von Harman waren schon alle Filme in der Liste.
 
