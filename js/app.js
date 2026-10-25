@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 16;
+const SEED_VERSION = 17;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -31,7 +31,8 @@ async function boot() {
     }
     const existing = new Set((await DB.all('stocks')).map(s => s.id));
     await DB.putMany('stocks', SEED_STOCKS.filter(s => !existing.has(s.id)));
-    // Neue Nutzerinnen starten mit leerem Kameraschrank. Die Beispielausrüstung lässt sich unter Reset/Test laden.
+    // Vorerst wieder: Beispielkameras und -objektive beim ersten Start und einmalig nach diesem Update ergänzen. Vorhandene Einträge bleiben unverändert.
+    if (!meta || meta.v < 17) await loadSeedGear();
     for (const c of await DB.all('cameras')) {
       const seed = SEED_CAMERAS.find(x => x.id === c.id);
       if (seed && !c.mount) { c.mount = seed.mount; await DB.put('cameras', c); }

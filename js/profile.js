@@ -409,7 +409,7 @@ function openSettings() {
       <div class="sethead">${ART.x}<span>Reset/Test</span></div>
       <p class="hint" style="margin:0 0 8px">Löscht alle hochgeladenen Fotos, deinen Namen und dein Profilbild. Rollen, Filme, Kameras und Preise bleiben.</p>
       <button type="button" class="btn danger small" id="resetAll">Fotos, Name und Profilbild löschen</button>
-      <p class="hint" style="margin:14px 0 8px">Neue Nutzerinnen starten mit leerem Kameraschrank. Für Tests lassen sich die Beispielkameras und -objektive laden.</p>
+      <p class="hint" style="margin:14px 0 8px">Die Beispielkameras und -objektive sind beim ersten Start schon im Kameraschrank. Gelöschte lassen sich hier wieder laden.</p>
       <button type="button" class="btn ghost small" id="seedGear">Beispielausrüstung laden</button>
       <div class="modalfoot"><button class="closex" id="setClose" aria-label="Schließen">${ART.x}</button><span></span></div>
     </div>`;

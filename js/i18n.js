@@ -570,7 +570,7 @@ Tippe auf den Haken, um die Kamera zu speichern.	Tap the tick to save the camera
 Öffne deine neue Kamera und trag Hersteller und Modell ein.	Open your new camera and enter its make and model.
 Öffne den Kameraschrank und tippe deine neue Kamera an.	Open the camera cabinet and tap your new camera.
 Zurück zum Profil, dort steht deine neue Kamera.	Back to the profile, your new camera is there.
-Neue Nutzerinnen starten mit leerem Kameraschrank. Für Tests lassen sich die Beispielkameras und -objektive laden.	New users start with an empty camera cabinet. For testing you can load the sample cameras and lenses.
+Die Beispielkameras und -objektive sind beim ersten Start schon im Kameraschrank. Gelöschte lassen sich hier wieder laden.	The sample cameras and lenses are already in the camera cabinet at first start. Deleted ones can be loaded again here.
 Beispielausrüstung laden	Load sample gear
 Beispielausrüstung geladen	Sample gear loaded
 Beispielausrüstung ist schon da	Sample gear is already there
