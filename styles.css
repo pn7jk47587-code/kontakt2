@@ -1377,3 +1377,15 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .homefold > h2.sec .foldchev { margin-left: auto; margin-right: 6px; }
 .homefold > .foldbody { padding-top: 0; }
 .homefold.open > .rolls.foldbody { display: grid; }
+
+/* Startseite: kompaktere Rollenkarten, Aktionsknopf auf Höhe des Textes */
+.rollcard { --striph: 56px; }
+.rollcard .strip { height: var(--striph); padding: 5px 6px; }
+.rollcard .strip-art { gap: 8px; }
+.rollcard .rc-body { padding: 8px 128px 10px 14px !important; }
+.rollcard.st-belichtet .rc-body { padding-right: 168px !important; }
+.rollcard .rc-title, .rollcard .rc-sub, .rollcard .devline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rollcard .rc-sub { margin: 1px 0 0; }
+.rollcard .devline { margin: 1px 0 0; }
+.rollcard .cardact { top: calc(var(--striph) + 10px); bottom: auto; height: 36px; }
+.rollcard.lifted .rc-body { padding-bottom: 10px !important; }

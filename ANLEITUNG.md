@@ -55,6 +55,8 @@ Name der Rolle: lässt sich beim Einlegen eingeben und steht danach oben in der 
 
 In der Bildübersicht einer Rolle sitzt der Papierkorb als großer runder Knopf rechts oben neben dem Filmnamen, nicht mehr in der Kopfzeile.
 
+Die Rollenkarten auf der Startseite sind kompakt: schmalerer Filmstreifen oben, darunter Name und Kamera, der Knopf für den nächsten Schritt (Entwickeln, Scans hochladen, Ansehen) steht rechts auf Höhe dieses Textes. Lange Namen werden mit … gekürzt.
+
 Auf der Startseite lassen sich „In Entwicklung“ und „Fotoalbum“ mit dem Pfeil rechts neben der Überschrift ein- und ausklappen. Neben der Überschrift steht die Zahl der Rollen, die App merkt sich den Zustand. „Film in der Kamera“ bleibt immer offen.
 
 Langes Drücken auf eine Rolle (Startseite): Die Karte hebt sich ab und zeigt Details (Film und ISO, Kamera, Format, Einlegedatum, notierte Bilder oder Scans, Entwicklung, Kosten) und darunter „Löschen“. Ein Tipp daneben legt sie wieder ab. Zum Löschen gibt es außerdem den Papierkorb in der Rollenansicht (rechts neben dem Filmnamen) und oben rechts im Fotoalbum-Raster, außerdem unten im Reiter „Rolle“. Davor fragt die App nach, ob die Rolle wirklich gelöscht werden soll.

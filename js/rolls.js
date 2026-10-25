@@ -87,7 +87,7 @@ async function viewRolls() {
         : `<a class="cardact open-album" href="#/album/${r.id}" aria-label="Fotoalbum öffnen">${ART.album}<span>Ansehen</span></a>`;
       html += `<div class="rollcard st-${g}">
         <a class="rc-link" href="#/${g === 'entwickelt' ? 'album' : 'rolle'}/${r.id}">
-          <div class="strip">${thumbs.length ? thumbs.map(u => `<img src="${u}" alt="">`).join('') : `<div class="strip-art">${await filmArt(st, 58)}${cam ? await camArt(cam, 70) : ''}</div>`}</div>
+          <div class="strip">${thumbs.length ? thumbs.map(u => `<img src="${u}" alt="">`).join('') : `<div class="strip-art">${await filmArt(st, 44)}${cam ? await camArt(cam, 56) : ''}</div>`}</div>
           <div class="rc-body">
             <div class="rc-title">${U.esc(r.title || U.stockLabel(st))}</div>
             <div class="rc-sub">${U.esc(camLabel(cam) || r.camera || '')}${r.loadedAt ? ' · ' + U.fmtDate(r.loadedAt) : ''}</div>
