@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kontaktbogen</title>
+<meta name="theme-color" content="#fbfaf6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Kontaktbogen">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+<script src="js/theme.js"></script>
+</head>
+<body>
+<div class="light" aria-hidden="true"></div>
+<header class="topbar">
+  <button class="back" id="backBtn" hidden></button>
+  <a class="homebtn" id="homeBtn" href="#/" aria-label="Startseite" hidden><img src="icon-192.png" alt=""></a>
+  <h1 id="title"></h1>
+  <div class="topaction" id="topAction"></div>
+  <a class="profbtn" id="profBtn" href="#/profil" aria-label="Profil mit Filmkühlschrank und Kameraschrank" hidden><span class="whoav"></span></a>
+</header>
+<main id="view"></main>
+<div id="toast" class="toast" hidden></div>
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/exifr.lite.umd.js"></script>
+<script src="js/db.js"></script>
+<script src="js/seed.js"></script>
+<script src="js/util.js"></script>
+<script src="js/art.js"></script>
+<script src="js/app.js"></script>
+<script src="js/rolls.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/beam.js"></script>
+</body>
+</html>
