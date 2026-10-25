@@ -45,6 +45,7 @@ async function viewWelcome() {
   let avatarFile = null;
   view.innerHTML = `
     <div class="welcome">
+      <div class="brand"><img src="icon-192.png" alt="" width="88" height="88">${WORDMARK}</div>
       <label class="welcomeav" aria-label="Profilbild wählen"><span id="wAv">${await avatarHtml(132, { name: '' })}</span><span class="avedit">Bild wählen</span><input type="file" accept="image/*" hidden id="wPic"></label>
       <div class="langpick" id="wLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <h1 class="welcometitle">Willkommen</h1>

@@ -2,6 +2,7 @@
 const SEED_VERSION = 16;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
+const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
 const backBtn = document.getElementById('backBtn');
 const topAction = document.getElementById('topAction');
 
@@ -680,7 +681,7 @@ async function exportZip() {
     zip.file(`bilder/${i.id}_klein.jpg`, U.recBlob(i, true));
   }
   const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-  const name = `kontaktbogen-${U.today()}.zip`;
+  const name = `lightleak-${U.today()}.zip`;
   const file = new File([blob], name, { type: 'application/zip' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], title: name }); }
@@ -703,7 +704,7 @@ async function importZip(file) {
     U.toast('Lese Sicherung …');
     const zip = await JSZip.loadAsync(file);
     const data = JSON.parse(await zip.file('daten.json').async('string'));
-    if (data.app !== 'kontaktbogen') throw new Error('Keine Kontaktbogen-Sicherung');
+    if (data.app !== 'kontaktbogen') throw new Error('Keine Lightleak-Sicherung');
     for (const s of DB.STORES) await DB.clear(s);
     for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) await DB.putMany(s, data[s] || []);
     let n = 0;

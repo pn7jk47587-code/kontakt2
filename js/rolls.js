@@ -58,6 +58,7 @@ async function camArt(cam, size = 120) {
 /* ---------- Startseite: Film einlegen und die drei Stadien ---------- */
 async function viewRolls() {
   setHeader('');
+  titleEl.innerHTML = WORDMARK;
   const [rolls, stocks, cams] = [await DB.all('rolls'), await stocksMap(), await DB.all('cameras')];
   const hero = await profileHero();
   const camMap = new Map(cams.map(c => [c.id, c]));

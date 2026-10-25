@@ -1,8 +1,10 @@
-# Kontaktbogen
+# Lightleak
 
-Web-App für analoge Filmrollen. Läuft auf dem iPhone wie eine App, ohne Mac, ohne App Store und ohne Gebühr. Jede Person, die den Link öffnet, hat ihre eigenen Daten auf ihrem eigenen Gerät.
+Web-App für analoge Filmrollen (früher „Kontaktbogen“). Läuft auf dem iPhone wie eine App, ohne Mac, ohne App Store und ohne Gebühr. Jede Person, die den Link öffnet, hat ihre eigenen Daten auf ihrem eigenen Gerät.
 
 ## Was die App kann
+
+Name und Logo: Das App-Symbol zeigt Dünen unter einem Mond, von unten fällt ein Lightleak von Hellgelb über Orange und Rosa zu Violett ins Bild. Der Schriftzug „lightleak“ ist in Unbounded (Google Fonts, SIL Open Font License) gesetzt, „leak“ trägt den Farbverlauf des Leaks. Die Schrift liegt in der App (fonts/unbounded-600.woff2) und funktioniert damit auch offline. Schriftzug und Symbol stehen auf der Begrüßungsseite, der Schriftzug außerdem oben auf der Startseite. Sicherungen heißen jetzt lightleak-Datum.zip, ältere Sicherungen lassen sich weiter einspielen.
 
 Beim ersten Start legst du einen Nutzernamen und optional ein Profilbild fest. Das Bild wählst du mit einem Tipp auf den bunten Kreis. Vor dem Namen steht fest ein @, auch später im Profil und auf der Startseite (zum Beispiel @rebecca). Gespeichert wird der Name ohne @. Auf jeder Seite führt oben links der runde Knopf mit dem App-Symbol zur Startseite und oben rechts dein Profilbild zum Profil.
 
@@ -127,11 +129,11 @@ Beim ersten Start wählst du über „DE“ und „EN“ die Sprache. Später ge
 
 ## Einführung beim ersten Start
 
-Nach Name und optionalem Profilbild führt ein leuchtender Ring mit Sprechblase durch die App. Profilbild antippen, im Profil einen Film in den Filmkühlschrank legen, „Weiter“, im Kameraschrank eine Kamera anlegen, Hersteller oder Modell eintragen und mit dem Haken speichern (erst dann kommt „Super, jetzt bist du bereit …“), über die Filmdose oben links zur Startseite, Film einlegen, bei einem Bild eine Beschreibung eintragen, den Film in die Entwicklung geben, Scans hochladen und zum Schluss das Fotoalbum öffnen. Jeder Schritt geht erst weiter, wenn die Aufgabe erledigt ist. „Einführung überspringen“ beendet sie. Nach „Reset/Test“ beginnt sie von vorn.
+Nach Name und optionalem Profilbild führt ein leuchtender Ring mit Sprechblase durch die App. Profilbild antippen, im Profil einen Film in den Filmkühlschrank legen, „Weiter“, im Kameraschrank eine Kamera anlegen, Hersteller oder Modell eintragen und mit dem Haken speichern (erst dann kommt „Super, jetzt bist du bereit …“), über das App-Symbol oben links zur Startseite, Film einlegen, bei einem Bild eine Beschreibung eintragen, den Film in die Entwicklung geben, Scans hochladen und zum Schluss das Fotoalbum öffnen. Jeder Schritt geht erst weiter, wenn die Aufgabe erledigt ist. „Einführung überspringen“ beendet sie. Nach „Reset/Test“ beginnt sie von vorn.
 
 ## Gesten und Hinweise
 
-Oben links führt eine kleine Filmdose mit herausschauendem Filmanfang (nur als Umriss) zur Startseite, oben rechts das Profilbild zum Profil. Bei der ersten Anmeldung gibt es nur das Namensfeld ohne Erklärtext. Legst du eine neue Kamera, ein Objektiv oder einen Film an, fehlt dort der Löschen-Knopf. Er erscheint erst, wenn du den Eintrag später wieder öffnest.
+Oben links führt das App-Symbol im runden Knopf zur Startseite, oben rechts das Profilbild zum Profil. Bei der ersten Anmeldung gibt es nur das Namensfeld ohne Erklärtext. Legst du eine neue Kamera, ein Objektiv oder einen Film an, fehlt dort der Löschen-Knopf. Er erscheint erst, wenn du den Eintrag später wieder öffnest.
 
 Im Reiter „Rolle“ steht neben der Filmauswahl ein kleines Foto des Films. Hat die Kamera eine ISO-Einstellung (Haken „ISO-Einstellung an der Kamera“ im Kameraschrank, gesetzt bei Nikon F3 und Minolta XG-1, nicht bei Praktica L2, Hasselblad und Olive San), gibt es das Feld „ISO an der Kamera eingestellt“. Darunter steht die Herstellerangabe und, wo hinterlegt, eine oft empfohlene ISO mit Quelle: CineStill 800T ISO 500 bei Tageslicht (photobite.uk, CineStill selbst nennt EI 800 bei Kunstlicht), Kodak Portra 400 ISO 200 (shootitwithfilm.com), Wolfen NC500 ISO 400 (Ateliers Marinette). Eigene Empfehlungen trägst du unter Alle Filme beim Film ein.
 

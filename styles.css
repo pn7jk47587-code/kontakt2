@@ -1,3 +1,4 @@
+@font-face { font-family: "Unbounded"; src: url("fonts/unbounded-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
 [hidden] { display: none !important; }
 /* Lichtthema: tagsüber Sonne und Prisma, abends Mondschein.
    Layout: einspaltige App mit Glas-Karten über einer Lichtschicht aus Strahlen. */
@@ -1306,3 +1307,11 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
   background: var(--glass) !important; border: 1px solid var(--glassline) !important; box-shadow: var(--glassshadow) !important; }
 .trashbtn.big svg { width: 24px; height: 24px; }
 .trashbtn.big:active { transform: scale(.94); }
+
+/* Wortmarke Lightleak */
+.wordmark { font-family: "Unbounded", system-ui, sans-serif; font-weight: 600; letter-spacing: -.03em; line-height: 1.1; color: var(--text); white-space: nowrap; }
+.wordmark span { background: linear-gradient(90deg, #ffb347, #ff8a3d 30%, #ff4f6e 65%, #a35cff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.topbar h1 .wordmark { font-size: 19px; }
+.brand { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 18px; }
+.brand img { width: 88px; height: 88px; border-radius: 22px; display: block; box-shadow: 0 6px 20px rgba(29, 26, 38, .25); }
+.brand .wordmark { font-size: 34px; }

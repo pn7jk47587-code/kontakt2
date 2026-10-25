@@ -127,7 +127,7 @@ Erstelle Sicherung …	Creating backup …
 Sicherung erstellt	Backup created
 Sicherung einspielen? Vorhandene Daten auf diesem Gerät werden dabei ersetzt.	Restore backup? Existing data on this device will be replaced.
 Lese Sicherung …	Reading backup …
-Keine Kontaktbogen-Sicherung	Not a Kontaktbogen backup
+Keine Lightleak-Sicherung	Not a Lightleak backup
 Bilder: {0}/{1}	Images: {0}/{1}
 Sicherung eingespielt	Backup restored
 Einspielen fehlgeschlagen: {0}	Restore failed: {0}
