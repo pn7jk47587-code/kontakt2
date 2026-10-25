@@ -206,7 +206,7 @@ SEED_STOCKS.push(
 );
 
 // Bajonette und Startobjektive
-const MOUNTS = ['Nikon F', 'Minolta SR (MC/MD)', 'M42', 'Hasselblad V', 'Canon FD', 'Pentax K', 'Olympus OM', 'Leica M', 'Fest verbaut', 'Sonstiges'];
+const MOUNTS = ['Nikon F', 'Minolta SR (MC/MD)', 'M42', 'Praktica B', 'Hasselblad V', 'Canon FD', 'Pentax K', 'Olympus OM', 'Leica M', 'Fest verbaut', 'Sonstiges'];
 const SEED_LENSES = [
   { id: 'lens-nikon-28', maker: 'Nikon', focal: '28', kind: 'wide', mount: 'Nikon F', cameraIds: ['cam-nikon-f3'] },
   { id: 'lens-nikon-50', maker: 'Nikon', focal: '50', kind: 'normal', mount: 'Nikon F', cameraIds: ['cam-nikon-f3'] },
@@ -356,6 +356,35 @@ Object.assign(SEED_FORMATS, {
 });
 SEED_STOCKS.forEach(s => { if (SEED_FORMATS[s.id]) s.formats = SEED_FORMATS[s.id]; });
 
+// Ergänzung 25.10.2026: weitere Kameras und Objektive der Nutzerin. Inaktive Kameras stehen im Schrank unter „Inaktiv“.
+const NEW_GEAR_1025 = { cams: ['cam-minolta-hi-matic-7s', 'cam-olympus-superzoom70', 'cam-praktica-bx20', 'cam-canon-prima-zoom76', 'cam-leica-c2'],
+  lenses: ['lens-hb-distagon-50', 'lens-hb-sonnar-150', 'lens-minolta-rokkor-45', 'lens-prakticar-50'] };
+SEED_CAMERAS.push(
+  // Mattsclassiccameras.com: Seiko-LA-Verschluss B und 1/4 bis 1/500 s, Automatik oder manuell, ASA 25 bis 800
+  { id: 'cam-minolta-hi-matic-7s', maker: 'Minolta', name: 'Hi-Matic 7s', format: '135', mount: 'Fest verbaut', art: { kind: 'compact', color: '#b9bcbd' },
+    shutterFast: '1/500', shutterSlow: '1/4', shutterB: true, shutterAuto: true, isoDial: true, multiExp: true },
+  { id: 'cam-olympus-superzoom70', maker: 'Olympus', name: 'Superzoom 70', format: '135', mount: 'Fest verbaut', art: { kind: 'compact', color: '#2a2b2d' },
+    auto: true, isoDial: false, multiExp: false, inactive: true, notes: 'Zoomobjektiv 38–70 mm (Aufdruck am Objektiv), Autofokus.' },
+  // davidde.com: Praktica-B-Bajonett, B und 40 s bis 1/1000 s, Zeitautomatik, ISO 12 bis 3200
+  { id: 'cam-praktica-bx20', maker: 'Praktica', name: 'BX20', format: '135', mount: 'Praktica B', art: { kind: 'slr', body: 'black' },
+    shutterFast: '1/1000', shutterSlow: '40', shutterB: true, shutterAuto: true, isoDial: true, multiExp: true, inactive: true },
+  { id: 'cam-canon-prima-zoom76', maker: 'Canon', name: 'Prima Zoom 76 AiAF', format: '135', mount: 'Fest verbaut', art: { kind: 'compact', color: '#3a3b3e' },
+    auto: true, isoDial: false, multiExp: false, inactive: true, notes: 'Noch kein Foto hinterlegt.' },
+  { id: 'cam-leica-c2', maker: 'Leica', name: 'C2', format: '135', mount: 'Fest verbaut', art: { kind: 'compact', color: '#d9dadb' },
+    auto: true, isoDial: false, multiExp: false, inactive: true, notes: 'Leica Vario-Elmar 35–70 mm (Aufdruck am Objektiv).' }
+);
+SEED_LENSES.push(
+  // Ken Rockwell, Hasselblad 50mm f/4 C: Blende bis f/22, Filter Serie VIII (63 mm) mit Haltering, die CF-Version hat Bajonett 60
+  { id: 'lens-hb-distagon-50', maker: 'Zeiss', name: 'Distagon', focal: '50', kind: 'wide', mount: 'Hasselblad V', cameraIds: ['cam-hasselblad-500cm'], maxAp: '4', minAp: '22',
+    notes: 'Filter: C-Version Serie VIII (63 mm) mit Haltering, CF-Version Bajonett 60. Version bitte prüfen.' },
+  // Zeiss-Datenblatt Sonnar 4/150 C: Blende 4 bis 32
+  { id: 'lens-hb-sonnar-150', maker: 'Zeiss', name: 'Sonnar', focal: '150', kind: 'tele', mount: 'Hasselblad V', cameraIds: ['cam-hasselblad-500cm'], maxAp: '4', minAp: '32',
+    notes: 'Filter: Bajonett 50 (KEH, C-Version).' },
+  { id: 'lens-minolta-rokkor-45', maker: 'Minolta', name: 'Rokkor', focal: '45', kind: 'normal', mount: 'Fest verbaut', cameraIds: ['cam-minolta-hi-matic-7s'], maxAp: '1.8', minAp: '22', filterThread: '55' },
+  { id: 'lens-prakticar-50', maker: 'Pentacon', name: 'Prakticar MC', focal: '50', kind: 'normal', mount: 'Praktica B', cameraIds: ['cam-praktica-bx20'], maxAp: '1.8',
+    notes: 'Filtergewinde: davidde.com nennt 49 mm, Kamerastore 58 mm. Bitte am Objektiv nachsehen.' }
+);
+
 // Verschlusszeiten der Kameras und Blendenbereiche der Objektive (Quellen in der Anleitung)
 const SEED_SHUTTERS = {
   'cam-nikon-f3': { shutterFast: '1/2000', shutterSlow: '8', shutterB: true, shutterT: true, shutterAuto: true },
@@ -373,6 +402,7 @@ SEED_LENSES.forEach(l => Object.assign(l, SEED_LENS_APS[l.id] || {}));
 // Ein eigenes Foto im Eintrag hat Vorrang.
 const SEED_IMG = Object.fromEntries([
   'cam-hasselblad-500cm', 'cam-minolta-xg1', 'cam-nikon-f3', 'cam-praktica-l2', 'cam-superheadz-olivesan',
+  'cam-minolta-hi-matic-7s', 'cam-olympus-superzoom70', 'cam-praktica-bx20', 'cam-leica-c2',
   'agfa-apx100', 'cinestill-400d', 'cinestill-50d', 'cinestill-800t', 'cinestill-bwxx', 'foma-100', 'foma-200', 'foma-400',
   'harman-phoenix125', 'harman-phoenix200', 'harman-red125', 'harman-switch-azure',
   'ilford-delta100', 'ilford-delta3200', 'ilford-delta400', 'ilford-fp4', 'ilford-hp5', 'ilford-panf', 'ilford-sfx200', 'ilford-xp2',

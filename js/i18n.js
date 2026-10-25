@@ -642,6 +642,11 @@ Tasche und Gurt	Bag and strap
 Kratzer, Adapterring, gekauft bei …	Scratches, adapter ring, bought at …
 Leitzahl, Gewinde, Batterie, Macken …	Guide number, thread, battery, quirks …
 {0} Filter	{0} filters
+Inaktiv	Inactive
+Kamera ist inaktiv	Camera is inactive
+Kameras, die gerade im Regal liegen. Sie erscheinen nicht bei „Film einlegen“.	Cameras that are resting on the shelf. They don't appear under “Load film”.
+{0} (inaktiv)	{0} (inactive)
+Noch kein Foto hinterlegt.	No photo yet.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

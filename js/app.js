@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 18;
+const SEED_VERSION = 19;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -33,6 +33,12 @@ async function boot() {
     await DB.putMany('stocks', SEED_STOCKS.filter(s => !existing.has(s.id)));
     // Vorerst wieder: Beispielkameras und -objektive beim ersten Start und einmalig nach diesem Update ergänzen. Vorhandene Einträge bleiben unverändert.
     if (!meta || meta.v < 17) await loadSeedGear();
+    else if (meta.v < 19) {
+      // Neue Kameras und Objektive vom 25.10.2026 nachtragen, ohne gelöschte Beispielausrüstung zurückzuholen
+      const ci = new Set((await DB.all('cameras')).map(c => c.id)), li = new Set((await DB.all('lenses')).map(l => l.id));
+      await DB.putMany('cameras', SEED_CAMERAS.filter(c => NEW_GEAR_1025.cams.includes(c.id) && !ci.has(c.id)).map(c => JSON.parse(JSON.stringify(c))));
+      await DB.putMany('lenses', SEED_LENSES.filter(l => NEW_GEAR_1025.lenses.includes(l.id) && !li.has(l.id)).map(l => JSON.parse(JSON.stringify(l))));
+    }
     for (const c of await DB.all('cameras')) {
       const seed = SEED_CAMERAS.find(x => x.id === c.id);
       if (seed && !c.mount) { c.mount = seed.mount; await DB.put('cameras', c); }
@@ -86,7 +92,7 @@ const SEED_ISO_DIAL = { 'cam-nikon-f3': true, 'cam-minolta-xg1': true, 'cam-prak
 async function loadSeedGear() {
   const camIds = new Set((await DB.all('cameras')).map(c => c.id));
   const lensIds = new Set((await DB.all('lenses')).map(l => l.id));
-  const cams = SEED_CAMERAS.filter(c => !camIds.has(c.id)).map(c => ({ ...JSON.parse(JSON.stringify(c)), isoDial: SEED_ISO_DIAL[c.id] ?? false, multiExp: true }));
+  const cams = SEED_CAMERAS.filter(c => !camIds.has(c.id)).map(c => ({ ...JSON.parse(JSON.stringify(c)), isoDial: SEED_ISO_DIAL[c.id] ?? c.isoDial ?? false, multiExp: c.multiExp ?? true }));
   const lenses = SEED_LENSES.filter(l => !lensIds.has(l.id)).map(l => JSON.parse(JSON.stringify(l)));
   await DB.putMany('cameras', cams);
   await DB.putMany('lenses', lenses);

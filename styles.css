@@ -1364,3 +1364,9 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .acckinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 4px 0 12px; }
 .acckind { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-size: 10.5px; line-height: 1.15; text-align: center; cursor: pointer; }
 .acckind.on { border-color: var(--teal); color: var(--teal); box-shadow: 0 0 0 1.5px var(--teal) inset; }
+
+/* Inaktive Kameras: eigene Abteilung, ruhiger dargestellt */
+.inactivesub > .foldhead h3 { opacity: .8; }
+.inactivehint { margin: 0 4px 8px; }
+.crow.inactive { background: transparent; border-style: dashed; }
+.crow.inactive .crowart { opacity: .7; filter: saturate(.4); }

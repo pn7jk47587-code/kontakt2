@@ -2,7 +2,7 @@
 
 const APERTURES = ['1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22'];
 // Zeiten von der kürzesten zur längsten. Ohne Kameradaten gilt die volle Reihe.
-const SPEEDS = ['1/4000', '1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', '15', '30'];
+const SPEEDS = ['1/4000', '1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', '15', '30', '40'];
 const SHUTTERS = ['1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', 'B', 'Auto'];
 const STOPS = ['1', '1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22', '32', '45', '64'];
 // Zahlen auch aus „f/16“, „f16“, „1:2.8“ oder „2,8“ lesen
@@ -310,7 +310,7 @@ const NEXT_BTN = (id, label, disabled) => `<button class="nextarrow" id="${id}" 
 async function wizardStep1(wiz, root = view) {
   if (root === view) setHeader('Film einlegen');
   const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
-  const cams = gearSort((await DB.all('cameras')).filter(c => !c.broken), camSortFb);
+  const cams = gearSort((await DB.all('cameras')).filter(c => !c.broken && !c.inactive), camSortFb);
   if (wiz.cameraId && !cams.some(c => c.id === wiz.cameraId)) wiz.cameraId = null;
   wiz.format = wiz.format || '135';
   const camCards = await Promise.all(cams.map(async c => `
@@ -943,7 +943,7 @@ function rollInfo(body, roll) {
   body.querySelector('#camsel').addEventListener('change', () => setTimeout(extras, 80));
   Promise.all([DB.all('stocks'), DB.all('cameras')]).then(([st, cams]) => {
     body.querySelector('#stocksel').innerHTML = st.sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b))).map(s => `<option value="${s.id}">${U.esc(U.stockLabel(s))}</option>`).join('');
-    body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.filter(c => !c.broken || c.id === roll.cameraId).map(c => `<option value="${c.id}">${U.esc(camLabel(c))}${c.broken ? ' (kaputt)' : ''}</option>`).join('');
+    body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.filter(c => (!c.broken && !c.inactive) || c.id === roll.cameraId).map(c => `<option value="${c.id}">${U.esc(camLabel(c))}${c.broken ? ' (kaputt)' : c.inactive ? ' (inaktiv)' : ''}</option>`).join('');
     bind(body.querySelector('#infoform'), roll, 'rolls');
   });
 }
@@ -1448,7 +1448,7 @@ async function cabinetHtml(fold = false) {
   const camRow = async c => {
     const own = lenses.filter(l => (l.cameraIds || []).includes(c.id));
     const lk = c.lightLeaks ? await leakStats(c.id, rolls, frames) : null;
-    return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}" href="#/kamera/${c.id}" data-id="${c.id}">
+    return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}${c.inactive ? ' inactive' : ''}" href="#/kamera/${c.id}" data-id="${c.id}">
       <span class="crowart">${await camArt(c, 76)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(camLabel(c))}</span>
@@ -1459,9 +1459,10 @@ async function cabinetHtml(fold = false) {
       <span class="chev">›</span>
     </a>`;
   };
-  const working = cams.filter(c => !c.broken), broken = cams.filter(c => c.broken);
+  const working = cams.filter(c => !c.broken && !c.inactive), broken = cams.filter(c => c.broken), inactive = cams.filter(c => c.inactive && !c.broken);
   const camRows = await Promise.all(working.map(camRow));
   const brokenRows = await Promise.all(broken.map(camRow));
+  const inactiveRows = await Promise.all(inactive.map(camRow));
   const lensRows = lenses.map(l => {
     const names = (l.cameraIds || []).map(id => cams.find(c => c.id === id)).filter(Boolean).map(camLabel);
     return `<a class="crow${fresh === l.id ? ' fresh' : ''}" href="#/objektiv/${l.id}" data-id="${l.id}">
@@ -1489,6 +1490,11 @@ async function cabinetHtml(fold = false) {
       <div class="foldbody">
       ${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist" data-sort="cameras">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
         ${brokenRows.length ? `<div class="brokenhead">Kaputt</div><div class="flist" data-sort="cameras">${brokenRows.join('')}</div>` : ''}`, freshCam || foldOpen('cab-cams'))}
+      ${inactiveRows.length ? `
+      <div class="cabsub fold inactivesub${foldOpen('cab-inactive') ? ' open' : ''}" data-fold="cab-inactive">
+        <div class="cabhead foldhead"><h3>Inaktiv<span class="cabcount">${inactiveRows.length}</span></h3><span class="cabtools"><span class="foldchev" aria-hidden="true"></span></span></div>
+        <div class="foldbody"><p class="hint inactivehint">Kameras, die gerade im Regal liegen. Sie erscheinen nicht bei „Film einlegen“.</p><div class="flist" data-sort="cameras">${inactiveRows.join('')}</div></div>
+      </div>` : ''}
       ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>`, freshLens || foldOpen('cab-lenses'))}
       ${await filtersSubHtml(lenses, foldOpen('cab-filters'))}
       ${await accessoriesSubHtml(cams, foldOpen('cab-acc'))}
@@ -1685,6 +1691,7 @@ async function viewCamera(id) {
     <label class="check"><input type="checkbox" data-f="multiExp"> Doppelbelichtung möglich</label>
     <label class="check"><input type="checkbox" data-f="lightLeaks"> Kamera hat Lightleaks</label>
     ${cam.lightLeaks ? `<p class="leakstat">${U.esc(leakSentence(await leakStats(cam.id)))}</p>` : ''}
+    <label class="check"><input type="checkbox" data-f="inactive"> Kamera ist inaktiv</label>
     <label class="check"><input type="checkbox" data-f="broken"> Kamera ist kaputt</label>
     <div id="brokenBox">${area('Was ist kaputt?', 'brokenNotes', '', 3)}<p class="hint">Kaputte Kameras erscheinen nicht bei „Film einlegen“.</p></div>
     <div id="mfBox">
