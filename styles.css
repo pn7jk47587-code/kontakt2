@@ -946,8 +946,9 @@ main:has(.quick) { padding-bottom: 90px; }
 
 /* Drei Stadien in eigenen Farben: Kamera blaugrün, Entwicklung orange, Fotoalbum violett.
    Die Knöpfe tragen die Farbe des Stadiums, in das sie die Rolle bringen. */
-:root, :root[data-mood="sun"] { --st1: #0e9a8f; --st2: #e27a1f; --st3: #8a5bd6; --st1bg: rgba(14,154,143,.10); --st2bg: rgba(226,122,31,.11); --st3bg: rgba(138,91,214,.10); }
-:root[data-mood="moon"] { --st1: #5fd6c9; --st2: #ffaa5c; --st3: #b89cff; --st1bg: rgba(95,214,201,.12); --st2bg: rgba(255,170,92,.12); --st3bg: rgba(184,156,255,.12); }
+/* Farben der Stadien aus dem App-Logo (Verlauf des Schriftzugs: Orange, Pinkrot, Violett), für hellen Hintergrund etwas dunkler */
+:root, :root[data-mood="sun"] { --st1: #e0701f; --st2: #e23a5c; --st3: #8a46e6; --st1bg: rgba(224,112,31,.10); --st2bg: rgba(226,58,92,.10); --st3bg: rgba(138,70,230,.10); }
+:root[data-mood="moon"] { --st1: #ff9a4d; --st2: #ff5f7e; --st3: #b383ff; --st1bg: rgba(255,154,77,.13); --st2bg: rgba(255,95,126,.13); --st3bg: rgba(179,131,255,.13); }
 .rollcard.st-entwurf, .rollcard.st-belichtet, .rollcard.st-entwickelt { animation: none !important; background: var(--card) !important; box-shadow: var(--shadow) !important; border-width: 2px !important; border-style: solid !important; }
 .rollcard.st-entwurf { border-color: var(--st1) !important; }
 .rollcard.st-belichtet { border-color: var(--st2) !important; }
@@ -1005,7 +1006,7 @@ main:has(.quick) .framestrip { margin-top: 22px; padding: 0 64px; }
 .photostile { display: flex; align-items: center; gap: 12px; color: var(--text); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); text-decoration: none; }
 .photostile h2, .spend .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .photostile > div { flex: 1; min-width: 0; }
-.photoicon { color: var(--st3); box-shadow: 0 0 14px rgba(138,91,214,.3); }
+.photoicon { color: var(--st3); box-shadow: 0 0 14px rgba(138,70,230,.3); }
 .spendicon { font-weight: 800; font-size: 18px; color: #2f8a55; box-shadow: 0 0 14px rgba(47,138,85,.3); }
 .fold > .foldhead, .photostile { min-height: 64px; }
 .fold > .foldhead { padding: 0 2px; cursor: pointer; user-select: none; -webkit-user-select: none; }
@@ -1378,14 +1379,16 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .homefold > .foldbody { padding-top: 0; }
 .homefold.open > .rolls.foldbody { display: grid; }
 
-/* Startseite: kompaktere Rollenkarten, Aktionsknopf auf Höhe des Textes */
+/* Startseite: kompaktere Rollenkarten, kleiner Aktionsknopf auf Höhe des Textes. Der Text bricht um, statt gekürzt zu werden. */
 .rollcard { --striph: 56px; }
 .rollcard .strip { height: var(--striph); padding: 5px 6px; }
 .rollcard .strip-art { gap: 8px; }
-.rollcard .rc-body { padding: 8px 128px 10px 14px !important; }
-.rollcard.st-belichtet .rc-body { padding-right: 168px !important; }
-.rollcard .rc-title, .rollcard .rc-sub, .rollcard .devline { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rollcard .rc-body { padding: 8px 112px 10px 14px !important; }
+.rollcard.st-belichtet .rc-body { padding-right: 138px !important; }
+.rollcard.st-entwickelt .rc-body { padding-right: 98px !important; }
+.rollcard .rc-title { overflow-wrap: anywhere; }
 .rollcard .rc-sub { margin: 1px 0 0; }
 .rollcard .devline { margin: 1px 0 0; }
-.rollcard .cardact { top: calc(var(--striph) + 10px); bottom: auto; height: 36px; }
+.rollcard .cardact { top: calc(var(--striph) + 9px); bottom: auto; right: 10px; height: 30px; padding: 0 10px 0 8px; gap: 4px; font-size: 12.5px; border-width: 1.2px; }
+.rollcard .cardact svg { width: 15px; height: 15px; }
 .rollcard.lifted .rc-body { padding-bottom: 10px !important; }
