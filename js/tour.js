@@ -18,6 +18,11 @@ const TOUR = (() => {
     cabinet: () => hash() === '#/profil'
       ? [['section.cabinet.open [data-add="kamera"]', 'Hier kannst du deine Ausrüstung hinzufügen. Tippe auf das Plus bei „Kameras“.'], ['section.cabinet', 'Hier kannst du deine Ausrüstung hinzufügen. Öffne den Kameraschrank und lege eine Kamera an.']]
       : /^#\/kamera\//.test(hash()) ? [] : [['#profBtn', 'Zurück zum Profil, dort steht der Kameraschrank.']],
+    // Neue Kamera: erst Hersteller und Modell eintragen, dann mit dem Haken speichern
+    camEdit: () => hash() === '#/kamera/' + st.cam
+      ? (st.named ? [['.donebtn', 'Tippe auf den Haken, um die Kamera zu speichern.']] : [['#cf .fld', 'Trag Hersteller und Modell deiner Kamera ein.']])
+      : hash() === '#/profil' ? [[`a.crow[href="#/kamera/${st.cam}"]`, 'Öffne deine neue Kamera und trag Hersteller und Modell ein.'], ['section.cabinet', 'Öffne den Kameraschrank und tippe deine neue Kamera an.']]
+      : [['#profBtn', 'Zurück zum Profil, dort steht deine neue Kamera.']],
     ready: () => onHome() ? [] : [['#homeBtn', 'Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe hier, um zur Startseite zu gehen.']],
     load: () => onHome() ? [['.newroll', 'Tippe auf „Film einlegen“ und lege deinen ersten Film ein.']] : [['#homeBtn', 'Zur Startseite, dort legst du den Film ein.']],
     note: () => hash().startsWith('#/bild/') ? [['#note', 'Trag hier eine Beschreibung zu diesem Bild ein.']]
@@ -37,7 +42,18 @@ const TOUR = (() => {
     const s = st.step;
     if (s === 'profile' && hash() === '#/profil') return go('fridge');
     if (s === 'fridge' && (await DB.all('fridge')).some(e => (e.count || 0) > 0)) return go('fridgeDone');
-    if (s === 'cabinet' && await count('cameras') > (st.cams ?? 0)) return go('ready');
+    if (s === 'cabinet') {
+      const fresh = (await DB.all('cameras')).find(c => !(st.camIds || []).includes(c.id));
+      if (fresh) return go('camEdit', { cam: fresh.id, named: false });
+    }
+    if (s === 'camEdit') {
+      const c = await DB.get('cameras', st.cam);
+      if (!c) return go('cabinet');
+      const named = !!((c.maker || '').trim() || ((c.name || '').trim() && c.name.trim() !== 'Neue Kamera'));
+      if (named !== st.named) { st.named = named; save(); draw(); }
+      // Erledigt erst, wenn die Kamera benannt ist und der Haken zurück ins Profil geführt hat
+      if (named && hash() === '#/profil') return go('ready');
+    }
     if (s === 'ready' && onHome()) return go('load', { known: (await DB.all('rolls')).map(r => r.id) });
     if (s === 'load') {
       const fresh = (await DB.all('rolls')).find(r => !(st.known || []).includes(r.id));
@@ -60,7 +76,7 @@ const TOUR = (() => {
     bubble.addEventListener('click', e => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.act === 'skip') { st = null; save(); draw(); return; }
-      if (st.step === 'fridgeDone') { DB.all('cameras').then(c => go('cabinet', { cams: c.length })); return; }
+      if (st.step === 'fridgeDone') { DB.all('cameras').then(c => go('cabinet', { camIds: c.map(x => x.id) })); return; }
       if (st.step === 'end') { st = null; save(); draw(); }
     });
   }

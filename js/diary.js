@@ -78,7 +78,7 @@ async function viewDiary(stockId) {
     const img = e.target.closest('img[data-img]');
     if (img) zoom(await U.imgUrl(img.dataset.img) || img.src);
   });
-  diaryBackBtn('#/tagebuch', 'Zurück zum Filmtagebuch');
+  diaryBackBtn('#/profil', 'Zurück zum Profil');
 }
 
 /* Karte im Reiter „Rolle“: deine Erfahrungen mit diesem Film */
@@ -96,4 +96,31 @@ async function diaryCardHtml(stock) {
     ${diaryHas(d) ? '' : '<p class="hint">Noch nichts notiert.</p>'}
     <a class="btn ghost small" href="#/tagebuch/${stock.id}">${diaryHas(d) ? 'Im Filmtagebuch öffnen' : 'Im Filmtagebuch anlegen'}</a>
   </section>`;
+}
+
+/* Karte im Profil nach dem Kameraschrank: alle Filme mit Tagebuch, Plus legt einen neuen Eintrag an */
+async function diaryFoldHtml() {
+  const stocks = new Map((await DB.all('stocks')).map(s => [s.id, s]));
+  const list = (await allDiaries()).filter(diaryHas).sort((a, b) => U.stockLabel(stocks.get(a.stockId)).localeCompare(U.stockLabel(stocks.get(b.stockId))));
+  const rows = await Promise.all(list.map(async d => {
+    const st = stocks.get(d.stockId), n = (d.photos || []).length;
+    return `<a class="crow diaryrow" href="#/tagebuch/${d.stockId}"><span class="frowart">${await filmArt(st, 42)}</span>
+      <span class="frowmain"><span class="frowname">${U.esc(U.stockLabel(st) || 'Unbekannter Film')}</span><span class="frowsub">${n} ${n === 1 ? 'Foto' : 'Fotos'}${(d.notes || '').trim() ? ' · mit Notizen' : ''}</span></span><span class="chev">›</span></a>`;
+  }));
+  return `
+    <section class="diaryfold fold${foldOpen('diary') ? ' open' : ''}" data-fold="diary">
+      <div class="fridgetop foldhead">
+        <span class="fridgeicon diaryicon">${ART.diary}</span>
+        <div><h2>Filmtagebuch</h2><span class="sub2">${list.length ? `${list.length} ${list.length === 1 ? 'Film' : 'Filme'}` : 'Noch leer'}</span></div>
+        <button class="fridgeplus" id="addDiary" aria-label="Film zum Tagebuch hinzufügen">+</button>
+        <span class="foldchev" aria-hidden="true"></span>
+      </div>
+      <div class="foldbody">
+        <p class="hint" style="margin:0 2px 10px">Wie verhält sich ein Film bei dir? Notizen und Beispielfotos nach Lichtsituation.</p>
+        <div class="flist">${rows.length ? rows.join('') : '<p class="hint">Lege mit dem Plus den ersten Film an.</p>'}</div>
+      </div>
+    </section>`;
+}
+function setupDiaryFold(root) {
+  root.querySelector('#addDiary')?.addEventListener('click', () => openStockPicker(id => { location.hash = '#/tagebuch/' + id; }));
 }

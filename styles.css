@@ -1231,3 +1231,78 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .leak.l4::after { background: linear-gradient(100deg, rgba(255,170,190,1) 0%, rgba(255,110,150,.9) 20%, rgba(255,160,130,.55) 36%, rgba(110,100,240,.3) 50%, transparent 66%); }
 .cell.leak .idx, .cell.leak .flags, .cell.leak .ph { position: relative; z-index: 2; }
 .cell.leak .idx, .cell.leak .flags { position: absolute; }
+
+/* Nutzername mit festem @ davor (Begrüßung und Profil) */
+.welcomeav { position: relative; display: block; cursor: pointer; }
+.welcomeav .avedit { bottom: -4px; }
+.atname { display: flex; align-items: center; justify-content: center; gap: 0; width: 100%; max-width: 360px; margin: 0 auto; border: 1px solid var(--line); border-radius: 16px; background: var(--card); padding: 0 14px; }
+.atname .at { flex: 0 0 auto; font-size: 18px; font-weight: 700; color: var(--muted); }
+.atname input { flex: 1 1 auto; min-width: 0; border: 0 !important; background: transparent !important; box-shadow: none !important; padding-left: 2px !important; text-align: left !important; }
+.welcome .atname input { font-size: 18px; }
+.atname.pname { width: auto; max-width: 320px; border-color: transparent; background: transparent; padding: 0 6px; }
+.atname.pname:focus-within { background: var(--bg2); }
+.atname.pname .at { font-size: 24px; font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; color: var(--text); }
+.atname.pname input { font-size: 24px; font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; field-sizing: content; min-width: 2ch; max-width: 280px; text-align: left !important; }
+
+/* Film einlegen: Formatkreise mit Abstand zu den Kameras, Kühlschrank-Karte kompakter */
+.wizsec .fmtpick { margin: 4px 0 20px; padding: 4px 0; }
+.fridgecard { display: block; padding: 10px; }
+.fchead { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 2px 0 2px; }
+.fchead > .fridgeicon { flex: 0 0 auto; width: 34px; height: 34px; }
+.fctitle { flex: 1 1 auto; min-width: 0; font-size: 15px; font-weight: 650; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fchead input[type=search] { flex: 0 0 44px; margin: 0 !important; }
+.fchead input[type=search]:focus, .fchead input[type=search]:not(:placeholder-shown) { flex: 1 1 0; min-width: 0; width: 0 !important; max-width: 100%; }
+.fchead:has(input[type=search]:focus) .fctitle, .fchead:has(input[type=search]:not(:placeholder-shown)) .fctitle { display: none; }
+.fridgecard .flist { margin: 8px 0 0; gap: 6px; }
+.fridgecard .frow { padding: 8px 10px; gap: 10px; }
+.fridgecard .frowart { flex-basis: 38px; }
+.fridgecard #fridgeNone { margin: 8px 4px 2px; }
+.fridgecard + .newfilm { margin-top: 0; }
+.atname input:focus { outline: none !important; box-shadow: none !important; }
+.atname:not(.pname):focus-within { border-color: var(--teal); box-shadow: 0 0 0 2px var(--tint2); }
+
+/* Kameraschrank: Kameras und Objektive je ausklappbar */
+.fold .foldchev { transform: rotate(45deg) translate(-2px, -2px); }
+.fold.open > .foldhead .foldchev { transform: rotate(225deg) translate(-2px, -2px); }
+.cabsub { margin: 0 0 4px; }
+.cabsub + .cabsub { border-top: 1px solid rgba(170,140,100,.22); padding-top: 4px; }
+:root[data-mood="moon"] .cabsub + .cabsub { border-top-color: rgba(200,180,255,.15); }
+.cabsub > .foldhead.cabhead { min-height: 52px; margin: 2px 2px; }
+.cabsub > .foldbody { padding-top: 2px; padding-bottom: 8px; }
+.cabtools { display: flex; align-items: center; gap: 8px; }
+.cabcount { margin-left: 8px; font-size: 13px; font-weight: 600; opacity: .55; }
+.brokenhead { margin: 14px 4px 6px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .6; }
+.crow.broken { opacity: .78; }
+.crow.broken .crowart { filter: grayscale(1); }
+.brokentag { background: rgba(255,107,138,.18) !important; color: #b83a55; font-weight: 700; }
+.leaktag { background: linear-gradient(90deg, rgba(255,120,150,.28), rgba(255,170,80,.28)) !important; font-weight: 700; }
+.leakstat { margin: 2px 0 8px 30px; font-size: 14px; color: var(--muted); }
+
+/* Lightleaks auswählen */
+.leakgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0 6px; max-height: 52vh; overflow-y: auto; }
+.leakpick { position: relative; padding: 0; border: 0; border-radius: 10px; overflow: hidden; aspect-ratio: 1; background: var(--bg2); cursor: pointer; }
+.leakpick img { width: 100%; height: 100%; object-fit: cover; display: block; transition: filter .15s; }
+.leakpick .lkidx { position: absolute; left: 4px; bottom: 3px; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+.leakpick .lkmark { position: absolute; right: 4px; top: 4px; width: 22px; height: 22px; border-radius: 50%; display: none; align-items: center; justify-content: center; color: #fff; background: linear-gradient(135deg, #ff6b8a, #ff9d3c); }
+.leakpick .lkmark svg { width: 15px; height: 15px; }
+.leakpick.on { box-shadow: 0 0 0 3px #ff8a5c inset; }
+.leakpick.on img { filter: brightness(.85); }
+.leakpick.on .lkmark { display: flex; }
+.leakdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, #ff6b8a, #ff9d3c); box-shadow: 0 0 0 1.5px #fff; }
+.photogrid a { position: relative; }
+.photogrid .leakdot { position: absolute; right: 5px; top: 5px; }
+
+/* Filmtagebuch als eigene Karte im Profil */
+.diaryfold { margin: 12px 16px; padding: 14px; border-radius: 26px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.diaryfold .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+.diaryicon { color: #3f8f7a; box-shadow: 0 0 14px rgba(63,143,122,.32); }
+:root[data-mood="moon"] .diaryicon { color: #8fe0c8; }
+.diaryfold .crow { border-color: var(--line); background: var(--card); }
+
+/* Rollenansicht: Löschen rechts oben auf Höhe des Filmnamens */
+.rollhead { position: relative; align-items: flex-start; }
+.rh-txt { flex: 1 1 auto; padding-right: 4px; }
+.trashbtn.big { flex: 0 0 auto; width: 48px; height: 48px; margin: -6px -6px 0 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; padding: 0; cursor: pointer; color: #c2415d;
+  background: var(--glass) !important; border: 1px solid var(--glassline) !important; box-shadow: var(--glassshadow) !important; }
+.trashbtn.big svg { width: 24px; height: 24px; }
+.trashbtn.big:active { transform: scale(.94); }

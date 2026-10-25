@@ -5,12 +5,20 @@ const APERTURES = ['1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22'];
 const SPEEDS = ['1/4000', '1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', '15', '30'];
 const SHUTTERS = ['1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', 'B', 'Auto'];
 const STOPS = ['1', '1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22', '32', '45', '64'];
-const num = v => parseFloat(String(v ?? '').replace(',', '.'));
-// Blendenreihe eines Objektivs: Lichtstärke, dann volle Stufen bis zur kleinsten Blende (ohne Angabe bis 22)
+// Zahlen auch aus „f/16“, „f16“, „1:2.8“ oder „2,8“ lesen
+const num = v => { const m = String(v ?? '').replace(',', '.').replace(/^\s*(f\s*\/?|1\s*:)\s*/i, '').match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; };
+// Blendenreihe eines Objektivs: Lichtstärke, dann volle Stufen bis zur kleinsten Blende.
+// Ohne Lichtstärke beginnt die Reihe bei 1,4, ohne kleinste Blende endet sie bei 22.
 function lensApertures(l) {
-  const mx = num(l?.maxAp), mn = num(l?.minAp) || 22;
-  if (!(mx > 0)) return APERTURES;
-  return [String(mx), ...STOPS.filter(x => parseFloat(x) > mx + 0.05 && parseFloat(x) <= mn + 0.05)];
+  let mx = num(l?.maxAp), mn = num(l?.minAp);
+  if (!(mx > 0)) mx = null;
+  if (!(mn > 0)) mn = 22;
+  if (mx && mn < mx) [mx, mn] = [mn, mx];            // Felder vertauscht eingetragen
+  const lo = mx || 1.4;
+  const list = STOPS.filter(x => parseFloat(x) >= lo - 0.05 && parseFloat(x) <= mn + 0.05);
+  if (mx && !list.some(x => Math.abs(parseFloat(x) - mx) < 0.05)) list.unshift(String(mx));
+  if (!list.some(x => Math.abs(parseFloat(x) - mn) < 0.05)) list.push(String(mn));
+  return list.length ? list : APERTURES;
 }
 // Zeiten einer Kamera: kürzeste Zeit zuerst, dann B, T, Automatik
 function camShutters(c) {
@@ -205,6 +213,7 @@ function openPickupModal(roll, done) {
       if (!roll.dev.backAt && !roll.dev.devDate) roll.dev[roll.dev.mode === 'selbst' ? 'devDate' : 'backAt'] = U.today();
       await DB.put('rolls', roll);
       U.toast(`${n} ${n === 1 ? 'Scan' : 'Scans'} hochgeladen`);
+      await queueLeakPick(roll);
       location.hash = '#/album/' + roll.id;
     } finally { busy.remove(); }
   });
@@ -300,7 +309,8 @@ const NEXT_BTN = (id, label, disabled) => `<button class="nextarrow" id="${id}" 
 async function wizardStep1(wiz, root = view) {
   if (root === view) setHeader('Film einlegen');
   const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
-  const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
+  const cams = (await DB.all('cameras')).filter(c => !c.broken).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
+  if (wiz.cameraId && !cams.some(c => c.id === wiz.cameraId)) wiz.cameraId = null;
   wiz.format = wiz.format || '135';
   const camCards = await Promise.all(cams.map(async c => `
     <button type="button" class="pick cam${wiz.cameraId === c.id ? ' on' : ''}" data-cam="${c.id}" data-format="${c.format}">
@@ -324,12 +334,13 @@ async function wizardStep1(wiz, root = view) {
     <section class="wizsec" id="filmSec">
       <h2 class="wiztitle">Film</h2>
       <div class="fridgecard">
-        <span class="fridgeicon" aria-label="Filmkühlschrank" role="img">${SNOW}</span>
-        <div class="fcbody">
-          ${fridge.length ? `<input type="search" placeholder=" " id="qFridge" aria-label="Filme im Kühlschrank durchsuchen" autocomplete="off">
-          <div class="flist" id="fridgeList">${rows.join('')}</div>
-          <p class="hint" id="fridgeNone" hidden>Kein passender Film im Kühlschrank für dieses Format.</p>` : '<p class="hint">Dein Filmkühlschrank ist leer.</p>'}
+        <div class="fchead">
+          <span class="fridgeicon" aria-hidden="true">${SNOW}</span>
+          <span class="fctitle" id="fcTitle">${fridge.length ? 'Aus dem Filmkühlschrank' : 'Dein Filmkühlschrank ist leer.'}</span>
+          ${fridge.length ? '<input type="search" placeholder=" " id="qFridge" aria-label="Filme im Kühlschrank durchsuchen" autocomplete="off">' : ''}
         </div>
+        ${fridge.length ? `<div class="flist" id="fridgeList">${rows.join('')}</div>
+        <p class="hint" id="fridgeNone" hidden>Kein passender Film im Kühlschrank für dieses Format.</p>` : ''}
       </div>
       <button type="button" class="newfilm small${chosenOther ? ' on' : ''}" id="newFilm">
         <span class="plusbox">${chosenOther ? await filmArt(chosenOther, 40) : '+'}</span>
@@ -383,8 +394,9 @@ async function wizardStep1(wiz, root = view) {
       const none = root.querySelector('#fridgeNone');
       root.querySelector('#qFridge').hidden = !forFmt;
       fl.hidden = !forFmt;
-      none.hidden = any;
-      none.textContent = q && forFmt ? 'Ups, der Film liegt noch nicht im Kühlschrank.' : 'Dein Filmkühlschrank ist leer.';
+      root.querySelector('#fcTitle').textContent = forFmt ? 'Aus dem Filmkühlschrank' : 'Dein Filmkühlschrank ist leer.';
+      none.hidden = any || !forFmt;
+      none.textContent = 'Ups, der Film liegt noch nicht im Kühlschrank.';
     }
     root.querySelectorAll('#cams [data-cam]').forEach(el => { el.hidden = !fmtOk(el); });
     root.querySelector('#next').disabled = !(wiz.stockId && parseInt(wiz.expChoice) > 0);
@@ -505,7 +517,7 @@ function askFilmPrice(roll, stock) {
   setTimeout(() => inp.focus(), 50);
 }
 
-const TRASH_BTN = id => `<button class="trashbtn" data-delroll="${id}" aria-label="Rolle löschen" title="Rolle löschen"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l1 12.2h9L17.5 7M10.3 10.5v5.7M13.7 10.5v5.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
+const TRASH_BTN = id => `<button class="trashbtn" data-delroll="${id}" aria-label="Rolle löschen" title="Rolle löschen"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.8h5V7M6.5 7l1 12.2h9L17.5 7M10.3 10.5v5.7M13.7 10.5v5.7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`;
 
 // Rolle löschen mit Sicherheitsabfrage
 async function confirmDeleteRoll(rollId) {
@@ -546,7 +558,7 @@ async function viewRoll(id, tab) {
   if (!roll) { location.replace('#/'); return; }
   const stock = await DB.get('stocks', roll.stockId);
   const cam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
-  setHeader(roll.title || U.stockLabel(stock), { action: TRASH_BTN(roll.id) });
+  setHeader(roll.title || U.stockLabel(stock));
   // In der Kamera gibt es noch nichts zu entwickeln: nur Bilder und Rolle. Ab „In Entwicklung“ alle Reiter.
   const inCam = (roll.status || 'entwurf') === 'entwurf';
   const tabs = inCam ? [['bilder', 'Bilder'], ['info', 'Rolle']] : [['bilder', 'Bilder'], ['entwicklung', 'Entwicklung'], ['info', 'Rolle']];
@@ -556,6 +568,7 @@ async function viewRoll(id, tab) {
       <div class="rh-art">${await filmArt(stock, 52)}${cam ? await camArt(cam, 66) : ''}</div>
       <div class="rh-txt"><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">EI ${U.esc(roll.ei || stock?.boxIso || '?')}${camLabel(cam) || roll.camera ? ' · ' + U.esc(camLabel(cam) || roll.camera) : ''}</span>
         <br><span class="stagebadge st-${roll.status || 'entwurf'}">${STATUS[roll.status || 'entwurf'].label}</span></div>
+      ${TRASH_BTN(roll.id).replace('class="trashbtn"', 'class="trashbtn big"')}
     </div>
     <div class="tabs">${tabs.map(([k, t]) => `<a class="tab${tab === k ? ' on' : ''}" href="#/rolle/${id}/${k}">${t}</a>`).join('')}</div>
     <div id="rollbody"></div>`;
@@ -578,7 +591,7 @@ function leakMap(roll, frames) {
 async function frameCell(f, leak = 0) {
   const u = f.imgId ? await U.imgUrl(f.imgId, true) : null;
   const pu = !u && f.phoneId ? await U.imgUrl(f.phoneId, true) : null;
-  const flags = [f.double ? ART.double : '', f.phoneId && u ? '<span>▣</span>' : ''].join('');
+  const flags = [f.double ? ART.double : '', f.phoneId && u ? '<span>▣</span>' : '', f.leak ? '<span class="leakdot" title="Lightleak" aria-label="Lightleak"></span>' : ''].join('');
   return `<a class="cell${u ? ' has' : ''}${pu ? ' phoneprev' : ''}${f.shot ? ' shot' : ''}${f.bonus ? ' bonus' : ''}${leak ? ' leak l' + leak : ''}" href="#/bild/${f.id}">
     ${pu ? `<img src="${pu}" alt="" class="phoneimg"><span class="phonetag">Handy</span><span class="idx">${frameLabel(f)}</span>` : ''}
     ${u ? `<img src="${u}" alt="">` : pu ? '' : `<div class="ph"><span class="num">${frameLabel(f)}</span>${f.note ? `<span class="pn">${U.esc(f.note.slice(0, 40))}</span>` : ''}${!f.note && (f.aperture || f.shutter) ? `<span class="pn">${f.aperture ? 'f/' + U.esc(f.aperture) : ''} ${U.esc(f.shutter || '')}</span>` : ''}</div>`}
@@ -591,7 +604,7 @@ async function rollFrames(body, roll, stock) {
   const fr = await framesOf(roll.id);
   const st = roll.status || 'entwurf';
   const rcam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
-  const leaks = rcam?.lightLeaks ? leakMap(roll, fr) : new Map();
+  const leaks = rcam?.lightLeaks && !roll.leaksMarked ? leakMap(roll, fr) : new Map();
   const cells = await Promise.all(fr.map(f => frameCell(f, leaks.get(f.id) || 0)));
   const hasImgs = fr.some(f => f.imgId);
   let top = '', bottom = '';
@@ -630,7 +643,51 @@ async function rollFrames(body, roll, stock) {
       await DB.put('rolls', roll);
     }
     U.toast(`${n} ${n === 1 ? 'Scan' : 'Scans'} hochgeladen`);
+    if (await queueLeakPick(roll)) { location.hash = '#/album/' + roll.id; return; }
     route();
+  });
+}
+
+// Lightleak-Kamera: nach dem Hochladen öffnet das Album die Auswahl der Bilder mit Lightleaks
+async function queueLeakPick(roll) {
+  const cam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
+  if (!cam?.lightLeaks) return false;
+  try { sessionStorage.setItem('kb-leakpick', roll.id); } catch (_) {}
+  return true;
+}
+async function openLeakPicker(roll, done) {
+  const fr = (await framesOf(roll.id)).filter(f => f.imgId);
+  if (!fr.length) return;
+  const cam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
+  const thumbs = await Promise.all(fr.map(f => U.imgUrl(f.imgId, true)));
+  const on = new Set(fr.filter(f => f.leak).map(f => f.id));
+  const ov = document.createElement('div');
+  ov.className = 'modalbg';
+  ov.innerHTML = `
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lkTitle">
+      <h2 id="lkTitle">Welche Bilder haben Lightleaks?</h2>
+      <p class="hint">${U.esc(camLabel(cam) || 'Die Kamera')} hat Lightleaks. Tippe die Scans an, auf denen wirklich Licht eingefallen ist.</p>
+      <div class="leakgrid" id="lkGrid">${fr.map((f, i) => `<button type="button" class="leakpick${on.has(f.id) ? ' on' : ''}" data-id="${f.id}" aria-pressed="${on.has(f.id)}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt=""><span class="lkidx">${frameLabel(f)}</span><span class="lkmark">${ART.check}</span></button>`).join('')}</div>
+      <p class="hint" id="lkCount"></p>
+      <div class="modalfoot"><button class="closex" id="lkNo" aria-label="Später">${ART.x}</button><button class="okbtn" id="lkOk" aria-label="Speichern">${ART.check}</button></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const count = () => { ov.querySelector('#lkCount').textContent = on.size ? `${on.size} ${on.size === 1 ? 'Bild' : 'Bilder'} mit Lightleak` : 'Kein Bild markiert'; };
+  count();
+  ov.querySelector('#lkGrid').addEventListener('click', e => {
+    const b = e.target.closest('[data-id]'); if (!b) return;
+    on.has(b.dataset.id) ? on.delete(b.dataset.id) : on.add(b.dataset.id);
+    b.classList.toggle('on', on.has(b.dataset.id)); b.setAttribute('aria-pressed', on.has(b.dataset.id));
+    U.haptic && U.haptic(); count();
+  });
+  const close = () => ov.remove();
+  ov.querySelector('#lkNo').addEventListener('click', close);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  ov.querySelector('#lkOk').addEventListener('click', async () => {
+    for (const f of fr) { const v = on.has(f.id); if (!!f.leak !== v) { f.leak = v; await DB.put('frames', f); } }
+    roll.leaksMarked = true; await DB.put('rolls', roll);
+    close(); U.toast(on.size ? `${on.size} ${on.size === 1 ? 'Lightleak' : 'Lightleaks'} vermerkt` : 'Keine Lightleaks vermerkt');
+    done && done();
   });
 }
 
@@ -879,7 +936,7 @@ function rollInfo(body, roll) {
   body.querySelector('#camsel').addEventListener('change', () => setTimeout(extras, 80));
   Promise.all([DB.all('stocks'), DB.all('cameras')]).then(([st, cams]) => {
     body.querySelector('#stocksel').innerHTML = st.sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b))).map(s => `<option value="${s.id}">${U.esc(U.stockLabel(s))}</option>`).join('');
-    body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.map(c => `<option value="${c.id}">${U.esc(camLabel(c))}</option>`).join('');
+    body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.filter(c => !c.broken || c.id === roll.cameraId).map(c => `<option value="${c.id}">${U.esc(camLabel(c))}${c.broken ? ' (kaputt)' : ''}</option>`).join('');
     bind(body.querySelector('#infoform'), roll, 'rolls');
   });
 }
@@ -931,7 +988,7 @@ async function viewFrame(idWithQuery) {
   </div>`;
 
   renderMedia(view.querySelector('#media'), scanUrl, [phoneUrl, phoneUrl2].filter(Boolean), frame);
-  if (cam?.lightLeaks && roll) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
+  if (cam?.lightLeaks && roll && !roll.leaksMarked) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
 
   // Speichern; beim ersten Eintrag wird der heutige Tag als Aufnahmetag gesetzt
   let t;
@@ -1159,10 +1216,16 @@ async function viewAlbum(id) {
   setHeader(d.title, { action: d.roll ? `<a class="toplink" href="#/rolle/${d.roll.id}">Rolle</a>${TRASH_BTN(d.roll.id)}` : '' });
   if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Bilder im Album.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
+  const leakCam = !!(d.roll && d.cams.get(d.roll.cameraId)?.lightLeaks);
   view.innerHTML = `
     ${d.roll ? `<label class="rollname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : ''}
-    <div class="photogrid">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>
-    <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>`;
+    <div class="photogrid">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${f.leak ? '<span class="leakdot" title="Lightleak"></span>' : ''}</a>`).join('')}</div>
+    <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
+    ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
+  view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
+  let pick = null;
+  try { pick = sessionStorage.getItem('kb-leakpick'); if (pick === id) sessionStorage.removeItem('kb-leakpick'); } catch (_) {}
+  if (leakCam && pick === id) setTimeout(() => openLeakPicker(d.roll, () => route()), 350);
   const nameIn = view.querySelector('#rollName');
   if (nameIn) {
     const save = async () => { d.roll.title = nameIn.value.trim(); await DB.put('rolls', d.roll); titleEl.textContent = d.roll.title || U.stockLabel(await DB.get('stocks', d.roll.stockId)); };
@@ -1332,7 +1395,7 @@ function lensLabel(l) {
 const LENS_KINDS = [['wide', 'Weitwinkel'], ['normal', 'Normal'], ['tele', 'Tele'], ['zoom', 'Zoom']];
 
 // Ausklappzustand der Profilbereiche merken
-function foldOpen(key) { try { return localStorage.getItem('kb-fold-' + key) === '1'; } catch (_) { return false; } }
+function foldOpen(key, def = false) { try { const v = localStorage.getItem('kb-fold-' + key); return v === null ? def : v === '1'; } catch (_) { return def; } }
 function setupFolds(root) {
   root.querySelectorAll('.fold > .foldhead').forEach(h => {
     h.setAttribute('role', 'button'); h.tabIndex = 0;
@@ -1349,23 +1412,42 @@ function setupFolds(root) {
   });
 }
 
+// Lightleaks einer Kamera: markierte Bilder aller Rollen und das erste Einlegedatum
+async function leakStats(camId, rolls, frames) {
+  rolls = rolls || await DB.all('rolls'); frames = frames || await DB.all('frames');
+  const mine = rolls.filter(r => r.cameraId === camId);
+  const ids = new Set(mine.map(r => r.id));
+  const since = mine.map(r => r.loadedAt).filter(Boolean).sort()[0] || null;
+  const n = frames.filter(f => f.leak && ids.has(f.rollId)).length;
+  return { n, since, marked: mine.some(r => r.leaksMarked) };
+}
+const leakSentence = st => st.since
+  ? `Diese Kamera hat seit ${U.fmtDate(st.since)} ${st.n} ${st.n === 1 ? 'Lightleak' : 'Lightleaks'} produziert.`
+  : 'Mit dieser Kamera wurde noch kein Film eingelegt.';
+
 async function cabinetHtml(fold = false) {
   const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
   const lenses = (await DB.all('lenses')).sort((a, b) => (a.mount || '').localeCompare(b.mount || '') || parseFloat(a.focal) - parseFloat(b.focal));
+  const [rolls, frames] = [await DB.all('rolls'), await DB.all('frames')];
   let fresh = null;
   try { fresh = sessionStorage.getItem('kb-newgear'); sessionStorage.removeItem('kb-newgear'); } catch (_) {}
-  const camRows = await Promise.all(cams.map(async c => {
+  const camRow = async c => {
     const own = lenses.filter(l => (l.cameraIds || []).includes(c.id));
-    return `<a class="crow${fresh === c.id ? ' fresh' : ''}" href="#/kamera/${c.id}">
+    const lk = c.lightLeaks ? await leakStats(c.id, rolls, frames) : null;
+    return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}" href="#/kamera/${c.id}">
       <span class="crowart">${await camArt(c, 76)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(camLabel(c))}</span>
-        ${c.mount ? `<span class="frowchips"><span>${U.esc(c.mount)}</span></span>` : ''}
+        <span class="frowchips">${c.mount ? `<span>${U.esc(c.mount)}</span>` : ''}${c.broken ? '<span class="brokentag">kaputt</span>' : ''}${lk && lk.since ? `<span class="leaktag">${lk.n} ${lk.n === 1 ? 'Lightleak' : 'Lightleaks'}</span>` : ''}</span>
+        ${c.broken && c.brokenNotes ? `<span class="frowsub">${U.esc(c.brokenNotes.slice(0, 80))}</span>` : ''}
         ${own.length ? `<span class="minilenses">${own.map(l => ART.lens(l, 34)).join('')}</span>` : ''}
       </span>
       <span class="chev">›</span>
     </a>`;
-  }));
+  };
+  const working = cams.filter(c => !c.broken), broken = cams.filter(c => c.broken);
+  const camRows = await Promise.all(working.map(camRow));
+  const brokenRows = await Promise.all(broken.map(camRow));
   const lensRows = lenses.map(l => {
     const names = (l.cameraIds || []).map(id => cams.find(c => c.id === id)).filter(Boolean).map(camLabel);
     return `<a class="crow${fresh === l.id ? ' fresh' : ''}" href="#/objektiv/${l.id}">
@@ -1377,6 +1459,12 @@ async function cabinetHtml(fold = false) {
       <span class="chev">›</span>
     </a>`;
   });
+  const freshCam = cams.some(c => c.id === fresh), freshLens = lenses.some(l => l.id === fresh);
+  const sub = (key, title, count, add, body, open) => `
+      <div class="cabsub fold${open ? ' open' : ''}" data-fold="${key}">
+        <div class="cabhead foldhead"><h3>${title}<span class="cabcount">${count}</span></h3><span class="cabtools"><button class="fridgeplus" data-add="${add}" aria-label="${add === 'kamera' ? 'Kamera' : 'Objektiv'} hinzufügen">+</button><span class="foldchev" aria-hidden="true"></span></span></div>
+        <div class="foldbody">${body}</div>
+      </div>`;
   return `
     <section class="cabinet${fold ? ' fold' : ''}${fold && (fresh || foldOpen('cabinet')) ? ' open' : ''}" data-fold="cabinet">
       <div class="fridgetop foldhead">
@@ -1385,10 +1473,9 @@ async function cabinetHtml(fold = false) {
         ${fold ? '<span class="foldchev" aria-hidden="true"></span>' : ''}
       </div>
       <div class="foldbody">
-      <div class="cabhead"><h3>Kameras</h3><button class="fridgeplus" data-add="kamera" aria-label="Kamera hinzufügen">+</button></div>
-      <div class="flist">${camRows.join('')}</div>
-      <div class="cabhead"><h3>Objektive</h3><button class="fridgeplus" data-add="objektiv" aria-label="Objektiv hinzufügen">+</button></div>
-      <div class="flist">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>
+      ${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
+        ${brokenRows.length ? `<div class="brokenhead">Kaputt</div><div class="flist">${brokenRows.join('')}</div>` : ''}`, freshCam || foldOpen('cab-cams'))}
+      ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>`, freshLens || foldOpen('cab-lenses'))}
       </div>
     </section>`;
 }
@@ -1509,6 +1596,9 @@ async function viewCamera(id) {
     <label class="check"><input type="checkbox" data-f="isoDial"> ISO-Einstellung an der Kamera</label>
     <label class="check"><input type="checkbox" data-f="multiExp"> Doppelbelichtung möglich</label>
     <label class="check"><input type="checkbox" data-f="lightLeaks"> Kamera hat Lightleaks</label>
+    ${cam.lightLeaks ? `<p class="leakstat">${U.esc(leakSentence(await leakStats(cam.id)))}</p>` : ''}
+    <label class="check"><input type="checkbox" data-f="broken"> Kamera ist kaputt</label>
+    <div id="brokenBox">${area('Was ist kaputt?', 'brokenNotes', '', 3)}<p class="hint">Kaputte Kameras erscheinen nicht bei „Film einlegen“.</p></div>
     <div id="mfBox">
       ${field('Bilder pro 120er-Rolle', 'frames', { num: true })}
       ${field('Bildformat', 'frameSize')}
@@ -1524,6 +1614,7 @@ async function viewCamera(id) {
   ${used || FRESH_ID === cam.id ? '' : `<button class="btn danger wide" id="delCam">Kamera löschen</button>`}`;
   const sync = async () => {
     view.querySelector('#mfBox').hidden = cam.format !== '120';
+    view.querySelector('#brokenBox').hidden = !cam.broken;
     if (!cam.photoId && !SEED_IMG[cam.id]) view.querySelector('#camArt').innerHTML = ART.camera(cam, 150);
     setHeader(camLabel(cam), {});
   };

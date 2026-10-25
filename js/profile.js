@@ -8,8 +8,12 @@ function genitive(name) {
   return /(s|ß|x|z|ce)$/i.test(n) ? n + '’' : n + 's';
 }
 
+// Der Nutzername steht immer mit @ davor. Gespeichert wird er ohne @.
+const atName = n => '@' + String(n || '').replace(/^@+/, '');
+function stripAt(inp) { if (/^@/.test(inp.value)) { const p = inp.selectionStart; inp.value = inp.value.replace(/^@+/, ''); try { inp.setSelectionRange(Math.max(0, p - 1), Math.max(0, p - 1)); } catch (_) {} } }
+
 function initials(name) {
-  return String(name || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
+  return String(name || '?').replace(/^@+/, '').trim().split(/\s+/).slice(0, 2).map(w => w[0] || '').join('').toUpperCase() || '?';
 }
 
 // Rundes Nutzerbild. Ohne eigenes Bild: Initialen auf einem Prisma-Verlauf.
@@ -31,7 +35,7 @@ async function avatarHtml(size = 96, profile = PROFILE) {
 async function profileHero() {
   return `<a class="profilehead homehead" href="#/profil" aria-label="Profil">
     <span class="heroav big">${await avatarHtml(120)}</span>
-    <span class="pname">${U.esc(PROFILE?.name || '')}</span>
+    <span class="pname">${U.esc(atName(PROFILE?.name))}</span>
   </a>`;
 }
 
@@ -41,11 +45,10 @@ async function viewWelcome() {
   let avatarFile = null;
   view.innerHTML = `
     <div class="welcome">
-      <div class="welcomeav" id="wAv">${await avatarHtml(132, { name: '' })}</div>
-      <label class="btn ghost small">Profilbild wählen<input type="file" accept="image/*" hidden id="wPic"></label>
+      <label class="welcomeav" aria-label="Profilbild wählen"><span id="wAv">${await avatarHtml(132, { name: '' })}</span><span class="avedit">Bild wählen</span><input type="file" accept="image/*" hidden id="wPic"></label>
       <div class="langpick" id="wLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <h1 class="welcometitle">Willkommen</h1>
-      <input id="wName" autocomplete="nickname" maxlength="40" aria-label="Dein Name">
+      <label class="atname"><span class="at" aria-hidden="true">@</span><input id="wName" autocomplete="nickname" maxlength="40" aria-label="Dein Nutzername" autocapitalize="none" spellcheck="false"></label>
       <button class="btn wide accent" id="wGo" disabled>Los geht’s</button>
     </div>`;
   const nameIn = view.querySelector('#wName');
@@ -61,10 +64,10 @@ async function viewWelcome() {
       view.querySelector('#wAv').innerHTML = `<img class="avimg" src="${u}" alt="" style="width:132px;height:132px">`;
     } else view.querySelector('#wAv').innerHTML = await avatarHtml(132, { name: nameIn.value });
   };
-  nameIn.addEventListener('input', () => { view.querySelector('#wGo').disabled = !nameIn.value.trim(); if (!avatarFile) refreshAv(); });
+  nameIn.addEventListener('input', () => { stripAt(nameIn); view.querySelector('#wGo').disabled = !nameIn.value.trim(); if (!avatarFile) refreshAv(); });
   view.querySelector('#wPic').addEventListener('change', e => { avatarFile = e.target.files[0] || null; refreshAv(); });
   view.querySelector('#wGo').addEventListener('click', async () => {
-    const p = { id: 'profile', name: nameIn.value.trim(), createdAt: new Date().toISOString() };
+    const p = { id: 'profile', name: nameIn.value.replace(/^@+/, '').trim(), createdAt: new Date().toISOString() };
     if (avatarFile) p.avatarId = (await U.storeImage(avatarFile, 'avatar')).id;
     await DB.put('meta', p);
     PROFILE = p;
@@ -267,7 +270,7 @@ async function viewProfile() {
       <button class="gearbtn" id="openSettings" aria-label="Einstellungen">${ART.menu}</button>
       <button class="heroav big" id="pAv" aria-label="Profilbild ändern">${await avatarHtml(120)}<span class="avedit">Bild ändern</span></button>
       <input type="file" accept="image/*" hidden id="pPic">
-      <input class="pname" id="pName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40">
+      <label class="atname pname"><span class="at" aria-hidden="true">@</span><input id="pName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false"></label>
     </div>
 
     <a class="tile photostile" href="#/alle-fotos">
@@ -291,6 +294,8 @@ async function viewProfile() {
 
     ${await cabinetHtml(true)}
 
+    ${await diaryFoldHtml()}
+
     <section class="spend fold${foldOpen('spend') ? ' open' : ''}" data-fold="spend">
       <div class="fridgetop foldhead">
         <span class="fridgeicon spendicon">€</span>
@@ -309,8 +314,11 @@ async function viewProfile() {
       </div>
     </section>`;
   const nameIn = view.querySelector('#pName');
+  const fit = () => { nameIn.size = Math.max(2, nameIn.value.length + 1); };
+  fit();
   let t;
   nameIn.addEventListener('input', () => {
+    stripAt(nameIn); fit();
     clearTimeout(t);
     t = setTimeout(async () => {
       if (!nameIn.value.trim()) return;
@@ -350,6 +358,7 @@ async function viewProfile() {
     openFridgeModal(await DB.get('fridge', b.dataset.entry));
   });
   setupCabinet(view);
+  setupDiaryFold(view);
   setupFolds(view);
   view.querySelector('#spendReset')?.addEventListener('click', () => {
     const ov = document.createElement('div');
@@ -392,7 +401,6 @@ function openSettings() {
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
       <div class="list profilelinks" style="margin:16px 0 0">
-        <a class="item" href="#/tagebuch"><span class="setlink">${ART.album}Filmtagebuch</span><span class="chev">›</span></a>
         <a class="item" href="#/filme"><span class="setlink">${ART.filmIc}Alle Filme und Infos</span><span class="chev">›</span></a>
         <a class="item" href="#/rechner"><span class="setlink">${ART.moon}Belichtungsrechner für Nachtaufnahmen</span><span class="chev">›</span></a>
         <a class="item" href="#/mehr"><span class="setlink">${ART.save}Sicherung und Speicher</span><span class="chev">›</span></a>
@@ -400,6 +408,8 @@ function openSettings() {
       <div class="sethead">${ART.x}<span>Reset/Test</span></div>
       <p class="hint" style="margin:0 0 8px">Löscht alle hochgeladenen Fotos, deinen Namen und dein Profilbild. Rollen, Filme, Kameras und Preise bleiben.</p>
       <button type="button" class="btn danger small" id="resetAll">Fotos, Name und Profilbild löschen</button>
+      <p class="hint" style="margin:14px 0 8px">Neue Nutzerinnen starten mit leerem Kameraschrank. Für Tests lassen sich die Beispielkameras und -objektive laden.</p>
+      <button type="button" class="btn ghost small" id="seedGear">Beispielausrüstung laden</button>
       <div class="modalfoot"><button class="closex" id="setClose" aria-label="Schließen">${ART.x}</button><span></span></div>
     </div>`;
   document.body.appendChild(ov);
@@ -429,6 +439,11 @@ function openSettings() {
     cf.querySelector('#raNo').addEventListener('click', () => cf.remove());
     cf.addEventListener('click', e => { if (e.target === cf) cf.remove(); });
     cf.querySelector('#raYes').addEventListener('click', async () => { await resetPhotosAndProfile(); cf.remove(); ov.remove(); });
+  });
+  ov.querySelector('#seedGear').addEventListener('click', async () => {
+    const n = await loadSeedGear();
+    U.toast(n ? 'Beispielausrüstung geladen' : 'Beispielausrüstung ist schon da');
+    if (n && location.hash.startsWith('#/profil')) { ov.remove(); route(); }
   });
   const close = () => ov.remove();
   ov.querySelector('#setClose').addEventListener('click', close);

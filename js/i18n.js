@@ -562,6 +562,44 @@ Einführung überspringen	Skip introduction
 {0} Kamera · {1} Objektive	{0} camera · {1} lenses
 {0} Kameras · {1} Objektiv	{0} cameras · {1} lens
 {0} Kameras · {1} Objektive	{0} cameras · {1} lenses
+Bild wählen	Choose picture
+Dein Nutzername	Your username
+Trag Hersteller und Modell deiner Kamera ein.	Enter the make and model of your camera.
+Tippe auf den Haken, um die Kamera zu speichern.	Tap the tick to save the camera.
+Öffne deine neue Kamera und trag Hersteller und Modell ein.	Open your new camera and enter its make and model.
+Öffne den Kameraschrank und tippe deine neue Kamera an.	Open the camera cabinet and tap your new camera.
+Zurück zum Profil, dort steht deine neue Kamera.	Back to the profile, your new camera is there.
+Neue Nutzerinnen starten mit leerem Kameraschrank. Für Tests lassen sich die Beispielkameras und -objektive laden.	New users start with an empty camera cabinet. For testing you can load the sample cameras and lenses.
+Beispielausrüstung laden	Load sample gear
+Beispielausrüstung geladen	Sample gear loaded
+Beispielausrüstung ist schon da	Sample gear is already there
+Diese Kamera hat seit {0} {1} Lightleaks produziert.	This camera has produced {1} light leaks since {0}.
+Diese Kamera hat seit {0} {1} Lightleak produziert.	This camera has produced {1} light leak since {0}.
+Mit dieser Kamera wurde noch kein Film eingelegt.	No film has been loaded in this camera yet.
+{0} Lightleaks	{0} light leaks
+{0} Lightleak	{0} light leak
+Kaputt	Broken
+kaputt	broken
+Noch keine Kamera. Lege mit dem Plus deine erste an.	No camera yet. Add your first one with the plus.
+Kamera ist kaputt	Camera is broken
+Was ist kaputt?	What is broken?
+Kaputte Kameras erscheinen nicht bei „Film einlegen“.	Broken cameras don't appear under “Load film”.
+{0} (kaputt)	{0} (broken)
+Welche Bilder haben Lightleaks?	Which frames have light leaks?
+{0} hat Lightleaks. Tippe die Scans an, auf denen wirklich Licht eingefallen ist.	{0} has light leaks. Tap the scans where light actually leaked in.
+Später	Later
+{0} Bilder mit Lightleak	{0} frames with a light leak
+{0} Bild mit Lightleak	{0} frame with a light leak
+Kein Bild markiert	No frame marked
+{0} Lightleaks vermerkt	{0} light leaks noted
+{0} Lightleak vermerkt	{0} light leak noted
+Keine Lightleaks vermerkt	No light leaks noted
+Lightleaks ändern	Edit light leaks
+Lightleaks markieren	Mark light leaks
+Lightleak	Light leak
+Wie verhält sich ein Film bei dir? Notizen und Beispielfotos nach Lichtsituation.	How does a film behave for you? Notes and sample photos by lighting situation.
+Lege mit dem Plus den ersten Film an.	Add your first film with the plus.
+Film selbst entwickeln: Ablauf mit Chemie, Zeiten und Temperaturen.	Developing film yourself: workflow with chemistry, times and temperatures.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

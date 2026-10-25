@@ -30,8 +30,7 @@ async function boot() {
     }
     const existing = new Set((await DB.all('stocks')).map(s => s.id));
     await DB.putMany('stocks', SEED_STOCKS.filter(s => !existing.has(s.id)));
-    const camIds = new Set((await DB.all('cameras')).map(c => c.id));
-    await DB.putMany('cameras', SEED_CAMERAS.filter(c => !camIds.has(c.id)));
+    // Neue Nutzerinnen starten mit leerem Kameraschrank. Die Beispielausrüstung lässt sich unter Reset/Test laden.
     for (const c of await DB.all('cameras')) {
       const seed = SEED_CAMERAS.find(x => x.id === c.id);
       if (seed && !c.mount) { c.mount = seed.mount; await DB.put('cameras', c); }
@@ -63,8 +62,8 @@ async function boot() {
     // Doppelbelichtung war bisher bei jeder Kamera möglich: Häkchen setzen, damit sich nichts ändert
     if (!meta || meta.v < 16) for (const c of await DB.all('cameras')) if (c.multiExp === undefined) { c.multiExp = true; await DB.put('cameras', c); }
     const lensIds = new Set((await DB.all('lenses')).map(l => l.id));
-    if (!meta || meta.v < 6) await DB.putMany('lenses', SEED_LENSES.filter(l => !lensIds.has(l.id)));
-    else if (meta.v < 14) await DB.putMany('lenses', SEED_LENSES.filter(l => l.id === 'lens-olivesan-22' && !lensIds.has(l.id)));
+    if (meta && meta.v < 6) await DB.putMany('lenses', SEED_LENSES.filter(l => !lensIds.has(l.id)));
+    else if (meta && meta.v < 14) await DB.putMany('lenses', SEED_LENSES.filter(l => l.id === 'lens-olivesan-22' && !lensIds.has(l.id)));
     await DB.put('meta', { id: 'seed', v: SEED_VERSION });
   }
   if (navigator.storage && navigator.storage.persist) {
@@ -78,6 +77,18 @@ async function boot() {
   // Fehler sichtbar machen statt still zu scheitern, z. B. wenn ein Bild nicht gespeichert werden kann
   window.addEventListener('unhandledrejection', e => U.toast('Fehler: ' + (e.reason?.message || e.reason)));
   route();
+}
+
+// Beispielausrüstung (die Kameras und Objektive der Entwicklerin) für Tests laden. Vorhandene Einträge bleiben unverändert.
+const SEED_ISO_DIAL = { 'cam-nikon-f3': true, 'cam-minolta-xg1': true, 'cam-praktica-l2': false, 'cam-hasselblad-500cm': false, 'cam-superheadz-olivesan': false };
+async function loadSeedGear() {
+  const camIds = new Set((await DB.all('cameras')).map(c => c.id));
+  const lensIds = new Set((await DB.all('lenses')).map(l => l.id));
+  const cams = SEED_CAMERAS.filter(c => !camIds.has(c.id)).map(c => ({ ...JSON.parse(JSON.stringify(c)), isoDial: SEED_ISO_DIAL[c.id] ?? false, multiExp: true }));
+  const lenses = SEED_LENSES.filter(l => !lensIds.has(l.id)).map(l => JSON.parse(JSON.stringify(l)));
+  await DB.putMany('cameras', cams);
+  await DB.putMany('lenses', lenses);
+  return cams.length + lenses.length;
 }
 
 // Kopfzeile: links immer die Startseite (Kreis mit App-Symbol), rechts immer das Profil
@@ -634,6 +645,7 @@ async function viewMore() {
   <div class="card">
     <h3 class="sub">Geplant</h3>
     <p>Belichtungsmesser mit Vorschau verschiedener Einstellungen.</p>
+    <p>Film selbst entwickeln: Ablauf mit Chemie, Zeiten und Temperaturen.</p>
   </div>
   <div class="card">
     <h3 class="sub">Alles löschen</h3>

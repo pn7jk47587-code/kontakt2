@@ -1,5 +1,5 @@
 // Offline-Cache für die App-Dateien. Nutzerdaten liegen in IndexedDB, nicht hier.
-const VERSION = 'kb-v74';
+const VERSION = 'kb-v75';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
   'js/theme.js', 'js/i18n.js', 'js/db.js', 'js/seed.js', 'js/util.js', 'js/art.js', 'js/app.js', 'js/rolls.js', 'js/profile.js', 'js/diary.js', 'js/tour.js', 'js/beam.js', 'burn.png',
