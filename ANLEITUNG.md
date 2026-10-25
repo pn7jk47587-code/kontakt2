@@ -78,8 +78,14 @@ Filmbibliothek mit Box Speed, Feldern für Community-ISO samt Quelle, eigener IS
 | Harman Phoenix 125, Red 125, Switch Azure 125 | keine Werte gefunden | PetaPixel 8/2026, Kosmo Foto 6/2025 und 3/2026 |
 | ORWO Wolfen NC500 | keine Werte gefunden | Kosmo Foto (ISO 500, C-41 laut ORWO) |
 | AgfaPhoto APX 100, APX 200 Pro, APX 400, Color 400 | keine Werte gefunden | AgfaPhoto, Fotoimpex, Parallax Photographic |
+| Kodak T-Max 400 | bis 1 s keine Korrektur, 10 s +⅓ Blende, 100 s → 300 s | Kodak F-4043 (2007) |
+| Kodak T-Max P3200 | bis 1 s keine Korrektur, darüber keine Herstellerwerte | Kodak Alaris F-4001 (2018) |
+| Ilford Ortho Plus 80 | Tc = Tm^1,25 | Harman, Ortho Plus Datenblatt, Okt. 2019 |
+| Kodak Ektachrome E100, ColorPlus 200, Pro Image 100, Kodacolor 100 und 200, Ektacolor Pro 160/400/800, Ektapan 100/400/P3200, Ilford Pan 100 und 400, Ilfocolor Vintage Tone 400, Ilfocolor Cine Tone 400, Ilfochrome 100 | keine Werte gefunden | Kodak, Fachpresse 2026, Ilfocolor-Seite, Händler |
 
 Zwischenwerte der Kodak-Tabellen rechnet die App logarithmisch. Das ist eine Näherung, keine Herstellerangabe. Für Portra 160, Ektar 100, Gold 200 und UltraMax 400 sind keine Korrekturwerte hinterlegt. Community-ISO-Werte sind bewusst leer, weil es dafür keine verlässliche Einzelquelle gibt.
+
+Seit dem 25.10.2026 enthält die Filmliste zusätzlich alle aktuell erhältlichen Kodak-, Ilford- und Lomography-Filme, die vorher fehlten. Kodak verkauft seit 2026 unter zwei Marken. Die alten Namen von Kodak Alaris (Portra, T-Max, ColorPlus, Pro Image) und die neuen von Eastman Kodak (Ektacolor Pro, Ektapan, Kodacolor) stehen deshalb beide in der Liste. Bei den neuen Namen steht im Film, für welchen alten Film die Fachpresse ihn hält. Bestätigt hat Kodak das nicht, deshalb sind keine Schwarzschild-Werte übernommen. Ilfocolor Cine Tone 400 läuft im Prozess ECN-2, nicht C-41. Nur als Planfilm erhältliche Filme wie Kodak Tri-X 320 fehlen, weil die App nur Kleinbild, Mittelformat und 110 kennt. Bei UltraMax 400 ist jetzt nur Kleinbild hinterlegt, bei LomoChrome Purple, Turquoise, Metropolis, Color '92 Sun-Kissed und Classicolor zusätzlich 110. Von Harman waren schon alle Filme in der Liste.
 
 Belichtungsrechner für Nachtaufnahmen (drei Striche im Profil, Mondsymbol): Film über die Lupe suchen oder aus der Liste wählen, die App zeigt die Herstellerangabe des Films mit Quelle. Gemessene Zeit antippen (1 s bis 8 min) oder frei eingeben, darunter steht die korrigierte Belichtungszeit, wie viele Blenden das mehr sind und eine Tabelle für alle gängigen Zeiten. Gerechnet wird mit der Formel des jeweiligen Films (Potenzformel Tc = Tm^p oder Herstellertabelle mit logarithmischen Zwischenwerten). Hat ein Film keine Angabe, sagt die App das, statt zu raten.
 

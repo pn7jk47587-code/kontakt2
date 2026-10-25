@@ -295,6 +295,67 @@ SEED_STOCKS.push(
 ['harman-phoenix125', 'harman-red125', 'harman-switch-azure', 'orwo-wolfen-nc500', 'agfa-apx100', 'agfa-apx200', 'agfa-apx400', 'agfa-color400']
   .forEach(id => { SEED_FORMATS[id] = SEED_STOCKS.find(s => s.id === id).formats; });
 
+// Ergänzung 25.10.2026: fehlende Filme von Kodak, Ilford und Lomography (Quellen je Film in makerNote/datasheet)
+const SRC_TMAX400 = SRC('Kodak, F-4043 T-MAX 400, Okt. 2007', 'https://www.freestylephoto.com/pdf/product_pdfs/kodak/Kodak_Tmax400.pdf');
+const SRC_P3200 = SRC('Kodak Alaris, F-4001 T-MAX P3200, März 2018', 'https://www.macodirect.de/media/pdf/a3/fa/19/KTM3211_Datenblatt_e.pdf');
+const SRC_ORTHO = SRC('Harman, ILFORD ORTHO Plus Datenblatt, Okt. 2019', 'https://www.ilfordphoto.com/amfile/file/download/file/1948/product/698');
+const EK_EU = 'https://camerajabber.com/photography-news/eastman-kodaks-new-still-film-range-is-now-on-sale-in-europe/';
+const EK_NAMES = 'https://obscura.hu/blogs/news/kodak-film-has-new-packaging';
+const EK_SHEET = 'https://petapixel.com/2026/08/14/eastman-kodak-goes-big-and-shows-film-some-more-love/';
+const RENAMED = (old) => `Eastman-Kodak-Bezeichnung seit 2026. Die Fachpresse hält ihn für ${old}, Kodak hat das nicht bestätigt. Deshalb sind keine Werte von ${old} übernommen.`;
+const seedStock = (id, maker, name, type, process, iso, formats, extra = {}) => Object.assign(
+  { id, maker, name, type, process, boxIso: iso, formats, reciprocity: { model: 'unknown' }, builtin: true }, extra);
+SEED_STOCKS.push(
+  seedStock('kodak-tmax400', 'Kodak', 'T-Max 400', 'sw', 'SW', 400, ['135', '120'], {
+    reciprocity: { model: 'table', points: [[0.1, 0.1], [1, 1], [10, 12.6], [100, 300]], source: SRC_TMAX400 },
+    nightNotes: 'Datenblatt: bis 1 s keine Korrektur, 10 s +⅓ Blende (als Zeit umgerechnet ≈12,6 s), 100 s → 300 s.', datasheet: SRC_TMAX400.url }),
+  seedStock('kodak-tmaxp3200', 'Kodak', 'T-Max P3200', 'sw', 'SW', 3200, ['135'], {
+    isoLabel: '800–6400',
+    reciprocity: { model: 'none', upTo: 1, source: SRC_P3200 },
+    makerNote: 'Kodak: Nennempfindlichkeit EI 800 bis 1000, gute Negative bei EI 1600, EI 3200 und 6400 mit mehr Kontrast und Korn. Die Patrone ist DX-codiert auf 3200.',
+    nightNotes: 'Datenblatt: bis 1 s keine Korrektur, für längere Zeiten keine Werte.', datasheet: SRC_P3200.url }),
+  seedStock('kodak-e100', 'Kodak', 'Ektachrome E100', 'dia', 'E-6', 100, ['135', '120'], {
+    makerNote: 'Diafilm, auch als Planfilm 4×5 erhältlich. Schwarzschild-Werte aus einem aktuellen Kodak-Datenblatt habe ich nicht gefunden.',
+    datasheet: 'https://petapixel.com/2019/12/10/kodak-ektachrome-e100-film-is-now-available-in-120-and-4x5-formats' }),
+  seedStock('kodak-colorplus200', 'Kodak', 'ColorPlus 200', 'farbneg', 'C-41', 200, ['135'], {
+    makerNote: 'Kodak-Alaris-Verpackung. Eastman Kodak verkauft vermutlich denselben Film als Kodacolor 200.', datasheet: EK_NAMES }),
+  seedStock('kodak-proimage100', 'Kodak', 'Pro Image 100', 'farbneg', 'C-41', 100, ['135'], {
+    makerNote: 'Kodak-Alaris-Verpackung. Eastman Kodak verkauft vermutlich denselben Film als Kodacolor 100.', datasheet: EK_NAMES }),
+  seedStock('kodak-kodacolor100', 'Kodak', 'Kodacolor 100', 'farbneg', 'C-41', 100, ['135'], { makerNote: RENAMED('Pro Image 100'), datasheet: EK_NAMES }),
+  seedStock('kodak-kodacolor200', 'Kodak', 'Kodacolor 200', 'farbneg', 'C-41', 200, ['135'], { makerNote: RENAMED('ColorPlus 200'), datasheet: EK_NAMES }),
+  seedStock('kodak-ektacolor160', 'Kodak', 'Ektacolor Pro 160', 'farbneg', 'C-41', 160, ['135', '120'], { makerNote: RENAMED('Portra 160') + ' Auch als Planfilm 4×5 und 8×10.', datasheet: EK_SHEET }),
+  seedStock('kodak-ektacolor400', 'Kodak', 'Ektacolor Pro 400', 'farbneg', 'C-41', 400, ['135', '120'], { makerNote: RENAMED('Portra 400') + ' Auch als Planfilm 4×5 und 8×10.', datasheet: EK_SHEET }),
+  seedStock('kodak-ektacolor800', 'Kodak', 'Ektacolor Pro 800', 'farbneg', 'C-41', 800, ['135', '120'], { makerNote: RENAMED('Portra 800'), datasheet: EK_EU }),
+  seedStock('kodak-ektapan100', 'Kodak', 'Ektapan 100', 'sw', 'SW', 100, ['135', '120'], { makerNote: RENAMED('T-Max 100') + ' Auch als Planfilm 4×5 und 100-ft-Rolle.', datasheet: EK_SHEET }),
+  seedStock('kodak-ektapan400', 'Kodak', 'Ektapan 400', 'sw', 'SW', 400, ['135', '120'], { makerNote: RENAMED('T-Max 400') + ' Auch als Planfilm 4×5 und 100-ft-Rolle.', datasheet: EK_SHEET }),
+  seedStock('kodak-ektapanp3200', 'Kodak', 'Ektapan P3200', 'sw', 'SW', 3200, ['135'], { makerNote: RENAMED('T-Max P3200') + ' Für Push-Entwicklung gedacht.', datasheet: EK_NAMES }),
+  seedStock('ilford-orthoplus', 'Ilford', 'Ortho Plus 80', 'sw', 'SW', 80, ['135', '120'], {
+    reciprocity: { model: 'power', p: 1.25, threshold: 1, source: SRC_ORTHO },
+    makerNote: 'Orthochromatisch, also unempfindlich für Rot. Tageslicht ISO 80, Kunstlicht ISO 40. Die Patrone ist DX-codiert auf 80, bei Kunstlicht deshalb ISO 40 von Hand einstellen. Auch als Planfilm.',
+    nightNotes: 'Datenblatt: bis 1 s keine Korrektur, darüber Ta = Tm^1,25.', datasheet: SRC_ORTHO.url }),
+  seedStock('ilford-pan100', 'Ilford', 'Pan 100', 'sw', 'SW', 100, ['135'], {
+    makerNote: 'Günstiger SW-Film, laut Ilford nur für ausgewählte Märkte, in Europa bei einigen Händlern. Datenblatt mit Schwarzschild-Werten habe ich nicht gefunden.',
+    datasheet: 'https://www.photrio.com/forum/threads/ilford-pan-100.110960' }),
+  seedStock('ilford-pan400', 'Ilford', 'Pan 400', 'sw', 'SW', 400, ['135'], {
+    makerNote: 'Günstiger SW-Film, laut Ilford nur für ausgewählte Märkte, in Europa bei einigen Händlern. Datenblatt mit Schwarzschild-Werten habe ich nicht gefunden.',
+    datasheet: 'https://www.photrio.com/forum/threads/ilford-pan-100.110960' }),
+  seedStock('ilford-vintagetone400', 'Ilford', 'Ilfocolor Vintage Tone 400', 'farbneg', 'C-41', 400, ['135'], {
+    makerNote: 'Farbnegativfilm mit warmem Vintage-Look, Kleinbild.', datasheet: 'https://ilfocolor.com/?p=405' }),
+  seedStock('ilford-cinetone400', 'Ilford', 'Ilfocolor Cine Tone 400', 'farbneg', 'ECN-2', 400, ['135'], {
+    makerNote: 'Kinofilm für den ECN-2-Prozess, nicht C-41. Vor dem Abgeben beim Labor fragen, ob es ECN-2 entwickelt.', datasheet: 'https://macodirect.de/en/film/color-negative-films/6815/ilford-ilfocolor-400-cine-tone-35mm-24-exposures-ecn2-cinefilm' }),
+  seedStock('ilford-ilfochrome100', 'Ilford', 'Ilfochrome 100', 'dia', 'E-6', 100, ['135'], {
+    makerNote: 'Diafilm für E-6, Kleinbild. Einzelne Händler führen ihn als nicht mehr lieferbar.', datasheet: 'https://ilfocolor.com/?p=405' })
+);
+// Bekannte Formate für schon vorhandene Filme. Ultramax gibt es nur als Kleinbild, LomoChrome-Filme zusätzlich als 110.
+Object.assign(SEED_FORMATS, {
+  'kodak-trix': ['135', '120'], 'kodak-tmax100': ['135', '120'], 'kodak-portra160': ['135', '120'], 'kodak-portra400': ['135', '120'],
+  'kodak-ektar100': ['135', '120'], 'kodak-gold200': ['135', '120'], 'kodak-ultramax400': ['135'],
+  'ilford-delta3200': ['135', '120'], 'ilford-sfx200': ['135', '120'], 'ilford-xp2': ['135', '120'],
+  'lomo-purple': ['135', '120', '110'], 'lomo-turquoise': ['135', '120', '110'], 'lomo-metropolis': ['135', '120', '110'],
+  'lomo-color92-sun': ['135', '120', '110'], 'lomo-classicolor200': ['135', '120', '110']
+});
+SEED_STOCKS.forEach(s => { if (SEED_FORMATS[s.id]) s.formats = SEED_FORMATS[s.id]; });
+
 // Verschlusszeiten der Kameras und Blendenbereiche der Objektive (Quellen in der Anleitung)
 const SEED_SHUTTERS = {
   'cam-nikon-f3': { shutterFast: '1/2000', shutterSlow: '8', shutterB: true, shutterT: true, shutterAuto: true },
