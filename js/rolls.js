@@ -310,7 +310,7 @@ const NEXT_BTN = (id, label, disabled) => `<button class="nextarrow" id="${id}" 
 async function wizardStep1(wiz, root = view) {
   if (root === view) setHeader('Film einlegen');
   const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
-  const cams = (await DB.all('cameras')).filter(c => !c.broken).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
+  const cams = gearSort((await DB.all('cameras')).filter(c => !c.broken), camSortFb);
   if (wiz.cameraId && !cams.some(c => c.id === wiz.cameraId)) wiz.cameraId = null;
   wiz.format = wiz.format || '135';
   const camCards = await Promise.all(cams.map(async c => `
@@ -964,7 +964,8 @@ async function viewFrame(idWithQuery) {
   const scanUrl = frame.imgId ? await U.imgUrl(frame.imgId) : null;
   const phoneUrl = frame.phoneId ? await U.imgUrl(frame.phoneId) : null;
   const phoneUrl2 = frame.double && frame.phoneId2 ? await U.imgUrl(frame.phoneId2) : null;
-  const camLenses = roll?.cameraId ? (await DB.all('lenses')).filter(l => (l.cameraIds || []).includes(roll.cameraId)).sort((a, b) => parseFloat(a.focal) - parseFloat(b.focal)) : [];
+  const camLenses = roll?.cameraId ? (await DB.all('lenses')).filter(l => (l.cameraIds || []).includes(roll.cameraId)) : [];
+  gearSort(camLenses, (a, b) => parseFloat(a.focal) - parseFloat(b.focal));
   const ap = String(frame.aperture || '').replace(/^f\//, '');
   const sh = String(frame.shutter || '');
   const cam = roll?.cameraId ? await DB.get('cameras', roll.cameraId) : null;
@@ -1432,16 +1433,21 @@ const leakSentence = st => st.since
   ? `Diese Kamera hat seit ${U.fmtDate(st.since)} ${st.n} ${st.n === 1 ? 'Lightleak' : 'Lightleaks'} produziert.`
   : 'Mit dieser Kamera wurde noch kein Film eingelegt.';
 
+// Reihenfolge aus dem Kameraschrank (per Ziehen festgelegt). Einträge ohne Platz kommen ans Ende.
+const camSortFb = (a, b) => camLabel(a).localeCompare(camLabel(b));
+const lensSortFb = (a, b) => (a.mount || '').localeCompare(b.mount || '') || parseFloat(a.focal) - parseFloat(b.focal);
+function gearSort(list, fb) { return list.sort((a, b) => (a.order ?? 1e6) - (b.order ?? 1e6) || fb(a, b)); }
+
 async function cabinetHtml(fold = false) {
-  const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
-  const lenses = (await DB.all('lenses')).sort((a, b) => (a.mount || '').localeCompare(b.mount || '') || parseFloat(a.focal) - parseFloat(b.focal));
+  const cams = gearSort(await DB.all('cameras'), camSortFb);
+  const lenses = gearSort(await DB.all('lenses'), lensSortFb);
   const [rolls, frames] = [await DB.all('rolls'), await DB.all('frames')];
   let fresh = null;
   try { fresh = sessionStorage.getItem('kb-newgear'); sessionStorage.removeItem('kb-newgear'); } catch (_) {}
   const camRow = async c => {
     const own = lenses.filter(l => (l.cameraIds || []).includes(c.id));
     const lk = c.lightLeaks ? await leakStats(c.id, rolls, frames) : null;
-    return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}" href="#/kamera/${c.id}">
+    return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}" href="#/kamera/${c.id}" data-id="${c.id}">
       <span class="crowart">${await camArt(c, 76)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(camLabel(c))}</span>
@@ -1457,7 +1463,7 @@ async function cabinetHtml(fold = false) {
   const brokenRows = await Promise.all(broken.map(camRow));
   const lensRows = lenses.map(l => {
     const names = (l.cameraIds || []).map(id => cams.find(c => c.id === id)).filter(Boolean).map(camLabel);
-    return `<a class="crow${fresh === l.id ? ' fresh' : ''}" href="#/objektiv/${l.id}">
+    return `<a class="crow${fresh === l.id ? ' fresh' : ''}" href="#/objektiv/${l.id}" data-id="${l.id}">
       <span class="crowart lensart">${ART.lens(l, 60)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(lensLabel(l))}</span>
@@ -1480,9 +1486,9 @@ async function cabinetHtml(fold = false) {
         ${fold ? '<span class="foldchev" aria-hidden="true"></span>' : ''}
       </div>
       <div class="foldbody">
-      ${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
-        ${brokenRows.length ? `<div class="brokenhead">Kaputt</div><div class="flist">${brokenRows.join('')}</div>` : ''}`, freshCam || foldOpen('cab-cams'))}
-      ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>`, freshLens || foldOpen('cab-lenses'))}
+      ${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist" data-sort="cameras">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
+        ${brokenRows.length ? `<div class="brokenhead">Kaputt</div><div class="flist" data-sort="cameras">${brokenRows.join('')}</div>` : ''}`, freshCam || foldOpen('cab-cams'))}
+      ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>`, freshLens || foldOpen('cab-lenses'))}
       </div>
     </section>`;
 }
@@ -1496,6 +1502,7 @@ function setupCabinet(root) {
   }));
   const f = root.querySelector('.crow.fresh');
   if (f) { setTimeout(() => f.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); }
+  root.querySelectorAll('.flist[data-sort]').forEach(setupGearDrag);
 }
 async function viewCameras() {
   setHeader('Kameraschrank');
@@ -1503,8 +1510,76 @@ async function viewCameras() {
   setupCabinet(view);
 }
 
+// Reihenfolge ändern: Eintrag lange gedrückt halten, bis er sich anhebt, dann an die neue Stelle ziehen.
+let GEAR_DRAG = false;
+document.addEventListener('touchmove', e => { if (GEAR_DRAG) e.preventDefault(); }, { passive: false });
+function setupGearDrag(list) {
+  const HOLD = 380;
+  let timer = null, row = null, rows = [], rects = [], startY = 0, startX = 0, from = 0, to = 0, step = 0, active = false, suppress = false;
+  const reset = () => { clearTimeout(timer); timer = null; };
+  list.addEventListener('dragstart', e => e.preventDefault());
+  list.addEventListener('contextmenu', e => { if (timer || active || suppress) e.preventDefault(); });
+  list.addEventListener('click', e => { if (suppress) { e.preventDefault(); e.stopPropagation(); } }, true);
+  list.addEventListener('pointerdown', e => {
+    const r = e.target.closest('.crow');
+    if (!r || !list.contains(r) || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    rows = [...list.querySelectorAll(':scope > .crow')];
+    if (rows.length < 2) return;
+    row = r; startY = e.clientY; startX = e.clientX;
+    const pid = e.pointerId;
+    timer = setTimeout(() => {
+      timer = null; active = true; GEAR_DRAG = true; suppress = true;
+      from = to = rows.indexOf(row);
+      rects = rows.map(x => x.getBoundingClientRect());
+      const gap = rects[1].top - rects[0].bottom;
+      step = rects[from].height + gap;
+      list.classList.add('sorting'); row.classList.add('lifted');
+      row.style.transform = 'scale(1.03)';
+      try { row.setPointerCapture(pid); } catch (_) {}
+      U.haptic();
+    }, HOLD);
+  });
+  list.addEventListener('pointermove', e => {
+    if (!row) return;
+    if (timer && (Math.abs(e.clientY - startY) > 8 || Math.abs(e.clientX - startX) > 8)) { reset(); row = null; return; }
+    if (!active) return;
+    const dy = e.clientY - startY;
+    row.style.transform = `translateY(${dy}px) scale(1.03)`;
+    const mid = rects[from].top + rects[from].height / 2 + dy;
+    let next = 0;
+    rects.forEach((r, i) => { if (i !== from && r.top + r.height / 2 < mid) next++; });
+    if (next !== to) { to = next; U.haptic(8); }
+    rows.forEach((x, i) => {
+      if (x === row) return;
+      let shift = 0;
+      if (from < to && i > from && i <= to) shift = -step;
+      if (from > to && i < from && i >= to) shift = step;
+      x.style.transform = shift ? `translateY(${shift}px)` : '';
+    });
+  });
+  const end = async () => {
+    reset();
+    if (!active) { row = null; return; }
+    active = false; GEAR_DRAG = false;
+    rows.forEach(x => { x.style.transform = ''; });
+    row.classList.remove('lifted'); list.classList.remove('sorting');
+    if (to !== from) {
+      const moved = rows.splice(from, 1)[0]; rows.splice(to, 0, moved);
+      rows.forEach(x => list.appendChild(x));
+      const store = list.dataset.sort;
+      const lists = [...document.querySelectorAll(`.flist[data-sort="${store}"]`)];
+      const ids = lists.flatMap(l => [...l.querySelectorAll(':scope > .crow')].map(x => x.dataset.id));
+      for (let i = 0; i < ids.length; i++) { const it = await DB.get(store, ids[i]); if (it && it.order !== i) { it.order = i; await DB.put(store, it); } }
+    }
+    row = null;
+    setTimeout(() => { suppress = false; }, 400);
+  };
+  list.addEventListener('pointerup', end);
+  list.addEventListener('pointercancel', end);
+}
+
 async function viewLens(id) {
-  const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
+  const cams = gearSort(await DB.all('cameras'), camSortFb);
   if (id === 'neu') {
     const l = { id: U.uid(), maker: '', focal: '50', kind: 'normal', mount: 'Nikon F', cameraIds: [] };
     l.cameraIds = cams.filter(c => c.mount === l.mount).map(c => c.id);
@@ -1577,7 +1652,7 @@ async function viewCamera(id) {
   setHeader(camLabel(cam), {});
   gearDoneButton();
   const used = (await DB.all('rolls')).filter(r => r.cameraId === id).length;
-  const camLenses = (await DB.all('lenses')).filter(l => (l.cameraIds || []).includes(id)).sort((a, b) => parseFloat(a.focal) - parseFloat(b.focal));
+  const camLenses = gearSort((await DB.all('lenses')).filter(l => (l.cameraIds || []).includes(id)), (a, b) => parseFloat(a.focal) - parseFloat(b.focal));
   view.innerHTML = `
   <div class="artrow">
     <div class="artbox" id="camArt">${await camArt(cam, 150)}</div>

@@ -1324,3 +1324,8 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .diarytags .dtgrid { grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 8px; }
 .diarytags .dtgrid img { border-radius: 8px; }
 .diarytags .dtempty { margin: auto 0 0; font-size: 12px; }
+
+/* Kameraschrank sortieren: lange drücken, dann ziehen */
+.flist[data-sort] .crow { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: transform .18s ease; position: relative; }
+.flist.sorting .crow.lifted { transition: none; z-index: 5; box-shadow: 0 12px 30px rgba(29, 26, 38, .22); background: var(--card, #fff); }
+.flist.sorting .crow:not(.lifted) { opacity: .92; }
