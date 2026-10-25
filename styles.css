@@ -1202,3 +1202,22 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .filmselart { flex: 0 0 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
 .filmselart img, .filmselart svg { max-width: 40px; max-height: 40px; }
 .isohint { margin: -4px 0 12px; }
+
+/* Filmtagebuch */
+.diaryhead { display: flex; align-items: center; gap: 12px; margin: 12px 16px; }
+.diarytag { margin: 12px 16px; padding: 12px 14px; }
+.dthead { display: flex; align-items: center; justify-content: space-between; }
+.dthead h3 { margin: 0; font-size: 16px; }
+.dtadd { width: 36px !important; height: 36px !important; display: flex; align-items: center; justify-content: center; font-size: 22px; margin: 0; cursor: pointer; }
+.dtgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.dtgrid.small { grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px; }
+.dtgrid img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; display: block; cursor: zoom-in; }
+.dtph { position: relative; }
+.dtdel { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 16px; line-height: 1; cursor: pointer; }
+.dtempty { margin: 8px 0 0; }
+.diarycard { margin: 14px 16px; padding: 14px 16px; border-radius: 20px; border: 1.5px solid transparent; background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box; box-shadow: var(--glassshadow); }
+.diarycard h3 { margin: 0 0 8px; font-size: 16px; }
+.diarycard .dnotes { margin: 0 0 10px; white-space: normal; }
+.diarycard .dgroup { margin-bottom: 10px; }
+.diarycard .btn { margin-top: 4px; }
+.diaryrow { display: flex; align-items: center; gap: 12px; }

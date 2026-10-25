@@ -137,7 +137,7 @@ async function goUp() {
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
   const done = document.querySelector('.donebtn');
   if (done) { done.click(); return; }
-  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', profil: '#/' }[parts[0]];
+  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', tagebuch: '#/profil', profil: '#/' }[parts[0]];
   if (parts.length) location.hash = up || '#/';
 }
 
@@ -267,6 +267,7 @@ async function routeView() {
       case 'filme': return await viewStocks();
       case 'film': return await viewStock(parts[1]);
       case 'mehr': return await viewMore();
+      case 'tagebuch': return parts[1] ? await viewDiary(parts[1]) : await viewDiaryList();
       default: return await viewRolls();
     }
   } catch (e) {
@@ -562,6 +563,7 @@ async function viewStock(id) {
       ${field('Faktor p', 'reciprocity.p', { num: true })}` : ''}
     ${field('Datenblatt-Link', 'datasheet', { type: 'url' })}
   </div>
+  <a class="btn ghost wide" href="#/tagebuch/${stock.id}" style="margin:0 16px 12px;width:calc(100% - 32px)">Filmtagebuch zu diesem Film</a>
   <div class="card"><h3 class="sub">Rollen mit diesem Film</h3>${rolls.length ? rolls.map(x => `<a class="item" href="#/rolle/${x.id}"><span>${U.esc(x.title || U.fmtDate(x.loadedAt) || 'Rolle')}</span><span class="sub2">EI ${U.esc(x.ei || stock.boxIso || '?')}</span></a>`).join('') : '<p class="hint">Noch keine.</p>'}</div>
   ${rolls.length || FRESH_ID === stock.id ? '' : '<button class="btn danger wide" id="delStock">Film löschen</button>'}`;
   bind(view.querySelector('#sf'), stock, 'stocks', () => {

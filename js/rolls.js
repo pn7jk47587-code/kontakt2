@@ -822,7 +822,14 @@ function rollInfo(body, roll) {
     ${area('Notizen zur Rolle', 'notes', 'Thema, Reise, Besonderheiten …', 4)}
     ${select('Status korrigieren', 'status', [['entwurf', 'In der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']])}
   </div>
+  <div id="diaryCard"></div>
   <button class="btn danger wide" data-delroll="${roll.id}">Rolle löschen</button>`;
+  const fillDiary = async () => {
+    const box = body.querySelector('#diaryCard'); if (!box) return;
+    box.innerHTML = await diaryCardHtml(await DB.get('stocks', roll.stockId));
+  };
+  fillDiary();
+  body.querySelector('#diaryCard').addEventListener('click', async e => { const img = e.target.closest('img[data-img]'); if (img) zoom(await U.imgUrl(img.dataset.img) || img.src); });
   // Festes Objektiv: gilt für alle Frames der Rolle, einzelne Frames lassen sich danach trotzdem ändern
   const fillLens = async () => {
     const all = await DB.all('lenses');
@@ -856,7 +863,7 @@ function rollInfo(body, roll) {
     box.querySelector('#rollIso').addEventListener('input', async e => { roll.ei = e.target.value.replace(/[^\d]/g, ''); await DB.put('rolls', roll); });
   };
   extras();
-  body.querySelector('#stocksel').addEventListener('change', () => setTimeout(extras, 80));
+  body.querySelector('#stocksel').addEventListener('change', () => setTimeout(() => { extras(); fillDiary(); }, 80));
   body.querySelector('#camsel').addEventListener('change', () => setTimeout(extras, 80));
   Promise.all([DB.all('stocks'), DB.all('cameras')]).then(([st, cams]) => {
     body.querySelector('#stocksel').innerHTML = st.sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b))).map(s => `<option value="${s.id}">${U.esc(U.stockLabel(s))}</option>`).join('');

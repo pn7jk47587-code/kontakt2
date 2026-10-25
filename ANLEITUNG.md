@@ -115,6 +115,10 @@ Standort aus Handyfotos: iOS kann beim Auswählen aus der Mediathek den Ort entf
 Neue Version: Dateien im Repository ersetzen und in `sw.js` die Zeile `const VERSION = 'kb-v1';` hochzählen (kb-v2 …). Sonst zeigt das iPhone die alte, zwischengespeicherte Version.
 
 
+## Filmtagebuch
+
+In den Einstellungen (drei Striche im Profil) steht „Filmtagebuch“, außerdem gibt es auf jeder Filmseite unter „Alle Filme“ den Knopf „Filmtagebuch zu diesem Film“. Je Film schreibst du unter „Deine Erfahrungen“ Notizen und lädst Beispielfotos hoch, sortiert nach Lichtsituation: Box Speed, Unterbelichtet, Überbelichtet, Tageslicht, Innen, Kunstlicht, Blitz und Nacht. Ein Tipp auf ein Foto vergrößert es, das × entfernt es. Liegt der Film in der Kamera, zeigt der Reiter „Rolle“ unter den Einstellungen eine umrandete Karte „Deine Erfahrungen mit …“ mit Notizen und Fotos. Die Einträge stecken in der Sicherung (ZIP) mit drin. „Reset/Test“ löscht die Fotos, die Notizen bleiben.
+
 ## Sprache
 
 Beim ersten Start wählst du über „DE“ und „EN“ die Sprache. Später geht das in den Einstellungen (drei Striche im Profil) unter „Sprache“. Die App wird dabei neu geladen. Die Übersetzung ersetzt die deutschen Texte der Oberfläche anhand einer Liste in js/i18n.js. Was du selbst einträgst (Namen, Notizen), bleibt, wie es ist.

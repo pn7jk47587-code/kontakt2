@@ -493,6 +493,34 @@ Vorheriges Bild {0}	Previous frame {0}
 Nächstes Bild {0}	Next frame {0}
 Kamera	Camera
 Anzahl Frames	Number of frames
+Filmtagebuch	Film diary
+Filmtagebuch zu diesem Film	Film diary for this film
+Box Speed	Box speed
+Unterbelichtet	Underexposed
+Überbelichtet	Overexposed
+Tageslicht	Daylight
+Innen	Indoors
+Kunstlicht	Artificial light
+Blitz	Flash
+Nacht	Night
+Halte fest, wie sich ein Film bei dir verhält: Notizen und Beispielfotos nach Lichtsituation. Liegt der Film in der Kamera, siehst du das im Reiter „Rolle“.	Record how a film behaves for you: notes and sample photos by lighting situation. When the film is in the camera, you’ll see it in the “Roll” tab.
+Film zum Tagebuch hinzufügen	Add film to the diary
+Noch keine Einträge.	No entries yet.
+{0} Foto · mit Notizen	{0} photo · with notes
+{0} Fotos · mit Notizen	{0} photos · with notes
+Deine Erfahrungen	Your experience
+Wie verhält sich der Film? Welche ISO, welches Licht, welches Labor?	How does the film behave? Which ISO, which light, which lab?
+Lade für jede Lichtsituation Fotos hoch, die du mit diesem Film gemacht hast.	Upload photos you took with this film for each lighting situation.
+Foto hinzufügen: {0}	Add photo: {0}
+Noch kein Foto. Wie sieht der Film hier aus?	No photo yet. What does the film look like here?
+Foto wird gespeichert …	Saving photo …
+{0} Fotos werden gespeichert …	Saving {0} photos …
+Im Filmtagebuch gespeichert	Saved in the film diary
+Zurück zum Filmtagebuch	Back to the film diary
+Deine Erfahrungen mit {0}	Your experience with {0}
+Noch nichts notiert.	Nothing noted yet.
+Im Filmtagebuch öffnen	Open in the film diary
+Im Filmtagebuch anlegen	Create in the film diary
 ISO an der Kamera eingestellt	ISO set on the camera
 ISO-Einstellung an der Kamera	ISO setting on the camera
 Hersteller: ISO {0}	Manufacturer: ISO {0}

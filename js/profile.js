@@ -392,6 +392,7 @@ function openSettings() {
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
       <div class="list profilelinks" style="margin:16px 0 0">
+        <a class="item" href="#/tagebuch"><span class="setlink">${ART.album}Filmtagebuch</span><span class="chev">›</span></a>
         <a class="item" href="#/filme"><span class="setlink">${ART.filmIc}Alle Filme und Infos</span><span class="chev">›</span></a>
         <a class="item" href="#/rechner"><span class="setlink">${ART.moon}Belichtungsrechner für Nachtaufnahmen</span><span class="chev">›</span></a>
         <a class="item" href="#/mehr"><span class="setlink">${ART.save}Sicherung und Speicher</span><span class="chev">›</span></a>
@@ -624,6 +625,7 @@ async function resetPhotosAndProfile() {
   for (const st of ['frames', 'rolls', 'cameras', 'lenses', 'stocks', 'fridge']) {
     for (const r of await DB.all(st)) if (strip(r)) await DB.put(st, r);
   }
+  for (const d of await allDiaries()) { d.photos = (d.photos || []).filter(p => !ids.has(p.imgId)); await DB.put('meta', d); }
   await DB.del('meta', 'profile');
   PROFILE = null;
   U.toast('Zurückgesetzt');
