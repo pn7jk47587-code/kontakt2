@@ -95,7 +95,7 @@ const SEED_STOCKS = [
 
 // Startkameras. Bilder sind generische Illustrationen, eigenes Foto kann hochgeladen werden.
 const SEED_CAMERAS = [
-  { id: 'cam-hasselblad-500cm', maker: 'Hasselblad', name: '500C/M', format: '120', frames: 12, frameSize: '6×6', mount: 'Hasselblad V', art: { kind: 'mf' } },
+  { id: 'cam-hasselblad-500cm', maker: 'Hasselblad', name: '500C', format: '120', frames: 12, frameSize: '6×6', mount: 'Hasselblad V', art: { kind: 'mf' } },
   { id: 'cam-nikon-f3', maker: 'Nikon', name: 'F3', format: '135', mount: 'Nikon F', art: { kind: 'slr', body: 'black' } },
   { id: 'cam-minolta-xg1', maker: 'Minolta', name: 'XG-1', format: '135', mount: 'Minolta SR (MC/MD)', art: { kind: 'slr', body: 'chrome' } },
   { id: 'cam-praktica-l2', maker: 'Praktica', name: 'L2', format: '135', mount: 'M42', art: { kind: 'slr', body: 'chrome' } },

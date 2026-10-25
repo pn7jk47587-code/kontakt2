@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 19;
+const SEED_VERSION = 20;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -33,7 +33,15 @@ async function boot() {
     await DB.putMany('stocks', SEED_STOCKS.filter(s => !existing.has(s.id)));
     // Vorerst wieder: Beispielkameras und -objektive beim ersten Start und einmalig nach diesem Update ergänzen. Vorhandene Einträge bleiben unverändert.
     if (!meta || meta.v < 17) await loadSeedGear();
-    else if (meta.v < 19) {
+    // Die Hasselblad ist eine 500C, nicht 500C/M (Angabe der Nutzerin). Eigene Umbenennungen bleiben unberührt.
+    if (meta && meta.v < 20) {
+      const hb = await DB.get('cameras', 'cam-hasselblad-500cm');
+      if (hb && hb.name === '500C/M') {
+        hb.name = '500C'; await DB.put('cameras', hb);
+        for (const r of await DB.all('rolls')) if (r.cameraId === hb.id && r.camera === 'Hasselblad 500C/M') { r.camera = 'Hasselblad 500C'; await DB.put('rolls', r); }
+      }
+    }
+    if (meta && meta.v >= 17 && meta.v < 19) {
       // Neue Kameras und Objektive vom 25.10.2026 nachtragen, ohne gelöschte Beispielausrüstung zurückzuholen
       const ci = new Set((await DB.all('cameras')).map(c => c.id)), li = new Set((await DB.all('lenses')).map(l => l.id));
       await DB.putMany('cameras', SEED_CAMERAS.filter(c => NEW_GEAR_1025.cams.includes(c.id) && !ci.has(c.id)).map(c => JSON.parse(JSON.stringify(c))));
