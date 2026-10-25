@@ -43,11 +43,18 @@ async function viewWelcome() {
     <div class="welcome">
       <div class="welcomeav" id="wAv">${await avatarHtml(132, { name: '' })}</div>
       <label class="btn ghost small">Profilbild wählen<input type="file" accept="image/*" hidden id="wPic"></label>
+      <div class="langpick" id="wLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <h1 class="welcometitle">Willkommen</h1>
       <input id="wName" autocomplete="nickname" maxlength="40" aria-label="Dein Name">
       <button class="btn wide accent" id="wGo" disabled>Los geht’s</button>
     </div>`;
   const nameIn = view.querySelector('#wName');
+  view.querySelector('#wLang').addEventListener('click', e => {
+    const b = e.target.closest('[data-lang]'); if (!b || b.dataset.lang === I18N.get()) return;
+    try { sessionStorage.setItem('kb-welcome-name', nameIn.value); } catch (_) {}
+    I18N.set(b.dataset.lang);
+  });
+  try { const keep = sessionStorage.getItem('kb-welcome-name'); if (keep) { nameIn.value = keep; view.querySelector('#wGo').disabled = !keep.trim(); sessionStorage.removeItem('kb-welcome-name'); } } catch (_) {}
   const refreshAv = async () => {
     if (avatarFile) {
       const u = await U.fileToDataUrl(avatarFile);
@@ -61,6 +68,7 @@ async function viewWelcome() {
     if (avatarFile) p.avatarId = (await U.storeImage(avatarFile, 'avatar')).id;
     await DB.put('meta', p);
     PROFILE = p;
+    TOUR.start();
     location.replace('#/');
   });
 }
@@ -165,7 +173,7 @@ async function openStockPicker(onPick, format) {
   setTimeout(() => ov.querySelector('#spQ').focus(), 50);
 }
 
-function euro(n) { return (n || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }); }
+function euro(n) { return (n || 0).toLocaleString((typeof I18N !== 'undefined' ? I18N.locale() : 'de-DE'), { style: 'currency', currency: 'EUR' }); }
 
 // Preisliste Fotokotti (Angabe der Nutzerin): Entwicklung nach Format und Farbe/SW, Scan nach Format
 // Labore mit Preisen. Entweder Einzelpreise (Entwicklung und Scan je Format und SW/Farbe) oder ein Gesamtpreis pro Film.
@@ -228,7 +236,7 @@ function historyHtml(tx) {
     const [y, m] = k.split('-');
     const sum = kind => list.filter(t => t.kind === kind).reduce((n, t) => n + t.amount, 0);
     return `<div class="txmonth">
-      <div class="txhead"><b>${m ? MONTHS[Number(m) - 1] + ' ' + y : k}</b><span>${euro(list.reduce((n, t) => n + t.amount, 0))}</span></div>
+      <div class="txhead"><b>${m ? I18N.t(MONTHS[Number(m) - 1]) + ' ' + y : I18N.t(k)}</b><span>${euro(list.reduce((n, t) => n + t.amount, 0))}</span></div>
       <div class="txsplit">${['film', 'dev', 'scan'].map(kd => `<span>${KIND[kd]} ${euro(sum(kd))}</span>`).join('')}</div>
       ${list.map(t => `<div class="txrow"><span>${U.esc(t.label)}</span><span>${euro(t.amount)}</span></div>`).join('')}
     </div>`;
@@ -363,6 +371,7 @@ async function viewProfile() {
     });
   });
   view.querySelector('#openSettings').addEventListener('click', openSettings);
+  try { if (sessionStorage.getItem('kb-open-settings')) { sessionStorage.removeItem('kb-open-settings'); openSettings(); } } catch (_) {}
 }
 
 // Einstellungen und weitere Bereiche in einem Fenster, damit das Profil bei vier Bereichen bleibt
@@ -372,6 +381,8 @@ function openSettings() {
   ov.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
       <h2 id="setTitle">Einstellungen</h2>
+      <div class="sethead"><span class="langic" aria-hidden="true">Aa</span><span>Sprache</span></div>
+      <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Farbschema</span></div>
       <div class="moodpick" id="menuMood">${[['auto', 'Automatisch'], ['sun', 'Sonne'], ['moon', 'Mond']].map(([k, l]) => `<button type="button" data-mood="${k}">${l}</button>`).join('')}</div>
       <div class="qlabel" id="clockLabel"></div>
@@ -392,6 +403,12 @@ function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  ov.querySelector('#setLang').addEventListener('click', e => {
+    const b = e.target.closest('[data-lang]'); if (!b || b.dataset.lang === I18N.get()) return;
+    ov.querySelectorAll('#setLang button').forEach(x => x.classList.toggle('on', x === b));
+    try { sessionStorage.setItem('kb-open-settings', '1'); } catch (_) {}
+    I18N.set(b.dataset.lang);
+  });
   const drawLabs = async () => {
     const labs = await getLabs();
     ov.querySelector('#labList').innerHTML = labs.map(l => `<button type="button" class="item" data-lab="${l.id}"><span>${U.esc(l.name)}<br><span class="sub2">${l.mode === 'flat' ? 'Gesamtpreis ' + euro(Number(l.flat) || 0) : 'Einzelpreise'}</span></span><span class="chev">›</span></button>`).join('');
@@ -441,9 +458,9 @@ async function openFridgeModal(entry, fromBtn) {
   ov.className = 'modalbg';
   ov.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="frTitle">
-      <div class="seggroup" id="frFmt">
-        <button type="button" class="seg${entry.format === '135' ? ' on' : ''}" data-f="135">Kleinbild</button>
-        <button type="button" class="seg${entry.format === '120' ? ' on' : ''}" data-f="120">Mittelformat</button>
+      <div class="seggroup fmtpick" id="frFmt">
+        <button type="button" class="seg${entry.format === '135' ? ' on' : ''}" data-f="135" aria-label="Kleinbild">${ART.fmt135}<span>135</span></button>
+        <button type="button" class="seg${entry.format === '120' ? ' on' : ''}" data-f="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
       </div>
       <h2 id="frTitle">${isNew ? 'Film in den Kühlschrank' : U.esc(current ? U.stockLabel(current) : 'Film')}</h2>
       ${isNew ? `
@@ -457,6 +474,7 @@ async function openFridgeModal(entry, fromBtn) {
         <label class="fld"><span>Preis pro Rolle (€)</span><input id="frPrice" inputmode="decimal" value="${entry.price != null ? String(entry.price).replace('.', ',') : ''}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="frBought" value="${entry.boughtAt || ''}"></label>
       </div>
+      <label class="fld"><span>Läuft ab (Monat, optional)</span><input type="month" id="frExp" value="${U.esc(entry.expiresAt || '')}"></label>
       ${isNew ? '' : '<button class="btn danger small" id="frDel">Aus dem Kühlschrank nehmen</button>'}
       <div class="modalfoot">
         <button class="closex" id="frCancel" aria-label="Abbrechen">${ART.x}</button>
@@ -524,6 +542,7 @@ async function openFridgeModal(entry, fromBtn) {
     if (isNew) entry.bought = entry.count;
     else if (entry.count > startCount) entry.bought = (entry.bought ?? startCount) + (entry.count - startCount);
     entry.boughtAt = $('frBought').value;
+    entry.expiresAt = $('frExp').value || null;
     await DB.put('fridge', entry);
     close(); U.toast(isNew ? 'Im Filmkühlschrank' : 'Gespeichert'); route();
   });

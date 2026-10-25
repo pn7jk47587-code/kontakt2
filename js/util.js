@@ -9,7 +9,7 @@ const U = {
     if (!iso) return '';
     const d = new Date(iso);
     if (isNaN(d)) return iso;
-    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return d.toLocaleDateString((typeof I18N !== 'undefined' ? I18N.locale() : 'de-DE'), { day: '2-digit', month: '2-digit', year: 'numeric' });
   },
   today() {
     const d = new Date();
@@ -159,7 +159,7 @@ const U = {
 
   fmtSec(s) {
     if (s < 1) return '1/' + Math.round(1 / s) + ' s';
-    if (s < 60) return (Math.round(s * 10) / 10).toLocaleString('de-DE') + ' s';
+    if (s < 60) return (Math.round(s * 10) / 10).toLocaleString((typeof I18N !== 'undefined' ? I18N.locale() : 'de-DE')) + ' s';
     const m = Math.floor(s / 60), r = Math.round(s % 60);
     return `${m} min ${r} s`;
   },
@@ -252,7 +252,7 @@ Object.assign(U, {
 
   fmtStops(x) {
     const r = Math.round(x * 10) / 10;
-    return (r > 0 ? '+' : '') + r.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    return (r > 0 ? '+' : '') + r.toLocaleString((typeof I18N !== 'undefined' ? I18N.locale() : 'de-DE'), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
 });
 

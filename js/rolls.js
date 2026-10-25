@@ -314,26 +314,30 @@ async function wizardStep1(wiz, root = view) {
   root.innerHTML = `
     ${steps(1)}
     <section class="wizsec">
-      <h2 class="wiztitle">Welche Kamera?</h2>
-      <div class="seggroup" id="fmt">
-        <button type="button" class="seg${wiz.format === '135' ? ' on' : ''}" data-fmt="135">Kleinbild</button>
-        <button type="button" class="seg${wiz.format === '120' ? ' on' : ''}" data-fmt="120">Mittelformat</button>
+      <h2 class="wiztitle">Kamera</h2>
+      <div class="seggroup fmtpick" id="fmt">
+        <button type="button" class="seg${wiz.format === '135' ? ' on' : ''}" data-fmt="135" aria-label="Kleinbild">${ART.fmt135}<span>135</span></button>
+        <button type="button" class="seg${wiz.format === '120' ? ' on' : ''}" data-fmt="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
       </div>
       <div class="picks" id="cams">${camCards.join('')}</div>
     </section>
     <section class="wizsec" id="filmSec">
-      <h2 class="wiztitle">Welcher Film?</h2>
-      <button type="button" class="newfilm${chosenOther ? ' on' : ''}" id="newFilm">
+      <h2 class="wiztitle">Film</h2>
+      <div class="fridgecard">
+        <span class="fridgeicon" aria-label="Filmkühlschrank" role="img">${SNOW}</span>
+        <div class="fcbody">
+          ${fridge.length ? `<input type="search" placeholder=" " id="qFridge" aria-label="Filme im Kühlschrank durchsuchen" autocomplete="off">
+          <div class="flist" id="fridgeList">${rows.join('')}</div>
+          <p class="hint" id="fridgeNone" hidden>Kein passender Film im Kühlschrank für dieses Format.</p>` : '<p class="hint">Dein Filmkühlschrank ist leer.</p>'}
+        </div>
+      </div>
+      <button type="button" class="newfilm small${chosenOther ? ' on' : ''}" id="newFilm">
         <span class="plusbox">${chosenOther ? await filmArt(chosenOther, 40) : '+'}</span>
-        <span><b>${chosenOther ? U.esc(U.stockLabel(chosenOther)) : 'Neuer Film'}</b><br><span class="sub2">${chosenOther ? 'Nicht aus dem Kühlschrank' : 'Liegt nicht im Kühlschrank'}</span></span>
+        <span><b>${chosenOther ? U.esc(U.stockLabel(chosenOther)) : 'Neuen Film anlegen'}</b>${chosenOther ? '<br><span class="sub2">Nicht aus dem Kühlschrank</span>' : '<span class="sub2"></span>'}</span>
       </button>
-      <h3 class="sub">Aus dem Filmkühlschrank</h3>
-      ${fridge.length ? `<input type="search" placeholder=" " id="qFridge" aria-label="Suchen" autocomplete="off">
-      <div class="flist" id="fridgeList">${rows.join('')}</div>
-      <p class="hint" id="fridgeNone" hidden>Kein passender Film im Kühlschrank für dieses Format.</p>` : '<p class="hint">Dein Filmkühlschrank ist leer.</p>'}
     </section>
     <section class="wizsec" id="expSec">
-      <h2 class="wiztitle">Wie viele Aufnahmen?</h2>
+      <h2 class="wiztitle">Anzahl Frames</h2>
       <div class="chips" id="exp"></div>
     </section>
     <section class="wizsec">
@@ -344,13 +348,16 @@ async function wizardStep1(wiz, root = view) {
   const renderExp = () => {
     const cam = cams.find(c => c.id === wiz.cameraId);
     const options = expOptions(wiz, cam);
-    root.querySelector('#exp').innerHTML = `${options.map(n => `<button type="button" class="chip${n === '36+1' ? ' bonuschip' : ''}${wiz.expChoice === n ? ' on' : ''}" data-n="${n}">${n}</button>`).join('')}
+    // Mittelformat: Anzahl steht durch die Kamera fest, daher kein freies Feld
+    root.querySelector('#exp').innerHTML = wiz.format === '120'
+      ? (options.length ? options.map(n => `<button type="button" class="chip on" data-n="${n}">${n}</button>`).join('') : '<p class="hint">Wähle zuerst eine Kamera.</p>')
+      : `${options.map(n => `<button type="button" class="chip${n === '36+1' ? ' bonuschip' : ''}${wiz.expChoice === n ? ' on' : ''}" data-n="${n}">${n}</button>`).join('')}
       <input type="number" id="expN" min="1" max="99" inputmode="numeric" class="chip-input" aria-label="Freie Anzahl" value="${!wiz.expChoice || options.includes(wiz.expChoice) ? '' : U.esc(wiz.expChoice)}">`;
   };
   renderExp();
   root.querySelector('#exp').addEventListener('click', e => {
     const b = e.target.closest('.chip'); if (!b) return;
-    wiz.expChoice = b.dataset.n; root.querySelector('#expN').value = '';
+    wiz.expChoice = b.dataset.n; const en = root.querySelector('#expN'); if (en) en.value = '';
     root.querySelectorAll('#exp .chip').forEach(c => c.classList.toggle('on', c === b));
     wizSave(wiz); refresh();
   });
@@ -372,9 +379,12 @@ async function wizardStep1(wiz, root = view) {
     const fl = root.querySelector('#fridgeList');
     if (fl) {
       const any = [...fl.children].some(x => !x.hidden), q = (root.querySelector('#qFridge')?.value || '').trim();
+      const forFmt = [...fl.children].some(x => x.dataset.format === wiz.format);
       const none = root.querySelector('#fridgeNone');
+      root.querySelector('#qFridge').hidden = !forFmt;
+      fl.hidden = !forFmt;
       none.hidden = any;
-      none.textContent = q ? 'Ups, der Film liegt noch nicht im Kühlschrank.' : 'Kein passender Film im Kühlschrank für dieses Format.';
+      none.textContent = q && forFmt ? 'Ups, der Film liegt noch nicht im Kühlschrank.' : 'Dein Filmkühlschrank ist leer.';
     }
     root.querySelectorAll('#cams [data-cam]').forEach(el => { el.hidden = !fmtOk(el); });
     root.querySelector('#next').disabled = !(wiz.stockId && parseInt(wiz.expChoice) > 0);
@@ -399,8 +409,8 @@ async function wizardStep1(wiz, root = view) {
     root.querySelectorAll('[data-fridge]').forEach(x => x.classList.toggle('on', x === b));
     const nf = root.querySelector('#newFilm'); nf.classList.remove('on');
     nf.querySelector('.plusbox').textContent = '+';
-    nf.querySelector('b').textContent = 'Neuer Film';
-    nf.querySelector('.sub2').textContent = 'Liegt nicht im Kühlschrank';
+    nf.querySelector('b').textContent = 'Neuen Film anlegen';
+    nf.querySelector('.sub2').textContent = '';
     wizSave(wiz); refresh(); toNext();
   });
   root.querySelector('#newFilm').addEventListener('click', () => openStockPicker(async stockId => {
@@ -423,11 +433,21 @@ async function wizardStep1(wiz, root = view) {
 async function wizardStep2(wiz) { location.replace('#/rolle/neu'); }
 
 // Aufnahmen: Kleinbild 24, 36, 36+1 (Bonusbild am Rollenanfang) oder frei. Mittelformat: Bildzahl der Kamera oder frei.
+// Mittelformat: Bilder pro Rolle aus der Kamera, sonst aus dem Bildformat (120er-Rolle: 6×4,5 → 15, 6×6 → 12, 6×7 → 10, 6×8 → 9, 6×9 → 8)
+function framesFor120(cam) {
+  if (!cam) return 0;
+  if (parseInt(cam.frames) > 0) return parseInt(cam.frames);
+  const m = String(cam.frameSize || '').replace(',', '.').match(/6\s*[×x]\s*([\d.]+)/);
+  const table = { '4.5': 15, '6': 12, '7': 10, '8': 9, '9': 8, '12': 6, '17': 4 };
+  return m ? (table[m[1]] || 0) : 12;
+}
 function expOptions(wiz, cam) {
   const is120 = wiz.format === '120';
-  const options = is120 ? (cam?.frames ? [String(cam.frames)] : []) : ['24', '36', '36+1'];
+  const n120 = is120 ? framesFor120(cam) : 0;
+  const options = is120 ? (n120 ? [String(n120)] : []) : ['24', '36', '36+1'];
   const key = wiz.format + (wiz.cameraId || '');
-  if (!wiz.expChoice || wiz.expFor !== key) { wiz.expChoice = is120 ? (cam?.frames ? String(cam.frames) : '') : '36'; wiz.expFor = key; }
+  if (is120) { wiz.expChoice = n120 ? String(n120) : ''; wiz.expFor = key; }
+  else if (!wiz.expChoice || wiz.expFor !== key) { wiz.expChoice = '36'; wiz.expFor = key; }
   return options;
 }
 
@@ -795,6 +815,7 @@ function rollInfo(body, roll) {
     ${field('Name der Rolle', 'title')}
     <label class="fld"><span>Film</span><select data-f="stockId" id="stocksel"></select></label>
     <label class="fld"><span>Kamera</span><select data-f="cameraId" id="camsel"></select></label>
+    <label class="fld"><span>Festes Objektiv für alle Frames</span><select id="lenssel"></select></label>
     ${field('Belichtet mit ISO/EI', 'ei', { num: true })}
     ${field('Eingelegt am', 'loadedAt', { type: 'date' })}
     ${field('Voll am', 'finishedAt', { type: 'date' })}
@@ -802,6 +823,25 @@ function rollInfo(body, roll) {
     ${select('Status korrigieren', 'status', [['entwurf', 'In der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']])}
   </div>
   <button class="btn danger wide" data-delroll="${roll.id}">Rolle löschen</button>`;
+  // Festes Objektiv: gilt für alle Frames der Rolle, einzelne Frames lassen sich danach trotzdem ändern
+  const fillLens = async () => {
+    const all = await DB.all('lenses');
+    const fit = all.filter(l => (l.cameraIds || []).includes(roll.cameraId));
+    const list = (fit.length ? fit : all).sort((a, b) => parseFloat(a.focal) - parseFloat(b.focal));
+    const sel = body.querySelector('#lenssel');
+    sel.innerHTML = '<option value="">wechselt je Frame</option>' + list.map(l => `<option value="${l.id}"${roll.fixedLensId === l.id ? ' selected' : ''}>${U.esc(lensLabel(l))}</option>`).join('');
+  };
+  fillLens();
+  body.querySelector('#camsel').addEventListener('change', () => setTimeout(fillLens, 50));
+  body.querySelector('#lenssel').addEventListener('change', async e => {
+    const v = e.target.value || null;
+    roll.fixedLensId = v; if (v) roll.lastLensId = v;
+    await DB.put('rolls', roll);
+    if (v) {
+      for (const f of (await DB.all('frames')).filter(f => f.rollId === roll.id)) { f.lensId = v; await DB.put('frames', f); }
+      U.toast('Objektiv für alle Frames übernommen');
+    }
+  });
   Promise.all([DB.all('stocks'), DB.all('cameras')]).then(([st, cams]) => {
     body.querySelector('#stocksel').innerHTML = st.sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b))).map(s => `<option value="${s.id}">${U.esc(U.stockLabel(s))}</option>`).join('');
     body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.map(c => `<option value="${c.id}">${U.esc(camLabel(c))}</option>`).join('');
@@ -830,13 +870,13 @@ async function viewFrame(idWithQuery) {
   const sh = String(frame.shutter || '');
   const cam = roll?.cameraId ? await DB.get('cameras', roll.cameraId) : null;
   // Objektiv zuerst: zuletzt benutztes Objektiv der Rolle oder das einzige der Kamera ist vorausgewählt
-  let lensId = frame.lensId || (camLenses.length === 1 ? camLenses[0].id : camLenses.some(l => l.id === roll?.lastLensId) ? roll.lastLensId : null);
+  let lensId = frame.lensId || (roll?.fixedLensId && camLenses.some(l => l.id === roll.fixedLensId) ? roll.fixedLensId : null) || (camLenses.length === 1 ? camLenses[0].id : camLenses.some(l => l.id === roll?.lastLensId) ? roll.lastLensId : null);
   const curLens = () => camLenses.find(l => l.id === lensId);
   const apList = () => cam?.auto && !camLenses.length ? ['Auto'] : lensApertures(curLens());
   const shList = camShutters(cam);
 
   view.innerHTML = `
-  <div class="framestrip" aria-hidden="true">${all.map(f => `<i class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
+  <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
   <div id="media"></div>
   <div class="card quick">
     ${camLenses.length ? `<div class="qlabel">Objektiv</div>
@@ -938,6 +978,26 @@ async function viewFrame(idWithQuery) {
 
   // Wischen nach links oder rechts: nächstes oder vorheriges Bild
   const goTo = async f => { if (!f) return; await flush(); location.replace('#/bild/' + f.id); };
+  // Mit dem Finger über die Bildleiste wischen: das Bild unter dem Finger wird markiert, beim Loslassen öffnet es sich
+  const strip = view.querySelector('.framestrip');
+  if (strip) {
+    const marks = [...strip.children];
+    let cur = marks.findIndex(m => m.classList.contains('on')), scrub = false, tip = null;
+    const at = x => { const a = marks[0].getBoundingClientRect(), b = marks[marks.length - 1].getBoundingClientRect(); return Math.max(0, Math.min(marks.length - 1, Math.floor((x - a.left) / (b.right - a.left) * marks.length))); };
+    const show = i => {
+      if (i === cur) return;
+      cur = i; U.haptic && U.haptic();
+      marks.forEach((m, j) => m.classList.toggle('on', j === i));
+      const f = all[i];
+      if (!tip) { tip = document.createElement('div'); tip.className = 'striptip'; strip.appendChild(tip); }
+      tip.textContent = f.bonus ? 'Bonusbild' : 'Bild ' + frameLabel(f);
+      tip.style.left = (marks[i].offsetLeft + marks[i].offsetWidth / 2) + 'px';
+    };
+    strip.addEventListener('pointerdown', e => { scrub = true; strip.setPointerCapture(e.pointerId); cur = -1; show(at(e.clientX)); e.preventDefault(); });
+    strip.addEventListener('pointermove', e => { if (scrub) show(at(e.clientX)); });
+    const end = () => { if (!scrub) return; scrub = false; tip?.remove(); tip = null; const f = all[cur]; if (f && f.id !== frame.id) goTo(f); else marks.forEach(m => m.classList.toggle('on', m.dataset.id === frame.id)); };
+    strip.addEventListener('pointerup', end); strip.addEventListener('pointercancel', end);
+  }
   // Große Knöpfe am linken und rechten Rand, mittig
   [[prev, 'prev', 'M15 5l-7 7 7 7'], [next, 'next', 'M9 5l7 7-7 7']].forEach(([f, side, d]) => {
     if (!f) return;
@@ -950,7 +1010,7 @@ async function viewFrame(idWithQuery) {
   });
   let t0 = null;
   const onStart = e => {
-    if (e.target.closest('.slides, input, textarea, .cmprange')) { t0 = null; return; }
+    if (e.target.closest('.slides, input, textarea, .cmprange, .framestrip')) { t0 = null; return; }
     t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
   const onEnd = e => {
@@ -1416,7 +1476,6 @@ async function viewCamera(id) {
     </div>
     ${select('Illustration', 'art.kind', [['slr', 'Spiegelreflex'], ['mf', 'Mittelformat-Würfel'], ['compact', 'Kompaktkamera']])}
     ${select('Farbe Spiegelreflex', 'art.body', [['black', 'Schwarz'], ['chrome', 'Chrom']])}
-    <label class="fld"><span>Farbe Kompaktkamera</span><input type="color" data-f="art.color" value="${U.esc(cam.art.color || '#7b5aa6')}"></label>
     ${area('Notizen', 'notes', 'Eigenheiten, Batterie, Macken …')}
   </div>
   <div class="card">

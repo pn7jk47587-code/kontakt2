@@ -85,6 +85,7 @@ function setTab() {}
 
 async function route() {
   await routeView();
+  if (typeof TOUR !== 'undefined') TOUR.after();
   // Nach „Haken“ aus Kamera oder Objektiv: an dieselbe Stelle zurückscrollen
   try {
     const r = JSON.parse(sessionStorage.getItem('kb-restore') || 'null');

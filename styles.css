@@ -852,8 +852,8 @@ input[type=search] { padding-left: 40px; background: var(--glass) url("data:imag
 :root[data-mood="moon"] .cell.bonus::after { opacity: .85; }
 
 /* Frames-Modus */
-.framestrip { display: flex; gap: 3px; justify-content: center; flex-wrap: wrap; margin: 12px 16px 10px; }
-.framestrip i { width: 6px; height: 14px; border-radius: 2px; background: var(--line); }
+.framestrip { position: relative; display: flex; gap: 2px; justify-content: center; flex-wrap: nowrap; margin: 12px 16px 10px; padding: 8px 0; touch-action: none; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.framestrip i { flex: 1 1 0; min-width: 0; max-width: 8px; height: 14px; border-radius: 2px; background: var(--line); transition: transform .15s; }
 .framestrip i.used { background: var(--tint2); }
 .framestrip i.b { background: linear-gradient(180deg, #ffd27a, #ff8a3c); opacity: .7; }
 .framestrip i.on { background: var(--teal); transform: scaleY(1.35); }
@@ -1148,3 +1148,50 @@ input[type=search]:placeholder-shown:not(:focus) { margin-left: auto; margin-rig
 /* Offenes Fenster: Seite dahinter scrollt nicht mit */
 html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .modal, .lsbody { overscroll-behavior: contain; }
+
+/* Sprachwahl DE / EN */
+.langpick { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+.langpick button { min-width: 48px; height: 36px; border: 0; border-radius: 999px; background: transparent; color: inherit; font: inherit; font-weight: 700; letter-spacing: .04em; cursor: pointer; }
+.langpick button.on { background: var(--solid); box-shadow: 0 1px 4px rgba(30,40,70,.18); color: var(--teal); }
+.welcome .langpick { margin-bottom: 4px; }
+.langic { display: inline-flex; width: 18px; justify-content: center; font-weight: 700; font-size: 13px; }
+
+/* Einführung: leuchtender Ring und Sprechblase */
+.tour { position: fixed; inset: 0; z-index: 1150; pointer-events: none; }
+.tour[hidden] { display: none; }
+.tour.away { opacity: 0; }
+.tourring { position: fixed; border: 2.5px solid #ffd27a; box-shadow: 0 0 0 4px rgba(255,210,122,.35), 0 0 26px 8px rgba(255,190,90,.55); animation: tourglow 1.6s ease-in-out infinite; transition: left .35s, top .35s, width .35s, height .35s; }
+@keyframes tourglow { 0%, 100% { box-shadow: 0 0 0 3px rgba(255,210,122,.3), 0 0 18px 4px rgba(255,190,90,.45); } 50% { box-shadow: 0 0 0 7px rgba(255,210,122,.45), 0 0 34px 12px rgba(255,190,90,.65); } }
+.tourbubble { position: fixed; pointer-events: auto; padding: 14px 16px 12px; border-radius: 18px; background: var(--solid); color: var(--text); box-shadow: 0 14px 40px rgba(30,40,70,.28); border: 1px solid var(--glassline); font-size: 15px; line-height: 1.4; animation: tourin .45s cubic-bezier(.2,.8,.2,1); }
+.tourbubble p { margin: 0 0 8px; font-weight: 600; }
+.tourbtns { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-direction: row-reverse; }
+.tourskip { border: 0; background: none; color: var(--muted); font: inherit; font-size: 13px; padding: 4px 0; cursor: pointer; text-decoration: underline; }
+.tourarrow { position: absolute; top: -9px; width: 18px; height: 18px; margin-left: -9px; background: var(--solid); border-left: 1px solid var(--glassline); border-top: 1px solid var(--glassline); transform: rotate(45deg); }
+.tourbubble.up .tourarrow { top: auto; bottom: -9px; transform: rotate(225deg); }
+.tour.center .tourbubble { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); width: min(300px, calc(100vw - 32px)); }
+.tour.center .tourarrow, .tour.center .tourring { display: none; }
+.tour.center { background: rgba(20,25,40,.25); pointer-events: auto; }
+@keyframes tourin { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .tourring, .tourbubble { animation: none; } }
+
+/* Kleinbild / Mittelformat als zwei kleine runde Symbole */
+.seggroup.fmtpick { display: flex; justify-content: center; gap: 18px; background: none !important; border: 0 !important; box-shadow: none !important; padding: 0; }
+.fmtpick .seg { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 50% !important; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  background: var(--glass); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); color: var(--muted); transition: transform .2s, color .2s, box-shadow .2s; }
+.fmtpick .seg svg { width: 26px; height: 26px; }
+.fmtpick .seg span { font-size: 10px; font-weight: 700; letter-spacing: .04em; line-height: 1; }
+.fmtpick .seg.on { color: var(--teal); background: var(--solid); box-shadow: 0 0 0 2px var(--teal), var(--glassshadow); transform: scale(1.06); }
+
+/* Film einlegen: Kühlschrank-Karte mit Symbol links, darunter kleinere Karte „Neuen Film anlegen“ */
+.fridgecard { display: flex; gap: 12px; align-items: flex-start; padding: 12px; margin-bottom: 10px; border-radius: 18px; background: var(--glass); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+.fridgecard > .fridgeicon { flex: 0 0 auto; width: 36px; height: 36px; }
+.fcbody { flex: 1; min-width: 0; }
+.fcbody input[type=search] { margin: 0 0 8px auto; }
+.fcbody .flist { margin: 0; }
+.fcbody .hint { margin: 6px 0 0; }
+.newfilm.small { padding: 8px 12px; gap: 10px; font-size: 15px; }
+.newfilm.small .plusbox { width: 32px; height: 32px; font-size: 20px; }
+.newfilm.small .plusbox { flex-basis: 32px; border-radius: 10px; }
+.fcbody input[type=search] { margin-left: auto !important; margin-right: 0 !important; }
+
+.striptip { position: absolute; bottom: 100%; transform: translateX(-50%); margin-bottom: 4px; padding: 4px 10px; border-radius: 999px; background: var(--solid); box-shadow: var(--glassshadow); font-size: 13px; font-weight: 700; white-space: nowrap; pointer-events: none; }
