@@ -601,6 +601,47 @@ Lightleak	Light leak
 Wie verhält sich ein Film bei dir? Notizen und Beispielfotos nach Lichtsituation.	How does a film behave for you? Notes and sample photos by lighting situation.
 Lege mit dem Plus den ersten Film an.	Add your first film with the plus.
 Film selbst entwickeln: Ablauf mit Chemie, Zeiten und Temperaturen.	Developing film yourself: workflow with chemistry, times and temperatures.
+Filter	Filters
+Filter hinzufügen	Add filters
+Zubehör	Accessories
+Zubehör hinzufügen	Add accessory
+Zubehör entfernen	Remove accessory
+Zubehör hinzugefügt	Accessory added
+Zubehör entfernt	Accessory removed
+Filter entfernen	Remove filter
+Filter hinzugefügt	Filter added
+{0} Filter hinzugefügt	{0} filters added
+Filter entfernt	Filter removed
+{0} ausgewählt	{0} selected
+Halter {0} mm breit	Holder {0} mm wide
+Filter suchen	Search filters
+Anderer Filter	Other filter
+Eigener Filter	Own filter
+Anzahl	Quantity
+Noch keine Filter. Wähle mit dem Plus deine Cokin-Filter aus dem Katalog.	No filters yet. Pick your Cokin filters from the catalogue with the plus.
+Noch kein Zubehör. Blitze, Auslöser, Stative und alles andere legst du mit dem Plus an.	No accessories yet. Add flashes, releases, tripods and everything else with the plus.
+Filtergewinde deiner Objektive: {0}	Filter threads of your lenses: {0}
+Filtergewinde ⌀ (mm)	Filter thread ⌀ (mm)
+Nummern und Namen aus den Cokin-Katalogen 2000 und 2015. Nicht jeder Filter gibt es in jeder Größe oder noch neu zu kaufen.	Numbers and names from the Cokin catalogues of 2000 and 2015. Not every filter exists in every size or is still sold new.
+Schwarzweiß und Infrarot	Black and white and infrared
+Farbe und Farbkorrektur	Colour and colour correction
+Graufilter (ND)	Neutral density (ND)
+Verlaufsfilter	Graduated filters
+Polfilter	Polarisers
+Stern und Diffraktion	Star and diffraction
+Center-Spot	Centre spot
+Weichzeichner und Pastell	Soft focus and pastel
+Optische Effekte	Optical effects
+Spezialeffekte und Masken	Special effects and masks
+Selbst- und Fernauslöser	Self-timer and remote release
+Stativ	Tripod
+Belichtungsmesser	Light meter
+Gegenlichtblende	Lens hood
+Adapter und Filterhalter	Adapters and filter holders
+Tasche und Gurt	Bag and strap
+Kratzer, Adapterring, gekauft bei …	Scratches, adapter ring, bought at …
+Leitzahl, Gewinde, Batterie, Macken …	Guide number, thread, battery, quirks …
+{0} Filter	{0} filters
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

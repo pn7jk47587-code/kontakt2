@@ -1013,7 +1013,6 @@ main:has(.quick) .framestrip { margin-top: 22px; padding: 0 64px; }
 .fold > .foldbody { display: none; padding-top: 12px; }
 .fold.open > .foldbody { display: block; }
 .foldchev { flex: 0 0 auto; width: 10px; height: 10px; margin: 0 6px 0 4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; opacity: .5; transform: rotate(45deg) translate(-2px, -2px); transition: transform .2s ease; }
-.fold.open .foldchev { transform: rotate(225deg) translate(-2px, -2px); }
 .fold .fridgeplus { margin-left: 0; }
 .profilehead { position: relative; }
 .gearbtn { position: absolute; right: 0; top: 0; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; color: var(--muted);
@@ -1263,8 +1262,6 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .atname:not(.pname):focus-within { border-color: var(--teal); box-shadow: 0 0 0 2px var(--tint2); }
 
 /* Kameraschrank: Kameras und Objektive je ausklappbar */
-.fold .foldchev { transform: rotate(45deg) translate(-2px, -2px); }
-.fold.open > .foldhead .foldchev { transform: rotate(225deg) translate(-2px, -2px); }
 .cabsub { margin: 0 0 4px; }
 .cabsub + .cabsub { border-top: 1px solid rgba(170,140,100,.22); padding-top: 4px; }
 :root[data-mood="moon"] .cabsub + .cabsub { border-top-color: rgba(200,180,255,.15); }
@@ -1329,3 +1326,41 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .flist[data-sort] .crow { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; transition: transform .18s ease; position: relative; }
 .flist.sorting .crow.lifted { transition: none; z-index: 5; box-shadow: 0 12px 30px rgba(29, 26, 38, .22); background: var(--card, #fff); }
 .flist.sorting .crow:not(.lifted) { opacity: .92; }
+
+/* Pfeile: zugeklappt zeigt der Pfeil nach unten, aufgeklappt nach oben. Jeder Bereich richtet nur seinen eigenen Pfeil. */
+.fold:not(.open) > .foldhead .foldchev { transform: rotate(45deg) translate(-2px, -2px); }
+.fold.open > .foldhead .foldchev { transform: translateY(3px) rotate(225deg); }
+
+/* Filter im Kameraschrank */
+.filterbadge { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; min-width: 52px; height: 30px; padding: 0 8px; border-radius: 9px;
+  font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: .02em; color: #fff; background: linear-gradient(135deg, #2c3e50, #3f8f7a); }
+.filterbadge.own { background: linear-gradient(135deg, #7a6a55, #a08560); }
+.filterrow { width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.filterrow .frowcount, .accrow .frowcount { margin-left: auto; }
+.threadhint { margin: 0 4px 8px; }
+.threadtag { font-weight: 700; }
+.modal h2 .filterbadge { vertical-align: middle; margin-right: 4px; }
+.filterpick .seggroup .seg, .modal #feSeries .seg { display: flex; flex-direction: column; align-items: center; line-height: 1.15; padding: 6px 4px; }
+.filterpick .seggroup .seg .sub2, #feSeries .seg .sub2 { font-size: 10px; }
+.fpklist { max-height: 46vh; overflow-y: auto; margin: 8px -4px 0; padding: 0 4px; overscroll-behavior: contain; }
+.fpkhead { position: sticky; top: 0; z-index: 1; padding: 8px 2px 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--solid); }
+.fpkrow { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
+.fpktoggle { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.fpktoggle .filterbadge { min-width: 50px; height: 26px; font-size: 12px; background: var(--bg2); color: var(--text); }
+.fpkname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.fpkrow .stepper { display: none; flex: 0 0 auto; }
+.fpkrow.on .stepper { display: inline-flex; }
+.fpkrow.on .fpktoggle { border-color: var(--teal); box-shadow: 0 0 0 1.5px var(--teal) inset; }
+.fpkrow.on .fpktoggle .filterbadge { color: #fff; background: linear-gradient(135deg, #2c3e50, #3f8f7a); }
+.stepper.small button { width: 32px; height: 32px; font-size: 18px; }
+.stepper.small span { min-width: 22px; font-size: 14px; }
+.fpkown { padding: 4px 0 8px; }
+.fpksrc { margin: 8px 0 0; font-size: 11px; }
+
+/* Zubehör */
+.accrow { width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.accicon { flex: 0 0 52px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; color: #6b4e2e; background: rgba(230,190,130,.25); }
+:root[data-mood="moon"] .accicon { color: #e7c48a; background: rgba(230,190,130,.12); }
+.acckinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 4px 0 12px; }
+.acckind { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-size: 10.5px; line-height: 1.15; text-align: center; cursor: pointer; }
+.acckind.on { border-color: var(--teal); color: var(--teal); box-shadow: 0 0 0 1.5px var(--teal) inset; }

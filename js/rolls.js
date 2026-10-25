@@ -1442,6 +1442,7 @@ async function cabinetHtml(fold = false) {
   const cams = gearSort(await DB.all('cameras'), camSortFb);
   const lenses = gearSort(await DB.all('lenses'), lensSortFb);
   const [rolls, frames] = [await DB.all('rolls'), await DB.all('frames')];
+  const nFilters = (await getFilters()).reduce((n, f) => n + (f.count || 1), 0);
   let fresh = null;
   try { fresh = sessionStorage.getItem('kb-newgear'); sessionStorage.removeItem('kb-newgear'); } catch (_) {}
   const camRow = async c => {
@@ -1467,7 +1468,7 @@ async function cabinetHtml(fold = false) {
       <span class="crowart lensart">${ART.lens(l, 60)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(lensLabel(l))}</span>
-        <span class="frowchips"><span>${U.esc(l.mount || 'Bajonett offen')}</span>${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
+        <span class="frowchips"><span>${U.esc(l.mount || 'Bajonett offen')}</span>${l.filterThread ? `<span class="threadtag">⌀ ${U.esc(String(l.filterThread).replace('.', ','))} mm</span>` : ''}${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
       </span>
       <span class="chev">›</span>
     </a>`;
@@ -1482,13 +1483,15 @@ async function cabinetHtml(fold = false) {
     <section class="cabinet${fold ? ' fold' : ''}${fold && (fresh || foldOpen('cabinet')) ? ' open' : ''}" data-fold="cabinet">
       <div class="fridgetop foldhead">
         <span class="fridgeicon cabicon">${ART.cabinet}</span>
-        <div><h2>Kameraschrank</h2><span class="sub2">${cams.length} ${cams.length === 1 ? 'Kamera' : 'Kameras'} · ${lenses.length} ${lenses.length === 1 ? 'Objektiv' : 'Objektive'}</span></div>
+        <div><h2>Kameraschrank</h2><span class="sub2">${cams.length} ${cams.length === 1 ? 'Kamera' : 'Kameras'} · ${lenses.length} ${lenses.length === 1 ? 'Objektiv' : 'Objektive'}${nFilters ? ` · ${nFilters} Filter` : ''}</span></div>
         ${fold ? '<span class="foldchev" aria-hidden="true"></span>' : ''}
       </div>
       <div class="foldbody">
       ${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist" data-sort="cameras">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
         ${brokenRows.length ? `<div class="brokenhead">Kaputt</div><div class="flist" data-sort="cameras">${brokenRows.join('')}</div>` : ''}`, freshCam || foldOpen('cab-cams'))}
       ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>`, freshLens || foldOpen('cab-lenses'))}
+      ${await filtersSubHtml(lenses, foldOpen('cab-filters'))}
+      ${await accessoriesSubHtml(cams, foldOpen('cab-acc'))}
       </div>
     </section>`;
 }
@@ -1503,6 +1506,8 @@ function setupCabinet(root) {
   const f = root.querySelector('.crow.fresh');
   if (f) { setTimeout(() => f.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); }
   root.querySelectorAll('.flist[data-sort]').forEach(setupGearDrag);
+  setupFilters(root);
+  setupAccessories(root);
 }
 async function viewCameras() {
   setHeader('Kameraschrank');
@@ -1605,6 +1610,7 @@ async function viewLens(id) {
         ${field('Brennweite (mm)', 'focal')}
         ${field('Lichtstärke (größte Blende)', 'maxAp')}
         ${field('Kleinste Blende', 'minAp')}
+        ${field('Filtergewinde ⌀ (mm)', 'filterThread', { attrs: 'inputmode="decimal" placeholder="z. B. 52"' })}
       </div>
       ${field('Hersteller', 'maker')}
       ${field('Bezeichnung', 'name')}
