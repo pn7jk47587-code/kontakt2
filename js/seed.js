@@ -405,7 +405,7 @@ const SEED_IMG = Object.fromEntries([
   'cam-minolta-hi-matic-7s', 'cam-olympus-superzoom70', 'cam-praktica-bx20', 'cam-leica-c2',
   'agfa-apx100', 'cinestill-400d', 'cinestill-50d', 'cinestill-800t', 'cinestill-bwxx', 'foma-100', 'foma-200', 'foma-400',
   'harman-phoenix125', 'harman-phoenix2', 'harman-red125', 'harman-switch-azure',
-  'rollei-ir400', 'optik-opticolour200', 'lomo-purple', 'kodak-portra160', 'kodak-portra400', 'kodak-portra800', 'kodak-colorplus200', 'kodak-gold200',
+  'rollei-ir400', 'optik-opticolour200', 'lomo-purple', 'kodak-portra160', 'kodak-portra400', 'kodak-portra800', 'kodak-colorplus200', 'kodak-gold200', 'orwo-wolfen-nc500',
   'ilford-delta100', 'ilford-delta3200', 'ilford-delta400', 'ilford-fp4', 'ilford-hp5', 'ilford-panf', 'ilford-sfx200', 'ilford-xp2',
   'kentmere-200'
 ].map(id => [id, 'img/' + id + '.webp']));
