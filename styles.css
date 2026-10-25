@@ -1392,3 +1392,17 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .rollcard .cardact { top: calc(var(--striph) + 9px); bottom: auto; right: 10px; height: 30px; padding: 0 10px 0 8px; gap: 4px; font-size: 12.5px; border-width: 1.2px; }
 .rollcard .cardact svg { width: 15px; height: 15px; }
 .rollcard.lifted .rc-body { padding-bottom: 10px !important; }
+
+/* Profil: einheitliche Karten in den Farben des App-Logos (Variante C). Jede Karte trägt einen zarten Schimmer ihrer Logostufe,
+   von oben nach unten Bernstein, Orange, Rot, Pink, Violett. Ersetzt die früheren Sonderlooks (Frost, Holz). */
+section.fridge.fold, section.cabinet.fold, section.diaryfold, section.spend.fold, a.photostile { background: var(--card) !important; border: 1px solid var(--line) !important; box-shadow: var(--shadow) !important; color: var(--text) !important; border-radius: 26px !important; margin: 12px 16px !important; }
+.fridge .frow, .cabinet .crow, .diaryfold .crow { background: var(--card) !important; border-color: var(--line) !important; color: var(--text) !important; }
+.cabsub + .cabsub { border-top-color: var(--line) !important; }
+a.photostile { background: linear-gradient(160deg, rgba(255,179,71,.20), var(--card) 70%) !important; border-color: rgba(255,179,71,.45) !important; }
+section.fridge.fold { background: linear-gradient(160deg, rgba(255,138,61,.20), var(--card) 70%) !important; border-color: rgba(255,138,61,.45) !important; }
+section.cabinet.fold { background: linear-gradient(160deg, rgba(255,95,90,.20), var(--card) 70%) !important; border-color: rgba(255,95,90,.45) !important; }
+section.diaryfold { background: linear-gradient(160deg, rgba(255,79,110,.20), var(--card) 70%) !important; border-color: rgba(255,79,110,.45) !important; }
+section.spend.fold { background: linear-gradient(160deg, rgba(163,92,255,.22), var(--card) 70%) !important; border-color: rgba(163,92,255,.45) !important; }
+.photostile .fridgeicon { color: #e8901f !important; } .fridge .fridgeicon { color: #ff7a3d !important; } .cabinet .fridgeicon { color: #ff5f5a !important; }
+.diaryfold .fridgeicon { color: #ff4f6e !important; } .spend .fridgeicon { color: #a35cff !important; }
+.photostile .fridgeicon, .fridge .fridgeicon, .cabinet .fridgeicon, .diaryfold .fridgeicon, .spend .fridgeicon { background: var(--solid) !important; box-shadow: none !important; }
