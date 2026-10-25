@@ -1221,3 +1221,13 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .diarycard .dgroup { margin-bottom: 10px; }
 .diarycard .btn { margin-top: 4px; }
 .diaryrow { display: flex; align-items: center; gap: 12px; }
+
+/* Lightleaks: weiches rosa bis orangerotes Licht, das von einer Seite ins Bild fällt, mit violettem Saum */
+.leak { position: relative; overflow: hidden; }
+.leak::after { content: ''; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; z-index: 1; }
+.leak.l1::after { background: radial-gradient(95% 135% at -10% 45%, rgba(255,70,120,1), rgba(255,120,130,.85) 30%, rgba(255,170,150,.5) 46%, rgba(150,90,230,.3) 60%, transparent 78%); }
+.leak.l2::after { background: radial-gradient(100% 125% at 110% 62%, rgba(255,60,90,1), rgba(255,130,110,.85) 28%, rgba(255,180,140,.45) 45%, rgba(130,90,230,.3) 58%, transparent 76%); }
+.leak.l3::after { background: linear-gradient(0deg, rgba(255,60,110,1) 0%, rgba(255,120,140,.85) 24%, rgba(255,170,160,.45) 40%, rgba(150,100,240,.25) 52%, transparent 66%); }
+.leak.l4::after { background: linear-gradient(100deg, rgba(255,170,190,1) 0%, rgba(255,110,150,.9) 20%, rgba(255,160,130,.55) 36%, rgba(110,100,240,.3) 50%, transparent 66%); }
+.cell.leak .idx, .cell.leak .flags, .cell.leak .ph { position: relative; z-index: 2; }
+.cell.leak .idx, .cell.leak .flags { position: absolute; }

@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 15;
+const SEED_VERSION = 16;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const backBtn = document.getElementById('backBtn');
@@ -60,6 +60,8 @@ async function boot() {
       };
       for (const st of await DB.all('stocks')) if (rec[st.id] && !st.communityIso) { st.communityIso = rec[st.id][0]; st.communitySource = rec[st.id][1]; await DB.put('stocks', st); }
     }
+    // Doppelbelichtung war bisher bei jeder Kamera möglich: Häkchen setzen, damit sich nichts ändert
+    if (!meta || meta.v < 16) for (const c of await DB.all('cameras')) if (c.multiExp === undefined) { c.multiExp = true; await DB.put('cameras', c); }
     const lensIds = new Set((await DB.all('lenses')).map(l => l.id));
     if (!meta || meta.v < 6) await DB.putMany('lenses', SEED_LENSES.filter(l => !lensIds.has(l.id)));
     else if (meta.v < 14) await DB.putMany('lenses', SEED_LENSES.filter(l => l.id === 'lens-olivesan-22' && !lensIds.has(l.id)));

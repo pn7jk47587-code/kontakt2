@@ -137,7 +137,7 @@ Im Reiter „Rolle“ lässt sich ein festes Objektiv für alle Frames wählen. 
 
 In der Frames-Ansicht stehen die kleinen Bildmarken immer in einer Reihe und werden bei vielen Bildern schmaler. Wischst du mit dem Finger darüber, zeigt ein Schild das Bild unter dem Finger, beim Loslassen öffnet es sich.
 
-In der Kamera-Bearbeitung gibt es keine Farbwahl für Kompaktkameras mehr.
+In der Kamera-Bearbeitung gibt es keine Farbwahl für Kompaktkameras mehr. Neu sind die Haken „Doppelbelichtung möglich“ (ohne Haken fehlt in der Bildansicht der Knopf für Doppelbelichtung) und „Kamera hat Lightleaks“. Mit Lightleaks bekommt in der Bildübersicht einer Rolle etwa jedes dritte bis vierte Bild einen rosa bis orangeroten Lichteinfall von links, rechts oder unten, auch in der großen Ansicht des Scans. Welche Bilder das sind, ist je Rolle fest. Es ist nur eine Vorschau, die gespeicherten Scans bleiben unverändert.
 
 In einer Rolle zeigt die Ansicht, solange der Film in der Kamera ist, nur die Reiter „Bilder“ und „Rolle“. Ab „In Entwicklung“ kommt „Entwicklung“ dazu.
 

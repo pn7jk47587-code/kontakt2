@@ -565,11 +565,21 @@ async function viewRoll(id, tab) {
   return rollFrames(body, roll, stock);
 }
 
-async function frameCell(f) {
+// Lightleaks: bei Kameras mit Lichteinfall bekommt etwa jedes dritte bis vierte Bild in der Vorschau einen Leak.
+// Welche Bilder und welche Form, ergibt sich fest aus der Rolle, damit es bei jedem Öffnen gleich aussieht.
+function leakMap(roll, frames) {
+  const m = new Map();
+  let h = 2166136261; for (const c of String(roll.id)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
+  const rnd = () => { h ^= h << 13; h >>>= 0; h ^= h >>> 17; h ^= h << 5; h >>>= 0; return h / 4294967296; };
+  let next = 1 + Math.floor(rnd() * 3);
+  frames.forEach((f, i) => { if (i === next) { m.set(f.id, 1 + Math.floor(rnd() * 4)); next = i + 3 + (rnd() < .5 ? 0 : 1); } });
+  return m;
+}
+async function frameCell(f, leak = 0) {
   const u = f.imgId ? await U.imgUrl(f.imgId, true) : null;
   const pu = !u && f.phoneId ? await U.imgUrl(f.phoneId, true) : null;
   const flags = [f.double ? ART.double : '', f.phoneId && u ? '<span>▣</span>' : ''].join('');
-  return `<a class="cell${u ? ' has' : ''}${pu ? ' phoneprev' : ''}${f.shot ? ' shot' : ''}${f.bonus ? ' bonus' : ''}" href="#/bild/${f.id}">
+  return `<a class="cell${u ? ' has' : ''}${pu ? ' phoneprev' : ''}${f.shot ? ' shot' : ''}${f.bonus ? ' bonus' : ''}${leak ? ' leak l' + leak : ''}" href="#/bild/${f.id}">
     ${pu ? `<img src="${pu}" alt="" class="phoneimg"><span class="phonetag">Handy</span><span class="idx">${frameLabel(f)}</span>` : ''}
     ${u ? `<img src="${u}" alt="">` : pu ? '' : `<div class="ph"><span class="num">${frameLabel(f)}</span>${f.note ? `<span class="pn">${U.esc(f.note.slice(0, 40))}</span>` : ''}${!f.note && (f.aperture || f.shutter) ? `<span class="pn">${f.aperture ? 'f/' + U.esc(f.aperture) : ''} ${U.esc(f.shutter || '')}</span>` : ''}</div>`}
     ${u ? `<span class="idx">${frameLabel(f)}</span>` : ''}
@@ -580,7 +590,9 @@ async function frameCell(f) {
 async function rollFrames(body, roll, stock) {
   const fr = await framesOf(roll.id);
   const st = roll.status || 'entwurf';
-  const cells = await Promise.all(fr.map(frameCell));
+  const rcam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
+  const leaks = rcam?.lightLeaks ? leakMap(roll, fr) : new Map();
+  const cells = await Promise.all(fr.map(f => frameCell(f, leaks.get(f.id) || 0)));
   const hasImgs = fr.some(f => f.imgId);
   let top = '', bottom = '';
   if (st === 'entwurf') {
@@ -914,11 +926,12 @@ async function viewFrame(idWithQuery) {
     <label class="fld"><span>Notizen</span><textarea id="note" rows="3">${U.esc(frame.note || '')}</textarea></label>
     ${!scanUrl ? phoneBoxes(frame, phoneUrl, phoneUrl2) : ''}
     <div class="frametools">
-      <button class="dblbtn${frame.double ? ' on' : ''}" id="dbl" aria-pressed="${!!frame.double}" aria-label="Doppelbelichtung" title="Doppelbelichtung">${ART.double}</button>
+      ${cam && cam.multiExp === false ? '' : `<button class="dblbtn${frame.double ? ' on' : ''}" id="dbl" aria-pressed="${!!frame.double}" aria-label="Doppelbelichtung" title="Doppelbelichtung">${ART.double}</button>`}
     </div>
   </div>`;
 
   renderMedia(view.querySelector('#media'), scanUrl, [phoneUrl, phoneUrl2].filter(Boolean), frame);
+  if (cam?.lightLeaks && roll) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
 
   // Speichern; beim ersten Eintrag wird der heutige Tag als Aufnahmetag gesetzt
   let t;
@@ -959,7 +972,7 @@ async function viewFrame(idWithQuery) {
     save();
     if (lensId && roll) { roll.lastLensId = lensId; DB.put('rolls', roll); }
   });
-  view.querySelector('#dbl').addEventListener('click', async () => {
+  view.querySelector('#dbl')?.addEventListener('click', async () => {
     frame.double = !frame.double;
     if (!frame.date) frame.date = nowLocal();
     await flush(); route();
@@ -1457,7 +1470,7 @@ async function viewLens(id) {
 
 async function viewCamera(id) {
   if (id === 'neu') {
-    const cam = { id: U.uid(), maker: '', name: 'Neue Kamera', format: '135', mount: 'Nikon F', isoDial: true, art: { kind: 'slr', body: 'black' } };
+    const cam = { id: U.uid(), maker: '', name: 'Neue Kamera', format: '135', mount: 'Nikon F', isoDial: true, multiExp: true, art: { kind: 'slr', body: 'black' } };
     await DB.put('cameras', cam);
     try { sessionStorage.setItem('kb-newgear', cam.id); } catch (_) {}
     FRESH_ID = cam.id;
@@ -1494,6 +1507,8 @@ async function viewCamera(id) {
       <label class="check"><input type="checkbox" data-f="shutterAuto"> Zeitautomatik</label>
     </div>
     <label class="check"><input type="checkbox" data-f="isoDial"> ISO-Einstellung an der Kamera</label>
+    <label class="check"><input type="checkbox" data-f="multiExp"> Doppelbelichtung möglich</label>
+    <label class="check"><input type="checkbox" data-f="lightLeaks"> Kamera hat Lightleaks</label>
     <div id="mfBox">
       ${field('Bilder pro 120er-Rolle', 'frames', { num: true })}
       ${field('Bildformat', 'frameSize')}

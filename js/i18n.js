@@ -493,6 +493,8 @@ Vorheriges Bild {0}	Previous frame {0}
 Nächstes Bild {0}	Next frame {0}
 Kamera	Camera
 Anzahl Frames	Number of frames
+Doppelbelichtung möglich	Multiple exposure possible
+Kamera hat Lightleaks	Camera has light leaks
 Filmtagebuch	Film diary
 Filmtagebuch zu diesem Film	Film diary for this film
 Box Speed	Box speed
