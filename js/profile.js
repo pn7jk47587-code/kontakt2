@@ -269,7 +269,7 @@ async function viewProfile() {
   view.innerHTML = `
     <div class="profilehead">
       <button class="gearbtn" id="openSettings" aria-label="Einstellungen">${ART.menu}</button>
-      <button class="heroav big" id="pAv" aria-label="Profilbild ändern">${await avatarHtml(120)}<span class="avedit">Bild ändern</span></button>
+      <button class="heroav big" id="pAv" aria-label="Profilbild ändern">${await avatarHtml(120)}</button>
       <input type="file" accept="image/*" hidden id="pPic">
       <label class="atname pname"><span class="at" aria-hidden="true">@</span><input id="pName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false"></label>
     </div>
