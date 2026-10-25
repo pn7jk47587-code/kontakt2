@@ -127,6 +127,8 @@ Nach Name und optionalem Profilbild führt ein leuchtender Ring mit Sprechblase 
 
 Oben links führt eine kleine Filmdose mit herausschauendem Filmanfang (nur als Umriss) zur Startseite, oben rechts das Profilbild zum Profil. Bei der ersten Anmeldung gibt es nur das Namensfeld ohne Erklärtext. Legst du eine neue Kamera, ein Objektiv oder einen Film an, fehlt dort der Löschen-Knopf. Er erscheint erst, wenn du den Eintrag später wieder öffnest.
 
+Im Reiter „Rolle“ steht neben der Filmauswahl ein kleines Foto des Films. Hat die Kamera eine ISO-Einstellung (Haken „ISO-Einstellung an der Kamera“ im Kameraschrank, gesetzt bei Nikon F3 und Minolta XG-1, nicht bei Praktica L2, Hasselblad und Olive San), gibt es das Feld „ISO an der Kamera eingestellt“. Darunter steht die Herstellerangabe und, wo hinterlegt, eine oft empfohlene ISO mit Quelle: CineStill 800T ISO 500 bei Tageslicht (photobite.uk, CineStill selbst nennt EI 800 bei Kunstlicht), Kodak Portra 400 ISO 200 (shootitwithfilm.com), Wolfen NC500 ISO 400 (Ateliers Marinette). Eigene Empfehlungen trägst du unter Alle Filme beim Film ein.
+
 Im Reiter „Rolle“ lässt sich ein festes Objektiv für alle Frames wählen. Es wird sofort bei allen Frames eingetragen, einzelne Frames kannst du danach trotzdem ändern.
 
 In der Frames-Ansicht stehen die kleinen Bildmarken immer in einer Reihe und werden bei vielen Bildern schmaler. Wischst du mit dem Finger darüber, zeigt ein Schild das Bild unter dem Finger, beim Loslassen öffnet es sich.

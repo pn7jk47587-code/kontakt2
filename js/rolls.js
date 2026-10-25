@@ -813,10 +813,10 @@ function rollInfo(body, roll) {
   body.innerHTML = `
   <div class="card" id="infoform">
     ${field('Name der Rolle', 'title')}
-    <label class="fld"><span>Film</span><select data-f="stockId" id="stocksel"></select></label>
+    <div class="fld"><span>Film</span><div class="filmselrow"><span class="filmselart" id="filmArt"></span><select data-f="stockId" id="stocksel"></select></div></div>
     <label class="fld"><span>Kamera</span><select data-f="cameraId" id="camsel"></select></label>
     <label class="fld"><span>Festes Objektiv für alle Frames</span><select id="lenssel"></select></label>
-    ${field('Belichtet mit ISO/EI', 'ei', { num: true })}
+    <div id="isoBox"></div>
     ${field('Eingelegt am', 'loadedAt', { type: 'date' })}
     ${field('Voll am', 'finishedAt', { type: 'date' })}
     ${area('Notizen zur Rolle', 'notes', 'Thema, Reise, Besonderheiten …', 4)}
@@ -842,6 +842,22 @@ function rollInfo(body, roll) {
       U.toast('Objektiv für alle Frames übernommen');
     }
   });
+  // Kleines Foto des Films neben der Auswahl; ISO-Feld nur, wenn die Kamera eine ISO-Einstellung hat
+  const extras = async () => {
+    const [stock, cam] = await Promise.all([DB.get('stocks', roll.stockId), roll.cameraId ? DB.get('cameras', roll.cameraId) : null]);
+    body.querySelector('#filmArt').innerHTML = stock ? await filmArt(stock, 40) : '';
+    const box = body.querySelector('#isoBox');
+    if (!cam || cam.isoDial !== true) { box.innerHTML = ''; return; }
+    const tips = [];
+    if (stock?.boxIso) tips.push(`Hersteller: ISO ${U.esc(stock.boxIso)}`);
+    if (stock?.communityIso) tips.push(`oft empfohlen: ISO ${U.esc(stock.communityIso)}${stock.communitySource ? ` (${U.esc(stock.communitySource)})` : ''}`);
+    box.innerHTML = `<label class="fld"><span>ISO an der Kamera eingestellt</span><input id="rollIso" inputmode="numeric" value="${U.esc(roll.ei || '')}" placeholder="${U.esc(stock?.boxIso || '')}"></label>
+      ${tips.length ? `<p class="hint isohint">${tips.map(t => `<span>${t}</span>`).join(' · ')}</p>` : ''}`;
+    box.querySelector('#rollIso').addEventListener('input', async e => { roll.ei = e.target.value.replace(/[^\d]/g, ''); await DB.put('rolls', roll); });
+  };
+  extras();
+  body.querySelector('#stocksel').addEventListener('change', () => setTimeout(extras, 80));
+  body.querySelector('#camsel').addEventListener('change', () => setTimeout(extras, 80));
   Promise.all([DB.all('stocks'), DB.all('cameras')]).then(([st, cams]) => {
     body.querySelector('#stocksel').innerHTML = st.sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b))).map(s => `<option value="${s.id}">${U.esc(U.stockLabel(s))}</option>`).join('');
     body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.map(c => `<option value="${c.id}">${U.esc(camLabel(c))}</option>`).join('');
@@ -1434,7 +1450,7 @@ async function viewLens(id) {
 
 async function viewCamera(id) {
   if (id === 'neu') {
-    const cam = { id: U.uid(), maker: '', name: 'Neue Kamera', format: '135', mount: 'Nikon F', art: { kind: 'slr', body: 'black' } };
+    const cam = { id: U.uid(), maker: '', name: 'Neue Kamera', format: '135', mount: 'Nikon F', isoDial: true, art: { kind: 'slr', body: 'black' } };
     await DB.put('cameras', cam);
     try { sessionStorage.setItem('kb-newgear', cam.id); } catch (_) {}
     FRESH_ID = cam.id;
@@ -1470,6 +1486,7 @@ async function viewCamera(id) {
       <label class="check"><input type="checkbox" data-f="shutterT"> T</label>
       <label class="check"><input type="checkbox" data-f="shutterAuto"> Zeitautomatik</label>
     </div>
+    <label class="check"><input type="checkbox" data-f="isoDial"> ISO-Einstellung an der Kamera</label>
     <div id="mfBox">
       ${field('Bilder pro 120er-Rolle', 'frames', { num: true })}
       ${field('Bildformat', 'frameSize')}

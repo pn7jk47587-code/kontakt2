@@ -1195,3 +1195,10 @@ html.locked, html.locked body { overflow: hidden; overscroll-behavior: none; }
 .fcbody input[type=search] { margin-left: auto !important; margin-right: 0 !important; }
 
 .striptip { position: absolute; bottom: 100%; transform: translateX(-50%); margin-bottom: 4px; padding: 4px 10px; border-radius: 999px; background: var(--solid); box-shadow: var(--glassshadow); font-size: 13px; font-weight: 700; white-space: nowrap; pointer-events: none; }
+
+/* Reiter „Rolle“: kleines Filmfoto neben der Filmauswahl */
+.filmselrow { display: flex; align-items: center; gap: 10px; }
+.filmselrow select { flex: 1; min-width: 0; }
+.filmselart { flex: 0 0 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+.filmselart img, .filmselart svg { max-width: 40px; max-height: 40px; }
+.isohint { margin: -4px 0 12px; }

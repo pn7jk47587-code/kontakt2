@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 14;
+const SEED_VERSION = 15;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const backBtn = document.getElementById('backBtn');
@@ -49,6 +49,16 @@ async function boot() {
     for (const l of await DB.all('lenses')) {
       const v = SEED_LENS_APS[l.id];
       if (v && !l.minAp) { l.maxAp = l.maxAp || v.maxAp; l.minAp = v.minAp; await DB.put('lenses', l); }
+    }
+    // Kameras mit ISO-Rad (Nikon F3, Minolta XG-1) und übliche ISO-Empfehlungen mit Quelle
+    if (!meta || meta.v < 15) {
+      const dial = { 'cam-nikon-f3': true, 'cam-minolta-xg1': true, 'cam-praktica-l2': false, 'cam-hasselblad-500cm': false, 'cam-superheadz-olivesan': false };
+      for (const c of await DB.all('cameras')) if (c.id in dial && c.isoDial === undefined) { c.isoDial = dial[c.id]; await DB.put('cameras', c); }
+      const rec = {
+        'cinestill-800t': ['500', 'photobite.uk: bei Tageslicht ISO 500; CineStill selbst nennt EI 800 bei Kunstlicht'],
+        'kodak-portra400': ['200', 'shootitwithfilm.com, Samantha Stortecky: ISO 200 für warme Farben']
+      };
+      for (const st of await DB.all('stocks')) if (rec[st.id] && !st.communityIso) { st.communityIso = rec[st.id][0]; st.communitySource = rec[st.id][1]; await DB.put('stocks', st); }
     }
     const lensIds = new Set((await DB.all('lenses')).map(l => l.id));
     if (!meta || meta.v < 6) await DB.putMany('lenses', SEED_LENSES.filter(l => !lensIds.has(l.id)));

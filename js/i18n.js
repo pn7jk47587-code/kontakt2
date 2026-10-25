@@ -493,6 +493,11 @@ Vorheriges Bild {0}	Previous frame {0}
 Nächstes Bild {0}	Next frame {0}
 Kamera	Camera
 Anzahl Frames	Number of frames
+ISO an der Kamera eingestellt	ISO set on the camera
+ISO-Einstellung an der Kamera	ISO setting on the camera
+Hersteller: ISO {0}	Manufacturer: ISO {0}
+oft empfohlen: ISO {0}	often recommended: ISO {0}
+oft empfohlen: ISO {0} ({1})	often recommended: ISO {0} ({1})
 Festes Objektiv für alle Frames	Fixed lens for all frames
 wechselt je Frame	changes per frame
 Objektiv für alle Frames übernommen	Lens applied to all frames
