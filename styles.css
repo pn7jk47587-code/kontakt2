@@ -1523,3 +1523,9 @@ section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounde
 /* Startseite: Infrarotfilter neben Film und Kamera */
 .stripfilter { display: inline-flex; align-items: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
 .rh-art .filterart { flex: 0 0 auto; }
+
+/* Symbol „Einträge verschieben“ rechts in der Reiterzeile */
+.tabs { display: flex; align-items: flex-end; }
+.reorderbtn { margin: 0 0 6px auto; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; color: var(--text); background: var(--glass); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+.reorderbtn.on { color: #fff; background: var(--teal); border-color: var(--teal); }
+.reorderbar:has(.reordertools[hidden]) { display: none; }

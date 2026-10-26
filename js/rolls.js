@@ -634,7 +634,6 @@ async function rollFrames(body, roll, stock) {
   body.innerHTML = `
     ${top}
     <div class="reorderbar" id="reorderBar">
-      <button type="button" class="btn ghost small" id="reorderOn">${MOVE_IC}Einträge verschieben</button>
       <div class="reordertools" hidden>
         <p class="hint">Halte ein Bild gedrückt und ziehe es an die richtige Stelle. Alles dazwischen rückt nach. Oder verschiebe alle Einträge auf einmal.</p>
         <div class="row gap" style="padding:0">
@@ -722,7 +721,7 @@ function rollIrFilters(roll, frames, filters) {
 /* ---------- Einträge der Bilder verschieben ----------
    Die Plätze (Bild 1, 2, 3 …) bleiben, verschoben wird alles, was zu einem Bild eingetragen ist:
    Blende, Zeit, Objektiv, Filter, Notiz, Datum, Handyfotos, Scans. */
-const MOVE_IC = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M7 4 3.5 7.5 7 11M3.5 7.5H15M17 13l3.5 3.5L17 20M20.5 16.5H9"/></svg>';
+const MOVE_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3.5 7.5 7 11M3.5 7.5H15M17 13l3.5 3.5L17 20M20.5 16.5H9"/></svg>';
 const FRAME_FIXED = ['id', 'rollId', 'index', 'bonus'];
 const frameContent = f => Object.fromEntries(Object.entries(f).filter(([k]) => !FRAME_FIXED.includes(k)));
 const contentEmpty = c => !Object.values(c).some(v => v !== null && v !== undefined && v !== '' && v !== false && !(Array.isArray(v) && !v.length));
@@ -737,10 +736,18 @@ async function applyContents(frames, contents) {
 function setupReorder(body, roll, fr) {
   const bar = body.querySelector('#reorderBar'), grid = body.querySelector('#frameGrid');
   if (!bar || !grid || fr.length < 2) { bar?.remove(); return; }
-  const tools = bar.querySelector('.reordertools'), on = bar.querySelector('#reorderOn');
+  // Symbol zum Verschieben rechts in der Reiterzeile (Bilder · Rolle)
+  const tabs = document.querySelector('.tabs');
+  tabs?.querySelector('#reorderOn')?.remove();
+  const on = document.createElement('button');
+  on.type = 'button'; on.id = 'reorderOn'; on.className = 'reorderbtn';
+  on.setAttribute('aria-label', 'Einträge verschieben'); on.title = 'Einträge verschieben';
+  on.innerHTML = MOVE_IC;
+  (tabs || bar).appendChild(on);
+  const tools = bar.querySelector('.reordertools');
   let undo = null;
-  const setMode = m => { grid.classList.toggle('reorder', m); tools.hidden = !m; on.hidden = m; };
-  on.addEventListener('click', () => setMode(true));
+  const setMode = m => { grid.classList.toggle('reorder', m); tools.hidden = !m; on.classList.toggle('on', m); on.setAttribute('aria-pressed', m); };
+  on.addEventListener('click', () => { if (grid.classList.contains('reorder')) route(); else setMode(true); });
   const commit = async contents => {
     undo = fr.map(frameContent);
     await applyContents(fr, contents);
