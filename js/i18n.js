@@ -708,6 +708,9 @@ Ohne Beschreibung	No description
 Motiv, Licht, Technik, wo du es gesehen hast …	Subject, light, technique, where you saw it …
 Noch keine Filter im Kameraschrank.	No filters in the camera cabinet yet.
 Halte hier fest, was du ausprobieren willst: ein Motiv, eine Technik, ein Bild aus Social Media. Lege mit dem Plus die erste Idee an.	Keep what you want to try here: a subject, a technique, a picture from social media. Add your first idea with the plus.
+Objektiv ist inaktiv	Lens is inactive
+Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.	Inactive lenses are listed under “Inactive” in the cabinet and no longer appear in the frame view.
+Noch keine aktiven Objektive.	No active lenses yet.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

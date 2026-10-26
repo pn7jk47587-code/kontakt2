@@ -913,7 +913,7 @@ function rollInfo(body, roll) {
   body.querySelector('#diaryCard').addEventListener('click', async e => { const img = e.target.closest('img[data-img]'); if (img) zoom(await U.imgUrl(img.dataset.img) || img.src); });
   // Festes Objektiv: gilt für alle Frames der Rolle, einzelne Frames lassen sich danach trotzdem ändern
   const fillLens = async () => {
-    const all = await DB.all('lenses');
+    const all = (await DB.all('lenses')).filter(l => !l.inactive || l.id === roll.fixedLensId);
     const fit = all.filter(l => (l.cameraIds || []).includes(roll.cameraId));
     const list = (fit.length ? fit : all).sort((a, b) => parseFloat(a.focal) - parseFloat(b.focal));
     const sel = body.querySelector('#lenssel');
@@ -969,7 +969,7 @@ async function viewFrame(idWithQuery) {
   const scanUrl = frame.imgId ? await U.imgUrl(frame.imgId) : null;
   const phoneUrl = frame.phoneId ? await U.imgUrl(frame.phoneId) : null;
   const phoneUrl2 = frame.double && frame.phoneId2 ? await U.imgUrl(frame.phoneId2) : null;
-  const camLenses = roll?.cameraId ? (await DB.all('lenses')).filter(l => (l.cameraIds || []).includes(roll.cameraId)) : [];
+  const camLenses = roll?.cameraId ? (await DB.all('lenses')).filter(l => (l.cameraIds || []).includes(roll.cameraId) && (!l.inactive || l.id === frame.lensId)) : [];
   gearSort(camLenses, (a, b) => parseFloat(a.focal) - parseFloat(b.focal));
   const ap = String(frame.aperture || '').replace(/^f\//, '');
   const sh = String(frame.shutter || '');
@@ -1518,7 +1518,7 @@ async function cabinetHtml(fold = false) {
   let fresh = null;
   try { fresh = sessionStorage.getItem('kb-newgear'); sessionStorage.removeItem('kb-newgear'); } catch (_) {}
   const camRow = async c => {
-    const own = lenses.filter(l => (l.cameraIds || []).includes(c.id));
+    const own = lenses.filter(l => !l.inactive && (l.cameraIds || []).includes(c.id));
     const lk = c.lightLeaks ? await leakStats(c.id, rolls, frames) : null;
     return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}${c.inactive ? ' inactive' : ''}" href="#/kamera/${c.id}" data-id="${c.id}">
       <span class="crowart">${await camArt(c, 76)}</span>
@@ -1535,9 +1535,9 @@ async function cabinetHtml(fold = false) {
   const camRows = await Promise.all(working.map(camRow));
   const brokenRows = await Promise.all(broken.map(camRow));
   const inactiveRows = await Promise.all(inactive.map(camRow));
-  const lensRows = lenses.map(l => {
+  const lensRow = l => {
     const names = (l.cameraIds || []).map(id => cams.find(c => c.id === id)).filter(Boolean).map(camLabel);
-    return `<a class="crow${fresh === l.id ? ' fresh' : ''}" href="#/objektiv/${l.id}" data-id="${l.id}">
+    return `<a class="crow${fresh === l.id ? ' fresh' : ''}${l.inactive ? ' inactive' : ''}" href="#/objektiv/${l.id}" data-id="${l.id}">
       <span class="crowart lensart">${ART.lens(l, 60)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(lensLabel(l))}</span>
@@ -1545,7 +1545,10 @@ async function cabinetHtml(fold = false) {
       </span>
       <span class="chev">›</span>
     </a>`;
-  });
+  };
+  // Inaktive Objektive stehen unter den aktiven in einer eigenen Gruppe
+  const lensRows = lenses.filter(l => !l.inactive).map(lensRow);
+  const inactiveLensRows = lenses.filter(l => l.inactive).map(lensRow);
   const freshCam = cams.some(c => c.id === fresh), freshLens = lenses.some(l => l.id === fresh);
   const sub = (key, title, count, add, body, open) => `
       <div class="cabsub fold${open ? ' open' : ''}" data-fold="${key}">
@@ -1567,7 +1570,8 @@ async function cabinetHtml(fold = false) {
         <div class="cabhead foldhead"><h3>Inaktiv<span class="cabcount">${inactiveRows.length}</span></h3><span class="cabtools"><span class="foldchev" aria-hidden="true"></span></span></div>
         <div class="foldbody"><p class="hint inactivehint">Kameras, die gerade im Regal liegen. Sie erscheinen nicht bei „Film einlegen“.</p><div class="flist" data-sort="cameras">${inactiveRows.join('')}</div></div>
       </div>` : ''}
-      ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine Objektive.</p>'}</div>`, freshLens || foldOpen('cab-lenses'))}
+      ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine aktiven Objektive.</p>'}</div>
+        ${inactiveLensRows.length ? `<div class="brokenhead">Inaktiv</div><div class="flist" data-sort="lenses">${inactiveLensRows.join('')}</div>` : ''}`, freshLens || foldOpen('cab-lenses'))}
       ${await filtersSubHtml(lenses, foldOpen('cab-filters'))}
       ${await accessoriesSubHtml(cams, foldOpen('cab-acc'))}
       </div>
@@ -1695,6 +1699,8 @@ async function viewLens(id) {
       <label class="fld"><span>Bajonett</span><select data-f="mount">${MOUNTS.map(m => `<option>${U.esc(m)}</option>`).join('')}</select></label>
       <div class="qlabel">Passt an</div>
       <div class="camchecks" id="camChecks">${cams.map(c => `<label class="camcheck${c.mount && c.mount !== lens.mount ? ' other' : ''}"><input type="checkbox" value="${c.id}" ${lens.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}<br><span class="sub2">${U.esc(c.mount || 'Bajonett offen')}</span></span></label>`).join('')}</div>
+      <label class="check"><input type="checkbox" data-f="inactive"> Objektiv ist inaktiv</label>
+      <p class="hint" style="margin:-4px 0 10px">Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.</p>
       ${area('Notizen', 'notes', 'Eigenheiten, Filtergewinde, Macken …')}
     </div>
     ${used || FRESH_ID === lens.id ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
