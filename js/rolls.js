@@ -1643,10 +1643,11 @@ async function viewAlbumBook(id) {
 
 // Alle hochgeladenen Fotos, nach Rollen getrennt durch eine kleine Zeile
 async function viewAllPhotos() {
+  // Archivieren oben rechts in der Kopfzeile, nur in dieser Ansicht
   setHeader('Alle Fotos');
   const d = await albumData('alle');
-  const arBtn = `<div class="modewrap"><a class="btn ghost small archbtn" href="#/archiv">${ARCHIVE_IC}<span>Archivieren</span></a></div>`;
-  if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Fotos hochgeladen.</div>' + arBtn; return; }
+  const arBtn = `<div class="archcorner"><a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`;
+  if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   let html = '', cur = null;
   d.frames.forEach((f, i) => {
@@ -1671,7 +1672,7 @@ async function viewAllPhotos() {
 /* ---------- Archivieren: früher entwickelte Rollen nachtragen, ohne Einlegen und Entwickeln ----------
    Die Rolle entsteht direkt im Fotoalbum (Status „entwickelt“, archived: true). Die Scans füllen Bild 1, 2, 3 … nach Dateinamen.
    Beschriften und Einstellungen gehen danach wie gewohnt in der Rolle. Alles außer den Fotos ist freiwillig. */
-const ARCHIVE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/></svg>';
+const ARCHIVE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v9.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 10 2.5 6.5 9 5l3 5M20 10l1.5-3.5L15 5l-3 5"/><path d="M9.5 14h5"/></svg>';
 async function viewArchive() {
   setHeader('Archivieren');
   const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));

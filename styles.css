@@ -1673,7 +1673,6 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .ffscol { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--solid, #fff); color: var(--text); font: inherit; font-size: 11.5px; line-height: 1.15; text-align: center; }
 .ffscol.on { border-color: var(--teal); background: var(--tint); box-shadow: 0 0 0 1.5px var(--teal) inset; }
 /* Archivieren */
-.archrow { display: flex; align-items: center; gap: 10px; margin: -2px 18px 12px; }
 .archbtn { display: inline-flex; align-items: center; gap: 6px; }
 .archform .seggroup { margin-bottom: 12px; }
 .archup { display: inline-flex; align-items: center; gap: 8px; justify-content: center; width: 100%; }
@@ -1687,3 +1686,7 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .favstar.on { color: #e2a400; }
 .favstar.on svg { fill: #f5c518; }
 .favstar:active { transform: scale(.9); }
+.archlink { display: inline-flex; align-items: center; gap: 5px; color: var(--text); white-space: nowrap; }
+.archlink svg { flex: 0 0 auto; }
+.archcorner { display: flex; justify-content: flex-end; margin: 8px 14px -4px; }
+.archcorner .archlink { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; text-decoration: none; }

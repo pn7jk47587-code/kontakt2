@@ -279,7 +279,6 @@ async function viewProfile() {
       <div><h2>Alle Fotos</h2><span class="sub2">${photos.length} ${photos.length === 1 ? 'Foto' : 'Fotos'}</span></div>
       <span class="chev">›</span>
     </a>
-    <div class="archrow"><a class="btn ghost small archbtn" href="#/archiv">${ARCHIVE_IC}<span>Archivieren</span></a><span class="sub2">Früher entwickelte Rollen nachtragen</span></div>
 
     <section class="fridge fold${foldOpen('fridge') ? ' open' : ''}" data-fold="fridge">
       <div class="fridgetop foldhead">
