@@ -1,7 +1,9 @@
 /* Belichtungsmesser (Test), geöffnet aus der Bildansicht eines Frames.
-   Aufbau nach Rebeccas Vorlage: Kopfzeile (Schwarzschild, Film, Bildnummer, Einstellungen), links eine Rechenschieber-Skala
-   Zeit ↔ Blende, rechts der Sucher mit Rahmen des gewählten Objektivs, darunter Objektivleiste, Messen/Loggen und vier Walzen
-   (Lichtwert, Korrektur, Filter, ISO) mit Schlössern.
+   Aufbau (eigene Gestaltung im Lightleak-Look):
+   oben der Sucher über die ganze Breite mit eingeblendeten Bedienelementen (Film, Objektiv, Film-Look, Kamera, Vollbild),
+   darunter die Anzeige des gewählten Paars, ein waagerechter Blendenring (drehen = Blende wählen, darunter die Zeit),
+   vier Werte-Chips (Lichtwert, Korrektur, Filter, ISO) mit gemeinsamem Lineal zum Einstellen und Schlössern,
+   unten Mediathek, runder Auslöser „messen“ und „loggen“.
 
    Woher der Lichtwert kommt:
    1. Foto („messen“ oder Mediathek): EXIF liefert Zeit, Blende und ISO der Handykamera. Daraus folgt der Lichtwert, den die
@@ -9,14 +11,13 @@
       (18 % linear) würde.
    2. Live, nur wenn der Browser Belichtungszeit und ISO der Kamera herausgibt (MediaStreamTrack.getSettings, Image Capture).
       Safari auf iOS tut das nach allem, was dazu auffindbar ist, nicht. Dann zeigt Live nur das Verhältnis Messfeld zu Bild.
-   3. Von Hand an der Lichtwert-Walze.
-   Belichtung: LW(ISO) = LW100 + log2(ISO/100) − Korrektur − Filter. Für jede Zeit t der Skala gilt N = √(t_gemessen · 2^LW).
-   Mit Schwarzschild ist t die einzustellende Zeit und t_gemessen die Zeit vor der Korrektur (U.effectiveTime). */
+   3. Von Hand am Lineal.
+   Belichtung: LW(ISO) = LW100 + log2(ISO/100) − Korrektur − Filter. Für eine Blende N gilt t = N² / 2^LW.
+   Mit Schwarzschild wird t danach mit U.reciprocity auf die einzustellende Zeit verlängert. */
 const METER = (() => {
   const LS = 'kb-meter-';
   const ls = (k, d) => { try { const v = localStorage.getItem(LS + k); return v === null ? d : JSON.parse(v); } catch (_) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(LS + k, JSON.stringify(v)); } catch (_) {} };
-  // Frühere Version speicherte die Kalibrierung unter „kb-meter-cal“ als Zahl, das bleibt lesbar
   const getCal = () => { const v = parseFloat(ls('cal', 0)); return isFinite(v) ? v : 0; };
 
   const GREY = 0.18;
@@ -25,24 +26,22 @@ const METER = (() => {
   const loc = () => (typeof I18N !== 'undefined' ? I18N.locale() : 'de-DE');
   const dec = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString(loc(), { maximumFractionDigits: d });
 
-  // Drittelreihen
-  const THIRD_T = ['1/8000', '1/6400', '1/5000', '1/4000', '1/3200', '1/2500', '1/2000', '1/1600', '1/1250', '1/1000', '1/800', '1/640', '1/500', '1/400', '1/320', '1/250', '1/200', '1/160', '1/125', '1/100', '1/80', '1/60', '1/50', '1/40', '1/30', '1/25', '1/20', '1/15', '1/13', '1/10', '1/8', '1/6', '1/5', '1/4', '0.3', '0.4', '0.5', '0.6', '0.8', '1', '1.3', '1.6', '2', '2.5', '3', '4', '5', '6', '8', '10', '13', '15', '20', '25', '30', '40', '50', '60', '90', '120', '180', '240'];
   const THIRD_N = [0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.5, 2.8, 3.2, 3.5, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10, 11, 13, 14, 16, 18, 20, 22, 25, 29, 32, 36, 40, 45, 51, 57, 64, 72, 80, 90];
   const ISOS = [3, 4, 5, 6, 8, 10, 12, 16, 20, 25, 32, 40, 50, 64, 80, 100, 125, 160, 200, 250, 320, 400, 500, 640, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 5000, 6400, 8000, 12800];
-  const EVS = Array.from({ length: (21 + 6) * 3 + 1 }, (_, i) => -6 + i / 3);   // −6 … 21 in Dritteln
-  const COMPS = Array.from({ length: 19 }, (_, i) => -3 + i / 3);              // −3 … +3
-  const FILTS = Array.from({ length: 41 }, (_, i) => i / 3);                   // 0 … +13⅓
+  const EVS = Array.from({ length: (21 + 6) * 3 + 1 }, (_, i) => -6 + i / 3);
+  const COMPS = Array.from({ length: 19 }, (_, i) => -3 + i / 3);
+  const FILTS = Array.from({ length: 41 }, (_, i) => i / 3);
   const FR = ['', '⅓', '⅔'];
   const thirds = (v, sign) => {
     const s = v < -1e-6 ? '−' : sign && v > 1e-6 ? '+' : '';
     const a = Math.abs(v), w = Math.floor(a + 1e-6), f = Math.round((a - w) * 3) % 3;
     return s + (w || !f ? String(w) : '') + FR[f];
   };
-  const tLabel = s => /^1\//.test(s) ? s.slice(2) : String(s).replace('.', ',') + '″';
+  const fT = t => t >= 60 ? `${Math.floor(t / 60)} min ${Math.round(t % 60)} s` : t >= 0.95 ? dec(t, t < 10 ? 1 : 0) + ' s' : '1/' + Math.round(1 / t) + ' s';
+  const tShort = s => /^1\//.test(s) ? s : String(s).replace('.', ',') + '″';
   const tDial = s => /^\d+(\.\d+)?$/.test(s) ? s.replace('.', ',') + ' s' : s + ' s';
-  const nLabel = N => { const n = THIRD_N.reduce((b, x) => Math.abs(Math.log2(x / N)) < Math.abs(Math.log2(b / N)) ? x : b); return Math.abs(Math.log2(n / N)) < 1 / 7 ? n : Math.round(N * 10) / 10; };
+  const nTxt = n => String(n).replace('.', ',');
 
-  // Film- und Objektivgeometrie: Diagonale Kleinbild 43,27 mm
   const DIAG_KB = Math.hypot(36, 24);
   function filmSize(roll, cam) {
     if (roll?.format === '120') {
@@ -72,11 +71,10 @@ const METER = (() => {
     }
     return { spot: n ? s / n : 0, mean, clip: n ? clip / n : 0, dark: n ? dark / n : 0 };
   }
-  // Sichtbares Bildrechteck bei object-fit: cover
   function coverRect(el, iw, ih) {
     const r = el.getBoundingClientRect();
     const s = Math.max(r.width / iw, r.height / ih), w = iw * s, h = ih * s;
-    return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h, box: r };
+    return { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w, height: h };
   }
   async function readExif(file) {
     try {
@@ -95,30 +93,28 @@ const METER = (() => {
   const LOCK = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
   const UNLOCK = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10.5V8a4 4 0 0 1 7.6-1.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   const IC = (d, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
-  const IC_FLIP = IC('<path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/>');
-  const IC_EXP = IC('<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>');
-  const IC_SHR = IC('<path d="M4 14h6v6M20 10h-6V4M10 14l-7 7M14 10l7-7"/>');
-  const IC_GEAR = IC('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>', 21);
-  const IC_LOG = IC('<rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 8"/>', 20);
-  const IC_SHUT = IC('<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5l3.2 8.5M20.5 12l-8.5 3.2M12 20.5 8.8 12M3.5 12l8.5-3.2"/>', 20);
-  const IC_LIB = IC('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/>', 18);
-  const IC_LIVE = IC('<circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>', 18);
+  const IC_FLIP = IC('<path d="M4 12a8 8 0 0 1 13.7-5.6L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15"/><path d="M4 20v-5h5"/>', 19);
+  const IC_EXP = IC('<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>', 19);
+  const IC_SHR = IC('<path d="M4 14h6v6M20 10h-6V4M10 14l-7 7M14 10l7-7"/>', 19);
+  const IC_GEAR = IC('<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>', 19);
+  const IC_LOG = IC('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 20);
+  const IC_LIB = IC('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 15l5-5 4 4 3-3 6 6"/>', 22);
+  const IC_LIVE = IC('<circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/>', 19);
+  const IC_LENS = IC('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/>', 16);
 
   /* opts: { stock, roll, cam, frameLabel, filmArt, lenses: [{id, label, focal, apertures}], lensId, shutters,
              aperture, iso, boxIso, filterSuggest, hasPhone, onLog(result, blob) } */
   function open(opts) {
     const stock = opts.stock, film = filmSize(opts.roll, opts.cam);
     const shNum = (opts.shutters || []).filter(v => U.parseShutter(v) > 0);
+    const hasB = (opts.shutters || []).some(v => v === 'B' || v === 'T');
     const camFast = shNum.length ? Math.min(...shNum.map(U.parseShutter)) : 1 / 1000;
-    let camSlow = shNum.length ? Math.max(...shNum.map(U.parseShutter)) : 1;
-    if ((opts.shutters || []).some(v => v === 'B' || v === 'T')) camSlow = 240;
+    const camSlow = shNum.length ? Math.max(...shNum.map(U.parseShutter)) : 1;
     const lenses = opts.lenses || [];
-    let lensIdx = Math.max(0, lenses.findIndex(l => l.id === opts.lensId));
-    if (!lenses.length) lensIdx = -1;
+    let lensIdx = lenses.length ? Math.max(0, lenses.findIndex(l => l.id === opts.lensId)) : -1;
     const lens = () => lenses[lensIdx] || null;
     const recipKnown = !!stock && U.reciprocity(stock, 2).ok;
 
-    // Zustand; Schlösser halten ihren Wert auch beim nächsten Öffnen
     const locks = ls('locks', { ev: false, comp: false, filt: false, iso: false });
     const isoDef = parseFloat(opts.iso) > 0 ? parseFloat(opts.iso) : parseFloat(opts.boxIso) > 0 ? parseFloat(opts.boxIso) : 100;
     const near = (list, v) => list.reduce((b, x) => Math.abs(x - v) < Math.abs(b - v) ? x : b);
@@ -130,62 +126,55 @@ const METER = (() => {
       cal: getCal(), recip: ls('recip', true) && recipKnown,
       look: ls('look', true), frameOn: ls('frameOn', true), saveShot: ls('saveShot', true),
       phoneN: ls('phoneN', 1.78), phoneF: ls('phoneF', 26),
-      sel: null, measured: false, source: '', exif: null, file: null
+      N: null, measured: false, source: '', exif: null, file: null, active: 'ev'
     };
     let mode = 'live', stream = null, track = null, raf = 0, facing = 'environment', fx = 0.5, fy = 0.5, liveExp = false, last = null;
 
-    const filmType = stock?.type || '';
     const looks = { sw: 'grayscale(1) contrast(1.12)', 'sw-c41': 'grayscale(1) contrast(1.05)', 'sw-umkehr': 'grayscale(1) contrast(1.3)', ir: 'grayscale(1) contrast(1.45) brightness(1.05)', farbneg: 'saturate(1.08) sepia(.1) contrast(.97)', dia: 'saturate(1.3) contrast(1.15)' };
-    const lookCss = looks[filmType] || '';
+    const lookCss = looks[stock?.type] || '';
 
     const ov = document.createElement('div');
     ov.className = 'mtr';
     ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Belichtungsmesser');
     ov.innerHTML = `
       <div class="mtr-glow" aria-hidden="true"></div>
-      <header class="mtr-top">
-        <button type="button" class="mtr-pill mtr-recip${st.recip ? ' on' : ''}" id="mRecip" ${recipKnown ? '' : 'disabled'} aria-pressed="${st.recip}">Schwarzschild <span class="mtr-ck">${IC('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 14)}</span></button>
-        <span class="mtr-film">${opts.filmArt || ''}<span>${U.esc(stock ? (stock.name || U.stockLabel(stock)) : 'Film')}</span></span>
-        <span class="mtr-no">#${U.esc(opts.frameLabel || '')}</span>
-        <button type="button" class="mtr-ic" id="mGear" aria-label="Einstellungen">${IC_GEAR}</button>
-        <button type="button" class="mtr-ic" id="mClose" aria-label="Schließen">${ART.x}</button>
-      </header>
-      <div class="mtr-body">
-        <div class="mtr-scale" id="mScale" role="list" aria-label="Zeit und Blende"></div>
-        <div class="mtr-right">
-          <div class="mtr-view" id="mView">
-            <video id="mVideo" playsinline muted autoplay></video>
-            <img id="mImg" alt="" hidden>
-            <div class="mtr-frame" id="mFrame" hidden><i></i><i></i><i></i><i></i></div>
-            <div class="mtr-spot" id="mSpot" hidden></div>
-            <div class="mtr-tags">
-              <span class="mtr-tag" id="mWb" hidden></span>
-              ${lookCss ? `<button type="button" class="mtr-tag${st.look ? ' on' : ''}" id="mLook" aria-pressed="${st.look}">Film-Look</button>` : ''}
-            </div>
-            <p class="mtr-msg" id="mMsg" hidden></p>
-            <button type="button" class="mtr-vbtn l" id="mFlip" aria-label="Kamera wechseln">${IC_FLIP}</button>
-            <button type="button" class="mtr-vbtn l" id="mLive" aria-label="Zurück zu Live" hidden>${IC_LIVE}</button>
-            <button type="button" class="mtr-vbtn r" id="mExp" aria-label="Sucher vergrößern">${IC_EXP}</button>
-            <label class="mtr-vbtn l t" aria-label="Aus Mediathek" role="button"><input type="file" accept="image/*" id="mLib" hidden>${IC_LIB}</label>
-          </div>
+      <div class="mtr-view" id="mView">
+        <video id="mVideo" playsinline muted autoplay></video>
+        <img id="mImg" alt="" hidden>
+        <div class="mtr-frame" id="mFrame" hidden><i></i><i></i><i></i><i></i></div>
+        <div class="mtr-spot" id="mSpot" hidden></div>
+        <p class="mtr-msg" id="mMsg" hidden></p>
+        <div class="mtr-hud top">
+          <button type="button" class="mtr-hb" id="mClose" aria-label="Schließen">${ART.x}</button>
+          <span class="mtr-film">${opts.filmArt || ''}<span class="mtr-fname">${U.esc(stock ? (stock.name || U.stockLabel(stock)) : 'Film')}</span><span class="mtr-fno">#${U.esc(opts.frameLabel || '')}</span></span>
+          <button type="button" class="mtr-hb" id="mGear" aria-label="Einstellungen">${IC_GEAR}</button>
+        </div>
+        <div class="mtr-hud side">
+          <button type="button" class="mtr-hb" id="mFlip" aria-label="Kamera wechseln">${IC_FLIP}</button>
+          <button type="button" class="mtr-hb" id="mLive" aria-label="Zurück zu Live" hidden>${IC_LIVE}</button>
+          <button type="button" class="mtr-hb" id="mExp" aria-label="Sucher vergrößern">${IC_EXP}</button>
+        </div>
+        <div class="mtr-hud bot">
           <button type="button" class="mtr-lens" id="mLens"></button>
-          <div class="mtr-act">
-            <div class="mtr-read" id="mRead" aria-live="polite"></div>
-            <div class="mtr-btns">
-              <label class="mtr-meas"><input type="file" accept="image/*" capture="environment" id="mCap" hidden>${IC_SHUT}<span>messen</span></label>
-              <button type="button" class="mtr-log" id="mLog" disabled>${IC_LOG}<span>loggen</span></button>
-            </div>
-          </div>
-          <div class="mtr-wheels">
-            <div class="mtr-band" aria-hidden="true"></div>
-            <div class="mtr-wheel" data-k="ev" aria-label="Lichtwert"></div>
-            <div class="mtr-wheel" data-k="comp" aria-label="Korrektur"></div>
-            <div class="mtr-wheel" data-k="filt" aria-label="Filter"></div>
-            <div class="mtr-wheel" data-k="iso" aria-label="ISO"></div>
-          </div>
-          <div class="mtr-wlabels">
-            <button type="button" data-k="ev">LW</button><button type="button" data-k="comp">Korr.</button><button type="button" data-k="filt">Filter</button><button type="button" data-k="iso">ISO</button>
-          </div>
+          <span class="mtr-wb" id="mWb" hidden></span>
+          ${lookCss ? `<button type="button" class="mtr-look${st.look ? ' on' : ''}" id="mLook" aria-pressed="${st.look}">Film-Look</button>` : ''}
+        </div>
+      </div>
+      <div class="mtr-panel">
+        <div class="mtr-read">
+          <div class="mtr-pair" id="mPair"></div>
+          <button type="button" class="mtr-recip${st.recip ? ' on' : ''}" id="mRecip" ${recipKnown ? '' : 'disabled'} role="switch" aria-checked="${st.recip}"><span class="mtr-sw"></span>Schwarzschild</button>
+        </div>
+        <div class="mtr-sub" id="mSub" aria-live="polite"></div>
+        <div class="mtr-ring" id="mRing" aria-label="Blendenring"><div class="mtr-ringin" id="mRingIn"></div></div>
+        <div class="mtr-chips" id="mChips">
+          ${['ev', 'comp', 'filt', 'iso'].map(k => `<div class="mtr-chip" data-k="${k}"><button type="button" class="mtr-cv" data-k="${k}"><span class="mtr-cl"></span><b class="mtr-cn"></b></button><button type="button" class="mtr-lk" data-k="${k}"></button></div>`).join('')}
+        </div>
+        <div class="mtr-rulerwrap"><div class="mtr-ruler" id="mRuler"><div class="mtr-rin" id="mRulerIn"></div></div></div>
+        <div class="mtr-bar">
+          <label class="mtr-side" aria-label="Aus Mediathek" role="button"><input type="file" accept="image/*" id="mLib" hidden>${IC_LIB}<span>Mediathek</span></label>
+          <label class="mtr-shutter" role="button" aria-label="messen"><input type="file" accept="image/*" capture="environment" id="mCap" hidden><span class="mtr-ring2"></span><span class="mtr-stxt">messen</span></label>
+          <button type="button" class="mtr-side log" id="mLog" disabled>${IC_LOG}<span>loggen</span></button>
         </div>
       </div>
       <div class="mtr-sheet" id="mSheet" hidden></div>`;
@@ -195,120 +184,157 @@ const METER = (() => {
     const video = $('#mVideo'), img = $('#mImg'), view = $('#mView');
     const cv = document.createElement('canvas'), ctx = cv.getContext('2d', { willReadFrequently: true });
 
-    /* ---------- Walzen ---------- */
-    const ROW = 34;
-    const LISTS = { ev: EVS, comp: COMPS, filt: FILTS, iso: ISOS };
-    const LBL = {
-      ev: v => Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)).replace('-', '−') : '•',
-      comp: v => thirds(v, true), filt: v => thirds(v, true), iso: v => String(v)
-    };
-    const wheels = {};
-    ov.querySelectorAll('.mtr-wheel').forEach(w => {
-      const k = w.dataset.k, list = LISTS[k];
-      w.innerHTML = `<div class="mtr-pad"></div>${list.map((v, i) => `<div class="mtr-it" data-i="${i}" data-a="${LBL[k](v)}" data-b="${k === 'ev' ? thirds(v) : LBL[k](v)}">${LBL[k](v)}</div>`).join('')}<div class="mtr-pad"></div>`;
-      let tm = null, quiet = false;
-      const idx = () => Math.max(0, Math.min(list.length - 1, Math.round(w.scrollTop / ROW)));
-      const mark = i => w.querySelectorAll('.mtr-it').forEach((e, j) => { const d = Math.abs(j - i); e.className = 'mtr-it' + (d === 0 ? ' on' : d === 1 ? ' n1' : d === 2 ? ' n2' : ''); e.textContent = d === 0 ? e.dataset.b : e.dataset.a; });
-      w.addEventListener('scroll', () => {
-        mark(idx());
-        if (quiet) return;
-        clearTimeout(tm); tm = setTimeout(() => {
-          const i = idx(), v = list[i];
-          if (locks[k]) { set(st[k]); return; }          // gesperrt: zurückspringen
-          if (Math.abs(v - st[k]) > 1e-6) { st[k] = v; U.haptic && U.haptic(8); if (k === 'ev') { st.source = 'Hand'; st.measured = true; lsSet('lastEv', v); } changed(); }
-        }, 90);
-      }, { passive: true });
-      w.addEventListener('click', e => { const it = e.target.closest('.mtr-it'); if (it && !locks[k]) w.scrollTo({ top: +it.dataset.i * ROW, behavior: 'smooth' }); });
-      const set = (v, smooth) => {
-        const i = list.reduce((b, x, j) => Math.abs(x - v) < Math.abs(list[b] - v) ? j : b, 0);
-        quiet = true; w.scrollTo({ top: i * ROW, behavior: smooth ? 'smooth' : 'auto' }); mark(i);
-        setTimeout(() => { quiet = false; }, smooth ? 450 : 80);
-      };
-      wheels[k] = { el: w, set };
-    });
-    const WN = { ev: ['LW', 'Lichtwert'], comp: ['Korr.', 'Korrektur'], filt: ['Filter', 'Filter'], iso: ['ISO', 'ISO'] };
-    const drawLocks = () => ov.querySelectorAll('.mtr-wlabels button').forEach(b => {
-      const k = b.dataset.k; b.classList.toggle('on', !!locks[k]);
-      b.innerHTML = `<span>${WN[k][0]}</span>${locks[k] ? LOCK : UNLOCK}`;
-      b.setAttribute('aria-label', `${WN[k][1]} ${locks[k] ? 'entsperren' : 'sperren'}`);
-      wheels[k].el.classList.toggle('locked', !!locks[k]);
-    });
-    ov.querySelector('.mtr-wlabels').addEventListener('click', e => {
-      const b = e.target.closest('button'); if (!b) return;
-      const k = b.dataset.k; locks[k] = !locks[k]; lsSet('locks', locks);
-      if (locks[k]) lsSet(k, st[k]);
-      U.haptic && U.haptic(); drawLocks();
-    });
-
-    /* ---------- Skala Zeit ↔ Blende ---------- */
+    /* ---------- Rechnung ---------- */
     const evSet = () => st.ev + Math.log2(st.iso / 100) - st.comp - st.filt;
-    function rows() {
-      const ev = evSet(), l = lens();
+    function apertureList() {
+      const l = lens();
       const lo = l ? Math.min(...l.apertures.map(U.parseAperture)) : 1.4, hi = l ? Math.max(...l.apertures.map(U.parseAperture)) : 22;
-      const full = l ? l.apertures : ['1', '1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22', '32', '45', '64'];
-      return THIRD_T.filter(s => { const t = U.parseShutter(s); return t >= camFast / 1.12 && t <= camSlow * 1.12; }).map(s => {
-        const t = U.parseShutter(s);
-        let tm = t, recip = false, recipBad = false;
-        if (st.recip && t > 1) { const e = U.effectiveTime(stock, t); if (e.ok) { tm = e.t; recip = Math.abs(e.t - t) > 0.01; } else recipBad = true; }
-        const N = Math.sqrt(tm * Math.pow(2, ev));
-        const n = nLabel(N);
-        const dial = shNum.find(v => Math.abs(Math.log2(U.parseShutter(v) / t)) < 0.05);
-        const inLens = N >= lo / 1.06 && N <= hi * 1.06;
-        const fullStop = full.some(a => Math.abs(Math.log2(U.parseAperture(a) / n)) < 0.05);
-        return { s, t, tm, N, n, onDial: !!dial, inLens, fullStop, recip, recipBad, dial };
-      });
+      const full = l ? l.apertures.map(U.parseAperture) : [1.4, 2, 2.8, 4, 5.6, 8, 11, 16, 22];
+      const list = THIRD_N.filter(n => n >= lo / 1.04 && n <= hi * 1.04);
+      if (l) full.forEach(n => { if (!list.some(x => Math.abs(Math.log2(x / n)) < 0.05)) list.push(n); });
+      return list.sort((a, b) => a - b).map(n => ({ n, full: full.some(x => Math.abs(Math.log2(x / n)) < 0.05) }));
     }
-    let cur = [];
-    function drawScale(center) {
-      const sc = $('#mScale'), keep = sc.scrollTop;
-      cur = rows();
-      sc.innerHTML = cur.map((r, i) => `<button type="button" role="listitem" class="mtr-row${r.onDial ? ' dial' : ''}${r.inLens ? ' lens' : ''}${r.fullStop && r.inLens ? ' full' : ''}${st.sel && st.sel.s === r.s ? ' sel' : ''}" data-i="${i}">
-          <span class="mtr-t">${tLabel(r.s)}</span><span class="mtr-tick"></span><span class="mtr-n">${r.N >= 0.6 && r.N <= 96 ? String(r.n).replace('.', ',') : ''}</span>${r.recip ? '<span class="mtr-rc" title="mit Schwarzschild" aria-label="mit Schwarzschild"></span>' : ''}</button>`).join('');
-      if (center) centerScale(); else sc.scrollTop = keep;
+    function solve(n) {
+      const ev = evSet();
+      const tm = n * n / Math.pow(2, ev);
+      let t = tm, recip = false, recipBad = false;
+      if (st.recip && tm > 1) { const r = U.reciprocity(stock, tm); if (r.ok) { t = r.tc; recip = Math.abs(r.tc - tm) > 0.01; } else recipBad = true; }
+      let dial = null, dev = 0, bulb = false;
+      if (shNum.length) {
+        dial = shNum.reduce((b, v) => Math.abs(Math.log2(U.parseShutter(v) / t)) < Math.abs(Math.log2(U.parseShutter(b) / t)) ? v : b);
+        dev = Math.log2(U.parseShutter(dial) / t);
+      }
+      const tooFast = t < camFast / Math.SQRT2, tooSlow = t > camSlow * Math.SQRT2;
+      if (tooSlow && hasB) { bulb = true; dial = 'B'; dev = 0; }
+      return { n, tm, t, recip, recipBad, dial, dev, bulb, out: tooFast || (tooSlow && !hasB), tooFast };
     }
-    function centerScale() {
-      const sc = $('#mScale');
-      let i = st.sel ? cur.findIndex(r => r.s === st.sel.s) : -1;
-      if (i < 0 && opts.aperture) { const A = U.parseAperture(opts.aperture); if (A > 0) i = cur.reduce((b, r, j) => Math.abs(Math.log2(r.N / A)) < Math.abs(Math.log2(cur[b].N / A)) ? j : b, 0); }
-      if (i < 0) i = cur.findIndex(r => r.inLens && r.fullStop);
-      const el = sc.children[Math.max(0, i)];
-      if (el) sc.scrollTop = el.offsetTop - sc.clientHeight / 2 + el.offsetHeight / 2;
+
+    /* ---------- Blendenring ---------- */
+    const CELL = 64;
+    let ring = [], ringQuiet = false, ringTm = null;
+    function drawRing(keepN) {
+      ring = apertureList();
+      const inner = $('#mRingIn');
+      inner.innerHTML = ring.map((a, i) => {
+        const s = solve(a.n);
+        const time = s.out ? (s.tooFast ? 'zu hell' : 'zu dunkel') : s.bulb ? 'B' : s.dial ? tShort(s.dial) : tShort(fT(s.t).replace(' s', ''));
+        return `<button type="button" class="mtr-cell${a.full ? ' full' : ''}${s.out ? ' out' : ''}${s.recip ? ' rc' : ''}" data-i="${i}" style="width:${CELL}px"><span class="mtr-cf">${nTxt(a.n)}</span><span class="mtr-ct">${time}</span></button>`;
+      }).join('');
+      const pad = Math.max(0, ($('#mRing').clientWidth - CELL) / 2);
+      inner.style.padding = `0 ${pad}px`;
+      let want = keepN ?? st.N ?? (U.parseAperture(opts.aperture) > 0 ? U.parseAperture(opts.aperture) : null);
+      let i = want ? ring.reduce((b, a, j) => Math.abs(Math.log2(a.n / want)) < Math.abs(Math.log2(ring[b].n / want)) ? j : b, 0) : ring.findIndex(a => a.full && Math.abs(a.n - 5.6) < 0.1);
+      if (i < 0) i = Math.floor(ring.length / 2);
+      setRing(i, false);
     }
-    $('#mScale').addEventListener('click', e => {
-      const b = e.target.closest('.mtr-row'); if (!b) return;
-      const r = cur[+b.dataset.i];
-      st.sel = { s: r.s };
-      U.haptic && U.haptic();
-      $('#mScale').querySelectorAll('.mtr-row').forEach(x => x.classList.toggle('sel', x === b));
+    function setRing(i, smooth) {
+      ringQuiet = true;
+      $('#mRing').scrollTo({ left: i * CELL, behavior: smooth ? 'smooth' : 'auto' });
+      pickRing(i);
+      setTimeout(() => { ringQuiet = false; }, smooth ? 450 : 80);
+    }
+    function pickRing(i) {
+      const a = ring[i]; if (!a) return;
+      st.N = a.n;
+      $('#mRingIn').querySelectorAll('.mtr-cell').forEach((c, j) => c.classList.toggle('on', j === i));
       drawRead();
+    }
+    $('#mRing').addEventListener('scroll', () => {
+      const i = Math.max(0, Math.min(ring.length - 1, Math.round($('#mRing').scrollLeft / CELL)));
+      if (ring[i] && ring[i].n !== st.N) { pickRing(i); if (!ringQuiet) U.haptic && U.haptic(6); }
+      clearTimeout(ringTm); ringTm = setTimeout(() => { if (!ringQuiet) setRing(i, true); }, 140);
+    }, { passive: true });
+    $('#mRingIn').addEventListener('click', e => { const c = e.target.closest('.mtr-cell'); if (c) setRing(+c.dataset.i, true); });
+
+    /* ---------- Anzeige ---------- */
+    function drawRead() {
+      const pair = $('#mPair'), sub = $('#mSub');
+      const src = { Foto: 'aus Foto', Live: 'live', Hand: 'von Hand' }[st.source] || '';
+      if (st.N == null) { pair.innerHTML = ''; return; }
+      const s = solve(st.N);
+      const timeTxt = s.out ? (s.tooFast ? 'zu hell' : 'zu dunkel') : s.bulb ? `B · ${fT(s.t)}` : s.dial ? tDial(s.dial) : fT(s.t);
+      pair.innerHTML = `<span class="mtr-pf">f/${nTxt(s.n)}</span><span class="mtr-pt${s.out ? ' out' : ''}">${timeTxt}</span>`;
+      const bits = [];
+      if (!st.measured) bits.push(liveExp ? 'Live-Messung läuft' : 'Messfeld antippen, dann messen');
+      else bits.push(`LW ${dec(st.ev)}${src ? ' ' + src : ''}`);
+      if (!s.out && s.dial && !s.bulb && Math.abs(s.dev) >= 0.1) bits.push(`genau ${fT(s.t)} (${U.fmtStops(s.dev)})`);
+      if (s.recip) bits.push(`gemessen ${fT(s.tm)}, mit Schwarzschild ${fT(s.t)}`);
+      if (s.recipBad) bits.push('Schwarzschild unbekannt');
+      let warn = '';
+      if (last && mode === 'photo' && !(st.exif && st.exif.ok)) warn = 'Foto ohne Belichtungsdaten (EXIF). Lichtwert von Hand einstellen oder ein Foto der Kamera-App aus der Mediathek laden.';
+      else if (last && last.clip > 0.2) warn = 'Messfeld ausgebrannt, Wert zu niedrig.';
+      else if (last && last.dark > 0.2) warn = 'Messfeld fast schwarz, Wert unsicher.';
+      else if (mode === 'live' && !liveExp && last) bits.push(`Messfeld ${U.fmtStops(Math.log2(Math.max(last.spot, 1e-5) / Math.max(last.mean, 1e-5)))} Blenden zum Bild`);
+      sub.innerHTML = `${bits.map(b => `<span>${U.esc(b)}</span>`).join('')}${warn ? `<span class="mtr-warn">${U.esc(warn)}</span>` : ''}`;
+      $('#mLog').disabled = !st.measured || s.out;
+    }
+    function changed() { drawRing(st.N); drawChips(); }
+
+    /* ---------- Werte-Chips und Lineal ---------- */
+    const P = {
+      ev: { name: 'LW', long: 'Lichtwert', list: EVS, fmt: v => thirds(v), w: 18, label: v => Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)).replace('-', '−') : '' },
+      comp: { name: 'Korr.', long: 'Korrektur', list: COMPS, fmt: v => thirds(v, true), w: 22, label: v => Math.abs(v - Math.round(v)) < 1e-6 ? thirds(v, true) : '' },
+      filt: { name: 'Filter', long: 'Filter', list: FILTS, fmt: v => thirds(v, true), w: 18, label: v => Math.abs(v - Math.round(v)) < 1e-6 ? thirds(v, true) : '' },
+      iso: { name: 'ISO', long: 'ISO', list: ISOS, fmt: v => String(v), w: 40, label: v => String(v) }
+    };
+    function drawChips() {
+      ov.querySelectorAll('.mtr-chip').forEach(c => {
+        const k = c.dataset.k;
+        c.classList.toggle('on', st.active === k); c.classList.toggle('locked', !!locks[k]);
+        c.querySelector('.mtr-cl').textContent = P[k].name;
+        c.querySelector('.mtr-cn').textContent = P[k].fmt(st[k]);
+        c.querySelector('.mtr-cv').setAttribute('aria-pressed', st.active === k);
+        const lk = c.querySelector('.mtr-lk');
+        lk.innerHTML = locks[k] ? LOCK : UNLOCK;
+        lk.setAttribute('aria-label', `${P[k].long} ${locks[k] ? 'entsperren' : 'sperren'}`);
+      });
+      $('#mRuler').classList.toggle('locked', !!locks[st.active]);
+    }
+    let rulerQuiet = false, rulerTm = null;
+    function drawRuler() {
+      const p = P[st.active], inner = $('#mRulerIn');
+      inner.innerHTML = p.list.map((v, i) => { const lb = p.label(v); return `<span class="mtr-tk${lb ? ' maj' : ''}" data-i="${i}" style="width:${p.w}px"><i></i>${lb ? `<b>${lb}</b>` : ''}</span>`; }).join('');
+      const pad = Math.max(0, ($('#mRuler').clientWidth - p.w) / 2);
+      inner.style.padding = `0 ${pad}px`;
+      setRuler(st[st.active], false);
+    }
+    function setRuler(v, smooth) {
+      const p = P[st.active];
+      const i = p.list.reduce((b, x, j) => Math.abs(x - v) < Math.abs(p.list[b] - v) ? j : b, 0);
+      rulerQuiet = true;
+      $('#mRuler').scrollTo({ left: i * p.w, behavior: smooth ? 'smooth' : 'auto' });
+      setTimeout(() => { rulerQuiet = false; }, smooth ? 450 : 80);
+    }
+    $('#mRuler').addEventListener('scroll', () => {
+      if (rulerQuiet) return;
+      const k = st.active, p = P[k];
+      const i = Math.max(0, Math.min(p.list.length - 1, Math.round($('#mRuler').scrollLeft / p.w)));
+      if (locks[k]) { clearTimeout(rulerTm); rulerTm = setTimeout(() => setRuler(st[k], true), 120); return; }
+      const v = p.list[i];
+      if (Math.abs(v - st[k]) > 1e-6) {
+        st[k] = v; U.haptic && U.haptic(6);
+        if (k === 'ev') { st.source = 'Hand'; st.measured = true; lsSet('lastEv', v); }
+        if (locks[k]) lsSet(k, v);
+        changed();
+      }
+      clearTimeout(rulerTm); rulerTm = setTimeout(() => setRuler(st[k], true), 160);
+    }, { passive: true });
+    $('#mChips').addEventListener('click', e => {
+      const lk = e.target.closest('.mtr-lk');
+      if (lk) { const k = lk.dataset.k; locks[k] = !locks[k]; lsSet('locks', locks); if (locks[k]) lsSet(k, st[k]); U.haptic && U.haptic(); drawChips(); return; }
+      const b = e.target.closest('.mtr-cv'); if (!b) return;
+      st.active = b.dataset.k; drawChips(); drawRuler();
     });
 
-    /* ---------- Anzeige unter dem Sucher ---------- */
-    function drawRead() {
-      const r = st.sel && cur.find(x => x.s === st.sel.s);
-      const src = { Foto: 'aus Foto', Live: 'live', Hand: 'von Hand' }[st.source] || '';
-      let h = '';
-      if (last && mode === 'photo' && !(st.exif && st.exif.ok)) h += `<div class="mtr-warn">Foto ohne Belichtungsdaten (EXIF). Lichtwert von Hand einstellen oder ein Foto der Kamera-App aus der Mediathek laden.</div>`;
-      if (r) h += `<div class="mtr-pair"><b>f/${String(r.n).replace('.', ',')}</b><b>${tDial(r.s)}</b></div>
-        <div class="mtr-sub">${r.onDial ? '' : 'Zwischenwert · '}${!r.inLens ? 'außerhalb des Objektivs · ' : ''}${r.recip ? `gemessen ${U.fmtSec(r.tm)} · ` : r.recipBad ? 'Schwarzschild unbekannt · ' : ''}LW ${dec(st.ev)} ${src}</div>`;
-      else if (st.measured) h += `<div class="mtr-pair"><span class="mtr-big">LW ${dec(st.ev)}</span><span class="mtr-src">${src}</span></div><div class="mtr-sub">Zeit und Blende links antippen</div>`;
-      else h += `<div class="mtr-sub">${liveExp ? 'Live-Messung läuft. ' : ''}Messfeld antippen, dann <b>messen</b>.</div>`;
-      if (last && last.clip > 0.2) h += '<div class="mtr-warn">Messfeld ausgebrannt, Wert zu niedrig.</div>';
-      else if (last && last.dark > 0.2) h += '<div class="mtr-warn">Messfeld fast schwarz, Wert unsicher.</div>';
-      else if (mode === 'live' && !liveExp && last) h += `<div class="mtr-sub">Messfeld ${U.fmtStops(Math.log2(Math.max(last.spot, 1e-5) / Math.max(last.mean, 1e-5)))} Blenden zum Bild</div>`;
-      $('#mRead').innerHTML = h;
-      $('#mLog').disabled = !r;
-    }
-    function changed() { drawScale(false); drawRead(); }
-
-    /* ---------- Objektivleiste und Rahmen ---------- */
+    /* ---------- Objektiv und Rahmen ---------- */
     function drawLens() {
       const l = lens(), b = $('#mLens');
-      if (!l) { b.innerHTML = `<span class="mtr-lname">Kein Objektiv gewählt</span>`; b.disabled = true; $('#mFrame').hidden = true; return; }
-      const crop = DIAG_KB / Math.hypot(film.w, film.h), feq = l.focal * crop;
-      const txt = l.focal ? (film.label === 'KB' ? `KB · ${dec(l.focal, 0)} mm` : `${film.label} · ${dec(l.focal, 0)} mm ≈ ${dec(feq, 0)} mm KB`) : U.esc(l.label);
-      b.innerHTML = `<span class="mtr-lname">${txt}</span>${lenses.length > 1 ? '<span class="mtr-lnext">wechseln</span>' : ''}<span class="mtr-lock${st.frameOn ? ' on' : ''}" id="mFrameT" role="switch" aria-checked="${st.frameOn}" aria-label="Bildausschnitt anzeigen">${st.frameOn ? LOCK : UNLOCK}</span>`;
-      b.disabled = false;
+      if (!l) { b.innerHTML = `${IC_LENS}<span>Kein Objektiv</span>`; b.disabled = true; $('#mFrame').hidden = true; return; }
+      const feq = l.focal * DIAG_KB / Math.hypot(film.w, film.h);
+      const txt = l.focal ? (film.label === 'KB' ? `${dec(l.focal, 0)} mm` : `${dec(l.focal, 0)} mm · ${film.label} ≈ ${dec(feq, 0)} mm KB`) : l.label;
+      b.innerHTML = `${IC_LENS}<span>${U.esc(txt)}</span>${lenses.length > 1 ? '<i class="mtr-more">›</i>' : ''}`;
+      b.disabled = lenses.length < 2;
+      b.setAttribute('aria-label', lenses.length > 1 ? `Objektiv ${l.label}, wechseln` : `Objektiv ${l.label}`);
       placeFrame();
     }
     function placeFrame() {
@@ -317,23 +343,22 @@ const METER = (() => {
       if (!l || !l.focal || !st.frameOn || !iw) { fr.hidden = true; return; }
       const el = mode === 'live' ? video : img, c = coverRect(el, iw, ih);
       const feq = l.focal * DIAG_KB / Math.hypot(film.w, film.h);
-      const k = Math.min(1, st.phoneF / feq);                       // Anteil der Bilddiagonale
+      const k = Math.min(1, st.phoneF / feq);
       const portrait = c.height >= c.width;
       const aw = portrait ? Math.min(film.w, film.h) : Math.max(film.w, film.h), ah = portrait ? Math.max(film.w, film.h) : Math.min(film.w, film.h);
       const u = Math.hypot(c.width, c.height) * k / Math.hypot(aw, ah);
       let w = aw * u, h = ah * u;
       const vb = view.getBoundingClientRect();
-      const fit = Math.min(1, (vb.width - 16) / w, (vb.height - 16) / h); w *= fit; h *= fit;   // sichtbar halten
+      const fit = Math.min(1, (vb.width - 24) / w, (vb.height - 24) / h); w *= fit; h *= fit;
       fr.style.width = w + 'px'; fr.style.height = h + 'px';
-      fr.style.left = (c.left - vb.left + c.width / 2 - w / 2) + 'px'; fr.style.top = (c.top - vb.top + c.height / 2 - h / 2) + 'px';
+      fr.style.left = (vb.width / 2 - w / 2) + 'px'; fr.style.top = (vb.height / 2 - h / 2) + 'px';
       fr.classList.toggle('wide', st.phoneF / feq > 1.02 || fit < 0.999);
       fr.hidden = false;
     }
-    $('#mLens').addEventListener('click', e => {
-      if (e.target.closest('#mFrameT')) { st.frameOn = !st.frameOn; lsSet('frameOn', st.frameOn); drawLens(); return; }
+    $('#mLens').addEventListener('click', () => {
       if (lenses.length < 2) return;
       lensIdx = (lensIdx + 1) % lenses.length; U.haptic && U.haptic();
-      st.sel = null; drawLens(); drawScale(true); drawRead();
+      drawLens(); drawRing(st.N);
     });
 
     /* ---------- Messfeld ---------- */
@@ -348,7 +373,8 @@ const METER = (() => {
       sp.hidden = false;
     };
     view.addEventListener('click', e => {
-      if (e.target.closest('button, label')) return;
+      if (e.target.closest('button, label, .mtr-film')) return;
+      if (Date.now() - expAt < 400) return;
       const el = mode === 'live' ? video : img;
       const iw = mode === 'live' ? video.videoWidth : img.naturalWidth, ih = mode === 'live' ? video.videoHeight : img.naturalHeight;
       if (!iw) return;
@@ -359,7 +385,8 @@ const METER = (() => {
       if (mode === 'photo') measurePhoto();
     });
     const relayout = () => { placeSpot(); placeFrame(); };
-    window.addEventListener('resize', relayout);
+    const onResize = () => { relayout(); drawRing(st.N); drawRuler(); };
+    window.addEventListener('resize', onResize);
 
     const draw = (src, iw, ih) => {
       const k = Math.min(1, 480 / Math.max(iw, ih));
@@ -370,7 +397,7 @@ const METER = (() => {
     const setEv = (v, source) => {
       if (locks.ev) return;
       st.ev = Math.round(v * 3) / 3; st.measured = true; st.source = source; lsSet('lastEv', st.ev);
-      wheels.ev.set(st.ev, true);
+      if (st.active === 'ev') setRuler(st.ev, true);
     };
 
     /* ---------- Live ---------- */
@@ -380,7 +407,6 @@ const METER = (() => {
       if (ts - tick < 300 || !video.videoWidth) return;
       tick = ts;
       last = draw(video, video.videoWidth, video.videoHeight);
-      // Nur wenn der Browser Zeit und ISO verrät (Image Capture: exposureTime in 100-µs-Schritten)
       const s = track?.getSettings?.() || {};
       if (s.exposureTime > 0 && s.iso > 0) {
         liveExp = true;
@@ -389,7 +415,7 @@ const METER = (() => {
       }
       if (s.colorTemperature > 0) { $('#mWb').hidden = false; $('#mWb').textContent = `${Math.round(s.colorTemperature)} K${s.whiteBalanceMode === 'continuous' ? ' · AWB' : ''}`; }
       else if (s.whiteBalanceMode) { $('#mWb').hidden = false; $('#mWb').textContent = s.whiteBalanceMode === 'continuous' ? 'AWB' : 'WB fest'; }
-      if (!st.sel) drawRead();
+      drawRead();
     };
     const stopLive = () => { cancelAnimationFrame(raf); raf = 0; if (stream) stream.getTracks().forEach(t => t.stop()); stream = null; track = null; video.srcObject = null; };
     const say = t => { const m = $('#mMsg'); m.hidden = !t; m.textContent = t || ''; };
@@ -413,7 +439,7 @@ const METER = (() => {
       drawRead();
     }
     $('#mFlip').addEventListener('click', () => { facing = facing === 'environment' ? 'user' : 'environment'; video.classList.toggle('mirror', facing === 'user'); startLive(); });
-    $('#mLive').addEventListener('click', () => { startLive(); });
+    $('#mLive').addEventListener('click', () => startLive());
 
     /* ---------- Foto ---------- */
     async function loadPhoto(input) {
@@ -437,20 +463,20 @@ const METER = (() => {
     $('#mCap').addEventListener('change', e => loadPhoto(e.target));
     $('#mLib').addEventListener('change', e => loadPhoto(e.target));
 
-    /* ---------- Sucher, Film-Look, Vollbild ---------- */
+    /* ---------- Film-Look, Vollbild, Schwarzschild ---------- */
     const applyLook = () => { const f = st.look && lookCss ? lookCss : ''; video.style.filter = f; img.style.filter = f; };
     $('#mLook')?.addEventListener('click', e => { st.look = !st.look; lsSet('look', st.look); e.currentTarget.classList.toggle('on', st.look); e.currentTarget.setAttribute('aria-pressed', st.look); applyLook(); });
+    let expAt = 0;
     $('#mExp').addEventListener('click', () => {
+      expAt = Date.now();
       const big = ov.classList.toggle('big');
       $('#mExp').innerHTML = big ? IC_SHR : IC_EXP;
       $('#mExp').setAttribute('aria-label', big ? 'Sucher verkleinern' : 'Sucher vergrößern');
-      setTimeout(relayout, 280);
+      setTimeout(relayout, 320);
     });
-
-    /* ---------- Schwarzschild ---------- */
     $('#mRecip').addEventListener('click', () => {
       st.recip = !st.recip; lsSet('recip', st.recip);
-      $('#mRecip').classList.toggle('on', st.recip); $('#mRecip').setAttribute('aria-pressed', st.recip);
+      $('#mRecip').classList.toggle('on', st.recip); $('#mRecip').setAttribute('aria-checked', st.recip);
       changed();
     });
 
@@ -462,19 +488,22 @@ const METER = (() => {
           <h3>Einstellungen</h3>
           <div class="mtr-srow"><span>Kalibrierung<small>Abgleich mit einem echten Belichtungsmesser. Plus ergibt kürzere Zeiten.</small></span>
             <span class="mtr-step"><button type="button" data-cal="-1" aria-label="Kalibrierung minus">−</button><b>${U.fmtStops(st.cal)}</b><button type="button" data-cal="1" aria-label="Kalibrierung plus">+</button></span></div>
+          <label class="mtr-srow"><span>Bildausschnitt des Objektivs zeigen<small>Ecken im Sucher, umgerechnet auf das Filmformat der Rolle.</small></span>
+            <input type="checkbox" switch id="sFrame" ${st.frameOn ? 'checked' : ''}></label>
           <div class="mtr-srow"><span>Brennweite Handykamera<small>Kleinbild-äquivalent, für den Bildausschnitt. Wird aus dem EXIF eines Messfotos übernommen.</small></span>
             <span class="mtr-in"><input id="sF" inputmode="numeric" value="${dec(st.phoneF, 0)}"> mm</span></div>
           <div class="mtr-srow"><span>Blende Handykamera<small>Nur für eine Live-Messung, falls der Browser Zeit und ISO liefert. Wird aus dem EXIF übernommen.</small></span>
             <span class="mtr-in">f/<input id="sN" inputmode="decimal" value="${dec(st.phoneN, 2)}"></span></div>
           <label class="mtr-srow"><span>Messfoto beim Loggen als Handyfoto speichern<small>Nur wenn das Bild noch kein Handyfoto hat.</small></span>
             <input type="checkbox" switch id="sSave" ${st.saveShot ? 'checked' : ''}></label>
-          <p class="mtr-note">Safari gibt Zeit, ISO und Weißabgleich der Handykamera im Live-Bild nicht heraus. Einen Lichtwert gibt es deshalb über „messen“ (Foto mit EXIF) oder von Hand an der Walze LW. Schlösser halten einen Wert fest, auch beim nächsten Öffnen.</p>
+          <p class="mtr-note">Safari gibt Zeit, ISO und Weißabgleich der Handykamera im Live-Bild nicht heraus. Einen Lichtwert gibt es deshalb über „messen“ (Foto mit EXIF) oder von Hand am Lineal. Schlösser halten einen Wert fest, auch beim nächsten Öffnen.</p>
           <button type="button" class="btn" id="sDone">Fertig</button></div>`;
         sh.querySelectorAll('[data-cal]').forEach(b => b.addEventListener('click', () => {
           const d = +b.dataset.cal / 3; st.cal = Math.round((st.cal + d) * 3) / 3; lsSet('cal', st.cal);
-          if (st.measured && st.source !== 'Hand' && !locks.ev) { st.ev = Math.round((st.ev + d) * 3) / 3; wheels.ev.set(st.ev, true); changed(); }
+          if (st.measured && st.source !== 'Hand' && !locks.ev) { st.ev = Math.round((st.ev + d) * 3) / 3; if (st.active === 'ev') setRuler(st.ev, false); changed(); }
           render();
         }));
+        sh.querySelector('#sFrame').addEventListener('change', e => { st.frameOn = e.target.checked; lsSet('frameOn', st.frameOn); placeFrame(); });
         sh.querySelector('#sF').addEventListener('change', e => { const v = parseFloat(e.target.value.replace(',', '.')); if (v > 5) { st.phoneF = v; lsSet('phoneF', v); placeFrame(); } });
         sh.querySelector('#sN').addEventListener('change', e => { const v = parseFloat(e.target.value.replace(',', '.')); if (v > 0.5) { st.phoneN = v; lsSet('phoneN', v); } });
         sh.querySelector('#sSave').addEventListener('change', e => { st.saveShot = e.target.checked; lsSet('saveShot', st.saveShot); });
@@ -493,13 +522,14 @@ const METER = (() => {
       return await new Promise(res => c.toBlob(b => res(b), 'image/jpeg', 0.88));
     }
     $('#mLog').addEventListener('click', async () => {
-      const r = st.sel && cur.find(x => x.s === st.sel.s); if (!r) return;
+      if (st.N == null) return;
+      const s = solve(st.N); if (s.out) return;
       const blob = st.saveShot && !opts.hasPhone ? await snapshot() : null;
       const l = lens();
       const res = {
-        aperture: String(r.n), shutter: r.dial || r.s, lensId: l ? l.id : null,
+        aperture: String(s.n), shutter: s.dial || (s.t >= 1 ? String(Math.round(s.t)) : '1/' + Math.round(1 / s.t)), lensId: l ? l.id : null,
         meter: { ev100: Math.round(st.ev * 100) / 100, iso: st.iso, comp: st.comp, filter: Math.round(st.filt * 100) / 100, cal: Math.round(st.cal * 100) / 100,
-          recip: !!r.recip, source: st.source || '', tMeasured: r.tm,
+          recip: !!s.recip, source: st.source || '', tMeasured: Math.round(s.tm * 10000) / 10000, tSet: Math.round(s.t * 10000) / 10000,
           phone: st.exif?.ok ? { t: st.exif.t, N: st.exif.N, iso: st.exif.iso, model: st.exif.model } : null,
           spot: { x: Math.round(fx * 1000) / 1000, y: Math.round(fy * 1000) / 1000 } }
       };
@@ -508,16 +538,12 @@ const METER = (() => {
     });
 
     /* ---------- Schließen ---------- */
-    const close = () => { stopLive(); window.removeEventListener('resize', relayout); window.removeEventListener('hashchange', close); ov.remove(); document.body.classList.remove('meteron'); };
+    const close = () => { stopLive(); window.removeEventListener('resize', onResize); window.removeEventListener('hashchange', close); ov.remove(); document.body.classList.remove('meteron'); };
     window.addEventListener('hashchange', close);
     $('#mClose').addEventListener('click', close);
 
-    // Start
-    drawLocks(); drawLens(); applyLook();
-    requestAnimationFrame(() => {
-      Object.entries(wheels).forEach(([k, w]) => w.set(st[k]));
-      drawScale(true); drawRead();
-    });
+    drawLens(); applyLook(); drawChips();
+    requestAnimationFrame(() => { drawRing(); drawRuler(); drawRead(); });
     startLive();
     return { close };
   }
