@@ -143,6 +143,18 @@ Standort aus Handyfotos: iOS kann beim Auswählen aus der Mediathek den Ort entf
 Neue Version: Dateien im Repository ersetzen und in `sw.js` die Zeile `const VERSION = 'kb-v1';` hochzählen (kb-v2 …). Sonst zeigt das iPhone die alte, zwischengespeicherte Version.
 
 
+## Belichtungsmesser (Test)
+
+In der Bildansicht steht neben dem Knopf für Doppelbelichtung ein Knopf mit Belichtungsmesser-Symbol. Er öffnet die Kamera des iPhones. Ein Tipp ins Bild setzt das Messfeld (gelbes Quadrat). Diese Stelle gilt als Mittelgrau.
+
+„Live“ zeigt nur, wie viele Blenden das Messfeld heller oder dunkler ist als das ganze Bild. Einen Lichtwert gibt es dort nicht, weil Safari auf iOS die Belichtungszeit und ISO der Handykamera nicht an Web-Apps weitergibt und die Handykamera ihre Belichtung selbst nachregelt.
+
+Einen Lichtwert gibt es über „Foto aufnehmen“ oder „Aus Mediathek“. Die App liest aus den EXIF-Daten des Fotos Zeit, Blende und ISO der Handykamera. Daraus folgt der Lichtwert, den die Handykamera gewählt hat. Die Helligkeit im Messfeld verschiebt ihn auf den Wert, bei dem diese Stelle Mittelgrau (18 % Reflexion) würde. Angezeigt wird der Lichtwert bei ISO 100 und, für die gewählte Blende und die Film-ISO, die Belichtungszeit samt nächster Zeit an der Kamera und gegebenenfalls Schwarzschild. Die Film-ISO ist mit der ISO der Rolle vorbelegt, sonst mit der Box Speed. Ein Tipp an eine andere Stelle misst neu. „In den Frame übernehmen“ trägt Blende und Zeit ein und merkt sich die Messung. In der Bildansicht steht danach „Letzte Messung LW … bei ISO …“.
+
+Nicht auf einem iPhone geprüft ist, ob Fotos über „Foto aufnehmen“ ihre EXIF-Daten behalten. Berichte im Apple-Entwicklerforum sprechen dafür, dass iOS sie bei direkt aufgenommenen Fotos entfernen kann, bei Fotos aus der Mediathek eher nicht. Fehlen sie, meldet die App das. Dann ein Foto mit der Kamera-App machen und über „Aus Mediathek“ laden.
+
+Abgleich mit anderen Belichtungsmessern: dieselbe Stelle messen, die Abweichung ablesen und mit „Kalibrierung“ in Drittelblenden ausgleichen. Plus ergibt einen höheren Lichtwert, also kürzere Zeiten. Die Kalibrierung bleibt auf dem iPhone gespeichert und gilt für alle Messungen. Ausgebrannte oder fast schwarze Messfelder liefern falsche Werte, die App warnt dann. Es ist eine Objektmessung (reflektiertes Licht), keine Lichtmessung.
+
 ## Filmtagebuch
 
 Das Filmtagebuch ist eine eigene Karte im Profil direkt nach dem Kameraschrank, so groß wie die anderen. Aufgeklappt zeigt sie alle Filme mit Einträgen, das Plus legt einen neuen an. In den Einstellungen steht es nicht mehr. Außerdem gibt es auf jeder Filmseite unter „Alle Filme“ den Knopf „Filmtagebuch zu diesem Film“. Je Film schreibst du unter „Deine Erfahrungen“ Notizen und lädst Beispielfotos hoch, sortiert nach Lichtsituation: Box Speed, Unterbelichtet, Überbelichtet, Tageslicht, Innen, Kunstlicht, Blitz und Nacht. Die acht Lichtsituationen stehen als Raster aus Kacheln, zwei nebeneinander, jede mit eigenem Plus und ihren Fotos. Ein Tipp auf ein Foto vergrößert es, das × entfernt es. Liegt der Film in der Kamera, zeigt der Reiter „Rolle“ unter den Einstellungen eine umrandete Karte „Deine Erfahrungen mit …“ mit Notizen und Fotos. Die Einträge stecken in der Sicherung (ZIP) mit drin. „Reset/Test“ löscht die Fotos, die Notizen bleiben.

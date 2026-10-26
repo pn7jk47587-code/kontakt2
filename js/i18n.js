@@ -647,6 +647,35 @@ Kamera ist inaktiv	Camera is inactive
 Kameras, die gerade im Regal liegen. Sie erscheinen nicht bei „Film einlegen“.	Cameras that are resting on the shelf. They don't appear under “Load film”.
 {0} (inaktiv)	{0} (inactive)
 Noch kein Foto hinterlegt.	No photo yet.
+Belichtungsmesser	Light meter
+Foto aufnehmen	Take photo
+Aus Mediathek	From library
+Film-ISO	Film ISO
+Kalibrierung	Calibration
+Kalibrierung minus	Calibration minus
+Kalibrierung plus	Calibration plus
+In den Frame übernehmen	Apply to frame
+Tippe auf die Stelle, die Mittelgrau werden soll.	Tap the spot that should become mid-grey.
+Messpunkt gegenüber Gesamtbild	Spot compared with whole frame
+Das Live-Bild liefert keine Belichtungsdaten. Für einen Lichtwert ein Foto aufnehmen.	The live image carries no exposure data. Take a photo to get an exposure value.
+Kamera im Browser nicht verfügbar. Ein Foto funktioniert trotzdem.	Camera not available in the browser. A photo still works.
+Kein Zugriff auf die Kamera. Ein Foto funktioniert trotzdem.	No camera access. A photo still works.
+Kamera konnte nicht starten. Ein Foto funktioniert trotzdem.	The camera could not start. A photo still works.
+Lese Foto …	Reading photo …
+Das Foto lässt sich nicht öffnen.	The photo cannot be opened.
+Messpunkt ist im Handybild ausgebrannt. Der Wert ist zu niedrig.	The spot is blown out in the phone image. The value is too low.
+Messpunkt ist im Handybild fast schwarz. Der Wert ist unsicher.	The spot is almost black in the phone image. The value is uncertain.
+Das Foto enthält keine Belichtungsdaten (EXIF). Ein Lichtwert lässt sich daraus nicht berechnen.	The photo has no exposure data (EXIF). No exposure value can be calculated from it.
+Mit einem Foto aus der Kamera-App über „Aus Mediathek“ klappt es eher.	A photo from the Camera app via “From library” is more likely to work.
+Lichtwert bei ISO 100	EV at ISO 100
+LW {0}	EV {0}
+Nächste Zeit an der Kamera:	Nearest speed on the camera:
+({0} Blenden)	({0} stops)
+Mit Schwarzschild belichten:	With reciprocity, expose:
+Letzte Messung	Last reading
+bei ISO {0}	at ISO {0}
+Messung übernommen	Reading applied
+Blenden	stops
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

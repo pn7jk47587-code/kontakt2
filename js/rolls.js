@@ -997,6 +997,8 @@ async function viewFrame(idWithQuery) {
     ${!scanUrl ? phoneBoxes(frame, phoneUrl, phoneUrl2) : ''}
     <div class="frametools">
       ${cam && cam.multiExp === false ? '' : `<button class="dblbtn${frame.double ? ' on' : ''}" id="dbl" aria-pressed="${!!frame.double}" aria-label="Doppelbelichtung" title="Doppelbelichtung">${ART.double}</button>`}
+      <button class="dblbtn${frame.meter ? ' on' : ''}" id="meterBtn" aria-label="Belichtungsmesser" title="Belichtungsmesser">${ART.meter}</button>
+      ${frame.meter ? `<span class="meterlast"><span>Letzte Messung</span> <b>LW ${String(frame.meter.ev100).replace('.', ',')}</b> <span>bei ISO ${U.esc(String(frame.meter.ei))}</span></span>` : ''}
     </div>
   </div>`;
 
@@ -1041,6 +1043,22 @@ async function viewFrame(idWithQuery) {
     view.querySelector('#apOther').value = !cur || apList().includes(cur) ? '' : cur;
     save();
     if (lensId && roll) { roll.lastLensId = lensId; DB.put('rolls', roll); }
+  });
+  // Belichtungsmesser (Test): übernimmt Blende und Zeit in diesen Frame
+  view.querySelector('#meterBtn').addEventListener('click', () => {
+    METER.open({
+      stock, ei: roll?.ei || stock?.boxIso || 100,
+      apertures: apList(), shutters: shList, aperture: String(frame.aperture || '').replace(/^f\//, ''),
+      onApply: async r => {
+        frame.aperture = r.aperture;
+        if (r.shutter) frame.shutter = r.shutter;
+        frame.meter = { ev100: r.ev100, ei: r.ei, cal: Math.round(r.cal * 100) / 100, phone: r.phone, spot: r.spot, at: nowLocal() };
+        frame.shot = true;
+        if (!frame.date) frame.date = nowLocal();
+        if (!frame.lensId && lensId) frame.lensId = lensId;
+        await flush(); U.toast('Messung übernommen'); route();
+      }
+    });
   });
   view.querySelector('#dbl')?.addEventListener('click', async () => {
     frame.double = !frame.double;
