@@ -63,7 +63,7 @@ In der Bildübersicht einer Rolle sitzt der Papierkorb als großer runder Knopf 
 
 Die Rollenkarten auf der Startseite sind kompakt: schmalerer Filmstreifen oben, darunter Name und Kamera, der kleine Knopf für den nächsten Schritt (Entwickeln, Scans hochladen, Ansehen) steht rechts auf Höhe dieses Textes. Lange Namen brechen in die nächste Zeile um und überlappen den Knopf nicht.
 
-Die Farben der drei Stadien stammen aus dem Verlauf des App-Logos: Film in der Kamera Orange, In Entwicklung Pinkrot, Fotoalbum Violett. Im hellen Sonnen-Look sind die Töne etwas dunkler, damit Schrift lesbar bleibt.
+Die Startseite folgt dem Stil des Profils: Jede Rollenkarte hat einen zarten Verlauf ihrer Statusfarbe, der von unten aufsteigt, und einen feinen Rand in derselben Farbe. Die Knöpfe tragen immer die Farbe des nächsten Status und sind etwas kräftiger gefüllt (Entwickeln pinkrot, Scans hochladen violett). „Ansehen“ im Fotoalbum bleibt violett. „Film einlegen“ ist orange, weil es in den ersten Status führt. Die Farben der drei Stadien stammen aus dem Verlauf des App-Logos: Film in der Kamera Orange, In Entwicklung Pinkrot, Fotoalbum Violett. Im hellen Sonnen-Look sind die Töne etwas dunkler, damit Schrift lesbar bleibt.
 
 Auf der Startseite lassen sich „In Entwicklung“ und „Fotoalbum“ mit dem Pfeil rechts neben der Überschrift ein- und ausklappen. Neben der Überschrift steht die Zahl der Rollen, die App merkt sich den Zustand. „Film in der Kamera“ bleibt immer offen.
 

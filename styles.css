@@ -1472,3 +1472,20 @@ section.shots.fold { margin: 12px 16px !important; padding: 14px; border-radius:
 section.shots .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .shots .fridgeicon { color: #d659c8 !important; background: var(--solid) !important; box-shadow: none !important; }
 .shots .txrow .sub2 { margin-left: 6px; }
+
+/* Startseite im Stil des Profils: Karten mit zartem Verlauf ihrer Statusfarbe aus dem Logo.
+   Knöpfe tragen die Farbe des nächsten Status, etwas kräftiger als die Karte. */
+:root { --s1rgb: 255,138,61; --s2rgb: 255,79,110; --s3rgb: 163,92,255; }
+.rollcard.st-entwurf, .rollcard.st-belichtet, .rollcard.st-entwickelt { border-width: 1px !important; border-radius: 26px !important; overflow: hidden; }
+.rollcard.st-entwurf { background: linear-gradient(20deg, rgba(var(--s1rgb),.30), rgba(var(--s1rgb),.10) 55%, var(--card) 85%) !important; border-color: rgba(var(--s1rgb),.5) !important; }
+.rollcard.st-belichtet { background: linear-gradient(20deg, rgba(var(--s2rgb),.30), rgba(var(--s2rgb),.10) 55%, var(--card) 85%) !important; border-color: rgba(var(--s2rgb),.5) !important; }
+.rollcard.st-entwickelt { background: linear-gradient(20deg, rgba(var(--s3rgb),.30), rgba(var(--s3rgb),.10) 55%, var(--card) 85%) !important; border-color: rgba(var(--s3rgb),.5) !important; }
+.rollcard .strip { border-radius: 25px 25px 0 0; }
+.rollcard .rc-body { background: transparent !important; }
+.rollcard .cardact { border-width: 1.5px !important; font-weight: 800; box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+.rollcard .cardact.to-dev { color: var(--st2); border-color: var(--st2); background: linear-gradient(135deg, rgba(var(--s2rgb),.34), rgba(var(--s2rgb),.18)); }
+.rollcard .cardact.to-album { color: var(--st3); border-color: var(--st3); background: linear-gradient(135deg, rgba(var(--s3rgb),.36), rgba(var(--s3rgb),.2)); }
+.rollcard .cardact.open-album { color: var(--st3); border-color: var(--st3); background: linear-gradient(135deg, rgba(var(--s3rgb),.36), rgba(var(--s3rgb),.2)); }
+/* „Film einlegen“ führt in den ersten Status: Orange */
+.newroll { background: linear-gradient(135deg, rgba(var(--s1rgb),.34), rgba(var(--s1rgb),.16)) !important; border: 1.5px solid var(--st1) !important; color: var(--st1) !important; font-weight: 800; }
+.homefold > h2.sec.foldhead, h2.sec { letter-spacing: .1em; }
