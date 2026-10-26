@@ -1218,7 +1218,8 @@ async function viewFrame(idWithQuery) {
   // Belichtungsmesser (Test): übernimmt Blende und Zeit in diesen Frame
   view.querySelector('#meterBtn').addEventListener('click', () => {
     METER.open({
-      stock, ei: roll?.ei || stock?.boxIso || 100,
+      stock, ei: roll?.ei || '', boxIso: stock?.boxIso || '',
+      lensName: curLens() ? lensLabel(curLens()) : '',
       apertures: apList(), shutters: shList, aperture: String(frame.aperture || '').replace(/^f\//, ''),
       onApply: async r => {
         frame.aperture = r.aperture;

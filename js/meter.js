@@ -60,7 +60,10 @@ const METER = (() => {
     const apList = apertures.length ? apertures : ['1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22'];
     const shNum = (opts.shutters || []).filter(v => U.parseShutter(v) > 0);
     let ap = apList.includes(String(opts.aperture || '')) ? String(opts.aperture) : apList[Math.floor(apList.length / 2)];
-    let cal = getCal(), ei = parseFloat(opts.ei) > 0 ? parseFloat(opts.ei) : 100;
+    const box = parseFloat(opts.boxIso) > 0 ? parseFloat(opts.boxIso) : null;
+    let isoIn = parseFloat(opts.ei) > 0 ? String(parseFloat(opts.ei)) : '';
+    const curEi = () => parseFloat(isoIn) > 0 ? parseFloat(isoIn) : (box || 100);
+    let cal = getCal(), ei = curEi();
     let mode = 'live', stream = null, raf = 0, fx = 0.5, fy = 0.5, photo = null, last = null, result = null;
 
     const ov = document.createElement('div');
@@ -83,12 +86,11 @@ const METER = (() => {
         </div>
         <div id="mRead" class="mread" aria-live="polite"></div>
         <div id="mSet" class="mset" hidden>
-          <div class="mline"><span class="mlab">Film-ISO</span><input id="mEi" inputmode="numeric" value="${U.esc(String(ei))}"></div>
+          <div class="mline"><span class="mlab">ISO <span id="mEiSrc"></span></span><input id="mEi" inputmode="numeric" value="${U.esc(isoIn)}" placeholder="${box ? U.esc(String(box)) : '100'}"></div>
           <div class="mline"><span class="mlab">Kalibrierung</span>
             <span class="mcal"><button type="button" id="mCalM" aria-label="Kalibrierung minus">−</button><b id="mCalV"></b><button type="button" id="mCalP" aria-label="Kalibrierung plus">+</button></span></div>
-          <div class="mlab">Blende</div>
-          <div class="chipwrap" id="mAp">${apList.map(v => `<button type="button" class="chip${v === ap ? ' on' : ''}" data-v="${v}">${v.replace('.', ',')}</button>`).join('')}</div>
-          <div id="mRes" class="mres"></div>
+          <div class="mlab mtabhead">${opts.lensName ? U.esc(opts.lensName) : 'Kein Objektiv gewählt, volle Blendenreihe'}</div>
+          <div id="mRes" class="mtab" role="list"></div>
           <button type="button" class="btn primary" id="mApply" disabled>In den Frame übernehmen</button>
         </div>
         <p class="hint mhint">Tippe auf die Stelle, die Mittelgrau werden soll.</p>
@@ -211,26 +213,44 @@ const METER = (() => {
       const evEi = ev100 + Math.log2(ei / 100);
       read.innerHTML = `<div class="mexif"><span class="mlab">Handyfoto</span> <span>${fT(x.t)} · f/${fN(x.N)} · ISO ${Math.round(x.iso)}</span>${x.model ? ` <span class="mlab">${U.esc(x.model)}</span>` : ''}</div>
         <div class="mbig"><span class="mlab">Lichtwert bei ISO 100</span><b>LW ${f1(ev100)}</b></div>${warn(m)}`;
-      const N = U.parseAperture(ap);
-      const t = N * N / Math.pow(2, evEi);
-      let pick = null, dev = 0;
-      if (shNum.length) {
-        pick = shNum.reduce((b, v) => Math.abs(Math.log2(U.parseShutter(v) / t)) < Math.abs(Math.log2(U.parseShutter(b) / t)) ? v : b);
-        dev = Math.log2(U.parseShutter(pick) / t);
-      }
-      const r = opts.stock && t > 1 ? U.reciprocity(opts.stock, t) : null;
-      res.innerHTML = `<div class="mout"><span>f/${ap.replace('.', ',')}</span><b>${fT(t)}</b></div>
-        ${pick ? `<p class="hint">Nächste Zeit an der Kamera: <b>${shTxt(pick)}</b> (${U.fmtStops(dev)} Blenden)</p>` : ''}
-        ${r ? (r.ok ? `<p class="hint">Mit Schwarzschild belichten: <b>${U.fmtSec(r.tc)}</b></p>` : `<p class="hint">Schwarzschild: ${U.esc(r.msg)}</p>`) : ''}`;
-      result = { aperture: ap, shutter: pick || null, ev100: Math.round(ev100 * 10) / 10, ei, cal, t,
-        phone: { t: x.t, N: x.N, iso: x.iso, model: x.model }, spot: { x: Math.round(fx * 1000) / 1000, y: Math.round(fy * 1000) / 1000 } };
-      btn.disabled = false;
+      // Für jede Blende des Objektivs die Zeit, bei der das Messfeld Mittelgrau wird
+      const fastest = shNum.length ? Math.min(...shNum.map(U.parseShutter)) : 0;
+      const slowest = shNum.length ? Math.max(...shNum.map(U.parseShutter)) : 0;
+      rows = apList.map(a => {
+        const N = U.parseAperture(a), t = N * N / Math.pow(2, evEi);
+        let pick = null, dev = 0;
+        if (shNum.length) {
+          pick = shNum.reduce((b, v) => Math.abs(Math.log2(U.parseShutter(v) / t)) < Math.abs(Math.log2(U.parseShutter(b) / t)) ? v : b);
+          dev = Math.log2(U.parseShutter(pick) / t);
+        }
+        const r = opts.stock && t > 1 ? U.reciprocity(opts.stock, t) : null;
+        const out = shNum.length && (t < fastest / Math.SQRT2 || t > slowest * Math.SQRT2);
+        return { a, t, pick, dev, r, out };
+      });
+      res.innerHTML = rows.map((w, i) => `<button type="button" role="listitem" class="mrow${w.a === ap ? ' on' : ''}${w.out ? ' out' : ''}" data-i="${i}">
+          <span class="mf">f/${w.a.replace('.', ',')}</span>
+          <b class="mt">${fT(w.t)}</b>
+          <span class="mc">${w.out ? (w.t < fastest ? 'kürzer als die Kamera' : 'länger als die Kamera') : w.pick ? `Kamera ${shTxt(w.pick)}${Math.abs(w.dev) >= 0.05 ? ` <i>${U.fmtStops(w.dev)}</i>` : ''}` : ''}${w.r ? (w.r.ok ? `<br>Schwarzschild ${U.fmtSec(w.r.tc)}` : '<br>Schwarzschild unbekannt') : ''}</span>
+        </button>`).join('');
+      $('#mEiSrc').textContent = parseFloat(isoIn) > 0 ? '' : (box ? '(Box Speed)' : '');
+      base = { ev100: Math.round(ev100 * 10) / 10, ei, cal, phone: { t: x.t, N: x.N, iso: x.iso, model: x.model }, spot: { x: Math.round(fx * 1000) / 1000, y: Math.round(fy * 1000) / 1000 } };
+      pickRow();
     }
-    $('#mAp').addEventListener('click', e => {
-      const b = e.target.closest('.chip'); if (!b) return;
-      ap = b.dataset.v; $('#mAp').querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b)); render();
+    let rows = [], base = null;
+    function pickRow() {
+      const w = rows.find(r => r.a === ap);
+      const btn = $('#mApply');
+      result = w && base ? Object.assign({ aperture: w.a, shutter: w.pick || null, t: w.t }, base) : null;
+      btn.disabled = !result;
+      btn.textContent = result ? `f/${w.a.replace('.', ',')} · ${w.pick ? shTxt(w.pick) : fT(w.t)} übernehmen` : 'In den Frame übernehmen';
+    }
+    $('#mRes').addEventListener('click', e => {
+      const b = e.target.closest('.mrow'); if (!b) return;
+      ap = rows[+b.dataset.i].a; U.haptic && U.haptic();
+      $('#mRes').querySelectorAll('.mrow').forEach(x => x.classList.toggle('on', x === b));
+      pickRow();
     });
-    $('#mEi').addEventListener('input', e => { const v = parseFloat(e.target.value.replace(',', '.')); if (v > 0) { ei = v; render(); } });
+    $('#mEi').addEventListener('input', e => { isoIn = e.target.value.replace(',', '.').replace(/[^\d.]/g, ''); ei = curEi(); render(); });
     const step = d => { cal = Math.round((cal + d) * 3) / 3; setCal(cal); render(); };
     $('#mCalM').addEventListener('click', () => step(-1 / 3));
     $('#mCalP').addEventListener('click', () => step(1 / 3));

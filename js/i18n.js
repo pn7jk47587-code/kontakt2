@@ -675,6 +675,14 @@ Mit Schwarzschild belichten:	With reciprocity, expose:
 Letzte Messung	Last reading
 bei ISO {0}	at ISO {0}
 Messung übernommen	Reading applied
+Kein Objektiv gewählt, volle Blendenreihe	No lens selected, full aperture range
+kürzer als die Kamera	faster than the camera
+länger als die Kamera	slower than the camera
+Kamera {0}	Camera {0}
+Schwarzschild {0}	Reciprocity {0}
+Schwarzschild unbekannt	Reciprocity unknown
+(Box Speed)	(box speed)
+{0} übernehmen	Apply {0}
 Blenden	stops
 ISO (Infrarot)	ISO (infrared)
 Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.	No filters yet. Add them in the camera cabinet under “Filters”.
