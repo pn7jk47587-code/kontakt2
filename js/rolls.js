@@ -718,6 +718,64 @@ function rollIrFilters(roll, frames, filters) {
   return filters.filter(f => ids.has(f.id) && isIrFilter(f));
 }
 
+const SEARCH_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 20 20"/></svg>';
+/* Filtersuche in der Bildansicht: Lupe oben, darunter gewählte und zuletzt in der Rolle benutzte Filter, beim Tippen alle Treffer.
+   Antippen wählt oder entfernt einen Filter, der Haken übernimmt. */
+function openFrameFilterSearch(filters, chosen, roll, onDone, onCancel) {
+  let pick = [...chosen];
+  const recent = new Set(roll?.lastFilterIds || []);
+  const hay = f => [filterCode(f), f.code, filterName(f), f.notes, ...(f.colors || []).map(c => c.name), filterKind(f) === 'screw' ? 'schraubfilter' : 'schiebefilter', f.thread ? f.thread + ' mm' : ''].filter(Boolean).join(' ').toLowerCase();
+  const ov = document.createElement('div');
+  ov.className = 'modalbg';
+  ov.innerHTML = `
+    <div class="modal ffsearch" role="dialog" aria-modal="true" aria-labelledby="ffsTitle">
+      <h2 id="ffsTitle">Filter wählen</h2>
+      <input type="search" id="ffsQ" placeholder="Nummer oder Name, z. B. 121 oder Pol" aria-label="Filter suchen" autocomplete="off">
+      <div class="ffslist" id="ffsList"></div>
+      <div class="modalfoot"><button class="closex" id="ffsNo" aria-label="Abbrechen">${ART.x}</button><span class="sub2" id="ffsCount"></span><button class="okbtn" id="ffsOk" aria-label="Übernehmen">${ART.check}</button></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const $ = id => ov.querySelector('#' + id);
+  const one = (f, label) => `<button type="button" class="ffsrow${pick.includes(f.id) ? ' on' : ''}${f.colorKey ? ' sub' : ''}" data-filter="${f.id}" aria-pressed="${pick.includes(f.id)}">
+      ${filterArt(f, f.colorKey ? 30 : 40)}${!f.colorKey && f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}<span class="ffsname">${U.esc(label || filterName(f))}</span><span class="ffscheck" aria-hidden="true"></span></button>`;
+  // Sets mit Farben: Kopfzeile mit Bild, darunter die Farben einzeln
+  const row = f => (f.colors || []).length
+    ? `<div class="ffsset"><div class="ffssethead">${filterArt(f, 40)}${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}<span class="ffsname">${U.esc(filterName(f))}</span></div>
+        <div class="ffsgrid">${f.colors.map(c => { const v = filterById(filters, f.id + '#' + c.k); return `<button type="button" class="ffscol${pick.includes(v.id) ? ' on' : ''}" data-filter="${v.id}" aria-pressed="${pick.includes(v.id)}">${filterArt(v, 34)}<span>${U.esc(c.name)}</span></button>`; }).join('')}</div></div>`
+    : one(f);
+  const draw = () => {
+    const q = $('ffsQ').value.toLowerCase().trim();
+    let html;
+    if (q) {
+      const hits = filters.filter(f => q.split(/\s+/).every(w => hay(f).includes(w)));
+      html = hits.length ? hits.map(row).join('') : '<p class="hint">Kein Filter gefunden.</p>';
+    } else {
+      const base = id => String(id).split('#')[0];
+      const top = filters.filter(f => pick.some(id => base(id) === f.id) || [...recent].some(id => base(id) === f.id));
+      const rest = filters.filter(f => !top.includes(f));
+      html = (top.length ? `<div class="ffshead">Gewählt und zuletzt benutzt</div>${top.map(row).join('')}` : '')
+        + `<div class="ffshead">Alle Filter</div>${rest.map(row).join('')}`;
+    }
+    $('ffsList').innerHTML = html;
+    $('ffsCount').textContent = pick.length ? `${pick.length} gewählt` : '';
+  };
+  draw();
+  setTimeout(() => $('ffsQ').focus(), 80);
+  $('ffsQ').addEventListener('input', draw);
+  $('ffsList').addEventListener('click', e => {
+    const b = e.target.closest('[data-filter]'); if (!b) return;
+    const id = b.dataset.filter;
+    pick = pick.includes(id) ? pick.filter(x => x !== id) : [...pick, id];
+    b.classList.toggle('on', pick.includes(id)); b.setAttribute('aria-pressed', pick.includes(id));
+    $('ffsCount').textContent = pick.length ? `${pick.length} gewählt` : '';
+    U.haptic && U.haptic(10);
+  });
+  const close = () => { ov.remove(); onCancel && onCancel(); };
+  $('ffsNo').addEventListener('click', close);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  $('ffsOk').addEventListener('click', () => { ov.remove(); onDone(pick); });
+}
+
 /* ---------- Einträge der Bilder verschieben ----------
    Die Plätze (Bild 1, 2, 3 …) bleiben, verschoben wird alles, was zu einem Bild eingetragen ist:
    Blende, Zeit, Objektiv, Filter, Notiz, Datum, Handyfotos, Scans. */
@@ -1105,11 +1163,11 @@ async function viewFrame(idWithQuery) {
   const isIR = isIrFilm(stock);
   let myFilters = (await getFilters()).filter(f => isIR || !isIrFilter(f));
   if (isIR) myFilters.sort((a, b) => isIrFilter(b) - isIrFilter(a));
-  let filterIds = (frame.filterIds || roll?.lastFilterIds || []).filter(id => myFilters.some(f => f.id === id));
+  let filterIds = (frame.filterIds || roll?.lastFilterIds || []).filter(id => filterById(myFilters, id));
   const IR_ISOS = ['8', '10', '12', '16', '20', '25'];
   const iso = String(frame.iso || (isIR ? roll?.lastIso || '' : ''));
-  const filterChips = () => filterIds.map(id => myFilters.find(f => f.id === id)).filter(Boolean)
-    .map(f => `<span class="ffchip">${filterArt(f, 22)}<span>${U.esc(filterCode(f) || filterName(f))}</span></span>`).join('');
+  const filterChips = () => filterIds.map(id => filterById(myFilters, id)).filter(Boolean)
+    .map(f => `<span class="ffchip">${filterArt(f, 22)}<span>${U.esc(filterShort(f))}</span></span>`).join('');
 
   view.innerHTML = `
   <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
@@ -1120,7 +1178,8 @@ async function viewFrame(idWithQuery) {
     ${camLenses.length ? `<div class="qlabel">Objektiv</div>
     <div class="lensrow" id="lensRow">${camLenses.map(l => `<button type="button" class="lensbtn${lensId === l.id ? ' on' : ''}" data-lens="${l.id}" aria-label="${U.esc(lensLabel(l))}" aria-pressed="${lensId === l.id}">${ART.lens(l, 54)}</button>`).join('')}</div>` : ''}
     <div class="qlabel">Filter</div>
-    ${myFilters.length ? `<div class="filterpickrow" id="filterRow">${myFilters.map(f => `<button type="button" class="ffbtn${filterIds.includes(f.id) ? ' on' : ''}" data-filter="${f.id}" aria-pressed="${filterIds.includes(f.id)}" aria-label="${U.esc(filterName(f))}">${filterArt(f, 34)}<span>${U.esc(filterCode(f) || filterName(f))}</span></button>`).join('')}</div>`
+    ${myFilters.length ? `<div class="seggroup ffuse" id="filterUse"><button type="button" class="seg${filterIds.length ? '' : ' on'}" data-use="0">Ohne Filter</button><button type="button" class="seg${filterIds.length ? ' on' : ''}" data-use="1">Mit Filter</button></div>
+    <div class="ffsel" id="filterSel"${filterIds.length ? '' : ' hidden'}></div>`
       : '<p class="hint">Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.</p>'}
     ${isIR ? `<div class="qlabel">ISO (Infrarot)</div>
     <div class="chipwrap" id="isoRow"><span class="chipset">${chipHtml(IR_ISOS, iso)}</span>
@@ -1182,14 +1241,32 @@ async function viewFrame(idWithQuery) {
     clearTimeout(t); DB.put('frames', frame); U.haptic && U.haptic(10);
   });
   const drawTop = () => { view.querySelector('#frameFilters').innerHTML = filterChips() + (isIR && frame.iso ? `<span class="ffchip iso">ISO ${U.esc(frame.iso)}</span>` : ''); };
-  view.querySelector('#filterRow')?.addEventListener('click', e => {
-    const b = e.target.closest('[data-filter]'); if (!b) return;
-    const fid = b.dataset.filter;
-    filterIds = filterIds.includes(fid) ? filterIds.filter(x => x !== fid) : [...filterIds, fid];
-    frame.filterIds = [...filterIds];
-    b.classList.toggle('on', filterIds.includes(fid)); b.setAttribute('aria-pressed', filterIds.includes(fid));
+  // Filter: erst „Mit Filter“ wählen, dann öffnet sich die Suche. Gewählte Filter stehen darunter, ein Tipp auf „Ändern“ öffnet die Suche erneut.
+  const setFilters = ids => {
+    filterIds = [...ids]; frame.filterIds = [...filterIds];
     if (roll) { roll.lastFilterIds = [...filterIds]; DB.put('rolls', roll); }
-    U.haptic && U.haptic(10); drawTop(); save();
+    drawTop(); drawSel(); save();
+  };
+  const drawSel = () => {
+    const sel = view.querySelector('#filterSel'); if (!sel) return;
+    const fs = filterIds.map(id => filterById(myFilters, id)).filter(Boolean);
+    sel.innerHTML = fs.map(f => `<span class="ffchip">${filterArt(f, 26)}<span>${U.esc(filterShort(f))}</span></span>`).join('')
+      + `<button type="button" class="btn ghost small ffedit" id="filterEdit">${SEARCH_IC}${fs.length ? 'Ändern' : 'Filter suchen'}</button>`;
+    sel.querySelector('#filterEdit').addEventListener('click', () => openFrameFilterSearch(myFilters, filterIds, roll, ids => { setFilters(ids); syncUse(); }));
+  };
+  const syncUse = () => {
+    const use = filterIds.length > 0 || view.querySelector('#filterUse [data-use="1"]')?.classList.contains('pending');
+    view.querySelectorAll('#filterUse .seg').forEach(x => x.classList.toggle('on', (x.dataset.use === '1') === use));
+    const sel = view.querySelector('#filterSel'); if (sel) sel.hidden = !use;
+  };
+  drawSel();
+  view.querySelector('#filterUse')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-use]'); if (!b) return;
+    U.haptic && U.haptic(10);
+    if (b.dataset.use === '0') { setFilters([]); syncUse(); return; }
+    view.querySelectorAll('#filterUse .seg').forEach(x => x.classList.toggle('on', x === b));
+    view.querySelector('#filterSel').hidden = false;
+    openFrameFilterSearch(myFilters, filterIds, roll, ids => { setFilters(ids); syncUse(); }, () => syncUse());
   });
   if (isIR) {
     const row = view.querySelector('#isoRow'), other = view.querySelector('#isoOther');
@@ -1310,7 +1387,7 @@ async function viewFrame(idWithQuery) {
   });
   let t0 = null;
   const onStart = e => {
-    if (e.target.closest('.slides, input, textarea, .cmprange, .framestrip')) { t0 = null; return; }
+    if (e.target.closest('.slides, input, textarea, .cmprange, .framestrip, .lensrow, .chipwrap, .ffsel, .seggroup')) { t0 = null; return; }
     t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
   const onEnd = e => {

@@ -1536,3 +1536,128 @@ body.meteron .donebtn, body.meteron .framenavbtn { display: none; }
 .mtr-note { font-size: 12.5px; color: var(--muted); margin: 12px 0; line-height: 1.4; }
 .mtr-sheetbox .btn { width: 100%; }
 @media (max-height: 700px) { .mtr-wheels { height: 136px; } .mtr-band { top: 51px; } .mtr-pad { height: 51px; } .mtr-read { min-height: 32px; } }
+
+/* Wiederhergestellt: diese Regeln fehlten nach kb-v108 versehentlich */
+/* Filter und Infrarot-ISO in der Bildansicht */
+.framefilters { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 16px 0; }
+.framefilters:empty { display: none; }
+.ffchip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 4px; border-radius: 999px; font-size: 12.5px; font-weight: 700; background: var(--card); border: 1px solid var(--line); color: var(--text); }
+.ffchip.iso { padding-left: 10px; background: rgba(160,20,40,.14); border-color: rgba(200,40,60,.4); }
+.filterpickrow { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 4px; scrollbar-width: none; }
+.filterpickrow::-webkit-scrollbar { display: none; }
+.ffbtn { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; padding: 6px 8px; border-radius: 14px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; max-width: 110px; }
+.ffbtn span { max-width: 94px; text-align: center; line-height: 1.15; }
+.ffbtn.on { border-color: var(--teal); box-shadow: 0 0 0 1.5px var(--teal) inset; }
+.filterrow .filterart { flex: 0 0 auto; }
+
+/* Bildansicht: Aufnahmetag oben */
+.framedate { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 16px 0; padding: 4px 6px 4px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.framedate input[type=date] { width: auto !important; min-width: 0; height: 32px !important; padding: 0 10px !important; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--text); background: var(--bg2); border: 0; }
+/* Profil: Fotozähler (Logostufe Magenta, zwischen Tagebuch und Geld) */
+section.shots.fold { margin: 12px 16px !important; padding: 14px; border-radius: 26px !important; background: linear-gradient(160deg, rgba(214,89,200,.22), var(--card) 70%) !important; border: 1px solid rgba(214,89,200,.45) !important; box-shadow: var(--shadow) !important; color: var(--text); }
+section.shots .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+.shots .fridgeicon { color: #d659c8 !important; background: var(--solid) !important; box-shadow: none !important; }
+.shots .txrow .sub2 { margin-left: 6px; }
+
+/* Startseite im Stil des Profils: Karten mit zartem Verlauf ihrer Statusfarbe aus dem Logo.
+   Knöpfe tragen die Farbe des nächsten Status, etwas kräftiger als die Karte. */
+:root { --s1rgb: 255,138,61; --s2rgb: 255,79,110; --s3rgb: 163,92,255; }
+.rollcard.st-entwurf, .rollcard.st-belichtet, .rollcard.st-entwickelt { border-width: 1px !important; border-radius: 26px !important; overflow: hidden; }
+.rollcard.st-entwurf { background: linear-gradient(20deg, rgba(var(--s1rgb),.30), rgba(var(--s1rgb),.10) 55%, var(--card) 85%) !important; border-color: rgba(var(--s1rgb),.5) !important; }
+.rollcard.st-belichtet { background: linear-gradient(20deg, rgba(var(--s2rgb),.30), rgba(var(--s2rgb),.10) 55%, var(--card) 85%) !important; border-color: rgba(var(--s2rgb),.5) !important; }
+.rollcard.st-entwickelt { background: linear-gradient(20deg, rgba(var(--s3rgb),.30), rgba(var(--s3rgb),.10) 55%, var(--card) 85%) !important; border-color: rgba(var(--s3rgb),.5) !important; }
+.rollcard .strip { border-radius: 25px 25px 0 0; }
+.rollcard .rc-body { background: transparent !important; }
+.rollcard .cardact { border-width: 1.5px !important; font-weight: 800; box-shadow: 0 3px 10px rgba(0,0,0,.08); }
+.rollcard .cardact.to-dev { color: var(--st2); border-color: var(--st2); background: linear-gradient(135deg, rgba(var(--s2rgb),.34), rgba(var(--s2rgb),.18)); }
+.rollcard .cardact.to-album { color: var(--st3); border-color: var(--st3); background: linear-gradient(135deg, rgba(var(--s3rgb),.36), rgba(var(--s3rgb),.2)); }
+.rollcard .cardact.open-album { color: var(--st3); border-color: var(--st3); background: linear-gradient(135deg, rgba(var(--s3rgb),.36), rgba(var(--s3rgb),.2)); }
+/* „Film einlegen“ führt in den ersten Status: Orange */
+.newroll { background: linear-gradient(135deg, rgba(var(--s1rgb),.34), rgba(var(--s1rgb),.16)) !important; border: 1.5px solid var(--st1) !important; color: var(--st1) !important; font-weight: 800; }
+.homefold > h2.sec.foldhead, h2.sec { letter-spacing: .1em; }
+
+/* Profil: Ideen (Logostufe zwischen Pink und Magenta) */
+section.ideas.fold { margin: 12px 16px !important; padding: 14px; border-radius: 26px !important; background: linear-gradient(160deg, rgba(232,84,154,.22), var(--card) 70%) !important; border: 1px solid rgba(232,84,154,.45) !important; box-shadow: var(--shadow) !important; color: var(--text); }
+section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+.ideas .fridgeicon { color: #e8549a !important; background: var(--solid) !important; box-shadow: none !important; }
+.ideagrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.ideatile { position: relative; display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 8px; min-height: 96px; border-radius: 18px; border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; text-align: left; cursor: pointer; overflow: hidden; }
+.ideatile img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; display: block; }
+.ideamore { position: absolute; top: 14px; right: 14px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; color: #fff; background: rgba(0,0,0,.5); }
+.ideatext { font-size: 13.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; padding: 0 2px; }
+.ideatile.hasimg .ideatext { -webkit-line-clamp: 2; }
+.ideatags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
+.ideatag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px 2px 3px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--bg2); }
+.ideatag svg { width: 16px; height: 16px; }
+
+/* Bildansicht: Aufnahmetag als Text, das unsichtbare Datumsfeld liegt darüber und öffnet den Kalender */
+.framedate { position: relative; }
+.framedate .fdval { padding: 6px 12px; border-radius: 999px; background: var(--bg2); font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.framedate input[type=date] { position: absolute !important; inset: 0; width: 100% !important; max-width: none !important; min-width: 0 !important; height: 100% !important; opacity: 0; margin: 0; padding: 0 !important; cursor: pointer; }
+/* Rolle: Einträge verschieben */
+.reorderbar { margin: 10px 16px 0; }
+.reorderbar .hint { margin: 0 0 8px; }
+.grid.reorder .cell { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; animation: wiggle .3s ease-in-out infinite alternate; }
+.grid.reorder .cell:nth-child(2n) { animation-delay: .15s; }
+@keyframes wiggle { from { transform: rotate(-.8deg); } to { transform: rotate(.8deg); } }
+@media (prefers-reduced-motion: reduce) { .grid.reorder .cell { animation: none; } }
+.cell.dragfrom { opacity: .3; }
+.cell.droptarget { outline: 2.5px solid var(--teal); outline-offset: 2px; }
+.dragghost { position: fixed; z-index: 1000; pointer-events: none; transform: scale(1.08); box-shadow: 0 14px 30px rgba(0,0,0,.3); opacity: .95; animation: none !important; }
+.grid.reorder .cell, .grid.reorder .cell img { -webkit-user-drag: none; }
+
+/* Startseite: Infrarotfilter neben Film und Kamera */
+.stripfilter { display: inline-flex; align-items: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.rh-art .filterart { flex: 0 0 auto; }
+
+/* Symbol „Einträge verschieben“ rechts in der Reiterzeile */
+.tabs { display: flex; align-items: flex-end; }
+.reorderbtn { margin: 0 0 6px auto; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; color: var(--text); background: var(--glass); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); }
+.reorderbtn.on { color: #fff; background: var(--teal); border-color: var(--teal); }
+.reorderbar:has(.reordertools[hidden]) { display: none; }
+
+/* Filter hinzufügen: Schiebe- oder Schraubfilter */
+#fpkKind, #feKind { margin-bottom: 10px; }
+#fpsThread .chip.mine { border-color: var(--teal); font-weight: 800; }
+#fpsThread .chip.on { background: var(--teal); color: #fff; border-color: var(--teal); }
+#fpsThread .chipset { display: flex; flex-wrap: wrap; gap: 6px; } #fpsThread .chip { padding: 0 11px; }
+
+/* Filterfotos */
+img.filterart.fimg { display: block; object-fit: contain; flex: 0 0 auto; }
+.ideatag img.filterart.fimg { display: inline-block; vertical-align: -3px; }
+.fe-photo { display: block; width: 150px; height: 150px; object-fit: contain; margin: 0 auto 4px; }
+
+/* Schriftzug komplett weiß (Wunsch 26.10.2026). Bei Tageslicht trägt ihn ein weicher dunkler Schatten, damit er auf hellem Grund lesbar bleibt. */
+.wordmark, .wordmark span { color: #fff; background: none; -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: #fff; }
+.wordmark { text-shadow: 0 1px 2px rgba(20, 16, 34, .55), 0 0 14px rgba(20, 16, 34, .35); }
+html[data-mood="moon"] .wordmark { text-shadow: none; }
+
+/* Bildansicht: Filter erst mit „Mit Filter“, Auswahl über die Suche */
+.ffuse { margin-bottom: 8px; }
+.ffsel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 4px; }
+.ffsel .ffchip { padding-right: 12px; }
+.ffedit { display: inline-flex; align-items: center; gap: 6px; }
+.ffsearch input[type=search], .ffsearch input[type=search]:placeholder-shown:not(:focus) { width: 100% !important; min-width: 0; padding: 0 14px 0 40px !important; color: var(--text); background-position: 13px 50%; cursor: text; }
+.ffslist { max-height: 52vh; overflow-y: auto; margin: 8px -4px 0; padding: 0 4px; -webkit-overflow-scrolling: touch; }
+.ffshead { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 12px 2px 6px; }
+.ffsrow { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; margin-bottom: 6px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); color: var(--text); text-align: left; font: inherit; }
+.ffsrow .ffsname { flex: 1 1 auto; min-width: 0; }
+.ffsrow .ffscheck { flex: 0 0 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); }
+.ffsrow.on { border-color: var(--teal); background: var(--tint); }
+.ffsrow.on .ffscheck { border-color: var(--teal); background: var(--teal) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat; }
+/* Farbfolien-Set: Farbpunkte in der Liste, kleine Kacheln im Filter, Farben einzeln in der Suche */
+.geldots { display: inline-flex; gap: 3px; align-items: center; padding: 0 2px !important; background: none !important; }
+.geldots i { width: 11px; height: 11px; border-radius: 3px; display: block; box-shadow: 0 0 0 1px rgba(0,0,0,.15) inset; }
+.gellist { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 10px; }
+.gelitem { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.ffsset { border: 1px solid var(--line); border-radius: 16px; padding: 6px; margin-bottom: 6px; background: var(--card); }
+.ffssethead { display: flex; align-items: center; gap: 10px; padding: 2px 4px 6px; font-weight: 600; }
+.ffsrow.sub { padding: 5px 10px; margin-bottom: 4px; }
+.ffsset .ffsrow.sub:last-child { margin-bottom: 0; }
+.gelstrip { width: 64px; height: 10px; padding: 0 !important; border-radius: 4px; align-self: center; box-shadow: 0 0 0 1px rgba(0,0,0,.12) inset; }
+.gelbox { margin-bottom: 10px; } .gelbox summary { cursor: pointer; font-weight: 600; margin-bottom: 8px; }
+.gellist { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 8px; }
+.gelitem { font-size: 12px; line-height: 1.2; }
+.ffsgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.ffscol { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--solid, #fff); color: var(--text); font: inherit; font-size: 11.5px; line-height: 1.15; text-align: center; }
+.ffscol.on { border-color: var(--teal); background: var(--tint); box-shadow: 0 0 0 1.5px var(--teal) inset; }

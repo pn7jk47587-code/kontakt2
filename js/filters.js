@@ -50,7 +50,7 @@ const COKIN_GROUPS = [
   ['spezial', 'Spezialeffekte und Masken', [
     ['185', 'Radial Zoom'], ['186', 'Rainspot'], ['187', 'Cyclone'], ['188', 'Softspot'], ['189', 'Sunspot'], ['195', 'Rainbow 1'], ['196', 'Rainbow 2'],
     ['216', 'Speed 2'], ['217', 'Super Speed 2'], ['219', 'Prism 2'], ['220', 'Mirage'],
-    ['340', 'Creative Mask'], ['342', 'Double Mask 1'], ['345', 'Double Mask 2'], ['346', 'Double Exposure'], ['397', 'Pre-shaped Frames']]]
+    ['340', 'Creative Mask'], ['375', 'Creative Filters (Farbfolien-Set)'], ['342', 'Double Mask 1'], ['345', 'Double Mask 2'], ['346', 'Double Exposure'], ['397', 'Pre-shaped Frames']]]
 ];
 const COKIN_BY_CODE = new Map(COKIN_GROUPS.flatMap(([g, , list]) => list.map(([c, n]) => [c, { code: c, name: n, group: g }])));
 const COKIN_SRC = [
@@ -83,7 +83,7 @@ async function filtersSubHtml(lenses, open) {
       ${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}
       <span class="frowmain">
         <span class="frowname">${U.esc(filterName(f))}</span>
-        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${f.notes ? `<span>${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
+        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${(f.colors || []).length ? `<span class="gelstrip" title="${U.esc(f.colors.map(c => c.name).join(', '))}" style="background:linear-gradient(90deg,${f.colors.map((c, i, a) => `${c.hex} ${i / a.length * 100}% ${(i + 1) / a.length * 100}%`).join(',')})"></span><span>${f.colors.length} Farben</span>` : ''}${f.notes ? `<span>${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
       </span>
       <span class="frowcount">×${f.count || 1}</span>
     </button>`;
@@ -234,6 +234,7 @@ function openFilterEditor(f) {
         : `<label class="fld"><span>Name</span><input id="feName" maxlength="60" value="${U.esc(f.name || '')}"></label>
            <div class="seggroup" id="feKind"><button type="button" class="seg${filterKind(f) === 'slide' ? ' on' : ''}" data-k="slide">Schiebefilter</button><button type="button" class="seg${filterKind(f) === 'screw' ? ' on' : ''}" data-k="screw">Schraubfilter</button></div>
            <label class="fld" id="feThreadBox"${filterKind(f) === 'screw' ? '' : ' hidden'}><span>Gewindedurchmesser (mm)</span><input id="feThread" inputmode="decimal" placeholder="z. B. 52" value="${U.esc(String(f.thread || '').replace('.', ','))}"></label>`}
+      ${(f.colors || []).length ? `<details class="gelbox"><summary>${f.colors.length} Farben${f.code === '375' ? ' und Halter' : ''}</summary><div class="gellist">${f.colors.map(c => `<span class="gelitem"><img src="img/filter-${c.img}.webp" alt="" width="30" height="30">${U.esc(c.name)}</span>`).join('')}${f.code === '375' ? '<span class="gelitem"><img src="img/filter-b375-halter.webp" alt="" width="30" height="30">Halter</span>' : ''}</div></details>` : ''}
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="feMinus" aria-label="weniger">−</button><span id="feCount">${f.count || 1}</span><button type="button" id="fePlus" aria-label="mehr">+</button></div></div>
       <label class="fld"><span>Notizen</span><textarea id="feNotes" rows="3" placeholder="Kratzer, Adapterring, gekauft bei …">${U.esc(f.notes || '')}</textarea></label>
       <button class="btn danger small" id="feDel">Filter entfernen</button>
@@ -364,8 +365,19 @@ async function openAccEditor(a) {
 
 /* ---------- Fotos der Filter: freigestellt aus Rebeccas Aufnahmen auf dem Leuchtpult, einheitlich 400 × 400 px.
    Cokin-Filter nach Nummer (gilt für jede Größe, eigene Aufnahme der Serie hat Vorrang), eigene Filter über das Feld img. ---------- */
-const FILTER_IMG_SER = { B160: 'b160', B058: 'b058' };
+const FILTER_IMG_SER = { B160: 'b160', B058: 'b058', B375: 'b375' };
 const FILTER_IMG_CODE = Object.fromEntries(['005', '021', '029', '056', '061', '084', '086', '103', '121', '124', '132', '133', '151', '160', '185', '195', '196', '201', '230', '345', '397'].map(c => [c, 'a' + c]));
+// Farbfolien-Set B375: ein Eintrag im Kameraschrank, die Farben einzeln wählbar (Kennung im Bild: f-b375#rot)
+const B375_COLORS = [['gelb', 'Honiggelb', '#f1b762'], ['goldgelb', 'Goldgelb', '#c99401'], ['pfirsich', 'Pfirsich', '#e5bc9d'], ['kupfer', 'Kupferorange', '#e4853a'], ['leuchtorange', 'Leuchtorange', '#db6901'], ['rot', 'Signalrot mit Loch', '#fe5340'], ['koralle', 'Koralle', '#e2637f'], ['pink', 'Pink', '#f17ab2'], ['lavendel', 'Lavendel', '#9880b2'], ['violett', 'Violett', '#520096'], ['ultramarin', 'Ultramarin', '#4146ca'], ['blau', 'Kobaltblau', '#0170dd'], ['eisblau', 'Eisblau', '#95a8d4'], ['himmelblau', 'Himmelblau', '#7cbad7'], ['tuerkis', 'Türkis', '#05cbdf'], ['gruen', 'Grasgrün', '#6bec32'], ['hellgrau', 'Hellgrau', '#949395'], ['grau', 'Grau', '#878a83']]
+  .map(([k, name, hex]) => ({ k, name, hex, img: 'b375-' + k }));
+function filterById(list, id) {
+  const [base, ck] = String(id).split('#');
+  const f = list.find(x => x.id === base);
+  if (!f || !ck) return f || null;
+  const c = (f.colors || []).find(x => x.k === ck);
+  return c ? { ...f, id, colorKey: ck, colorName: c.name, img: c.img } : f;
+}
+const filterShort = f => f.colorName || filterCode(f) || filterName(f);
 function filterImg(f) {
   if (!f) return null;
   const k = f.img || FILTER_IMG_SER[(f.series || '') + f.code] || (f.code && FILTER_IMG_CODE[f.code]);
@@ -386,6 +398,7 @@ const SEED_FILTERS = [
     .map(([img, name]) => ({ id: 'f-' + img, code: '', name, kind: 'slide', series: null, count: 1, img, notes: OWNLESS })),
   ...[['cf1', 'CF-1 Aurora'], ['cf3', 'CF-3 Radial Zoom'], ['cf4', 'CF-4 Swirl'], ['cf7', 'CF-7 Barrel'], ['cf10', 'CF-10 Diamond Cross']]
     .map(([img, name]) => ({ id: 'f-' + img, code: '', name, kind: 'slide', series: null, count: 1, img, notes: CF_NOTE })),
+  { id: 'f-b375', code: '375', series: 'B', count: 1, colors: B375_COLORS, notes: '18 Farbfolien und ein Halter, Schachtel „Creative Filter B. 375“.' },
   { id: 'f-zeiss-g1', code: '', name: 'Carl Zeiss Jena G1 (Gelb)', kind: 'screw', thread: '49', series: null, count: 1, img: 'zeiss-g1', notes: 'Gelbfilter, Aufdruck „G 1 / M 49“.' }
 ];
 // Fehlende Filter ergänzen. Cokin-Filter gelten als vorhanden, wenn Nummer und Serie schon in der Liste stehen.

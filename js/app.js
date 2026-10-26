@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 22;
+const SEED_VERSION = 23;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -52,7 +52,7 @@ async function boot() {
       }
     }
     // Rebeccas Cokin- und Effektfilter mit Fotos (26.10.2026): fehlende ergänzen, vorhandene bleiben unverändert
-    if (meta && meta.v < 22) await mergeSeedFilters();
+    if (meta && meta.v < 23) await mergeSeedFilters();  // v22: eigene Filter, v23: Farbfolien-Set B375
     if (meta && meta.v >= 17 && meta.v < 19) {
       // Neue Kameras und Objektive vom 25.10.2026 nachtragen, ohne gelöschte Beispielausrüstung zurückzuholen
       const ci = new Set((await DB.all('cameras')).map(c => c.id)), li = new Set((await DB.all('lenses')).map(l => l.id));
