@@ -725,6 +725,13 @@ Alle Einträge eins nach hinten	All entries moved one forward
 Alle Einträge eins nach vorne	All entries moved one back
 Eintrag von Bild {0} auf Bild {1} verschoben	Entry moved from frame {0} to frame {1}
 Bitte wählen	Please choose
+Schiebefilter	Slide-in filter
+Schraubfilter	Screw-in filter
+Gewindedurchmesser	Thread diameter
+Gewindedurchmesser (mm)	Thread diameter (mm)
+Hervorgehoben: Filtergewinde deiner Objektive.	Highlighted: filter threads of your lenses.
+Anderer Schiebefilter	Other slide-in filter
+Schraubfilter hinzugefügt	Screw-in filter added
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

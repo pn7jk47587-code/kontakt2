@@ -63,6 +63,10 @@ async function getFilters() { return (await DB.get('meta', 'filters'))?.list || 
 async function saveFilters(list) { await DB.put('meta', { id: 'filters', list }); }
 const seriesOf = k => COKIN_SERIES.find(s => s[0] === k);
 const filterCode = f => f.code ? (f.series || '') + f.code : '';
+// Schiebefilter (Cokin & Co., in den Halter gesteckt) oder Schraubfilter (aufs Objektiv geschraubt). Eigene Filter ohne Angabe gelten als Schraubfilter.
+const filterKind = f => f.code ? 'slide' : (f.kind || 'screw');
+const THREADS = ['37', '40.5', '43', '46', '49', '52', '55', '58', '62', '67', '72', '77', '82'];
+const mm = v => String(v).replace('.', ',') + ' mm';
 const filterName = f => f.name || COKIN_BY_CODE.get(f.code)?.name || 'Filter';
 
 // Teil im Kameraschrank: Liste der Filter mit Anzahl, darüber die Filtergewinde der Objektive
@@ -77,7 +81,7 @@ async function filtersSubHtml(lenses, open) {
       ${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}
       <span class="frowmain">
         <span class="frowname">${U.esc(filterName(f))}</span>
-        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : ''}${f.notes ? `<span>${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
+        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${f.notes ? `<span>${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
       </span>
       <span class="frowcount">×${f.count || 1}</span>
     </button>`;
@@ -104,11 +108,23 @@ async function openFilterPicker() {
   let series = 'P';
   try { series = localStorage.getItem('kb-filter-series') || 'P'; } catch (_) {}
   const pick = new Map();   // Code → Anzahl
+  let kind = 'slide', thread = '', screwN = 1;
+  const threadsMine = [...new Set((await DB.all('lenses')).map(l => String(l.filterThread || '').replace(',', '.')).filter(t => parseFloat(t) > 0))];
   const ov = document.createElement('div');
   ov.className = 'modalbg';
   ov.innerHTML = `
     <div class="modal filterpick" role="dialog" aria-modal="true" aria-labelledby="fpkTitle">
       <h2 id="fpkTitle">Filter hinzufügen</h2>
+      <div class="seggroup" id="fpkKind"><button type="button" class="seg on" data-k="slide">Schiebefilter</button><button type="button" class="seg" data-k="screw">Schraubfilter</button></div>
+      <div id="fpkScrew" hidden>
+        <label class="fld"><span>Name</span><input id="fpsName" maxlength="60" placeholder="z. B. Hoya R72, B+W UV"></label>
+        <div class="qlabel">Gewindedurchmesser</div>
+        <div class="chipwrap" id="fpsThread"><span class="chipset">${[...new Set([...threadsMine, ...THREADS])].sort((a, b) => parseFloat(a) - parseFloat(b)).map(t => `<button type="button" class="chip${threadsMine.includes(t) ? ' mine' : ''}" data-v="${t}">${mm(t)}</button>`).join('')}</span>
+          <input class="chip-input" id="fpsThreadOther" inputmode="decimal" placeholder="andere"></div>
+        ${threadsMine.length ? '<p class="hint">Hervorgehoben: Filtergewinde deiner Objektive.</p>' : ''}
+        <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="fpsMinus" aria-label="weniger">−</button><span id="fpsCount">1</span><button type="button" id="fpsPlus" aria-label="mehr">+</button></div></div>
+      </div>
+      <div id="fpkSlide">
       <div class="seggroup" id="fpkSeries">${COKIN_SERIES.map(([k, sz, nm, mm]) => `<button type="button" class="seg${k === series ? ' on' : ''}" data-s="${k}"><b>${sz}</b><span class="sub2">${nm}</span></button>`).join('')}</div>
       <p class="hint" id="fpkMm"></p>
       <input type="search" placeholder=" " id="fpkQ" aria-label="Filter suchen" autocomplete="off">
@@ -118,10 +134,11 @@ async function openFilterPicker() {
             <button type="button" class="fpktoggle" aria-pressed="false"><span class="filterbadge"><span class="fpkser">${series}</span>${c}</span><span class="fpkname">${U.esc(n)}</span></button>
             <span class="stepper small"><button type="button" data-d="-1" aria-label="weniger">−</button><span class="fpkn">1</span><button type="button" data-d="1" aria-label="mehr">+</button></span>
           </div>`).join('')}</div>`).join('')}
-        <div class="fpkgroup"><div class="fpkhead">Anderer Filter</div>
-          <div class="fpkown"><input id="fpkOwn" maxlength="60" placeholder="z. B. Hoya R72" aria-label="Eigener Filter"></div></div>
+        <div class="fpkgroup"><div class="fpkhead">Anderer Schiebefilter</div>
+          <div class="fpkown"><input id="fpkOwn" maxlength="60" placeholder="z. B. Lee 0.6 ND Grad" aria-label="Anderer Schiebefilter"></div></div>
       </div>
       <p class="hint fpksrc">Nummern und Namen aus den Cokin-Katalogen 2000 und 2015. Nicht jeder Filter gibt es in jeder Größe oder noch neu zu kaufen.</p>
+      </div>
       <div class="modalfoot"><button class="closex" id="fpkNo" aria-label="Abbrechen">${ART.x}</button><span class="sub2" id="fpkCount"></span><button class="okbtn" id="fpkOk" aria-label="Hinzufügen" disabled>${ART.check}</button></div>
     </div>`;
   document.body.appendChild(ov);
@@ -130,7 +147,7 @@ async function openFilterPicker() {
     const s = seriesOf(series);
     $('fpkMm').textContent = `Halter ${s[3]} mm breit`;
     ov.querySelectorAll('.fpkser').forEach(x => { x.textContent = series; });
-    const n = [...pick.values()].reduce((a, b) => a + b, 0) + ($('fpkOwn').value.trim() ? 1 : 0);
+    const n = kind === 'screw' ? ($('fpsName').value.trim() ? screwN : 0) : [...pick.values()].reduce((a, b) => a + b, 0) + ($('fpkOwn').value.trim() ? 1 : 0);
     $('fpkCount').textContent = n ? `${n} ausgewählt` : '';
     $('fpkOk').disabled = !n;
   };
@@ -146,6 +163,21 @@ async function openFilterPicker() {
     ov.querySelectorAll('.fpkgroup[data-g]').forEach(g => { g.hidden = ![...g.querySelectorAll('.fpkrow')].some(r => !r.hidden); });
   });
   $('fpkOwn').addEventListener('input', sync);
+  $('fpkKind').addEventListener('click', e => {
+    const b = e.target.closest('[data-k]'); if (!b) return;
+    kind = b.dataset.k; ov.querySelectorAll('#fpkKind .seg').forEach(x => x.classList.toggle('on', x === b));
+    $('fpkScrew').hidden = kind !== 'screw'; $('fpkSlide').hidden = kind === 'screw'; sync();
+    if (kind === 'screw') setTimeout(() => $('fpsName').focus(), 50);
+  });
+  $('fpsName').addEventListener('input', sync);
+  $('fpsThread').addEventListener('click', e => {
+    const b = e.target.closest('.chip'); if (!b) return;
+    thread = thread === b.dataset.v ? '' : b.dataset.v; $('fpsThreadOther').value = '';
+    ov.querySelectorAll('#fpsThread .chip').forEach(c => c.classList.toggle('on', c.dataset.v === thread));
+  });
+  $('fpsThreadOther').addEventListener('input', e => { thread = e.target.value.replace(',', '.').replace(/[^\d.]/g, ''); ov.querySelectorAll('#fpsThread .chip').forEach(c => c.classList.remove('on')); });
+  $('fpsMinus').addEventListener('click', () => { screwN = Math.max(1, screwN - 1); $('fpsCount').textContent = screwN; sync(); });
+  $('fpsPlus').addEventListener('click', () => { screwN = Math.min(9, screwN + 1); $('fpsCount').textContent = screwN; sync(); });
   $('fpkList').addEventListener('click', e => {
     const row = e.target.closest('.fpkrow'); if (!row) return;
     const code = row.dataset.code;
@@ -166,13 +198,20 @@ async function openFilterPicker() {
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   $('fpkOk').addEventListener('click', async () => {
     const list = await getFilters();
+    if (kind === 'screw') {
+      list.push({ id: U.uid(), code: '', name: $('fpsName').value.trim(), kind: 'screw', thread: thread || null, series: null, count: screwN });
+      await saveFilters(list);
+      close(); U.haptic([20, 60, 20]); U.toast('Schraubfilter hinzugefügt');
+      try { localStorage.setItem('kb-fold-cab-filters', '1'); localStorage.setItem('kb-fold-cabinet', '1'); } catch (_) {}
+      route(); return;
+    }
     for (const [code, n] of pick) {
       const same = list.find(f => f.code === code && f.series === series);
       if (same) same.count = (same.count || 1) + n;
       else list.push({ id: U.uid(), code, series, count: n });
     }
     const own = $('fpkOwn').value.trim();
-    if (own) list.push({ id: U.uid(), code: '', name: own, series: null, count: 1 });
+    if (own) list.push({ id: U.uid(), code: '', name: own, kind: 'slide', series: null, count: 1 });
     await saveFilters(list);
     const added = [...pick.values()].reduce((a, b) => a + b, 0) + (own ? 1 : 0);
     close(); U.haptic([20, 60, 20]); U.toast(added === 1 ? 'Filter hinzugefügt' : `${added} Filter hinzugefügt`);
@@ -189,7 +228,9 @@ function openFilterEditor(f) {
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="feTitle">
       <h2 id="feTitle"><span class="filterbadge${f.code ? '' : ' own'}" id="feBadge">${U.esc(filterCode(f) || 'F')}</span> ${U.esc(filterName(f))}</h2>
       ${f.code ? `<div class="seggroup" id="feSeries">${COKIN_SERIES.map(([k, sz, nm]) => `<button type="button" class="seg${k === f.series ? ' on' : ''}" data-s="${k}"><b>${sz}</b><span class="sub2">${nm}</span></button>`).join('')}</div>`
-        : `<label class="fld"><span>Name</span><input id="feName" maxlength="60" value="${U.esc(f.name || '')}"></label>`}
+        : `<label class="fld"><span>Name</span><input id="feName" maxlength="60" value="${U.esc(f.name || '')}"></label>
+           <div class="seggroup" id="feKind"><button type="button" class="seg${filterKind(f) === 'slide' ? ' on' : ''}" data-k="slide">Schiebefilter</button><button type="button" class="seg${filterKind(f) === 'screw' ? ' on' : ''}" data-k="screw">Schraubfilter</button></div>
+           <label class="fld" id="feThreadBox"${filterKind(f) === 'screw' ? '' : ' hidden'}><span>Gewindedurchmesser (mm)</span><input id="feThread" inputmode="decimal" placeholder="z. B. 52" value="${U.esc(String(f.thread || '').replace('.', ','))}"></label>`}
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="feMinus" aria-label="weniger">−</button><span id="feCount">${f.count || 1}</span><button type="button" id="fePlus" aria-label="mehr">+</button></div></div>
       <label class="fld"><span>Notizen</span><textarea id="feNotes" rows="3" placeholder="Kratzer, Adapterring, gekauft bei …">${U.esc(f.notes || '')}</textarea></label>
       <button class="btn danger small" id="feDel">Filter entfernen</button>
@@ -203,6 +244,11 @@ function openFilterEditor(f) {
     ed.series = b.dataset.s; ov.querySelectorAll('#feSeries .seg').forEach(x => x.classList.toggle('on', x === b));
     $('feBadge').textContent = filterCode(ed);
   });
+  $('feKind')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-k]'); if (!b) return;
+    ed.kind = b.dataset.k; ov.querySelectorAll('#feKind .seg').forEach(x => x.classList.toggle('on', x === b));
+    $('feThreadBox').hidden = ed.kind !== 'screw';
+  });
   $('feMinus').addEventListener('click', () => { ed.count = Math.max(1, ed.count - 1); $('feCount').textContent = ed.count; });
   $('fePlus').addEventListener('click', () => { ed.count = Math.min(99, ed.count + 1); $('feCount').textContent = ed.count; });
   const close = () => ov.remove();
@@ -211,6 +257,7 @@ function openFilterEditor(f) {
   $('feOk').addEventListener('click', async () => {
     ed.notes = $('feNotes').value.trim();
     if ($('feName')) ed.name = $('feName').value.trim() || f.name;
+    if ($('feThread')) { const t = $('feThread').value.replace(',', '.').replace(/[^\d.]/g, ''); ed.thread = filterKind(ed) === 'screw' && t ? t : null; }
     const list = (await getFilters()).map(x => x.id === f.id ? ed : x);
     await saveFilters(list); close(); U.toast('Gespeichert'); route();
   });
@@ -331,7 +378,7 @@ function filterTint(f) {
 }
 function filterArt(f, size = 40) {
   const t = filterTint(f), id = 'fa' + Math.random().toString(36).slice(2, 7);
-  const round = !f.code;
+  const round = filterKind(f) === 'screw';
   const fill = t.grad
     ? `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.a}" stop-opacity=".9"/><stop offset=".5" stop-color="${t.a}" stop-opacity=".35"/><stop offset=".62" stop-color="${t.a}" stop-opacity="0"/></linearGradient>`
     : `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${t.a}" stop-opacity=".92"/><stop offset="1" stop-color="${t.b}" stop-opacity=".78"/></linearGradient>`;
