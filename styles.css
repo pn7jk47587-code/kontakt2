@@ -1678,3 +1678,12 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .archform .seggroup { margin-bottom: 12px; }
 .archup { display: inline-flex; align-items: center; gap: 8px; justify-content: center; width: 100%; }
 #arStock { display: inline-flex; align-items: center; gap: 8px; }
+/* Favoriten im Kameraschrank: Stern oben links am Bild */
+.crowart { position: relative; }
+.crowart.filtart, .crowart.accart { flex: 0 0 auto !important; display: inline-flex; }
+.favstar { position: absolute; top: -6px; left: -6px; z-index: 2; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); fill: none; background: var(--solid, #fff); box-shadow: 0 1px 4px rgba(0,0,0,.18); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.favstar svg { fill: none; }
+.favstar.on { color: #e2a400; }
+.favstar.on svg { fill: #f5c518; }
+.favstar:active { transform: scale(.9); }

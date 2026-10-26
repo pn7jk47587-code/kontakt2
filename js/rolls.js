@@ -752,7 +752,7 @@ function openFrameFilterSearch(filters, chosen, roll, onDone, onCancel) {
     } else {
       const base = id => String(id).split('#')[0];
       const top = filters.filter(f => pick.some(id => base(id) === f.id) || [...recent].some(id => base(id) === f.id));
-      const rest = filters.filter(f => !top.includes(f));
+      const rest = filters.filter(f => !top.includes(f)).sort((a, b) => !!b.fav - !!a.fav);
       html = (top.length ? `<div class="ffshead">Gewählt und zuletzt benutzt</div>${top.map(row).join('')}` : '')
         + `<div class="ffshead">Alle Filter</div>${rest.map(row).join('')}`;
     }
@@ -1783,7 +1783,43 @@ const leakSentence = st => st.since
 // Reihenfolge aus dem Kameraschrank (per Ziehen festgelegt). Einträge ohne Platz kommen ans Ende.
 const camSortFb = (a, b) => camLabel(a).localeCompare(camLabel(b));
 const lensSortFb = (a, b) => (a.mount || '').localeCompare(b.mount || '') || parseFloat(a.focal) - parseFloat(b.focal);
-function gearSort(list, fb) { return list.sort((a, b) => (a.order ?? 1e6) - (b.order ?? 1e6) || fb(a, b)); }
+function gearSort(list, fb) { return list.sort((a, b) => (!!b.fav - !!a.fav) || (a.order ?? 1e6) - (b.order ?? 1e6) || fb(a, b)); }
+// Favoriten im Kameraschrank: Stern in der Ecke des Bildes, Favoriten stehen oben in ihrer Liste
+const FAV_IC = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+const favStar = (store, item) => `<span class="favstar${item.fav ? ' on' : ''}" role="button" tabindex="0" data-fav="${store}:${item.id}" aria-pressed="${!!item.fav}" aria-label="${item.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</span>`;
+async function toggleFav(store, id) {
+  if (store === 'filters' || store === 'accessories') {
+    const list = store === 'filters' ? await getFilters() : await getAccessories();
+    const it = list.find(x => x.id === id); if (!it) return null;
+    it.fav = !it.fav;
+    await (store === 'filters' ? saveFilters(list) : saveAccessories(list));
+    return it.fav;
+  }
+  const it = await DB.get(store, id); if (!it) return null;
+  it.fav = !it.fav; await DB.put(store, it); return it.fav;
+}
+function setupFavs(root) {
+  const act = async e => {
+    const st = e.target.closest('.favstar'); if (!st) return;
+    e.preventDefault(); e.stopPropagation();
+    const [store, id] = st.dataset.fav.split(':');
+    const on = await toggleFav(store, id); if (on === null) return;
+    st.classList.toggle('on', on); st.setAttribute('aria-pressed', on);
+    st.setAttribute('aria-label', on ? 'Aus Favoriten entfernen' : 'Als Favorit markieren');
+    U.haptic && U.haptic(on ? [12, 40, 12] : 10);
+    // Zeile innerhalb ihrer Liste nach oben (oder hinter die Favoriten) schieben, ohne neu zu laden
+    const row = st.closest('.crow'), list = row?.parentElement;
+    if (list) {
+      const rows = [...list.children].filter(x => x.classList.contains('crow'));
+      const favs = rows.filter(x => x.querySelector(':scope .favstar.on'));
+      const rest = rows.filter(x => !favs.includes(x));
+      [...favs, ...rest].forEach(x => list.appendChild(x));
+      row.classList.remove('fresh'); void row.offsetWidth; row.classList.add('fresh');
+    }
+  };
+  root.addEventListener('click', act, true);
+  root.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('.favstar')) act(e); }, true);
+}
 
 async function cabinetHtml(fold = false) {
   const cams = gearSort(await DB.all('cameras'), camSortFb);
@@ -1796,7 +1832,7 @@ async function cabinetHtml(fold = false) {
     const own = lenses.filter(l => !l.inactive && (l.cameraIds || []).includes(c.id));
     const lk = c.lightLeaks ? await leakStats(c.id, rolls, frames) : null;
     return `<a class="crow${fresh === c.id ? ' fresh' : ''}${c.broken ? ' broken' : ''}${c.inactive ? ' inactive' : ''}" href="#/kamera/${c.id}" data-id="${c.id}">
-      <span class="crowart">${await camArt(c, 76)}</span>
+      <span class="crowart">${await camArt(c, 76)}${favStar('cameras', c)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(camLabel(c))}</span>
         <span class="frowchips">${c.mount ? `<span>${U.esc(c.mount)}</span>` : ''}${c.broken ? '<span class="brokentag">kaputt</span>' : ''}${lk && lk.since ? `<span class="leaktag">${lk.n} ${lk.n === 1 ? 'Lightleak' : 'Lightleaks'}</span>` : ''}</span>
@@ -1813,7 +1849,7 @@ async function cabinetHtml(fold = false) {
   const lensRow = l => {
     const names = (l.cameraIds || []).map(id => cams.find(c => c.id === id)).filter(Boolean).map(camLabel);
     return `<a class="crow${fresh === l.id ? ' fresh' : ''}${l.inactive ? ' inactive' : ''}" href="#/objektiv/${l.id}" data-id="${l.id}">
-      <span class="crowart lensart">${ART.lens(l, 60)}</span>
+      <span class="crowart lensart">${ART.lens(l, 60)}${favStar('lenses', l)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(lensLabel(l))}</span>
         <span class="frowchips"><span>${U.esc(l.mount || 'Bajonett offen')}</span>${l.filterThread ? `<span class="threadtag">⌀ ${U.esc(String(l.filterThread).replace('.', ','))} mm</span>` : ''}${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
@@ -1863,6 +1899,7 @@ function setupCabinet(root) {
   const f = root.querySelector('.crow.fresh');
   if (f) { setTimeout(() => f.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150); }
   root.querySelectorAll('.flist[data-sort]').forEach(setupGearDrag);
+  setupFavs(root);
   setupFilters(root);
   setupAccessories(root);
 }

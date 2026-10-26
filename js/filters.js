@@ -76,10 +76,10 @@ async function filtersSubHtml(lenses, open) {
   const list = await getFilters();
   const total = list.reduce((n, f) => n + (f.count || 1), 0);
   const threads = [...new Set(lenses.map(l => parseFloat(String(l.filterThread || '').replace(',', '.'))).filter(x => x > 0))].sort((a, b) => a - b);
-  const rows = list.map(f => {
+  const rows = [...list].sort((a, b) => !!b.fav - !!a.fav).map(f => {
     const s = seriesOf(f.series);
     return `<button type="button" class="crow filterrow" data-filter="${f.id}">
-      ${filterArt(f, 36)}
+      <span class="crowart filtart">${filterArt(f, 36)}${favStar('filters', f)}</span>
       ${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}
       <span class="frowmain">
         <span class="frowname">${U.esc(filterName(f))}</span>
@@ -290,10 +290,10 @@ async function accessoriesSubHtml(cams, open) {
   const list = await getAccessories();
   const total = list.reduce((n, a) => n + (a.count || 1), 0);
   const order = ACC_KINDS.map(k => k[0]);
-  const rows = [...list].sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || (a.name || '').localeCompare(b.name || '')).map(a => {
+  const rows = [...list].sort((a, b) => (!!b.fav - !!a.fav) || order.indexOf(a.kind) - order.indexOf(b.kind) || (a.name || '').localeCompare(b.name || '')).map(a => {
     const names = (a.cameraIds || []).map(id => cams.find(c => c.id === id)).filter(Boolean).map(camLabel);
     return `<button type="button" class="crow accrow" data-acc="${a.id}">
-      <span class="accicon">${accIcon(a.kind, 26)}</span>
+      <span class="crowart accart"><span class="accicon">${accIcon(a.kind, 26)}</span>${favStar('accessories', a)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc([a.maker, a.name].filter(Boolean).join(' ') || accKind(a.kind)[1])}</span>
         <span class="frowchips"><span>${U.esc(accKind(a.kind)[1])}</span>${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
