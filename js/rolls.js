@@ -1650,11 +1650,57 @@ async function viewAlbumBook(id) {
 }
 
 // Alle hochgeladenen Fotos, nach Rollen getrennt durch eine kleine Zeile
+let ALLPHOTOS_SORT = false;
+window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/alle-fotos')) ALLPHOTOS_SORT = false; });
+// Reihenfolge der Scans einer Rolle per Ziehen ändern. Verschoben werden nur Scan, Lightleak-Markierung und Favorit.
+function setupPhotoSort(grid) {
+  const SCAN = ['imgId', 'leak', 'fav'];
+  let drag = null;
+  const cells = () => [...grid.querySelectorAll(':scope > a')];
+  grid.addEventListener('click', e => e.preventDefault(), true);
+  grid.addEventListener('dragstart', e => e.preventDefault());
+  grid.querySelectorAll('a').forEach(a => a.setAttribute('draggable', 'false'));
+  grid.addEventListener('pointerdown', e => {
+    const a = e.target.closest('a[data-fid]'); if (!a) return;
+    e.preventDefault();
+    const r = a.getBoundingClientRect();
+    const ghost = a.cloneNode(true); ghost.className = 'sortghost';
+    Object.assign(ghost.style, { width: r.width + 'px', height: r.height + 'px', left: r.left + 'px', top: r.top + 'px' });
+    document.body.appendChild(ghost); a.classList.add('dragfrom');
+    drag = { a, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, from: cells().indexOf(a), to: cells().indexOf(a) };
+    grid.setPointerCapture?.(e.pointerId); U.haptic && U.haptic(10);
+  });
+  grid.addEventListener('pointermove', e => {
+    if (!drag) return;
+    drag.ghost.style.left = (e.clientX - drag.dx) + 'px'; drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+    drag.ghost.style.visibility = 'hidden';
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('a[data-fid]');
+    drag.ghost.style.visibility = '';
+    const to = el && el.parentElement === grid ? cells().indexOf(el) : drag.to;
+    if (to !== drag.to) { drag.to = to; cells().forEach((c, i) => c.classList.toggle('droptarget', i === to && to !== drag.from)); U.haptic && U.haptic(6); }
+  });
+  const end = async () => {
+    if (!drag) return;
+    const { from, to, ghost, a } = drag; drag = null; ghost.remove(); a.classList.remove('dragfrom');
+    cells().forEach(c => c.classList.remove('droptarget'));
+    if (to === from || to < 0) return;
+    const ids = cells().map(c => c.dataset.fid);
+    const fr = await Promise.all(ids.map(id => DB.get('frames', id)));
+    const scans = fr.map(f => Object.fromEntries(SCAN.map(k => [k, f[k]])));
+    const [m] = scans.splice(from, 1); scans.splice(to, 0, m);
+    for (let i = 0; i < fr.length; i++) { for (const k of SCAN) { if (scans[i][k] === undefined) delete fr[i][k]; else fr[i][k] = scans[i][k]; } await DB.put('frames', fr[i]); }
+    U.haptic && U.haptic([15, 40, 15]);
+    document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await viewAllPhotos(); window.scrollTo(0, y);
+  };
+  grid.addEventListener('pointerup', end); grid.addEventListener('pointercancel', end);
+}
 async function viewAllPhotos() {
   // Archivieren oben rechts in der Kopfzeile, nur in dieser Ansicht
   setHeader('Alle Fotos');
   const d = await albumData('alle');
-  const arBtn = `<div class="archcorner"><a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`;
+  const sorting = ALLPHOTOS_SORT;
+  const arBtn = `<div class="archcorner">${d.frames.length > 1 ? `<button type="button" class="archlink${sorting ? ' on' : ''}" id="apSort" aria-pressed="${sorting}">${MOVE_IC}<span>${sorting ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`
+    + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Verschoben wird nur der Scan, Einträge wie Blende oder Notiz bleiben bei ihrer Bildnummer.</p>' : '');
   if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
@@ -1668,11 +1714,16 @@ async function viewAllPhotos() {
       cur = f.rollId;
       const r = d.rolls.get(cur);
       const st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
-      html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid">`;
+      html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid${sorting ? ' sorting' : ''}" data-roll="${cur}">`;
     }
-    html += `<a href="#/foto/alle/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`;
+    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : pstar(f)}</a>`;
   });
   view.innerHTML = arBtn + html + '</div>';
+  view.querySelector('#apSort')?.addEventListener('click', async () => {
+    ALLPHOTOS_SORT = !ALLPHOTOS_SORT; U.haptic && U.haptic(10);
+    document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await viewAllPhotos(); window.scrollTo(0, y);
+  });
+  if (sorting) view.querySelectorAll('.photogrid.sorting').forEach(g => setupPhotoSort(g));
   view.querySelectorAll('[data-pfav]').forEach(b => b.addEventListener('click', async e => {
     e.preventDefault(); e.stopPropagation();
     const f = await DB.get('frames', b.dataset.pfav); if (!f) return;
@@ -1694,52 +1745,80 @@ async function viewAllPhotos() {
 const ARCHIVE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v9.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 10 2.5 6.5 9 5l3 5M20 10l1.5-3.5L15 5l-3 5"/><path d="M9.5 14h5"/></svg>';
 async function viewArchive() {
   setHeader('Archivieren');
-  const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
+  const cams = gearSort(await DB.all('cameras'), camSortFb);
   const labs = await getLabs();
-  const ed = { stockId: null, format: '135', files: [] };
+  const ed = { files: [], dev: null, camId: undefined, stockId: null, format: '135' };
+  const camCards = await Promise.all(cams.map(async c => `<button type="button" class="pick cam" data-cam="${c.id}"><span class="pickart">${await camArt(c, 84)}</span><span class="pickname">${U.esc(camLabel(c))}</span></button>`));
+  const today = U.today();
   view.innerHTML = `
-    <p class="hint pad">Für Rollen, die du schon früher entwickelt hast: Fotos hochladen, fertig. Die Rolle landet direkt im Fotoalbum. Beschriften und Einstellungen kannst du danach in der Rolle nachtragen. Alles außer den Fotos ist freiwillig.</p>
-    <div class="card archform">
-      <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80" placeholder="z. B. Sommer an der Ostsee"></label>
-      <div class="fld"><span>Film</span><button type="button" class="btn ghost small" id="arStock">Film wählen</button></div>
-      <div class="qlabel">Format</div>
-      <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
-      <label class="fld"><span>Kamera</span><select id="arCam"><option value="">Weiß ich nicht mehr</option>${cams.map(c => `<option value="${c.id}">${U.esc(camLabel(c))}${c.inactive ? ' (inaktiv)' : ''}</option>`).join('')}</select></label>
-      <div class="two">
-        <label class="fld"><span>Fotografiert (Monat)</span><input type="month" id="arShot" max="${U.today().slice(0, 7)}"></label>
-        <label class="fld"><span>Entwickelt am</span><input type="date" id="arDev" max="${U.today()}"></label>
-      </div>
-      <label class="fld"><span>Labor</span><input id="arLab" list="arLabs" placeholder="freiwillig"><datalist id="arLabs">${labs.map(l => `<option value="${U.esc(l)}">`).join('')}</datalist></label>
-      <div class="qlabel">Fotos</div>
+    <p class="hint pad">Für Rollen, die du schon früher entwickelt hast. Pflicht sind nur die Fotos. Beschriften kannst du die Bilder danach in der Rolle.</p>
+    <section class="wizsec">
+      <h2 class="wiztitle">1 · Fotos</h2>
       <label class="btn accent archup">${ARCHIVE_IC}<span id="arUpTxt">Fotos auswählen</span><input type="file" accept="image/*" multiple hidden id="arFiles"></label>
-      <p class="hint" id="arFilesHint">Die Reihenfolge folgt den Dateinamen, also meist der Reihenfolge der Scans.</p>
-    </div>
-    <div class="modewrap"><button class="modebtn" id="arSave" disabled><span class="mbicon">${ARCHIVE_IC}</span><span>Rolle archivieren</span></button></div>`;
+      <p class="hint">Die Reihenfolge folgt den Dateinamen. Ändern kannst du sie danach in „Alle Fotos“.</p>
+    </section>
+    <section class="wizsec">
+      <h2 class="wiztitle">2 · Fotografiert ungefähr</h2>
+      <div class="two">
+        <label class="fld"><span>Von</span><input type="date" id="arFrom" max="${today}"></label>
+        <label class="fld"><span>Bis</span><input type="date" id="arTo" max="${today}"></label>
+      </div>
+    </section>
+    <section class="wizsec">
+      <h2 class="wiztitle">3 · Entwicklung</h2>
+      <label class="fld"><span>Entwickelt am</span><input type="date" id="arDev" max="${today}"></label>
+      <div class="devopts" id="arDevOpts">${labs.map(l => `<button type="button" data-o="${l.id}">${U.esc(l.name)}</button>`).join('')}<button type="button" data-o="selbst">Selbst entwickelt</button><button type="button" data-o="">Weiß ich nicht mehr</button></div>
+    </section>
+    <section class="wizsec">
+      <h2 class="wiztitle">4 · Kamera</h2>
+      <div class="picks" id="arCams">${camCards.join('')}<button type="button" class="pick cam" data-cam=""><span class="pickart unknowncam">?</span><span class="pickname">Weiß ich nicht mehr</span></button></div>
+    </section>
+    <section class="wizsec">
+      <h2 class="wiztitle">5 · Film und Name</h2>
+      <div class="fld"><span>Film</span><button type="button" class="btn ghost small" id="arStock">Film wählen</button></div>
+      <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
+      <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80" placeholder="z. B. Sommer an der Ostsee"></label>
+    </section>`;
   const $ = id => view.querySelector('#' + id);
-  $('arStock').addEventListener('click', () => openStockPicker(async id => {
-    ed.stockId = id; const st = await DB.get('stocks', id);
-    $('arStock').innerHTML = `${await filmArt(st, 26)}<span>${U.esc(U.stockLabel(st))}</span>`;
-    const f = st?.formats?.[0]; if (f && !st.formats.includes(ed.format)) { ed.format = f === '120' ? '120' : '135'; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x.dataset.f === ed.format)); }
-  }));
-  $('arFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; ed.format = b.dataset.f; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x === b)); });
+  // Unten rechts: Archivieren (statt eines Zurück-Pfeils, der wie ein Haken wirkt)
+  const save = document.createElement('button');
+  save.className = 'donebtn archsave'; save.setAttribute('aria-label', 'Rolle archivieren'); save.innerHTML = ARCHIVE_IC; save.disabled = true;
+  document.body.appendChild(save);
   $('arFiles').addEventListener('change', e => {
     ed.files = [...e.target.files];
     $('arUpTxt').textContent = ed.files.length ? `${ed.files.length} ${ed.files.length === 1 ? 'Foto' : 'Fotos'} ausgewählt` : 'Fotos auswählen';
-    $('arSave').disabled = !ed.files.length;
+    save.disabled = !ed.files.length; save.classList.toggle('ready', !!ed.files.length);
   });
-  $('arSave').addEventListener('click', async () => {
-    if (!ed.files.length) return;
-    const shot = $('arShot').value, dev = $('arDev').value, cam = cams.find(c => c.id === $('arCam').value);
-    // Ohne gewählten Film: gemeinsamer Eintrag „Unbekannter Film“, damit Rolle und Album wie gewohnt funktionieren. Später in der Rolle änderbar.
+  $('arFrom').addEventListener('change', () => { if (!$('arTo').value || $('arTo').value < $('arFrom').value) $('arTo').value = $('arFrom').value; $('arTo').min = $('arFrom').value; });
+  $('arDevOpts').addEventListener('click', e => {
+    const b = e.target.closest('[data-o]'); if (!b) return;
+    ed.dev = b.dataset.o; view.querySelectorAll('#arDevOpts button').forEach(x => x.classList.toggle('on', x === b)); U.haptic && U.haptic(8);
+  });
+  $('arCams').addEventListener('click', e => {
+    const b = e.target.closest('[data-cam]'); if (!b) return;
+    ed.camId = b.dataset.cam; view.querySelectorAll('#arCams .pick').forEach(x => x.classList.toggle('on', x === b)); U.haptic && U.haptic(8);
+  });
+  $('arStock').addEventListener('click', () => openStockPicker(async id => {
+    ed.stockId = id; const st = await DB.get('stocks', id);
+    $('arStock').innerHTML = `${await filmArt(st, 26)}<span>${U.esc(U.stockLabel(st))}</span>`;
+    if (st?.formats?.length && !st.formats.includes(ed.format)) { ed.format = st.formats[0] === '120' ? '120' : '135'; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x.dataset.f === ed.format)); }
+  }));
+  $('arFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; ed.format = b.dataset.f; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x === b)); });
+  save.addEventListener('click', async () => {
+    if (!ed.files.length) { U.toast('Wähle zuerst die Fotos aus'); return; }
+    const from = $('arFrom').value || null, to = $('arTo').value || from, dev = $('arDev').value || null;
+    const cam = cams.find(c => c.id === ed.camId), lab = labs.find(l => l.id === ed.dev);
     if (!ed.stockId) {
       ed.stockId = 'film-unbekannt';
       if (!(await DB.get('stocks', ed.stockId))) await DB.put('stocks', { id: ed.stockId, maker: '', name: 'Unbekannter Film', type: 'farbneg', process: '', boxIso: '', formats: ['135', '120'], reciprocity: { model: 'unknown' }, builtin: false });
     }
     const roll = {
       id: U.uid(), stockId: ed.stockId, cameraId: cam?.id || null, camera: camLabel(cam), format: ed.format, exposures: 0, bonus: false, ei: null,
-      loadedAt: shot ? shot + '-01' : (dev || U.today()), title: $('arTitle').value.trim(), status: 'entwickelt', archived: true, shotMonth: shot || null,
-      dev: { mode: 'labor', lab: $('arLab').value.trim() || null, backAt: dev || null }, createdAt: new Date().toISOString()
+      loadedAt: from || dev || U.today(), finishedAt: to || null, title: $('arTitle').value.trim(), status: 'entwickelt', archived: true, shotFrom: from, shotTo: to,
+      dev: ed.dev === 'selbst' ? { mode: 'selbst', devDate: dev } : { mode: 'labor', lab: lab?.name || null, labId: lab?.id || null, backAt: dev },
+      createdAt: new Date().toISOString()
     };
+    save.disabled = true;
     const busy = document.createElement('div');
     busy.className = 'modalbg busy';
     busy.innerHTML = `<div class="busycard">${ed.files.length} ${ed.files.length === 1 ? 'Foto wird' : 'Fotos werden'} gespeichert …</div>`;
@@ -1751,11 +1830,6 @@ async function viewArchive() {
       location.hash = '#/rolle/' + roll.id;
     } finally { busy.remove(); }
   });
-  const back = document.createElement('button');
-  back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück');
-  back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19 12H6M11.5 6 5.5 12l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  document.body.appendChild(back);
-  back.addEventListener('click', () => history.back());
 }
 
 /* ---------- Kameras ---------- */

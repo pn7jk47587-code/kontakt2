@@ -1718,3 +1718,21 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .rollcard.small .rc-body { padding-right: 44px; }
 .rcfold .foldchev { margin: 0; transform: translateY(2px) rotate(225deg); }
 .rollcard.small .rcfold .foldchev { transform: rotate(45deg) translate(-2px, -2px); }
+/* Archivieren: Formular und Knopf unten rechts */
+.archsave { opacity: .45; }
+.archsave.ready { opacity: 1; color: var(--teal); }
+.unknowncam { font-size: 44px; font-weight: 700; color: var(--muted); }
+#arDevOpts { margin-top: 8px; }
+/* Alle Fotos: Reihenfolge ändern */
+.archcorner { gap: 8px; }
+.archcorner button.archlink { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.archcorner .archlink.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.photogrid.sorting { touch-action: none; user-select: none; -webkit-user-select: none; }
+.photogrid.sorting > a { animation: wiggle .3s ease-in-out infinite alternate; -webkit-touch-callout: none; }
+.photogrid.sorting > a:nth-child(2n) { animation-delay: .15s; }
+.photogrid.sorting > a.dragfrom { opacity: .3; animation: none; }
+.photogrid.sorting > a.droptarget { outline: 3px solid var(--teal); outline-offset: -3px; }
+.sortnum { position: absolute; left: 4px; top: 4px; min-width: 20px; padding: 1px 6px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; font-size: 12px; font-weight: 700; text-align: center; }
+.sortghost { position: fixed; z-index: 1000; pointer-events: none; transform: scale(1.06); box-shadow: 0 14px 30px rgba(0,0,0,.3); opacity: .95; }
+.sortghost img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sorthint { margin-top: 6px; }

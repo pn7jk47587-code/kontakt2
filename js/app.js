@@ -196,18 +196,18 @@ async function goUp() {
 // Funktioniert mit dem Finger und am Computer mit gedrückter Maustaste.
 (() => {
   let s = null;
-  const begin = (x, y) => { s = x <= 90 && y <= 240 ? { x, y, fired: false } : null; };
+  const begin = (x, y, t) => { s = x <= 90 && y <= 240 && !t?.closest?.('.photogrid.sorting, .grid.reorder') ? { x, y, fired: false } : null; };   // nicht beim Sortieren per Ziehen
   const move = (x, y, e) => {
     if (!s || s.fired) return;
     const dx = x - s.x, dy = y - s.y;
     if (dx > 10 && dy > 0 && e && e.cancelable) e.preventDefault();   // Seite nicht mitscrollen
     if (dx > 55 && dy > 45 && dy < dx * 2.5) { s.fired = true; goUp(); }
   };
-  document.addEventListener('touchstart', e => begin(e.touches[0].clientX, e.touches[0].clientY), { passive: true, capture: true });
+  document.addEventListener('touchstart', e => begin(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true, capture: true });
   document.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY, e), { passive: false, capture: true });
   document.addEventListener('touchend', e => { if (s?.fired) e.stopPropagation(); s = null; }, { capture: true });
   document.addEventListener('touchcancel', () => { s = null; }, { capture: true });
-  document.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') begin(e.clientX, e.clientY); }, true);
+  document.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') begin(e.clientX, e.clientY, e.target); }, true);
   document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && e.buttons) move(e.clientX, e.clientY); }, true);
   document.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') { if (s?.fired) { const stop = ev => { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', stop, true), 60); } s = null; } }, true);
 })();

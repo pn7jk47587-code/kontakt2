@@ -673,7 +673,12 @@ function shotList(allFrames, rolls) {
     const seq = [...((bonus && (roll?.bonus || used(bonus)) && (last >= 0 || used(bonus))) ? [bonus] : []), ...reg.slice(0, last + 1)];
     seq.forEach((f, i) => {
       const next = seq.slice(i).find(x => x.date), prev = [...seq.slice(0, i)].reverse().find(x => x.date);
-      const date = roll?.archived ? (f.date || (roll.shotMonth ? roll.shotMonth + '-15' : null)) : ((next || prev)?.date || roll?.loadedAt);
+      // Archivierte Rollen: eigenes Datum, sonst gleichmäßig über den angegebenen Zeitraum verteilt
+      const spread = () => {
+        if (roll.shotFrom) { const a = Date.parse(roll.shotFrom), b = Date.parse(roll.shotTo || roll.shotFrom); return new Date(a + (b - a) * (seq.length > 1 ? i / (seq.length - 1) : 0)).toISOString().slice(0, 10); }
+        return roll.shotMonth ? roll.shotMonth + '-15' : null;
+      };
+      const date = roll?.archived ? (f.date || spread()) : ((next || prev)?.date || roll?.loadedAt);
       if (date) out.push({ rollId: rid, date, implied: !f.date });
     });
   }
