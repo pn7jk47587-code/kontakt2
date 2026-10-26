@@ -656,9 +656,33 @@ async function resetPhotosAndProfile() {
 }
 
 /* Fotozähler: gezählt werden Bilder mit Aufnahmetag (beim ersten Eintrag automatisch oder oben in der Bildansicht gesetzt) */
+/* Gemachte Fotos: je Rolle zählen alle Bilder bis zum zuletzt notierten, auch unnotierte davor, denn sie müssen belichtet worden sein.
+   Mit Bonusbild kommt es dazu (es liegt vor Bild 1). Ein Bild ohne eigenes Datum bekommt den Aufnahmetag des nächsten datierten Bildes
+   der Rolle (spätestens dann war es gemacht), sonst des vorigen, sonst den Einlegetag der Rolle. */
+function shotList(allFrames, rolls) {
+  const byRoll = new Map();
+  for (const f of allFrames) { if (!byRoll.has(f.rollId)) byRoll.set(f.rollId, []); byRoll.get(f.rollId).push(f); }
+  const out = [];
+  for (const [rid, fs] of byRoll) {
+    const roll = rolls.get(rid);
+    const reg = fs.filter(f => !f.bonus).sort((a, b) => a.index - b.index);
+    const bonus = fs.find(f => f.bonus);
+    const used = f => f && !contentEmpty(frameContent(f));
+    let last = -1;
+    reg.forEach((f, i) => { if (used(f)) last = i; });
+    const seq = [...((bonus && (roll?.bonus || used(bonus)) && (last >= 0 || used(bonus))) ? [bonus] : []), ...reg.slice(0, last + 1)];
+    seq.forEach((f, i) => {
+      const next = seq.slice(i).find(x => x.date), prev = [...seq.slice(0, i)].reverse().find(x => x.date);
+      const date = (next || prev)?.date || roll?.loadedAt;
+      if (date) out.push({ rollId: rid, date, implied: !f.date });
+    });
+  }
+  return out;
+}
+
 async function shotsFoldHtml() {
-  const frames = (await DB.all('frames')).filter(f => f.date);
   const rolls = new Map((await DB.all('rolls')).map(r => [r.id, r]));
+  const frames = shotList(await DB.all('frames'), rolls);
   const stocks = await stocksMap();
   const now = new Date(), ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`, y = String(now.getFullYear());
   const day = f => String(f.date).slice(0, 10);
@@ -677,7 +701,7 @@ async function shotsFoldHtml() {
       ${ds.map(d => { const fs = byDay.get(d); const names = [...new Set(fs.map(f => { const r = rolls.get(f.rollId); return r?.title || U.stockLabel(stocks.get(r?.stockId)); }).filter(Boolean))];
         return `<div class="txrow"><span>${U.fmtDate(d)}<span class="sub2">${U.esc(names.join(', '))}</span></span><span>${fs.length} ${word(fs.length)}</span></div>`; }).join('')}
     </div>`;
-  }).join('') : '<p class="hint">Noch keine Fotos mit Aufnahmetag.</p>';
+  }).join('') : '<p class="hint">Noch keine Fotos notiert.</p>';
   return `
     <section class="shots fold${foldOpen('shots') ? ' open' : ''}" data-fold="shots">
       <div class="fridgetop foldhead">
