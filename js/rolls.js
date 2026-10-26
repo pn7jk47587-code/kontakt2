@@ -632,8 +632,23 @@ async function rollFrames(body, roll, stock) {
   }
   body.innerHTML = `
     ${top}
-    <div class="grid">${cells.join('')}</div>
+    <div class="reorderbar" id="reorderBar">
+      <button type="button" class="btn ghost small" id="reorderOn">${MOVE_IC}Einträge verschieben</button>
+      <div class="reordertools" hidden>
+        <p class="hint">Halte ein Bild gedrückt und ziehe es an die richtige Stelle. Alles dazwischen rückt nach. Oder verschiebe alle Einträge auf einmal.</p>
+        <div class="row gap" style="padding:0">
+          <button type="button" class="btn ghost small" id="shiftBack">‹ Alle eins nach vorne</button>
+          <button type="button" class="btn ghost small" id="shiftFwd">Alle eins nach hinten ›</button>
+        </div>
+        <div class="row gap" style="padding:0;margin-top:6px">
+          <button type="button" class="btn ghost small" id="reorderUndo" disabled>Rückgängig</button>
+          <button type="button" class="btn accent small" id="reorderOff">Fertig</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid" id="frameGrid">${cells.join('')}</div>
     ${bottom}`;
+  setupReorder(body, roll, fr);
   const slide = body.querySelector('#devSlide');
   if (slide) setupSlide(slide, () => openDevModal(roll, () => route()));
   body.querySelector('#pickupOpen')?.addEventListener('click', () => openPickupModal(roll, () => route()));
@@ -695,6 +710,98 @@ async function openLeakPicker(roll, done) {
     close(); U.toast(on.size ? `${on.size} ${on.size === 1 ? 'Lightleak' : 'Lightleaks'} vermerkt` : 'Keine Lightleaks vermerkt');
     done && done();
   });
+}
+
+/* ---------- Einträge der Bilder verschieben ----------
+   Die Plätze (Bild 1, 2, 3 …) bleiben, verschoben wird alles, was zu einem Bild eingetragen ist:
+   Blende, Zeit, Objektiv, Filter, Notiz, Datum, Handyfotos, Scans. */
+const MOVE_IC = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:-3px"><path d="M7 4 3.5 7.5 7 11M3.5 7.5H15M17 13l3.5 3.5L17 20M20.5 16.5H9"/></svg>';
+const FRAME_FIXED = ['id', 'rollId', 'index', 'bonus'];
+const frameContent = f => Object.fromEntries(Object.entries(f).filter(([k]) => !FRAME_FIXED.includes(k)));
+const contentEmpty = c => !Object.values(c).some(v => v !== null && v !== undefined && v !== '' && v !== false && !(Array.isArray(v) && !v.length));
+async function applyContents(frames, contents) {
+  for (let i = 0; i < frames.length; i++) {
+    const f = frames[i];
+    for (const k of Object.keys(f)) if (!FRAME_FIXED.includes(k)) delete f[k];
+    Object.assign(f, contents[i] || {});
+    await DB.put('frames', f);
+  }
+}
+function setupReorder(body, roll, fr) {
+  const bar = body.querySelector('#reorderBar'), grid = body.querySelector('#frameGrid');
+  if (!bar || !grid || fr.length < 2) { bar?.remove(); return; }
+  const tools = bar.querySelector('.reordertools'), on = bar.querySelector('#reorderOn');
+  let undo = null;
+  const setMode = m => { grid.classList.toggle('reorder', m); tools.hidden = !m; on.hidden = m; };
+  on.addEventListener('click', () => setMode(true));
+  const commit = async contents => {
+    undo = fr.map(frameContent);
+    await applyContents(fr, contents);
+    const cells = await Promise.all(fr.map(f => frameCell(f)));
+    grid.innerHTML = cells.join('');
+    bar.querySelector('#reorderUndo').disabled = false;
+    U.haptic && U.haptic([15, 40, 15]);
+  };
+  bar.querySelector('#reorderOff').addEventListener('click', () => route());
+  bar.querySelector('#reorderUndo').addEventListener('click', async () => {
+    if (!undo) return; const u = undo; await commit(u); undo = null; bar.querySelector('#reorderUndo').disabled = true; U.toast('Rückgängig gemacht');
+  });
+  // Alle auf einmal: nur die normalen Bilder, das Bonusbild bleibt, wo es ist
+  const regular = fr.filter(f => !f.bonus);
+  const shift = async d => {
+    const c = fr.map(frameContent), idx = regular.map(f => fr.indexOf(f)), arr = idx.map(i => c[i]);
+    if (d > 0) { if (!contentEmpty(arr[arr.length - 1])) { U.toast('Das letzte Bild ist belegt, nach hinten geht nichts mehr'); return; } arr.pop(); arr.unshift({}); }
+    else { if (!contentEmpty(arr[0])) { U.toast('Bild 1 ist belegt, nach vorne geht nichts mehr'); return; } arr.shift(); arr.push({}); }
+    idx.forEach((i, k) => { c[i] = arr[k]; });
+    await commit(c); U.toast(d > 0 ? 'Alle Einträge eins nach hinten' : 'Alle Einträge eins nach vorne');
+  };
+  bar.querySelector('#shiftFwd').addEventListener('click', () => shift(1));
+  bar.querySelector('#shiftBack').addEventListener('click', () => shift(-1));
+  // Ziehen: Bild lange antippen und auf seinen richtigen Platz ziehen
+  let drag = null, timer = null;
+  const cellsArr = () => [...grid.querySelectorAll('.cell')];
+  grid.addEventListener('click', e => { if (grid.classList.contains('reorder')) e.preventDefault(); }, true);
+  grid.addEventListener('contextmenu', e => { if (grid.classList.contains('reorder')) e.preventDefault(); });
+  grid.addEventListener('pointerdown', e => {
+    if (!grid.classList.contains('reorder')) return;
+    const cell = e.target.closest('.cell'); if (!cell) return;
+    const from = cellsArr().indexOf(cell);
+    const start = { x: e.clientX, y: e.clientY };
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const r = cell.getBoundingClientRect();
+      const ghost = cell.cloneNode(true); ghost.classList.add('dragghost');
+      Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+      document.body.appendChild(ghost); cell.classList.add('dragfrom');
+      drag = { from, to: from, ghost, dx: start.x - r.left, dy: start.y - r.top };
+      U.haptic && U.haptic(12);
+    }, 220);
+    const cancelEarly = ev => { if (!drag && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 8) clearTimeout(timer); };
+    grid.addEventListener('pointermove', cancelEarly, { once: true });
+  });
+  document.addEventListener('pointermove', e => {
+    if (!drag) return;
+    e.preventDefault();
+    drag.ghost.style.left = (e.clientX - drag.dx) + 'px'; drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+    drag.ghost.style.visibility = 'hidden';
+    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('#frameGrid .cell');
+    drag.ghost.style.visibility = '';
+    const to = el ? cellsArr().indexOf(el) : drag.to;
+    if (to !== drag.to) { drag.to = to; cellsArr().forEach((c, i) => c.classList.toggle('droptarget', i === to && to !== drag.from)); U.haptic && U.haptic(6); }
+  }, { passive: false });
+  const end = async () => {
+    clearTimeout(timer);
+    if (!drag) return;
+    const { from, to, ghost } = drag; drag = null; ghost.remove();
+    cellsArr().forEach(c => c.classList.remove('dragfrom', 'droptarget'));
+    if (to === from || to < 0) return;
+    const c = fr.map(frameContent); const [item] = c.splice(from, 1); c.splice(to, 0, item);
+    await commit(c);
+    U.toast(`Eintrag von Bild ${frameLabel(fr[from])} auf Bild ${frameLabel(fr[to])} verschoben`);
+  };
+  document.addEventListener('pointerup', end);
+  document.addEventListener('pointercancel', end);
+  window.addEventListener('hashchange', () => { document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); }, { once: true });
 }
 
 // Schieberegler: Knopf von links nach rechts ziehen, um die Aktion auszulösen
@@ -992,7 +1099,7 @@ async function viewFrame(idWithQuery) {
 
   view.innerHTML = `
   <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
-  <label class="framedate"><span>Aufgenommen am</span><input type="date" id="frameDate" value="${U.esc(String(frame.date || '').slice(0, 10))}" max="${U.today()}"></label>
+  <label class="framedate"><span>Aufgenommen am</span><span class="fdval" id="frameDateTxt">${frame.date ? U.fmtDate(String(frame.date).slice(0, 10)) : 'Datum wählen'}</span><input type="date" id="frameDate" value="${U.esc(String(frame.date || '').slice(0, 10))}" max="${U.today()}" aria-label="Aufnahmetag"></label>
   <div class="framefilters" id="frameFilters">${filterChips()}${isIR && iso ? `<span class="ffchip iso">ISO ${U.esc(iso)}</span>` : ''}</div>
   <div id="media"></div>
   <div class="card quick">
@@ -1027,7 +1134,7 @@ async function viewFrame(idWithQuery) {
   let t;
   const flush = () => { clearTimeout(t); return DB.put('frames', frame); };
   const save = () => {
-    if (!frame.date) { frame.date = nowLocal(); const di = view.querySelector('#frameDate'); if (di) di.value = frame.date.slice(0, 10); }
+    if (!frame.date) { frame.date = nowLocal(); const di = view.querySelector('#frameDate'); if (di) { di.value = frame.date.slice(0, 10); view.querySelector('#frameDateTxt').textContent = U.fmtDate(di.value); } }
     if (!frame.lensId && lensId) frame.lensId = lensId;
     if (!frame.filterIds && filterIds.length) frame.filterIds = [...filterIds];
     if (isIR && !frame.iso && iso) frame.iso = iso;
@@ -1056,6 +1163,7 @@ async function viewFrame(idWithQuery) {
     const v = e.target.value;
     frame.date = v ? v + (String(frame.date || '').slice(10) || 'T12:00') : null;
     frame.dateSet = !!v;
+    view.querySelector('#frameDateTxt').textContent = v ? U.fmtDate(v) : 'Datum wählen';
     if (v && !frame.shot) frame.shot = true;
     clearTimeout(t); DB.put('frames', frame); U.haptic && U.haptic(10);
   });

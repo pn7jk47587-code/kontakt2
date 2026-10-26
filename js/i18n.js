@@ -711,6 +711,19 @@ Halte hier fest, was du ausprobieren willst: ein Motiv, eine Technik, ein Bild a
 Objektiv ist inaktiv	Lens is inactive
 Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.	Inactive lenses are listed under “Inactive” in the cabinet and no longer appear in the frame view.
 Noch keine aktiven Objektive.	No active lenses yet.
+Datum wählen	Choose date
+Aufnahmetag	Date taken
+Einträge verschieben	Move entries
+Halte ein Bild gedrückt und ziehe es an die richtige Stelle. Alles dazwischen rückt nach. Oder verschiebe alle Einträge auf einmal.	Hold a frame and drag it to the right place. Everything in between moves along. Or move all entries at once.
+‹ Alle eins nach vorne	‹ All one back
+Alle eins nach hinten ›	All one forward ›
+Rückgängig	Undo
+Rückgängig gemacht	Undone
+Das letzte Bild ist belegt, nach hinten geht nichts mehr	The last frame is in use, nothing can move further back
+Bild 1 ist belegt, nach vorne geht nichts mehr	Frame 1 is in use, nothing can move further forward
+Alle Einträge eins nach hinten	All entries moved one forward
+Alle Einträge eins nach vorne	All entries moved one back
+Eintrag von Bild {0} auf Bild {1} verschoben	Entry moved from frame {0} to frame {1}
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

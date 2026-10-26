@@ -1503,3 +1503,19 @@ section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounde
 .ideatags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; }
 .ideatag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px 2px 3px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--bg2); }
 .ideatag svg { width: 16px; height: 16px; }
+
+/* Bildansicht: Aufnahmetag als Text, das unsichtbare Datumsfeld liegt darüber und öffnet den Kalender */
+.framedate { position: relative; }
+.framedate .fdval { padding: 6px 12px; border-radius: 999px; background: var(--bg2); font-size: 14px; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+.framedate input[type=date] { position: absolute !important; inset: 0; width: 100% !important; max-width: none !important; min-width: 0 !important; height: 100% !important; opacity: 0; margin: 0; padding: 0 !important; cursor: pointer; }
+/* Rolle: Einträge verschieben */
+.reorderbar { margin: 10px 16px 0; }
+.reorderbar .hint { margin: 0 0 8px; }
+.grid.reorder .cell { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; animation: wiggle .3s ease-in-out infinite alternate; }
+.grid.reorder .cell:nth-child(2n) { animation-delay: .15s; }
+@keyframes wiggle { from { transform: rotate(-.8deg); } to { transform: rotate(.8deg); } }
+@media (prefers-reduced-motion: reduce) { .grid.reorder .cell { animation: none; } }
+.cell.dragfrom { opacity: .3; }
+.cell.droptarget { outline: 2.5px solid var(--teal); outline-offset: 2px; }
+.dragghost { position: fixed; z-index: 1000; pointer-events: none; transform: scale(1.08); box-shadow: 0 14px 30px rgba(0,0,0,.3); opacity: .95; animation: none !important; }
+.grid.reorder .cell, .grid.reorder .cell img { -webkit-user-drag: none; }
