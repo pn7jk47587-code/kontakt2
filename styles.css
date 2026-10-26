@@ -1540,3 +1540,8 @@ section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounde
 img.filterart.fimg { display: block; object-fit: contain; flex: 0 0 auto; }
 .ideatag img.filterart.fimg { display: inline-block; vertical-align: -3px; }
 .fe-photo { display: block; width: 150px; height: 150px; object-fit: contain; margin: 0 auto 4px; }
+
+/* Schriftzug komplett weiß (Wunsch 26.10.2026). Bei Tageslicht trägt ihn ein weicher dunkler Schatten, damit er auf hellem Grund lesbar bleibt. */
+.wordmark, .wordmark span { color: #fff; background: none; -webkit-background-clip: border-box; background-clip: border-box; -webkit-text-fill-color: #fff; }
+.wordmark { text-shadow: 0 1px 2px rgba(20, 16, 34, .55), 0 0 14px rgba(20, 16, 34, .35); }
+html[data-mood="moon"] .wordmark { text-shadow: none; }

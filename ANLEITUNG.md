@@ -4,7 +4,7 @@ Web-App für analoge Filmrollen (früher „Kontaktbogen“). Läuft auf dem iPh
 
 ## Was die App kann
 
-Name und Logo: Das App-Symbol zeigt Dünen unter einem Mond, von unten fällt ein Lightleak von Hellgelb über Orange und Rosa zu Violett ins Bild. Der Schriftzug „lightleak“ ist in Unbounded (Google Fonts, SIL Open Font License) gesetzt, „leak“ trägt den Farbverlauf des Leaks. Die Schrift liegt in der App (fonts/unbounded-600.woff2) und funktioniert damit auch offline. Schriftzug und Symbol stehen auf der Begrüßungsseite, der Schriftzug außerdem oben auf der Startseite. Sicherungen heißen jetzt lightleak-Datum.zip, ältere Sicherungen lassen sich weiter einspielen.
+Name und Logo: Das App-Symbol zeigt Dünen unter einem Mond, von unten fällt ein Lightleak von Hellgelb über Orange und Rosa zu Violett ins Bild. Der Schriftzug „lightleak“ ist in Unbounded (Google Fonts, SIL Open Font License) gesetzt, Der ganze Schriftzug ist weiß. Bei Tageslicht trägt ihn ein weicher dunkler Schatten, damit er auf dem hellen Grund lesbar bleibt, im Mondschein steht er ohne Schatten. Die Schrift liegt in der App (fonts/unbounded-600.woff2) und funktioniert damit auch offline. Schriftzug und Symbol stehen auf der Begrüßungsseite, der Schriftzug außerdem oben auf der Startseite. Sicherungen heißen jetzt lightleak-Datum.zip, ältere Sicherungen lassen sich weiter einspielen.
 
 Beim ersten Start legst du einen Nutzernamen und optional ein Profilbild fest. Das Bild wählst du mit einem Tipp auf den bunten Kreis. Vor dem Namen steht fest ein @, auch später im Profil und auf der Startseite (zum Beispiel @rebecca). Gespeichert wird der Name ohne @. Auf jeder Seite führt oben links der runde Knopf mit dem App-Symbol zur Startseite und oben rechts dein Profilbild zum Profil.
 
