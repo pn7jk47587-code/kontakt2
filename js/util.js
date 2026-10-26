@@ -183,6 +183,27 @@ const U = {
     U._tt = setTimeout(() => { t.hidden = true; }, 2600);
   },
 
+  // Gelöscht · Rückgängig: 5 Sekunden lang lässt sich das Löschen zurücknehmen. commit läuft danach (z. B. Bilddateien endgültig löschen).
+  undo(msg, onUndo, commit) {
+    if (U._undo) { const prev = U._undo; U._undo = null; clearTimeout(prev.t); prev.el.remove(); prev.commit && prev.commit(); }
+    const el = document.createElement('div');
+    el.className = 'undobar'; el.setAttribute('role', 'status');
+    el.innerHTML = `<span>${U.esc(msg)}</span><button type="button">Rückgängig</button>`;
+    document.body.appendChild(el);
+    const me = { el, commit, t: setTimeout(() => { if (U._undo === me) U._undo = null; el.remove(); commit && commit(); }, 5000) };
+    U._undo = me;
+    el.querySelector('button').addEventListener('click', async () => {
+      clearTimeout(me.t); if (U._undo === me) U._undo = null; el.remove();
+      U.haptic && U.haptic(10); await onUndo();
+    });
+  },
+
+  // Hinweis auf eine Geste oder Funktion, der nur bis zum Wegtippen erscheint
+  hintOnce(key, text) {
+    try { if (localStorage.getItem('kb-hint-' + key)) return ''; } catch (_) { return ''; }
+    return `<div class="oncehint" data-hint="${key}"><span>${text}</span><button type="button" class="oncex" aria-label="Hinweis schließen">×</button></div>`;
+  },
+
   stockLabel(st) {
     return st ? `${st.maker} ${st.name}` : 'Unbekannter Film';
   }

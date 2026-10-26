@@ -223,3 +223,13 @@ Favoriten in „Alle Fotos“: Jedes Foto hat unten rechts einen Stern. Favorite
 
 Fotoalben auf der Startseite: Jede Karte im Bereich „Fotoalbum“ hat oben rechts einen kleinen Pfeil. Er klappt die Karte auf eine schmale Zeile mit Name und Datum zusammen und wieder auf. Der ganze Bereich „Fotoalbum“ lässt sich wie bisher über seine Überschrift einklappen.
 
+Navigation (seit 26.10.2026 abends): Auf allen Unterseiten steht oben links ein runder Pfeil „Zurück“, wie in iOS üblich. Auf Startseite und Profil steht dort das App-Symbol, das zur Startseite führt. Der runde Knopf unten rechts trägt nur noch die Hauptaktion der Seite: der Haken speichert und führt zurück (Kamera, Objektiv, Bildansicht, Foto), der Karton archiviert. Die früheren Zurück-Pfeile unten rechts (Alle Fotos, Kameraschrank-Seiten, Filmtagebuch) sind entfallen. Das Wischen aus der oberen linken Ecke funktioniert weiter.
+
+Tippflächen: Sterne, Einklapp-Pfeile, kleine Plus-Minus-Knöpfe, das Kreuz zum Entfernen von Fotos und die Schließen-Knöpfe sind sichtbar unverändert, lassen sich aber auf mindestens 44 × 44 Punkt antippen (Empfehlung von Apple).
+
+Hinweise auf Gesten: Beim ersten Mal erklärt ein grüner Hinweis die Gesten: auf der Startseite das lange Drücken einer Karte, in der Bildansicht das Wischen zwischen Bildern, im Kameraschrank Stern und Reihenfolge. Das Kreuz blendet ihn dauerhaft aus. Auf den Seiten Kameras und Objektive gibt es zusätzlich den Knopf „Reihenfolge“: Die Einträge wackeln, Antippen öffnet nichts, und ein kurzes Drücken hebt einen Eintrag zum Ziehen an. „Fertig“ beendet das. Bei „Bewegung reduzieren“ in den iOS-Einstellungen wackelt nichts.
+
+Rückgängig: Nach dem Löschen einer Kamera, eines Objektivs, eines Filters, eines Zubehörs, einer Idee, eines Fotos im Filmtagebuch oder eines Films im Kühlschrank erscheint unten 5 Sekunden lang „… entfernt · Rückgängig“. Ein Tipp stellt den Eintrag wieder her. Fotos werden erst nach Ablauf dieser Zeit endgültig gelöscht. Das Löschen einer ganzen Rolle fragt wie bisher vorher nach.
+
+Begriffe: „Bild“ ist ein Platz auf der Rolle (Bild 1 bis 36, Bonusbild), „Foto“ ist das fertige Bild, also Scan oder Handyfoto. Daher heißt es jetzt „Fotos hochladen“, „Weitere Fotos hinzufügen“ und „Noch keine Fotos im Album“. Die Cokin-Namen bleiben englisch, weil sie so auf den Filtern stehen.
+

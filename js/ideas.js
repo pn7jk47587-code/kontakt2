@@ -107,9 +107,10 @@ async function openIdeaEditor(idea) {
     route();
   });
   $('idDel')?.addEventListener('click', async () => {
-    if (!confirm('Idee löschen?')) return;
-    for (const id of [...ed.imgIds, ...removed]) await deleteImage(id);
-    await saveIdeas((await getIdeas()).filter(x => x.id !== ed.id));
-    ov.remove(); U.toast('Idee gelöscht'); route();
+    const before = await getIdeas(), imgs = [...(idea?.imgIds || []), ...added, ...removed];
+    await saveIdeas(before.filter(x => x.id !== ed.id));
+    ov.remove(); route();
+    // Bilder erst nach Ablauf der Rückgängig-Zeit endgültig löschen
+    U.undo('Idee gelöscht', async () => { await saveIdeas(before); route(); }, async () => { for (const id of new Set(imgs)) await deleteImage(id); });
   });
 }

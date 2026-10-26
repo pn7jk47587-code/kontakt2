@@ -11,12 +11,8 @@ async function getDiary(stockId) { return (await DB.get('meta', diaryKey(stockId
 async function allDiaries() { return (await DB.all('meta')).filter(m => String(m.id).startsWith('diary:')); }
 const diaryHas = d => !!(d && ((d.notes || '').trim() || (d.photos || []).length));
 
-function diaryBackBtn(hash, label) {
-  const b = document.createElement('button');
-  b.className = 'donebtn'; b.setAttribute('aria-label', label); b.innerHTML = DIARY_BACK;
-  document.body.appendChild(b);
-  b.addEventListener('click', () => { location.hash = hash; });
-}
+// Zurück geht jetzt über den Pfeil oben links in der Kopfzeile
+function diaryBackBtn() {}
 
 /* Übersicht: alle Filme mit Tagebuch */
 async function viewDiaryList() {
@@ -74,7 +70,12 @@ async function viewDiary(stockId) {
   });
   view.addEventListener('click', async e => {
     const del = e.target.closest('[data-del]');
-    if (del) { d.photos = d.photos.filter(p => p.imgId !== del.dataset.del); await deleteImage(del.dataset.del); await save(); route(); return; }
+    if (del) {
+      const before = [...d.photos], id = del.dataset.del;
+      d.photos = d.photos.filter(p => p.imgId !== id); await save(); route();
+      U.undo('Foto entfernt', async () => { d.photos = before; await save(); route(); }, () => deleteImage(id));
+      return;
+    }
     const img = e.target.closest('img[data-img]');
     if (img) zoom(await U.imgUrl(img.dataset.img) || img.src);
   });

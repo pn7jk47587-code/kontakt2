@@ -266,7 +266,9 @@ function openFilterEditor(f) {
     await saveFilters(list); close(); U.toast('Gespeichert'); route();
   });
   $('feDel').addEventListener('click', async () => {
-    await saveFilters((await getFilters()).filter(x => x.id !== f.id)); close(); U.toast('Filter entfernt'); route();
+    const before = await getFilters();
+    await saveFilters(before.filter(x => x.id !== f.id)); close(); route();
+    U.undo(`${filterCode(f) || filterName(f)} entfernt`, async () => { await saveFilters(before); route(); });
   });
 }
 
@@ -360,7 +362,11 @@ async function openAccEditor(a) {
     try { localStorage.setItem('kb-fold-cab-acc', '1'); localStorage.setItem('kb-fold-cabinet', '1'); } catch (_) {}
     route();
   });
-  $('acDel')?.addEventListener('click', async () => { await saveAccessories((await getAccessories()).filter(x => x.id !== ed.id)); close(); U.toast('Zubehör entfernt'); route(); });
+  $('acDel')?.addEventListener('click', async () => {
+    const before = await getAccessories();
+    await saveAccessories(before.filter(x => x.id !== ed.id)); close(); route();
+    U.undo('Zubehör entfernt', async () => { await saveAccessories(before); route(); });
+  });
 }
 
 /* ---------- Fotos der Filter: freigestellt aus Rebeccas Aufnahmen auf dem Leuchtpult, einheitlich 400 × 400 px.

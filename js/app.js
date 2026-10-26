@@ -131,7 +131,11 @@ async function loadSeedGear() {
 function setHeader(title, { action = '' } = {}) {
   titleEl.textContent = title || '';
   const has = !!PROFILE;
-  document.getElementById('homeBtn').hidden = !has;
+  // Unterseiten: oben links der Zurück-Pfeil (wie in iOS). Startseite und Profil: oben links das App-Symbol zur Startseite.
+  const h = location.hash || '#/';
+  const top = h === '#/' || h === '#' || h.startsWith('#/profil') || h.startsWith('#/willkommen');
+  document.getElementById('homeBtn').hidden = !has || !top;
+  backBtn.hidden = !has || top;
   const prof = document.getElementById('profBtn');
   prof.hidden = !has;
   prof.classList.toggle('here', location.hash.startsWith('#/profil'));
@@ -163,7 +167,7 @@ document.addEventListener('click', e => {
 }, true);
 function gearDoneButton() {
   const done = document.createElement('button');
-  done.className = 'donebtn'; done.setAttribute('aria-label', 'Fertig, eine Ebene zurück'); done.innerHTML = ART.check;
+  done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig, eine Ebene zurück'); done.innerHTML = ART.check;
   document.body.appendChild(done);
   done.addEventListener('click', () => {
     try { if (sessionStorage.getItem('kb-newgear')) U.haptic([20, 60, 20]); } catch (_) {}
@@ -178,6 +182,14 @@ function gearDoneButton() {
 }
 
 // Eine Ebene zurück: offenes Fenster schließen, sonst zur übergeordneten Seite
+document.addEventListener('click', e => {
+  const x = e.target.closest('.oncehint .oncex'); if (!x) return;
+  const h = x.closest('.oncehint'); try { localStorage.setItem('kb-hint-' + h.dataset.hint, '1'); } catch (_) {}
+  h.remove();
+});
+backBtn.setAttribute('aria-label', 'Zurück');
+backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+backBtn.addEventListener('click', () => { U.haptic && U.haptic(8); goUp(); });
 async function goUp() {
   const modals = document.querySelectorAll('.modalbg');
   if (modals.length) { modals[modals.length - 1].remove(); return; }
@@ -185,9 +197,9 @@ async function goUp() {
   if (sheet) { sheet.click(); return; }
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
-  const done = document.querySelector('.donebtn');
+  const done = document.querySelector('.donebtn.goesback');
   if (done) { done.click(); return; }
-  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', tagebuch: '#/profil', profil: '#/' }[parts[0]];
+  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];
   if (parts.length) location.hash = up || '#/';
 }
 

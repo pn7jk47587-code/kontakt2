@@ -66,6 +66,7 @@ async function viewRolls() {
   const allFilters = await getFilters();
   rolls.sort((a, b) => (b.loadedAt || b.createdAt || '').localeCompare(a.loadedAt || a.createdAt || ''));
   let html = hero + `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;
+  if (rolls.length) html += U.hintOnce('home-longpress', 'Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.');
   const order = [['entwurf', 'Film in der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']];
   for (const [g, label] of order) {
     const list = rolls.filter(r => (r.status || 'entwurf') === g);
@@ -84,7 +85,7 @@ async function viewRolls() {
       const devInfo = g === 'belichtet'
         ? `<div class="devline">${r.dev?.mode === 'selbst' ? 'Selbst entwickeln' : U.esc(r.dev?.lab || 'Labor')}${r.dev?.sentAt ? ' · seit ' + U.fmtDate(r.dev.sentAt) : ''}</div>` : '';
       const act = g === 'entwurf' ? `<button class="cardact to-dev" data-dev="${r.id}" aria-label="Film in Entwicklung geben">${ART.arrow}<span>Entwickeln</span></button>`
-        : g === 'belichtet' ? `<button class="cardact to-album" data-pickup="${r.id}" aria-label="Film abgeholt, Scans hochladen">${ART.up}<span>Scans hochladen</span></button>`
+        : g === 'belichtet' ? `<button class="cardact to-album" data-pickup="${r.id}" aria-label="Film abgeholt, Fotos hochladen">${ART.up}<span>Fotos hochladen</span></button>`
         : `<a class="cardact open-album" href="#/album/${r.id}" aria-label="Fotoalbum öffnen">${ART.album}<span>Ansehen</span></a>`;
       const small = g === 'entwickelt' && (() => { try { return localStorage.getItem('kb-albumfold-' + r.id) === '1'; } catch (_) { return false; } })();
       html += `<div class="rollcard st-${g}${small ? ' small' : ''}" data-rc="${r.id}">${g === 'entwickelt' ? `<button type="button" class="rcfold" data-rcfold="${r.id}" aria-expanded="${!small}" aria-label="${small ? 'Album aufklappen' : 'Album einklappen'}"><span class="foldchev" aria-hidden="true"></span></button>` : ''}
@@ -176,7 +177,7 @@ function setupLongPress(root, data) {
       ['Kamera', camLabel(cam) || r.camera || ''],
       ['Format', FORMAT_LABEL[r.format] || ''],
       ['Eingelegt', r.loadedAt ? U.fmtDate(r.loadedAt) : ''],
-      ['Bilder', (r.status || 'entwurf') === 'entwickelt' ? `${scans} Scans` : `${used} von ${fr.length} notiert${r.bonus ? ' · mit Bonusbild' : ''}`],
+      ['Bilder', (r.status || 'entwurf') === 'entwickelt' ? `${scans} Fotos` : `${used} von ${fr.length} notiert${r.bonus ? ' · mit Bonusbild' : ''}`],
       ['Entwicklung', r.dev?.sentAt && (r.status || 'entwurf') !== 'entwurf' ? `${r.dev.mode === 'selbst' ? 'selbst' : U.esc(r.dev.lab || 'Labor')} seit ${U.fmtDate(r.dev.sentAt)}${r.dev.scan ? ', mit Scan' : ''}` : ''],
       ['Kosten', cost ? euro(cost) : '']
     ].filter(([, v]) => v);
@@ -208,8 +209,8 @@ function setupLongPress(root, data) {
   }, true);
 }
 
-/* ---------- Fenster „Film abgeholt“: Scans hochladen, danach Fotoalbum ---------- */
-// „Scans hochladen“ öffnet direkt die Fotoauswahl. Die Scans füllen die Platzhalter in der Reihenfolge der Dateinamen.
+/* ---------- Fenster „Film abgeholt“: Fotos hochladen, danach Fotoalbum ---------- */
+// „Fotos hochladen“ öffnet direkt die Fotoauswahl. Die Scans füllen die Platzhalter in der Reihenfolge der Dateinamen.
 function openPickupModal(roll, done) {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.hidden = true;
@@ -219,7 +220,7 @@ function openPickupModal(roll, done) {
     if (!files.length) return;
     const busy = document.createElement('div');
     busy.className = 'modalbg busy';
-    busy.innerHTML = `<div class="busycard">${files.length} ${files.length === 1 ? 'Scan wird' : 'Scans werden'} gespeichert …</div>`;
+    busy.innerHTML = `<div class="busycard">${files.length} ${files.length === 1 ? 'Foto wird' : 'Fotos werden'} gespeichert …</div>`;
     document.body.appendChild(busy);
     try {
       const n = await assignScans(roll, files);
@@ -227,7 +228,7 @@ function openPickupModal(roll, done) {
       roll.dev = roll.dev || {};
       if (!roll.dev.backAt && !roll.dev.devDate) roll.dev[roll.dev.mode === 'selbst' ? 'devDate' : 'backAt'] = U.today();
       await DB.put('rolls', roll);
-      U.toast(`${n} ${n === 1 ? 'Scan' : 'Scans'} hochgeladen`);
+      U.toast(`${n} ${n === 1 ? 'Foto' : 'Fotos'} hochgeladen`);
       await queueLeakPick(roll);
       location.hash = '#/album/' + roll.id;
     } finally { busy.remove(); }
@@ -546,7 +547,7 @@ async function confirmDeleteRoll(rollId) {
     <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="drTitle">
       <h2 id="drTitle">Rolle wirklich löschen?</h2>
       <p>${U.esc(roll.title || U.stockLabel(stock))}${roll.loadedAt ? ', eingelegt am ' + U.fmtDate(roll.loadedAt) : ''}.</p>
-      <p class="hint">Gelöscht werden alle Bilder${scans ? ` (${scans} Scans)` : ''}, Handyfotos, Notizen und der Abholschein. Das lässt sich nicht rückgängig machen.</p>
+      <p class="hint">Gelöscht werden alle Bilder${scans ? ` (${scans} Fotos)` : ''}, Handyfotos, Notizen und der Abholschein. Das lässt sich nicht rückgängig machen.</p>
       <div class="modalfoot">
         <button class="closex" id="drNo" aria-label="Abbrechen">${ART.x}</button>
         <button class="btn danger" id="drYes">Endgültig löschen</button>
@@ -634,10 +635,10 @@ async function rollFrames(body, roll, stock) {
       <div><b>In Entwicklung</b><br><span class="sub2">${roll.dev?.mode === 'selbst' ? 'Selbst entwickeln' : U.esc(roll.dev?.lab || 'Labor')}${roll.dev?.sentAt ? ' · abgegeben ' + U.fmtDate(roll.dev.sentAt) : ''}</span></div>
       ${slip ? `<img src="${slip}" class="slipthumb zoomable" alt="Abholschein">` : ''}
     </div>`;
-    bottom = modeBtn('pickupOpen', ART.up, 'Abgeholt: Scans hochladen', '', 'to-album');
+    bottom = modeBtn('pickupOpen', ART.up, 'Abgeholt: Fotos hochladen', '', 'to-album');
   } else {
     if (hasImgs) top = `<div class="modewrap"><a class="modebtn open-album" href="#/album/${roll.id}"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>`;
-    bottom = `<label class="btn ghost wide">Weitere Scans hinzufügen<input type="file" accept="image/*" multiple hidden id="bulk"></label>`;
+    bottom = `<label class="btn ghost wide">Weitere Fotos hinzufügen<input type="file" accept="image/*" multiple hidden id="bulk"></label>`;
   }
   body.innerHTML = `
     ${top}
@@ -671,7 +672,7 @@ async function rollFrames(body, roll, stock) {
       if (!roll.dev.backAt && !roll.dev.devDate) roll.dev[roll.dev.mode === 'selbst' ? 'devDate' : 'backAt'] = U.today();
       await DB.put('rolls', roll);
     }
-    U.toast(`${n} ${n === 1 ? 'Scan' : 'Scans'} hochgeladen`);
+    U.toast(`${n} ${n === 1 ? 'Foto' : 'Fotos'} hochgeladen`);
     if (await queueLeakPick(roll)) { location.hash = '#/album/' + roll.id; return; }
     route();
   });
@@ -694,8 +695,8 @@ async function openLeakPicker(roll, done) {
   ov.className = 'modalbg';
   ov.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lkTitle">
-      <h2 id="lkTitle">Welche Bilder haben Lightleaks?</h2>
-      <p class="hint">${U.esc(camLabel(cam) || 'Die Kamera')} hat Lightleaks. Tippe die Scans an, auf denen wirklich Licht eingefallen ist.</p>
+      <h2 id="lkTitle">Welche Fotos haben Lightleaks?</h2>
+      <p class="hint">${U.esc(camLabel(cam) || 'Die Kamera')} hat Lightleaks. Tippe die Fotos an, auf denen wirklich Licht eingefallen ist.</p>
       <div class="leakgrid" id="lkGrid">${fr.map((f, i) => `<button type="button" class="leakpick${on.has(f.id) ? ' on' : ''}" data-id="${f.id}" aria-pressed="${on.has(f.id)}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt=""><span class="lkidx">${frameLabel(f)}</span><span class="lkmark">${ART.check}</span></button>`).join('')}</div>
       <p class="hint" id="lkCount"></p>
       <div class="modalfoot"><button class="closex" id="lkNo" aria-label="Später">${ART.x}</button><button class="okbtn" id="lkOk" aria-label="Speichern">${ART.check}</button></div>
@@ -1185,6 +1186,7 @@ async function viewFrame(idWithQuery) {
 
   view.innerHTML = `
   <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
+  ${U.hintOnce('frame-swipe', 'Wische auf dem Bild nach links oder rechts zum nächsten oder vorigen Bild. Unten rechts speichert der Haken und führt zurück zur Rolle.')}
   <label class="framedate"><span>Aufgenommen am</span><span class="fdval" id="frameDateTxt">${frame.date ? U.fmtDate(String(frame.date).slice(0, 10)) : 'Datum wählen'}</span><input type="date" id="frameDate" value="${U.esc(String(frame.date || '').slice(0, 10))}" max="${U.today()}" aria-label="Aufnahmetag"></label>
   <div class="framefilters" id="frameFilters">${filterChips()}${isIR && iso ? `<span class="ffchip iso">ISO ${U.esc(iso)}</span>` : ''}</div>
   <div id="media"></div>
@@ -1363,7 +1365,7 @@ async function viewFrame(idWithQuery) {
 
   // Haken unten rechts: speichern und zurück zur Bildübersicht der Rolle
   const done = document.createElement('button');
-  done.className = 'donebtn'; done.setAttribute('aria-label', 'Fertig'); done.innerHTML = ART.check;
+  done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig'); done.innerHTML = ART.check;
   document.body.appendChild(done);
   done.addEventListener('click', async () => { await flush(); location.hash = '#/rolle/' + frame.rollId; });
 
@@ -1512,7 +1514,7 @@ async function viewAlbum(id) {
   const d = await albumData(id);
   if (!d) { location.replace('#/'); return; }
   setHeader(d.title, { action: d.roll ? `<a class="toplink" href="#/rolle/${d.roll.id}">Rolle</a>${TRASH_BTN(d.roll.id)}` : '' });
-  if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Bilder im Album.</div>'; return; }
+  if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Fotos im Album.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   const leakCam = !!(d.roll && d.cams.get(d.roll.cameraId)?.lightLeaks);
   view.innerHTML = `
@@ -1567,7 +1569,7 @@ async function viewPhoto(albumId, frameId) {
   const go = async g => { if (g) { await saveTitle(); location.replace(`#/foto/${albumId}/${g.id}`); } };
   // Haken unten rechts: Titel speichern und zurück zum Raster
   const done = document.createElement('button');
-  done.className = 'donebtn'; done.setAttribute('aria-label', 'Fertig, zurück zum Raster'); done.innerHTML = ART.check;
+  done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig, zurück zum Raster'); done.innerHTML = ART.check;
   document.body.appendChild(done);
   done.addEventListener('click', async () => { await saveTitle(); location.hash = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId; });
   // Tippen auf den linken oder rechten Rand des Fotos: zurück oder weiter
@@ -1741,7 +1743,7 @@ async function viewAllPhotos() {
   const d = await albumData('alle');
   const sorting = ALLPHOTOS_SORT;
   const arBtn = `<div class="archcorner">${d.frames.length > 1 ? `<button type="button" class="archlink${sorting ? ' on' : ''}" id="apSort" aria-pressed="${sorting}">${MOVE_IC}<span>${sorting ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`
-    + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Verschoben wird nur der Scan, Einträge wie Blende oder Notiz bleiben bei ihrer Bildnummer.</p>' : '');
+    + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Verschoben wird nur das Foto, Einträge wie Blende oder Notiz bleiben bei ihrer Bildnummer.</p>' : '');
   if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
@@ -1773,12 +1775,6 @@ async function viewAllPhotos() {
     U.haptic && U.haptic(f.fav ? [12, 40, 12] : 10);
     const y = window.scrollY; document.querySelectorAll('.donebtn').forEach(x => x.remove()); await viewAllPhotos(); window.scrollTo(0, y);
   }));
-  // Pfeil unten rechts: zurück zum Profil
-  const back = document.createElement('button');
-  back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück zum Profil');
-  back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19 12H6M11.5 6 5.5 12l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  document.body.appendChild(back);
-  back.addEventListener('click', () => { location.hash = '#/profil'; });
 }
 
 /* ---------- Archivieren: früher entwickelte Rollen nachtragen, ohne Einlegen und Entwickeln ----------
@@ -2059,14 +2055,19 @@ async function viewCabinetPart(k) {
   const part = CAB_PARTS.find(p => p[0] === k);
   if (!part) { location.replace('#/profil'); return; }
   setHeader(part[1]);
-  view.innerHTML = `<div class="cabnav">${CAB_PARTS.map(([key, label]) => `<a class="seg${key === k ? ' on' : ''}" href="#/schrank/${key}">${label}</a>`).join('')}</div>` + await cabinetHtml(false, k);
+  const sortable = k === 'kameras' || k === 'objektive';
+  view.innerHTML = `<div class="cabnav">${CAB_PARTS.map(([key, label]) => `<a class="seg${key === k ? ' on' : ''}" href="#/schrank/${key}">${label}</a>`).join('')}</div>`
+    + (sortable ? `<div class="archcorner"><button type="button" class="archlink" id="cabSort" aria-pressed="false">${MOVE_IC}<span>Reihenfolge</span></button></div>` : '')
+    + U.hintOnce('cab-gestures', sortable ? 'Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.' : 'Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben.')
+    + await cabinetHtml(false, k);
   setupFolds(view);
   setupCabinet(view);
-  const back = document.createElement('button');
-  back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück zum Profil');
-  back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19 12H6M11.5 6 5.5 12l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  document.body.appendChild(back);
-  back.addEventListener('click', () => { location.hash = '#/profil'; });
+  view.querySelector('#cabSort')?.addEventListener('click', e => {
+    const on = view.querySelector('.cabpage').classList.toggle('cabsorting');
+    e.currentTarget.classList.toggle('on', on); e.currentTarget.setAttribute('aria-pressed', on);
+    e.currentTarget.querySelector('span').textContent = on ? 'Fertig' : 'Reihenfolge';
+    U.haptic && U.haptic(10);
+  });
 }
 
 // Plus im Kameraschrank: kurzes Vibrieren, danach leuchtet der neue Eintrag beim Zurückkommen auf
@@ -2093,12 +2094,12 @@ async function viewCameras() {
 let GEAR_DRAG = false;
 document.addEventListener('touchmove', e => { if (GEAR_DRAG) e.preventDefault(); }, { passive: false });
 function setupGearDrag(list) {
-  const HOLD = 380;
+  const holdMs = () => list.closest('.cabsorting') ? 90 : 380;   // im Modus „Reihenfolge“ hebt fast sofort an
   let timer = null, row = null, rows = [], rects = [], startY = 0, startX = 0, from = 0, to = 0, step = 0, active = false, suppress = false;
   const reset = () => { clearTimeout(timer); timer = null; };
   list.addEventListener('dragstart', e => e.preventDefault());
   list.addEventListener('contextmenu', e => { if (timer || active || suppress) e.preventDefault(); });
-  list.addEventListener('click', e => { if (suppress) { e.preventDefault(); e.stopPropagation(); } }, true);
+  list.addEventListener('click', e => { if (suppress || (list.closest('.cabsorting') && !e.target.closest('.favstar'))) { e.preventDefault(); e.stopPropagation(); } }, true);
   list.addEventListener('pointerdown', e => {
     const r = e.target.closest('.crow');
     if (!r || !list.contains(r) || (e.pointerType === 'mouse' && e.button !== 0)) return;
@@ -2116,7 +2117,7 @@ function setupGearDrag(list) {
       row.style.transform = 'scale(1.03)';
       try { row.setPointerCapture(pid); } catch (_) {}
       U.haptic();
-    }, HOLD);
+    }, holdMs());
   });
   list.addEventListener('pointermove', e => {
     if (!row) return;
@@ -2214,7 +2215,7 @@ async function viewLens(id) {
       lens.cameraIds = [...view.querySelectorAll('#camChecks input:checked')].map(i => i.value);
       await DB.put('lenses', lens);
     });
-    view.querySelector('#delLens')?.addEventListener('click', async () => { await DB.del('lenses', lens.id); location.replace('#/schrank/objektive'); });
+    view.querySelector('#delLens')?.addEventListener('click', async () => { const keep = await DB.get('lenses', lens.id); await DB.del('lenses', lens.id); location.replace('#/schrank/objektive'); U.undo('Objektiv gelöscht', async () => { if (keep) await DB.put('lenses', keep); route(); }); });
   };
   draw();
 }
@@ -2292,5 +2293,5 @@ async function viewCamera(id) {
     await deleteImage(cam.photoId); cam.photoId = rec.id; await DB.put('cameras', cam); route();
   });
   view.querySelector('#camPhotoRm')?.addEventListener('click', async () => { await deleteImage(cam.photoId); cam.photoId = null; await DB.put('cameras', cam); route(); });
-  view.querySelector('#delCam')?.addEventListener('click', async () => { await DB.del('cameras', cam.id); location.replace('#/schrank/kameras'); });
+  view.querySelector('#delCam')?.addEventListener('click', async () => { const keep = await DB.get('cameras', cam.id); await DB.del('cameras', cam.id); location.replace('#/schrank/kameras'); U.undo('Kamera gelöscht', async () => { if (keep) await DB.put('cameras', keep); route(); }); });
 }

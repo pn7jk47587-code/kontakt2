@@ -250,22 +250,22 @@ Film in der Kamera	Film in the camera
 Selbst entwickeln	Develop yourself
 Film in Entwicklung geben	Send film for development
 Entwickeln	Develop
-Film abgeholt, Scans hochladen	Film picked up, upload scans
-Scans hochladen	Upload scans
+Film abgeholt, Fotos hochladen	Film picked up, upload photos
+Fotos hochladen	Upload photos
 Fotoalbum öffnen	Open photo album
 Ansehen	View
 Kamera	Camera
 Format	Format
 Eingelegt	Loaded
 Bilder	Frames
-{0} Scans	{0} scans
+{0} Fotos	{0} photos
 {0} von {1} notiert	{0} of {1} noted
 {0} von {1} notiert · mit Bonusbild	{0} of {1} noted · with bonus frame
 Kosten	Cost
-{0} Scan wird gespeichert …	Saving {0} scan …
-{0} Scans werden gespeichert …	Saving {0} scans …
-{0} Scan hochgeladen	{0} scan uploaded
-{0} Scans hochgeladen	{0} scans uploaded
+{0} Foto wird gespeichert …	Saving {0} photo …
+{0} Fotos werden gespeichert …	Saving {0} photos …
+{0} Foto hochgeladen	{0} photo uploaded
+{0} Fotos hochgeladen	{0} photos uploaded
 Abholschein	Pickup slip
 Bestätigen	Confirm
 Film entwickeln	Develop film
@@ -296,15 +296,15 @@ Film eingelegt, Preis verbucht	Film loaded, price recorded
 Rolle löschen	Delete roll
 Rolle wirklich löschen?	Really delete this roll?
 Gelöscht werden alle Bilder, Handyfotos, Notizen und der Abholschein. Das lässt sich nicht rückgängig machen.	All frames, phone photos, notes and the pickup slip will be deleted. This cannot be undone.
-Gelöscht werden alle Bilder ({0} Scans), Handyfotos, Notizen und der Abholschein. Das lässt sich nicht rückgängig machen.	All frames ({0} scans), phone photos, notes and the pickup slip will be deleted. This cannot be undone.
+Gelöscht werden alle Bilder ({0} Fotos), Handyfotos, Notizen und der Abholschein. Das lässt sich nicht rückgängig machen.	All frames ({0} photos), phone photos, notes and the pickup slip will be deleted. This cannot be undone.
 Endgültig löschen	Delete permanently
 Rolle gelöscht	Roll deleted
 Handy	Phone
 In Entwicklung geben (zum Bestätigen nach rechts schieben)	Send for development (slide right to confirm)
 In Entwicklung geben	Send for development
-Abgeholt: Scans hochladen	Picked up: upload scans
+Abgeholt: Fotos hochladen	Picked up: upload photos
 Fotoalbum ansehen	View photo album
-Weitere Scans hinzufügen	Add more scans
+Weitere Fotos hinzufügen	Add more photos
 Speichere {0}/{1} …	Saving {0}/{1} …
 Wo wird der Film entwickelt?	Where will the film be developed?
 Im Labor	At a lab
@@ -369,7 +369,7 @@ Schieber	Slider
 Nebeneinander	Side by side
 Analog	Film
 Vergleich verschieben	Move comparison
-Noch keine Bilder im Album.	No pictures in the album yet.
+Noch keine Fotos im Album.	No photos in the album yet.
 Bild {0}	Frame {0}
 Nach oben wischen: Handyfoto	Swipe up: phone photo
 Titel	Title
@@ -554,8 +554,8 @@ Tippe ein Bild an und füge zumindest eine Beschreibung hinzu.	Tap a frame and a
 Gut. Mit dem Haken geht es zurück zur Rolle.	Good. The check mark takes you back to the roll.
 Schieb den Regler nach rechts, um den Film in die Entwicklung zu geben.	Slide to the right to send the film for development.
 Tippe auf „Entwickeln“, um den Film in die Entwicklung zu geben.	Tap “Develop” to send the film for development.
-Ist der Film entwickelt, lädst du hier die Scans hoch.	Once the film is developed, upload the scans here.
-Zur Startseite, dort lädst du die Scans hoch.	To the home screen, that’s where you upload the scans.
+Ist der Film entwickelt, lädst du hier die Fotos hoch.	Once the film is developed, upload the photos here.
+Zur Startseite, dort lädst du die Fotos hoch.	To the home screen, that’s where you upload the photos.
 Schau dir jetzt dein Fotoalbum an.	Now take a look at your photo album.
 Geschafft! Das ist dein erstes Fotoalbum. Die Einführung ist beendet.	Done! This is your first photo album. The introduction is complete.
 Einführung überspringen	Skip introduction
@@ -586,8 +586,8 @@ Kamera ist kaputt	Camera is broken
 Was ist kaputt?	What is broken?
 Kaputte Kameras erscheinen nicht bei „Film einlegen“.	Broken cameras don't appear under “Load film”.
 {0} (kaputt)	{0} (broken)
-Welche Bilder haben Lightleaks?	Which frames have light leaks?
-{0} hat Lightleaks. Tippe die Scans an, auf denen wirklich Licht eingefallen ist.	{0} has light leaks. Tap the scans where light actually leaked in.
+Welche Fotos haben Lightleaks?	Which photos have light leaks?
+{0} hat Lightleaks. Tippe die Fotos an, auf denen wirklich Licht eingefallen ist.	{0} has light leaks. Tap the photos where light actually leaked in.
 Später	Later
 {0} Bilder mit Lightleak	{0} frames with a light leak
 {0} Bild mit Lightleak	{0} frame with a light leak
@@ -787,6 +787,21 @@ Gewindedurchmesser (mm)	Thread diameter (mm)
 Hervorgehoben: Filtergewinde deiner Objektive.	Highlighted: filter threads of your lenses.
 Anderer Schiebefilter	Other slide-in filter
 Schraubfilter hinzugefügt	Screw-in filter added
+Reihenfolge	Order
+Fertig	Done
+Zurück	Back
+Archivieren	Archive
+Tippe auf den Pfeil oben links, um zurückzugehen.	Tap the arrow at the top left to go back.
+Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.	Press and hold a card to see the film, camera and dates of the roll.
+Wische auf dem Bild nach links oder rechts zum nächsten oder vorigen Bild. Unten rechts speichert der Haken und führt zurück zur Rolle.	Swipe left or right on the picture for the next or previous frame. The check mark at the bottom right saves and takes you back to the roll.
+Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben.	The star on the picture makes an item a favourite, it then appears at the top.
+Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.	The star on the picture makes an item a favourite, it then appears at the top. With “Order” you drag items to another place; without the button, press and hold.
+Kamera gelöscht	Camera deleted
+Objektiv gelöscht	Lens deleted
+Zubehör entfernt	Accessory removed
+Foto entfernt	Photo removed
+Idee gelöscht	Idea deleted
+Film entfernt	Film removed
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

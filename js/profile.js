@@ -351,11 +351,12 @@ async function viewProfile() {
       e.stopPropagation();
       // Versehentlich hinzugefügt: noch vorrätige Rollen samt Preis entfernen. Schon eingelegte Rollen bleiben als Ausgabe stehen.
       const en = await DB.get('fridge', x.dataset.delentry); if (!en) return;
+      const keep = JSON.parse(JSON.stringify(en));
       const left = en.count || 0, bought = en.bought ?? left;
       const used = Math.max(0, bought - left);
       if (used > 0) { en.bought = used; en.count = 0; await DB.put('fridge', en); }
       else await DB.del('fridge', en.id);
-      U.toast(left === 1 ? 'Film entfernt' : `${left} Rollen entfernt`);
+      U.undo(left === 1 ? 'Film entfernt' : `${left} Rollen entfernt`, async () => { await DB.put('fridge', keep); route(); });
       route();
       return;
     }

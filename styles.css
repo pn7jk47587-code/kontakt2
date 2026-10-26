@@ -802,7 +802,7 @@ body { padding-bottom: calc(28px + var(--safe-b)); }
 /* Kopfzeile: links Startseite als Kreis mit App-Symbol, rechts das Profil */
 .topbar { justify-content: space-between; padding-left: 10px; padding-right: 10px; }
 .topbar h1 { flex: 1; text-align: center; font-size: 17px; }
-#backBtn, .who, .menubtn { display: none !important; }
+.who, .menubtn { display: none !important; }
 .homebtn, .profbtn { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;
   border: 1px solid var(--glassline); box-shadow: var(--glassshadow); background: var(--glass); }
 .homebtn img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -1741,3 +1741,33 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .txrow > span:first-child { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .txrow > span:first-child span { white-space: normal; }
 .txrow > span:last-child { flex: 0 0 auto; white-space: nowrap; }
+
+/* Zurück oben links (Unterseiten), unten rechts nur die Hauptaktion der Seite */
+#backBtn { flex: 0 0 auto; width: 44px; height: 44px; margin: 0; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--glassline); background: var(--glass); box-shadow: var(--glassshadow); color: var(--teal); cursor: pointer; }
+#backBtn[hidden] { display: none !important; }
+#backBtn:active { transform: scale(.94); }
+
+/* Tippflächen: sichtbar klein, antippbar mindestens 44 × 44 px (Apple HIG) */
+.favstar::after, .pfav::after, .rcfold::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); border-radius: 50%; }
+.favstar, .pfav, .rcfold { position: absolute; }
+.dtdel::after, .stepper.small button::after, .reorderbtn::after, .closex::after { content: ""; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
+.stepper.small button, .reorderbtn, .closex { position: relative; }
+.closex { width: 44px; height: 44px; }
+.reorderbtn { width: 40px; height: 40px; }
+/* Einmalige Hinweise */
+.oncehint { display: flex; align-items: flex-start; gap: 8px; margin: 10px 16px; padding: 10px 6px 10px 14px; border-radius: 16px; background: var(--tint); border: 1px solid var(--tint2); font-size: 13.5px; line-height: 1.4; color: var(--text); }
+.oncehint span { flex: 1 1 auto; }
+.oncex { flex: 0 0 auto; width: 32px; height: 32px; margin: -6px 0; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; position: relative; }
+.oncex::after { content: ""; position: absolute; inset: -6px; }
+/* Kameraschrank im Modus „Reihenfolge“: Einträge wackeln, Antippen öffnet nichts */
+.cabsorting .flist > .crow { animation: wiggle .3s ease-in-out infinite alternate; }
+.cabsorting .flist > .crow:nth-child(2n) { animation-delay: .15s; }
+.cabsorting .flist > .crow .chev { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .cabsorting .flist > .crow, .photogrid.sorting > a { animation: none; } }
+.archcorner .archlink[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #fff; }
+/* Gelöscht · Rückgängig */
+.undobar { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + var(--safe-b)); z-index: 1200; display: flex; align-items: center; gap: 14px; padding: 6px 6px 6px 16px; border-radius: 999px; background: var(--toastbg); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); color: var(--text); font-size: 14px; max-width: 92vw; animation: undoin .25s ease-out; }
+.undobar button { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--teal); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+@keyframes undoin { from { opacity: 0; transform: translate(-50%, 10px); } }
+.undobar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

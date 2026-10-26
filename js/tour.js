@@ -1,3 +1,5 @@
+// Auf Unterseiten steht oben links der Zurück-Pfeil statt des App-Symbols
+const homeStep = text => document.querySelector('#homeBtn:not([hidden])') ? [['#homeBtn', text]] : [['#backBtn', 'Tippe auf den Pfeil oben links, um zurückzugehen.']];
 /* Einführung beim ersten Start: ein leuchtender Ring zeigt, wohin man tippen soll, eine Sprechblase sagt, was zu tun ist.
    Jeder Schritt geht erst weiter, wenn die Aufgabe erledigt ist. Der Stand liegt in localStorage, damit er ein Neuladen übersteht. */
 const TOUR = (() => {
@@ -23,15 +25,15 @@ const TOUR = (() => {
       ? (st.named ? [['.donebtn', 'Tippe auf den Haken, um die Kamera zu speichern.']] : [['#cf .fld', 'Trag Hersteller und Modell deiner Kamera ein.']])
       : hash() === '#/profil' ? [[`a.crow[href="#/kamera/${st.cam}"]`, 'Öffne deine neue Kamera und trag Hersteller und Modell ein.'], ['section.cabinet', 'Öffne den Kameraschrank und tippe deine neue Kamera an.']]
       : [['#profBtn', 'Zurück zum Profil, dort steht deine neue Kamera.']],
-    ready: () => onHome() ? [] : [['#homeBtn', 'Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe hier, um zur Startseite zu gehen.']],
-    load: () => onHome() ? [['.newroll', 'Tippe auf „Film einlegen“ und lege deinen ersten Film ein.']] : [['#homeBtn', 'Zur Startseite, dort legst du den Film ein.']],
+    ready: () => onHome() ? [] : homeStep('Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe hier, um zur Startseite zu gehen.'),
+    load: () => onHome() ? [['.newroll', 'Tippe auf „Film einlegen“ und lege deinen ersten Film ein.']] : homeStep('Zur Startseite, dort legst du den Film ein.'),
     note: () => hash().startsWith('#/bild/') ? [['#note', 'Trag hier eine Beschreibung zu diesem Bild ein.']]
       : hash().startsWith('#/rolle/' + st.roll) ? [['.cell', 'Tippe ein Bild an und füge zumindest eine Beschreibung hinzu.']] : [],
     dev: () => hash().startsWith('#/bild/') ? [['.donebtn', 'Gut. Mit dem Haken geht es zurück zur Rolle.']]
       : hash().startsWith('#/rolle/' + st.roll) ? [['#devSlide', 'Schieb den Regler nach rechts, um den Film in die Entwicklung zu geben.']]
       : onHome() ? [[`[data-dev="${st.roll}"]`, 'Tippe auf „Entwickeln“, um den Film in die Entwicklung zu geben.']] : [],
-    scan: () => onHome() ? [[`[data-pickup="${st.roll}"]`, 'Ist der Film entwickelt, lädst du hier die Scans hoch.']]
-      : hash().startsWith('#/rolle/' + st.roll) ? [['#pickupOpen', 'Ist der Film entwickelt, lädst du hier die Scans hoch.']] : [['#homeBtn', 'Zur Startseite, dort lädst du die Scans hoch.']],
+    scan: () => onHome() ? [[`[data-pickup="${st.roll}"]`, 'Ist der Film entwickelt, lädst du hier die Fotos hoch.']]
+      : hash().startsWith('#/rolle/' + st.roll) ? [['#pickupOpen', 'Ist der Film entwickelt, lädst du hier die Fotos hoch.']] : homeStep('Zur Startseite, dort lädst du die Fotos hoch.'),
     album: () => hash().startsWith('#/album/') ? [] : [['.open-album, a.rc-link[href^="#/album/"]', 'Schau dir jetzt dein Fotoalbum an.']],
     end: () => [[null, 'Geschafft! Das ist dein erstes Fotoalbum. Die Einführung ist beendet.', null, 'Fertig']]
   };
