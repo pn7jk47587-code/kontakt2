@@ -675,6 +675,53 @@ Mit Schwarzschild belichten:	With reciprocity, expose:
 Letzte Messung	Last reading
 bei ISO {0}	at ISO {0}
 Messung übernommen	Reading applied
+Schwarzschild	Reciprocity
+Einstellungen	Settings
+Zeit und Blende	Shutter and aperture
+Film-Look	Film look
+Kamera wechseln	Switch camera
+Zurück zu Live	Back to live
+Sucher vergrößern	Enlarge viewfinder
+Sucher verkleinern	Shrink viewfinder
+messen	measure
+loggen	log
+Lichtwert	Exposure value
+Korrektur	Compensation
+Korr.	Comp.
+LW	EV
+{0} sperren	Lock {0}
+{0} entsperren	Unlock {0}
+Kein Objektiv gewählt	No lens selected
+wechseln	switch
+Bildausschnitt anzeigen	Show frame lines
+mit Schwarzschild	with reciprocity
+aus Foto	from photo
+live	live
+von Hand	manual
+Zwischenwert ·	In-between value ·
+außerhalb des Objektivs ·	outside the lens range ·
+gemessen {0} ·	metered {0} ·
+Schwarzschild unbekannt ·	Reciprocity unknown ·
+LW {0} {1}	EV {0} {1}
+Zeit und Blende links antippen	Tap a shutter/aperture pair on the left
+Messfeld antippen, dann	Tap the metering spot, then
+Live-Messung läuft.	Live metering running.
+Foto ohne Belichtungsdaten (EXIF). Lichtwert von Hand einstellen oder ein Foto der Kamera-App aus der Mediathek laden.	Photo has no exposure data (EXIF). Set the EV by hand or load a Camera app photo from the library.
+Messfeld ausgebrannt, Wert zu niedrig.	Spot is blown out, value too low.
+Messfeld fast schwarz, Wert unsicher.	Spot is almost black, value uncertain.
+Messfeld {0} Blenden zum Bild	Spot {0} stops vs. frame
+Kamera im Browser nicht verfügbar. „messen“ funktioniert trotzdem.	Camera not available in the browser. “measure” still works.
+Kein Zugriff auf die Kamera. „messen“ funktioniert trotzdem.	No camera access. “measure” still works.
+Kamera konnte nicht starten. „messen“ funktioniert trotzdem.	The camera could not start. “measure” still works.
+Abgleich mit einem echten Belichtungsmesser. Plus ergibt kürzere Zeiten.	Match against a real light meter. Plus gives faster speeds.
+Brennweite Handykamera	Phone camera focal length
+Kleinbild-äquivalent, für den Bildausschnitt. Wird aus dem EXIF eines Messfotos übernommen.	35 mm equivalent, for the frame lines. Taken from the EXIF of a metering photo.
+Blende Handykamera	Phone camera aperture
+Nur für eine Live-Messung, falls der Browser Zeit und ISO liefert. Wird aus dem EXIF übernommen.	Only for live metering if the browser provides shutter and ISO. Taken from the EXIF.
+Messfoto beim Loggen als Handyfoto speichern	Save the metering photo as phone photo when logging
+Nur wenn das Bild noch kein Handyfoto hat.	Only if the frame has no phone photo yet.
+Safari gibt Zeit, ISO und Weißabgleich der Handykamera im Live-Bild nicht heraus. Einen Lichtwert gibt es deshalb über „messen“ (Foto mit EXIF) oder von Hand an der Walze LW. Schlösser halten einen Wert fest, auch beim nächsten Öffnen.	Safari does not expose the phone camera's shutter, ISO or white balance in the live image. You get an EV via “measure” (photo with EXIF) or by hand on the EV wheel. Locks keep a value, also the next time you open the meter.
+Messung geloggt	Reading logged
 Kein Objektiv gewählt, volle Blendenreihe	No lens selected, full aperture range
 kürzer als die Kamera	faster than the camera
 länger als die Kamera	slower than the camera

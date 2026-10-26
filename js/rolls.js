@@ -1137,7 +1137,7 @@ async function viewFrame(idWithQuery) {
     <div class="frametools">
       ${cam && cam.multiExp === false ? '' : `<button class="dblbtn${frame.double ? ' on' : ''}" id="dbl" aria-pressed="${!!frame.double}" aria-label="Doppelbelichtung" title="Doppelbelichtung">${ART.double}</button>`}
       <button class="dblbtn${frame.meter ? ' on' : ''}" id="meterBtn" aria-label="Belichtungsmesser" title="Belichtungsmesser">${ART.meter}</button>
-      ${frame.meter ? `<span class="meterlast"><span>Letzte Messung</span> <b>LW ${String(frame.meter.ev100).replace('.', ',')}</b> <span>bei ISO ${U.esc(String(frame.meter.ei))}</span></span>` : ''}
+      ${frame.meter ? `<span class="meterlast"><span>Letzte Messung</span> <b>LW ${(Math.round(frame.meter.ev100 * 10) / 10).toLocaleString(I18N.locale())}</b> <span>bei ISO ${U.esc(String(frame.meter.iso || frame.meter.ei || ''))}</span></span>` : ''}
     </div>
   </div>`;
 
@@ -1216,19 +1216,23 @@ async function viewFrame(idWithQuery) {
     if (lensId && roll) { roll.lastLensId = lensId; DB.put('rolls', roll); }
   });
   // Belichtungsmesser (Test): übernimmt Blende und Zeit in diesen Frame
-  view.querySelector('#meterBtn').addEventListener('click', () => {
+  view.querySelector('#meterBtn').addEventListener('click', async () => {
+    const filt = filterIds.map(id => myFilters.find(f => f.id === id)).filter(Boolean).reduce((a, f) => a + METER.filterStops(filterName(f)), 0);
     METER.open({
-      stock, ei: roll?.ei || '', boxIso: stock?.boxIso || '',
-      lensName: curLens() ? lensLabel(curLens()) : '',
-      apertures: apList(), shutters: shList, aperture: String(frame.aperture || '').replace(/^f\//, ''),
-      onApply: async r => {
+      stock, roll, cam, frameLabel: frame.bonus ? 'B' : frameLabel(frame),
+      filmArt: stock ? await filmArt(stock, 26) : '',
+      lenses: camLenses.map(l => ({ id: l.id, label: lensLabel(l), focal: parseFloat(l.focal) || 0, apertures: lensApertures(l) })),
+      lensId, shutters: shList, aperture: String(frame.aperture || '').replace(/^f\//, ''),
+      iso: frame.iso || roll?.ei || '', boxIso: stock?.boxIso || '', filterSuggest: filt, hasPhone: !!frame.phoneId,
+      onLog: async (r, blob) => {
         frame.aperture = r.aperture;
-        if (r.shutter) frame.shutter = r.shutter;
-        frame.meter = { ev100: r.ev100, ei: r.ei, cal: Math.round(r.cal * 100) / 100, phone: r.phone, spot: r.spot, at: nowLocal() };
+        frame.shutter = r.shutter;
+        if (r.lensId) { frame.lensId = r.lensId; if (roll) { roll.lastLensId = r.lensId; DB.put('rolls', roll); } }
+        frame.meter = Object.assign(r.meter, { at: nowLocal() });
         frame.shot = true;
         if (!frame.date) frame.date = nowLocal();
-        if (!frame.lensId && lensId) frame.lensId = lensId;
-        await flush(); U.toast('Messung übernommen'); route();
+        if (blob && !frame.phoneId) { try { frame.phoneId = (await U.storeImage(blob, 'phone')).id; } catch (_) {} }
+        await flush(); U.toast('Messung geloggt'); route();
       }
     });
   });
