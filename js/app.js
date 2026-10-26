@@ -801,3 +801,45 @@ function growFrom(ov, btn) {
     an.onfinish = () => ov.remove();
   };
 }
+
+// Suchen mit eingeblendeter Tastatur: Fenster und Seite schrumpfen nicht, das Suchfeld bleibt oben, die Treffer stehen direkt darunter
+// im sichtbaren Bereich über der Tastatur. Kein „OK“ auf der Tastatur nötig, um die Treffer zu sehen.
+(() => {
+  const vv = window.visualViewport;
+  const fit = () => {
+    document.querySelectorAll('.modalbg').forEach(bg => {
+      if (!vv) return;
+      bg.style.top = vv.offsetTop + 'px'; bg.style.height = vv.height + 'px'; bg.style.bottom = 'auto';
+      const m = bg.querySelector('.modal'); if (!m) return;
+      m.style.maxHeight = Math.round(vv.height - 10) + 'px';
+      if (m.dataset.lockH) m.style.minHeight = Math.min(+m.dataset.lockH, Math.round(vv.height - 10)) + 'px';
+    });
+  };
+  if (vv) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+  const toTop = inp => {
+    const box = inp.closest('.modal, .lsbody');
+    if (box) {
+      const y = inp.getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - 10;
+      if (Math.abs(box.scrollTop - y) > 4) box.scrollTo({ top: y, behavior: 'smooth' });
+    } else {
+      const head = document.querySelector('.topbar')?.getBoundingClientRect().bottom || 60;
+      const y = inp.getBoundingClientRect().top + window.scrollY - head - 10;
+      // Seite darf beim Filtern nicht kürzer werden, sonst springt das Suchfeld nach unten
+      const v = document.getElementById('view');
+      if (v) v.style.minHeight = Math.ceil(y + window.innerHeight + 40) + 'px';
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }
+  };
+  document.addEventListener('focusin', e => {
+    const inp = e.target.closest?.('input[type=search]'); if (!inp) return;
+    const m = inp.closest('.modal');
+    if (m && !m.dataset.lockH) m.dataset.lockH = m.offsetHeight;   // aktuelle Höhe festhalten: das Fenster wird beim Filtern nicht kleiner
+    fit();
+    setTimeout(() => toTop(inp), 250);   // nach dem Einblenden der Tastatur
+  });
+  document.addEventListener('input', e => {
+    const inp = e.target.closest?.('input[type=search]'); if (inp) requestAnimationFrame(() => toTop(inp));
+  });
+  // Seitenhöhe beim Seitenwechsel wieder freigeben
+  window.addEventListener('hashchange', () => { const v = document.getElementById('view'); if (v) v.style.minHeight = ''; });
+})();

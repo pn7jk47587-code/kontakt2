@@ -233,3 +233,5 @@ Rückgängig: Nach dem Löschen einer Kamera, eines Objektivs, eines Filters, ei
 
 Begriffe: „Bild“ ist ein Platz auf der Rolle (Bild 1 bis 36, Bonusbild), „Foto“ ist das fertige Bild, also Scan oder Handyfoto. Daher heißt es jetzt „Fotos hochladen“, „Weitere Fotos hinzufügen“ und „Noch keine Fotos im Album“. Die Cokin-Namen bleiben englisch, weil sie so auf den Filtern stehen.
 
+Suchen mit Tastatur: Tippst du in ein Suchfeld (Film wählen, Filter wählen, Filmliste, Kühlschrank beim Film einlegen), rückt das Suchfeld nach oben, und die Treffer stehen direkt darunter im sichtbaren Bereich über der Tastatur. Ein Fenster behält beim Filtern seine Höhe und schrumpft nicht mehr nach unten weg, die Seite wird beim Filtern nicht kürzer. Beim Scrollen durch die Treffer bleibt das Suchfeld oben stehen. Du musst die Tastatur nicht mehr mit „OK“ schließen, um die Treffer zu sehen.
+

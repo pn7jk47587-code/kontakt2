@@ -1771,3 +1771,5 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .undobar button { min-height: 40px; padding: 0 16px; border-radius: 999px; border: 0; background: var(--teal); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
 @keyframes undoin { from { opacity: 0; transform: translate(-50%, 10px); } }
 .undobar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+/* Suchfeld bleibt beim Scrollen der Treffer oben im Fenster sichtbar */
+.modal input[type=search]:focus, .modal input[type=search]:not(:placeholder-shown), .lsbody input[type=search]:focus { position: sticky; top: 0; z-index: 3; background-color: var(--solid, #fff); box-shadow: 0 6px 12px -8px rgba(0,0,0,.25); }
