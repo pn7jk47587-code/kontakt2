@@ -802,6 +802,11 @@ Zubehör entfernt	Accessory removed
 Foto entfernt	Photo removed
 Idee gelöscht	Idea deleted
 Film entfernt	Film removed
+Hier kannst du deine Ausrüstung hinzufügen. Tippe auf „Kameras“.	Add your gear here. Tap “Cameras”.
+Hier kannst du deine Ausrüstung hinzufügen. Öffne den Kameraschrank.	Add your gear here. Open the camera cabinet.
+Tippe auf das Plus und lege eine Kamera an.	Tap the plus and add a camera.
+Tippe auf „Kameras“ und öffne deine neue Kamera.	Tap “Cameras” and open your new camera.
+Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe auf den Pfeil oben links, um zurückzugehen.	Great, now you’re ready to load your first film into the camera. Tap the arrow at the top left to go back.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();
