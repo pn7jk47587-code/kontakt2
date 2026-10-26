@@ -300,6 +300,7 @@ async function routeView() {
       case 'album': return parts[2] === 'buch' ? await viewAlbumBook(parts[1]) : await viewAlbum(parts[1]);
       case 'foto': return await viewPhoto(parts[1], parts[2]);
       case 'alle-fotos': return await viewAllPhotos();
+      case 'archiv': return await viewArchive();
       case 'kameras': return await viewCameras();
       case 'kamera': return await viewCamera(parts[1]);
       case 'objektiv': return await viewLens(parts[1]);

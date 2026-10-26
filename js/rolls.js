@@ -1645,7 +1645,8 @@ async function viewAlbumBook(id) {
 async function viewAllPhotos() {
   setHeader('Alle Fotos');
   const d = await albumData('alle');
-  if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Fotos hochgeladen.</div>'; return; }
+  const arBtn = `<div class="modewrap"><a class="btn ghost small archbtn" href="#/archiv">${ARCHIVE_IC}<span>Archivieren</span></a></div>`;
+  if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Fotos hochgeladen.</div>' + arBtn; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   let html = '', cur = null;
   d.frames.forEach((f, i) => {
@@ -1658,13 +1659,83 @@ async function viewAllPhotos() {
     }
     html += `<a href="#/foto/alle/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`;
   });
-  view.innerHTML = html + '</div>';
+  view.innerHTML = arBtn + html + '</div>';
   // Pfeil unten rechts: zurück zum Profil
   const back = document.createElement('button');
   back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück zum Profil');
   back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19 12H6M11.5 6 5.5 12l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   document.body.appendChild(back);
   back.addEventListener('click', () => { location.hash = '#/profil'; });
+}
+
+/* ---------- Archivieren: früher entwickelte Rollen nachtragen, ohne Einlegen und Entwickeln ----------
+   Die Rolle entsteht direkt im Fotoalbum (Status „entwickelt“, archived: true). Die Scans füllen Bild 1, 2, 3 … nach Dateinamen.
+   Beschriften und Einstellungen gehen danach wie gewohnt in der Rolle. Alles außer den Fotos ist freiwillig. */
+const ARCHIVE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9.5A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5V9M10 13h4"/></svg>';
+async function viewArchive() {
+  setHeader('Archivieren');
+  const cams = (await DB.all('cameras')).sort((a, b) => camLabel(a).localeCompare(camLabel(b)));
+  const labs = await getLabs();
+  const ed = { stockId: null, format: '135', files: [] };
+  view.innerHTML = `
+    <p class="hint pad">Für Rollen, die du schon früher entwickelt hast: Fotos hochladen, fertig. Die Rolle landet direkt im Fotoalbum. Beschriften und Einstellungen kannst du danach in der Rolle nachtragen. Alles außer den Fotos ist freiwillig.</p>
+    <div class="card archform">
+      <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80" placeholder="z. B. Sommer an der Ostsee"></label>
+      <div class="fld"><span>Film</span><button type="button" class="btn ghost small" id="arStock">Film wählen</button></div>
+      <div class="qlabel">Format</div>
+      <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
+      <label class="fld"><span>Kamera</span><select id="arCam"><option value="">Weiß ich nicht mehr</option>${cams.map(c => `<option value="${c.id}">${U.esc(camLabel(c))}${c.inactive ? ' (inaktiv)' : ''}</option>`).join('')}</select></label>
+      <div class="two">
+        <label class="fld"><span>Fotografiert (Monat)</span><input type="month" id="arShot" max="${U.today().slice(0, 7)}"></label>
+        <label class="fld"><span>Entwickelt am</span><input type="date" id="arDev" max="${U.today()}"></label>
+      </div>
+      <label class="fld"><span>Labor</span><input id="arLab" list="arLabs" placeholder="freiwillig"><datalist id="arLabs">${labs.map(l => `<option value="${U.esc(l)}">`).join('')}</datalist></label>
+      <div class="qlabel">Fotos</div>
+      <label class="btn accent archup">${ARCHIVE_IC}<span id="arUpTxt">Fotos auswählen</span><input type="file" accept="image/*" multiple hidden id="arFiles"></label>
+      <p class="hint" id="arFilesHint">Die Reihenfolge folgt den Dateinamen, also meist der Reihenfolge der Scans.</p>
+    </div>
+    <div class="modewrap"><button class="modebtn" id="arSave" disabled><span class="mbicon">${ARCHIVE_IC}</span><span>Rolle archivieren</span></button></div>`;
+  const $ = id => view.querySelector('#' + id);
+  $('arStock').addEventListener('click', () => openStockPicker(async id => {
+    ed.stockId = id; const st = await DB.get('stocks', id);
+    $('arStock').innerHTML = `${await filmArt(st, 26)}<span>${U.esc(U.stockLabel(st))}</span>`;
+    const f = st?.formats?.[0]; if (f && !st.formats.includes(ed.format)) { ed.format = f === '120' ? '120' : '135'; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x.dataset.f === ed.format)); }
+  }));
+  $('arFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; ed.format = b.dataset.f; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x === b)); });
+  $('arFiles').addEventListener('change', e => {
+    ed.files = [...e.target.files];
+    $('arUpTxt').textContent = ed.files.length ? `${ed.files.length} ${ed.files.length === 1 ? 'Foto' : 'Fotos'} ausgewählt` : 'Fotos auswählen';
+    $('arSave').disabled = !ed.files.length;
+  });
+  $('arSave').addEventListener('click', async () => {
+    if (!ed.files.length) return;
+    const shot = $('arShot').value, dev = $('arDev').value, cam = cams.find(c => c.id === $('arCam').value);
+    // Ohne gewählten Film: gemeinsamer Eintrag „Unbekannter Film“, damit Rolle und Album wie gewohnt funktionieren. Später in der Rolle änderbar.
+    if (!ed.stockId) {
+      ed.stockId = 'film-unbekannt';
+      if (!(await DB.get('stocks', ed.stockId))) await DB.put('stocks', { id: ed.stockId, maker: '', name: 'Unbekannter Film', type: 'farbneg', process: '', boxIso: '', formats: ['135', '120'], reciprocity: { model: 'unknown' }, builtin: false });
+    }
+    const roll = {
+      id: U.uid(), stockId: ed.stockId, cameraId: cam?.id || null, camera: camLabel(cam), format: ed.format, exposures: 0, bonus: false, ei: null,
+      loadedAt: shot ? shot + '-01' : (dev || U.today()), title: $('arTitle').value.trim(), status: 'entwickelt', archived: true, shotMonth: shot || null,
+      dev: { mode: 'labor', lab: $('arLab').value.trim() || null, backAt: dev || null }, createdAt: new Date().toISOString()
+    };
+    const busy = document.createElement('div');
+    busy.className = 'modalbg busy';
+    busy.innerHTML = `<div class="busycard">${ed.files.length} ${ed.files.length === 1 ? 'Foto wird' : 'Fotos werden'} gespeichert …</div>`;
+    document.body.appendChild(busy);
+    try {
+      await DB.put('rolls', roll);
+      const n = await assignScans(roll, ed.files);
+      U.haptic && U.haptic([20, 60, 20]); U.toast(`Rolle mit ${n} ${n === 1 ? 'Foto' : 'Fotos'} archiviert`);
+      location.hash = '#/rolle/' + roll.id;
+    } finally { busy.remove(); }
+  });
+  const back = document.createElement('button');
+  back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück');
+  back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19 12H6M11.5 6 5.5 12l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(back);
+  back.addEventListener('click', () => history.back());
 }
 
 /* ---------- Kameras ---------- */

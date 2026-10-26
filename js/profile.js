@@ -279,6 +279,7 @@ async function viewProfile() {
       <div><h2>Alle Fotos</h2><span class="sub2">${photos.length} ${photos.length === 1 ? 'Foto' : 'Fotos'}</span></div>
       <span class="chev">›</span>
     </a>
+    <div class="archrow"><a class="btn ghost small archbtn" href="#/archiv">${ARCHIVE_IC}<span>Archivieren</span></a><span class="sub2">Früher entwickelte Rollen nachtragen</span></div>
 
     <section class="fridge fold${foldOpen('fridge') ? ' open' : ''}" data-fold="fridge">
       <div class="fridgetop foldhead">
@@ -673,7 +674,7 @@ function shotList(allFrames, rolls) {
     const seq = [...((bonus && (roll?.bonus || used(bonus)) && (last >= 0 || used(bonus))) ? [bonus] : []), ...reg.slice(0, last + 1)];
     seq.forEach((f, i) => {
       const next = seq.slice(i).find(x => x.date), prev = [...seq.slice(0, i)].reverse().find(x => x.date);
-      const date = (next || prev)?.date || roll?.loadedAt;
+      const date = roll?.archived ? (f.date || (roll.shotMonth ? roll.shotMonth + '-15' : null)) : ((next || prev)?.date || roll?.loadedAt);
       if (date) out.push({ rollId: rid, date, implied: !f.date });
     });
   }
