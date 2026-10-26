@@ -980,9 +980,10 @@ async function viewFrame(idWithQuery) {
   const apList = () => cam?.auto && !camLenses.length ? ['Auto'] : lensApertures(curLens());
   const shList = camShutters(cam);
   // Filter: aus dem Kameraschrank. Ohne eigenen Eintrag übernimmt das Bild die zuletzt benutzten Filter der Rolle.
-  const myFilters = await getFilters();
-  const isIR = stock?.type === 'ir';
-  if (isIR) myFilters.sort((a, b) => (filterTint(b).a === '#2a0508') - (filterTint(a).a === '#2a0508'));
+  // Infrarotfilter (Hoya R72, Cokin 007) nur bei Filmen, die Infrarot aufnehmen: Typ Infrarot und Ilford SFX 200 (erweiterte Rotempfindlichkeit)
+  const isIR = isIrFilm(stock);
+  let myFilters = (await getFilters()).filter(f => isIR || !isIrFilter(f));
+  if (isIR) myFilters.sort((a, b) => isIrFilter(b) - isIrFilter(a));
   let filterIds = (frame.filterIds || roll?.lastFilterIds || []).filter(id => myFilters.some(f => f.id === id));
   const IR_ISOS = ['8', '10', '12', '16', '20', '25'];
   const iso = String(frame.iso || (isIR ? roll?.lastIso || '' : ''));
@@ -991,6 +992,7 @@ async function viewFrame(idWithQuery) {
 
   view.innerHTML = `
   <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
+  <label class="framedate"><span>Aufgenommen am</span><input type="date" id="frameDate" value="${U.esc(String(frame.date || '').slice(0, 10))}" max="${U.today()}"></label>
   <div class="framefilters" id="frameFilters">${filterChips()}${isIR && iso ? `<span class="ffchip iso">ISO ${U.esc(iso)}</span>` : ''}</div>
   <div id="media"></div>
   <div class="card quick">
@@ -1025,7 +1027,7 @@ async function viewFrame(idWithQuery) {
   let t;
   const flush = () => { clearTimeout(t); return DB.put('frames', frame); };
   const save = () => {
-    if (!frame.date) frame.date = nowLocal();
+    if (!frame.date) { frame.date = nowLocal(); const di = view.querySelector('#frameDate'); if (di) di.value = frame.date.slice(0, 10); }
     if (!frame.lensId && lensId) frame.lensId = lensId;
     if (!frame.filterIds && filterIds.length) frame.filterIds = [...filterIds];
     if (isIR && !frame.iso && iso) frame.iso = iso;
@@ -1049,6 +1051,14 @@ async function viewFrame(idWithQuery) {
     });
   };
   setChip('apRow', 'apOther', 'aperture');
+  // Aufnahmetag von Hand: zählt im Profil beim Fotozähler. Leeren entfernt den Tag.
+  view.querySelector('#frameDate').addEventListener('change', e => {
+    const v = e.target.value;
+    frame.date = v ? v + (String(frame.date || '').slice(10) || 'T12:00') : null;
+    frame.dateSet = !!v;
+    if (v && !frame.shot) frame.shot = true;
+    clearTimeout(t); DB.put('frames', frame); U.haptic && U.haptic(10);
+  });
   const drawTop = () => { view.querySelector('#frameFilters').innerHTML = filterChips() + (isIR && frame.iso ? `<span class="ffchip iso">ISO ${U.esc(frame.iso)}</span>` : ''); };
   view.querySelector('#filterRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-filter]'); if (!b) return;

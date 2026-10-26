@@ -340,3 +340,7 @@ function filterArt(f, size = 40) {
     : `<rect x="5" y="3" width="30" height="34" rx="3" fill="#fff" fill-opacity=".12" stroke="#9aa3ad" stroke-opacity=".7"/><rect x="5" y="3" width="30" height="34" rx="3" fill="url(#${id})"/><path d="M9 8l6 0" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>`;
   return `<svg class="filterart" viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true"><defs>${fill}</defs>${shape}</svg>`;
 }
+
+const IR_FILM_IDS = ['ilford-sfx200'];
+const isIrFilm = st => !!st && (st.type === 'ir' || IR_FILM_IDS.includes(st.id));
+const isIrFilter = f => filterTint(f).a === '#2a0508';

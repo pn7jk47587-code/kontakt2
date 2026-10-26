@@ -1463,3 +1463,12 @@ body.meteron .donebtn, body.meteron .framenavbtn { display: none; }
 .ffbtn span { max-width: 94px; text-align: center; line-height: 1.15; }
 .ffbtn.on { border-color: var(--teal); box-shadow: 0 0 0 1.5px var(--teal) inset; }
 .filterrow .filterart { flex: 0 0 auto; }
+
+/* Bildansicht: Aufnahmetag oben */
+.framedate { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 16px 0; padding: 4px 6px 4px 14px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+.framedate input[type=date] { width: auto !important; min-width: 0; height: 32px !important; padding: 0 10px !important; border-radius: 999px; font-size: 14px; font-weight: 700; color: var(--text); background: var(--bg2); border: 0; }
+/* Profil: Fotozähler (Logostufe Magenta, zwischen Tagebuch und Geld) */
+section.shots.fold { margin: 12px 16px !important; padding: 14px; border-radius: 26px !important; background: linear-gradient(160deg, rgba(214,89,200,.22), var(--card) 70%) !important; border: 1px solid rgba(214,89,200,.45) !important; box-shadow: var(--shadow) !important; color: var(--text); }
+section.shots .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+.shots .fridgeicon { color: #d659c8 !important; background: var(--solid) !important; box-shadow: none !important; }
+.shots .txrow .sub2 { margin-left: 6px; }

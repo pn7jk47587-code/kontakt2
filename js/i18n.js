@@ -679,6 +679,17 @@ Blenden	stops
 ISO (Infrarot)	ISO (infrared)
 Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.	No filters yet. Add them in the camera cabinet under “Filters”.
 Schraubfilter, lässt Licht ab etwa 720 nm durch.	Screw-in filter, passes light from about 720 nm.
+Aufgenommen am	Taken on
+Fotos gemacht	Photos taken
+diesen Monat {0} Fotos	this month {0} photos
+diesen Monat {0} Foto	this month {0} photo
+Du hast diesen Monat schon {0} gemacht. Insgesamt sind es {1}.	This month you have already taken {0}. That makes {1} in total.
+Diesen Monat	This month
+Dieses Jahr	This year
+Insgesamt	In total
+Noch keine Fotos mit Aufnahmetag.	No photos with a date yet.
+{0} Fotos	{0} photos
+{0} Foto	{0} photo
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

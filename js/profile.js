@@ -297,6 +297,8 @@ async function viewProfile() {
 
     ${await diaryFoldHtml()}
 
+    ${await shotsFoldHtml()}
+
     <section class="spend fold${foldOpen('spend') ? ' open' : ''}" data-fold="spend">
       <div class="fridgetop foldhead">
         <span class="fridgeicon spendicon">€</span>
@@ -647,4 +649,46 @@ async function resetPhotosAndProfile() {
   U.toast('Zurückgesetzt');
   location.hash = '#/';
   route();
+}
+
+/* Fotozähler: gezählt werden Bilder mit Aufnahmetag (beim ersten Eintrag automatisch oder oben in der Bildansicht gesetzt) */
+async function shotsFoldHtml() {
+  const frames = (await DB.all('frames')).filter(f => f.date);
+  const rolls = new Map((await DB.all('rolls')).map(r => [r.id, r]));
+  const stocks = await stocksMap();
+  const now = new Date(), ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`, y = String(now.getFullYear());
+  const day = f => String(f.date).slice(0, 10);
+  const month = frames.filter(f => day(f).startsWith(ym)).length, year = frames.filter(f => day(f).startsWith(y)).length;
+  const word = n => n === 1 ? 'Foto' : 'Fotos';
+  // Verlauf: Monate, darin Tage mit Anzahl und Rollen
+  const byDay = new Map();
+  for (const f of frames) { const d = day(f); if (!byDay.has(d)) byDay.set(d, []); byDay.get(d).push(f); }
+  const days = [...byDay.keys()].sort().reverse();
+  const months = new Map();
+  for (const d of days) { const k = d.slice(0, 7); if (!months.has(k)) months.set(k, []); months.get(k).push(d); }
+  const hist = days.length ? [...months].map(([k, ds]) => {
+    const [yy, mm] = k.split('-');
+    const total = ds.reduce((n, d) => n + byDay.get(d).length, 0);
+    return `<div class="txmonth"><div class="txhead"><b>${I18N.t(MONTHS[Number(mm) - 1])} ${yy}</b><span>${total} ${word(total)}</span></div>
+      ${ds.map(d => { const fs = byDay.get(d); const names = [...new Set(fs.map(f => { const r = rolls.get(f.rollId); return r?.title || U.stockLabel(stocks.get(r?.stockId)); }).filter(Boolean))];
+        return `<div class="txrow"><span>${U.fmtDate(d)}<span class="sub2">${U.esc(names.join(', '))}</span></span><span>${fs.length} ${word(fs.length)}</span></div>`; }).join('')}
+    </div>`;
+  }).join('') : '<p class="hint">Noch keine Fotos mit Aufnahmetag.</p>';
+  return `
+    <section class="shots fold${foldOpen('shots') ? ' open' : ''}" data-fold="shots">
+      <div class="fridgetop foldhead">
+        <span class="fridgeicon">${ART.camIc}</span>
+        <div><h2>Fotos gemacht</h2><span class="sub2">diesen Monat ${month} ${word(month)}</span></div>
+        <span class="foldchev" aria-hidden="true"></span>
+      </div>
+      <div class="foldbody">
+        <p class="spendtext">Du hast diesen Monat schon <b>${month} ${word(month)}</b> gemacht. Insgesamt sind es <b>${frames.length} ${word(frames.length)}</b>.</p>
+        <div class="spendsplit three">
+          <div><span class="sub2">Diesen Monat</span><b>${month}</b></div>
+          <div><span class="sub2">Dieses Jahr</span><b>${year}</b></div>
+          <div><span class="sub2">Insgesamt</span><b>${frames.length}</b></div>
+        </div>
+        <details class="txhist"><summary>Verlauf</summary>${hist}</details>
+      </div>
+    </section>`;
 }
