@@ -1,5 +1,5 @@
 // Offline-Cache für die App-Dateien. Nutzerdaten liegen in IndexedDB, nicht hier.
-const VERSION = 'kb-v113';
+const VERSION = 'kb-v114';
 const FILES = [
   './', 'index.html', 'styles.css', 'manifest.webmanifest',
   'js/theme.js', 'js/i18n.js', 'js/db.js', 'js/seed.js', 'js/util.js', 'js/art.js', 'js/app.js', 'js/meter.js', 'js/rolls.js', 'js/profile.js', 'js/diary.js', 'js/filters.js', 'js/ideas.js', 'js/tour.js', 'js/beam.js', 'burn.png',
@@ -10,7 +10,8 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' umgeht den HTTP-Cache, sonst landen bis zu 10 Minuten alte Dateien von GitHub Pages im neuen Cache
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {

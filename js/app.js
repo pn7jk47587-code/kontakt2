@@ -98,7 +98,14 @@ async function boot() {
     try { await navigator.storage.persist(); } catch (_) {}
   }
   if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Neue Version: sobald der neue Service Worker übernimmt, Seite einmal neu laden, damit nicht der alte Stand sichtbar bleibt.
+    // Beim Zurückholen der App aus dem Hintergrund nach Updates fragen (die Home-Bildschirm-App lädt sonst selten neu).
+    const hadCtrl = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadCtrl && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+    }).catch(() => {});
   }
   PROFILE = await DB.get('meta', 'profile') || null;
   window.addEventListener('hashchange', route);
