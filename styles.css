@@ -1608,7 +1608,7 @@ section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounde
 /* Rolle: Einträge verschieben */
 .reorderbar { margin: 10px 16px 0; }
 .reorderbar .hint { margin: 0 0 8px; }
-.grid.reorder .cell { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; animation: wiggle .3s ease-in-out infinite alternate; }
+.grid.reorder .cell { touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; animation: wiggle .3s ease-in-out infinite alternate; }
 .grid.reorder .cell:nth-child(2n) { animation-delay: .15s; }
 @keyframes wiggle { from { transform: rotate(-.8deg); } to { transform: rotate(.8deg); } }
 @media (prefers-reduced-motion: reduce) { .grid.reorder .cell { animation: none; } }
@@ -1727,7 +1727,7 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .archcorner { gap: 8px; }
 .archcorner button.archlink { font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .archcorner .archlink.on { background: var(--teal); border-color: var(--teal); color: #fff; }
-.photogrid.sorting { touch-action: none; user-select: none; -webkit-user-select: none; }
+.photogrid.sorting { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
 .photogrid.sorting > a { animation: wiggle .3s ease-in-out infinite alternate; -webkit-touch-callout: none; }
 .photogrid.sorting > a:nth-child(2n) { animation-delay: .15s; }
 .photogrid.sorting > a.dragfrom { opacity: .3; animation: none; }

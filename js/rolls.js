@@ -854,8 +854,8 @@ function setupReorder(body, roll, fr) {
       Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
       document.body.appendChild(ghost); cell.classList.add('dragfrom');
       drag = { from, to: from, ghost, dx: start.x - r.left, dy: start.y - r.top };
-      U.haptic && U.haptic(12);
-    }, 220);
+      GEAR_DRAG = true; U.haptic && U.haptic(12);
+    }, 260);
     const cancelEarly = ev => { if (!drag && Math.hypot(ev.clientX - start.x, ev.clientY - start.y) > 8) clearTimeout(timer); };
     grid.addEventListener('pointermove', cancelEarly, { once: true });
   });
@@ -863,15 +863,21 @@ function setupReorder(body, roll, fr) {
     if (!drag) return;
     e.preventDefault();
     drag.ghost.style.left = (e.clientX - drag.dx) + 'px'; drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
-    drag.ghost.style.visibility = 'hidden';
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('#frameGrid .cell');
-    drag.ghost.style.visibility = '';
-    const to = el ? cellsArr().indexOf(el) : drag.to;
-    if (to !== drag.to) { drag.to = to; cellsArr().forEach((c, i) => c.classList.toggle('droptarget', i === to && to !== drag.from)); U.haptic && U.haptic(6); }
+    const hitAt = (x, y) => {
+      if (!drag) return;
+      drag.ghost.style.visibility = 'hidden';
+      const el = document.elementFromPoint(x, y)?.closest('#frameGrid .cell');
+      drag.ghost.style.visibility = '';
+      const to = el ? cellsArr().indexOf(el) : drag.to;
+      if (to !== drag.to) { drag.to = to; cellsArr().forEach((c, i) => c.classList.toggle('droptarget', i === to && to !== drag.from)); U.haptic && U.haptic(6); }
+    };
+    hitAt(e.clientX, e.clientY);
+    autoScrollAt(e.clientX, e.clientY, hitAt);
   }, { passive: false });
   const end = async () => {
     clearTimeout(timer);
     if (!drag) return;
+    stopAutoScroll(); GEAR_DRAG = false;
     const { from, to, ghost } = drag; drag = null; ghost.remove();
     cellsArr().forEach(c => c.classList.remove('dragfrom', 'droptarget'));
     if (to === from || to < 0) return;
@@ -1650,37 +1656,65 @@ async function viewAlbumBook(id) {
 }
 
 // Alle hochgeladenen Fotos, nach Rollen getrennt durch eine kleine Zeile
+// Beim Ziehen am Bildrand automatisch scrollen, damit auch Plätze außerhalb des Bildschirms erreichbar sind
+const AUTOSCROLL = { x: 0, y: null, tick: null, raf: 0 };
+function autoScrollAt(x, y, tick) {
+  AUTOSCROLL.x = x; AUTOSCROLL.y = y; AUTOSCROLL.tick = tick;
+  if (AUTOSCROLL.raf) return;
+  const loop = () => {
+    if (AUTOSCROLL.y === null) { AUTOSCROLL.raf = 0; return; }
+    const H = window.innerHeight, edge = 110, y0 = AUTOSCROLL.y;
+    const v = y0 < edge ? -Math.ceil((edge - y0) / 7) : y0 > H - edge ? Math.ceil((y0 - (H - edge)) / 7) : 0;
+    if (v) { window.scrollBy(0, v); AUTOSCROLL.tick && AUTOSCROLL.tick(AUTOSCROLL.x, AUTOSCROLL.y); }
+    AUTOSCROLL.raf = requestAnimationFrame(loop);
+  };
+  AUTOSCROLL.raf = requestAnimationFrame(loop);
+}
+function stopAutoScroll() { AUTOSCROLL.y = null; AUTOSCROLL.tick = null; }
+
 let ALLPHOTOS_SORT = false;
 window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/alle-fotos')) ALLPHOTOS_SORT = false; });
 // Reihenfolge der Scans einer Rolle per Ziehen ändern. Verschoben werden nur Scan, Lightleak-Markierung und Favorit.
 function setupPhotoSort(grid) {
+  // Scrollen bleibt möglich: erst langes Drücken (ohne Bewegung) hebt ein Foto an, danach folgt es dem Finger
   const SCAN = ['imgId', 'leak', 'fav'];
-  let drag = null;
+  let drag = null, timer = null, start = null;
   const cells = () => [...grid.querySelectorAll(':scope > a')];
   grid.addEventListener('click', e => e.preventDefault(), true);
+  grid.addEventListener('contextmenu', e => e.preventDefault());
   grid.addEventListener('dragstart', e => e.preventDefault());
   grid.querySelectorAll('a').forEach(a => a.setAttribute('draggable', 'false'));
-  grid.addEventListener('pointerdown', e => {
-    const a = e.target.closest('a[data-fid]'); if (!a) return;
-    e.preventDefault();
-    const r = a.getBoundingClientRect();
-    const ghost = a.cloneNode(true); ghost.className = 'sortghost';
-    Object.assign(ghost.style, { width: r.width + 'px', height: r.height + 'px', left: r.left + 'px', top: r.top + 'px' });
-    document.body.appendChild(ghost); a.classList.add('dragfrom');
-    drag = { a, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, from: cells().indexOf(a), to: cells().indexOf(a) };
-    grid.setPointerCapture?.(e.pointerId); U.haptic && U.haptic(10);
-  });
-  grid.addEventListener('pointermove', e => {
-    if (!drag) return;
-    drag.ghost.style.left = (e.clientX - drag.dx) + 'px'; drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+  const hit = (x, y) => {
     drag.ghost.style.visibility = 'hidden';
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('a[data-fid]');
+    const el = document.elementFromPoint(x, y)?.closest('a[data-fid]');
     drag.ghost.style.visibility = '';
     const to = el && el.parentElement === grid ? cells().indexOf(el) : drag.to;
     if (to !== drag.to) { drag.to = to; cells().forEach((c, i) => c.classList.toggle('droptarget', i === to && to !== drag.from)); U.haptic && U.haptic(6); }
+  };
+  grid.addEventListener('pointerdown', e => {
+    const a = e.target.closest('a[data-fid]'); if (!a) return;
+    start = { x: e.clientX, y: e.clientY };
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const r = a.getBoundingClientRect();
+      const ghost = a.cloneNode(true); ghost.className = 'sortghost';
+      Object.assign(ghost.style, { width: r.width + 'px', height: r.height + 'px', left: r.left + 'px', top: r.top + 'px' });
+      document.body.appendChild(ghost); a.classList.add('dragfrom');
+      drag = { a, ghost, dx: start.x - r.left, dy: start.y - r.top, from: cells().indexOf(a), to: cells().indexOf(a) };
+      GEAR_DRAG = true; U.haptic && U.haptic(12);
+    }, 260);
   });
+  const move = e => {
+    if (!drag) { if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) { clearTimeout(timer); start = null; } return; }
+    e.preventDefault();
+    drag.ghost.style.left = (e.clientX - drag.dx) + 'px'; drag.ghost.style.top = (e.clientY - drag.dy) + 'px';
+    hit(e.clientX, e.clientY);
+    autoScrollAt(e.clientX, e.clientY, (x, y) => drag && hit(x, y));
+  };
   const end = async () => {
+    clearTimeout(timer); start = null;
     if (!drag) return;
+    stopAutoScroll(); GEAR_DRAG = false;
     const { from, to, ghost, a } = drag; drag = null; ghost.remove(); a.classList.remove('dragfrom');
     cells().forEach(c => c.classList.remove('droptarget'));
     if (to === from || to < 0) return;
@@ -1692,8 +1726,15 @@ function setupPhotoSort(grid) {
     U.haptic && U.haptic([15, 40, 15]);
     document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await viewAllPhotos(); window.scrollTo(0, y);
   };
-  grid.addEventListener('pointerup', end); grid.addEventListener('pointercancel', end);
+  // Beim Neuzeichnen und beim Verlassen der Seite die Dokument-Listener wieder abmelden
+  const off = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); };
+  PHOTOSORT_OFF.push(off);
+  document.addEventListener('pointermove', move, { passive: false });
+  document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
 }
+const PHOTOSORT_OFF = [];
+window.addEventListener('hashchange', () => { while (PHOTOSORT_OFF.length) PHOTOSORT_OFF.pop()(); });
+
 async function viewAllPhotos() {
   // Archivieren oben rechts in der Kopfzeile, nur in dieser Ansicht
   setHeader('Alle Fotos');
@@ -1723,6 +1764,7 @@ async function viewAllPhotos() {
     ALLPHOTOS_SORT = !ALLPHOTOS_SORT; U.haptic && U.haptic(10);
     document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await viewAllPhotos(); window.scrollTo(0, y);
   });
+  while (PHOTOSORT_OFF.length) PHOTOSORT_OFF.pop()();
   if (sorting) view.querySelectorAll('.photogrid.sorting').forEach(g => setupPhotoSort(g));
   view.querySelectorAll('[data-pfav]').forEach(b => b.addEventListener('click', async e => {
     e.preventDefault(); e.stopPropagation();
