@@ -73,7 +73,8 @@ async function filtersSubHtml(lenses, open) {
   const rows = list.map(f => {
     const s = seriesOf(f.series);
     return `<button type="button" class="crow filterrow" data-filter="${f.id}">
-      <span class="filterbadge${f.code ? '' : ' own'}">${U.esc(filterCode(f) || 'F')}</span>
+      ${filterArt(f, 36)}
+      ${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}
       <span class="frowmain">
         <span class="frowname">${U.esc(filterName(f))}</span>
         <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : ''}${f.notes ? `<span>${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
@@ -309,4 +310,33 @@ async function openAccEditor(a) {
     route();
   });
   $('acDel')?.addEventListener('click', async () => { await saveAccessories((await getAccessories()).filter(x => x.id !== ed.id)); close(); U.toast('Zubehör entfernt'); route(); });
+}
+
+/* ---------- Bild eines Filters: Cokin-Filter als eckige Scheibe, Schraubfilter rund. Farbe nach Filterart. ---------- */
+function filterTint(f) {
+  const n = (filterName(f) || '').toLowerCase(), c = f.code || '';
+  if (/r ?72|infra|ir\b|89b/.test(n) || c === '007') return { a: '#2a0508', b: '#5a0b14' };
+  const fixed = { '001': '#f7d33a', '002': '#f59a2b', '003': '#d8232f', '004': '#4fa34a', '005': '#9b6a3b', '006': '#b9cf3b' };
+  if (fixed[c]) return { a: fixed[c], b: fixed[c] };
+  const g = COKIN_BY_CODE.get(c)?.group;
+  if (g === 'nd') return { a: '#5d6168', b: '#5d6168' };
+  if (g === 'pol') return { a: '#3a3f4a', b: '#6b7280' };
+  if (g === 'grad') {
+    const col = /blue/.test(n) ? '#3b7fd9' : /tobacco/.test(n) ? '#8a5a2b' : /mauve/.test(n) ? '#9a5ab0' : /pink/.test(n) ? '#e66aa3' : /emerald/.test(n) ? '#2e9a6a' : /yellow/.test(n) ? '#e8c23a' : /sunset|orange/.test(n) ? '#f08a3a' : /red/.test(n) ? '#d8373f' : '#5d6168';
+    return { a: col, b: 'transparent', grad: true };
+  }
+  if (/blue|cyan|80|82/.test(n)) return { a: '#6fa8e8', b: '#6fa8e8' };
+  if (/warm|81|85|gold|sepia/.test(n)) return { a: '#e8a25a', b: '#e8a25a' };
+  return { a: '#cfe3ee', b: '#cfe3ee' };
+}
+function filterArt(f, size = 40) {
+  const t = filterTint(f), id = 'fa' + Math.random().toString(36).slice(2, 7);
+  const round = !f.code;
+  const fill = t.grad
+    ? `<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t.a}" stop-opacity=".9"/><stop offset=".5" stop-color="${t.a}" stop-opacity=".35"/><stop offset=".62" stop-color="${t.a}" stop-opacity="0"/></linearGradient>`
+    : `<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${t.a}" stop-opacity=".92"/><stop offset="1" stop-color="${t.b}" stop-opacity=".78"/></linearGradient>`;
+  const shape = round
+    ? `<circle cx="20" cy="20" r="17.5" fill="#1d1f22"/><circle cx="20" cy="20" r="14.5" fill="url(#${id})"/><circle cx="20" cy="20" r="14.5" fill="none" stroke="#fff" stroke-opacity=".25"/><path d="M11 13a11 11 0 0 1 9-5" stroke="#fff" stroke-opacity=".55" stroke-width="2" fill="none" stroke-linecap="round"/>`
+    : `<rect x="5" y="3" width="30" height="34" rx="3" fill="#fff" fill-opacity=".12" stroke="#9aa3ad" stroke-opacity=".7"/><rect x="5" y="3" width="30" height="34" rx="3" fill="url(#${id})"/><path d="M9 8l6 0" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/>`;
+  return `<svg class="filterart" viewBox="0 0 40 40" width="${size}" height="${size}" aria-hidden="true"><defs>${fill}</defs>${shape}</svg>`;
 }

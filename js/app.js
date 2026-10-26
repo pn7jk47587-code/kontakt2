@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 20;
+const SEED_VERSION = 21;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -39,6 +39,14 @@ async function boot() {
       if (hb && hb.name === '500C/M') {
         hb.name = '500C'; await DB.put('cameras', hb);
         for (const r of await DB.all('rolls')) if (r.cameraId === hb.id && r.camera === 'Hasselblad 500C/M') { r.camera = 'Hasselblad 500C'; await DB.put('rolls', r); }
+      }
+    }
+    // Hoya Infrared R72 (Schraubfilter) in die Filterliste der Nutzerin, falls noch nicht vorhanden
+    if (meta && meta.v < 21) {
+      const fl = (await DB.get('meta', 'filters'))?.list || [];
+      if (!fl.some(f => /r ?72/i.test(f.name || ''))) {
+        fl.push({ id: 'f-hoya-r72', code: '', name: 'Hoya Infrared R72', series: null, count: 1, notes: 'Schraubfilter, lässt Licht ab etwa 720 nm durch.' });
+        await DB.put('meta', { id: 'filters', list: fl });
       }
     }
     if (meta && meta.v >= 17 && meta.v < 19) {

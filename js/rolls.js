@@ -979,13 +979,29 @@ async function viewFrame(idWithQuery) {
   const curLens = () => camLenses.find(l => l.id === lensId);
   const apList = () => cam?.auto && !camLenses.length ? ['Auto'] : lensApertures(curLens());
   const shList = camShutters(cam);
+  // Filter: aus dem Kameraschrank. Ohne eigenen Eintrag übernimmt das Bild die zuletzt benutzten Filter der Rolle.
+  const myFilters = await getFilters();
+  const isIR = stock?.type === 'ir';
+  if (isIR) myFilters.sort((a, b) => (filterTint(b).a === '#2a0508') - (filterTint(a).a === '#2a0508'));
+  let filterIds = (frame.filterIds || roll?.lastFilterIds || []).filter(id => myFilters.some(f => f.id === id));
+  const IR_ISOS = ['8', '10', '12', '16', '20', '25'];
+  const iso = String(frame.iso || (isIR ? roll?.lastIso || '' : ''));
+  const filterChips = () => filterIds.map(id => myFilters.find(f => f.id === id)).filter(Boolean)
+    .map(f => `<span class="ffchip">${filterArt(f, 22)}<span>${U.esc(filterCode(f) || filterName(f))}</span></span>`).join('');
 
   view.innerHTML = `
   <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
+  <div class="framefilters" id="frameFilters">${filterChips()}${isIR && iso ? `<span class="ffchip iso">ISO ${U.esc(iso)}</span>` : ''}</div>
   <div id="media"></div>
   <div class="card quick">
     ${camLenses.length ? `<div class="qlabel">Objektiv</div>
     <div class="lensrow" id="lensRow">${camLenses.map(l => `<button type="button" class="lensbtn${lensId === l.id ? ' on' : ''}" data-lens="${l.id}" aria-label="${U.esc(lensLabel(l))}" aria-pressed="${lensId === l.id}">${ART.lens(l, 54)}</button>`).join('')}</div>` : ''}
+    <div class="qlabel">Filter</div>
+    ${myFilters.length ? `<div class="filterpickrow" id="filterRow">${myFilters.map(f => `<button type="button" class="ffbtn${filterIds.includes(f.id) ? ' on' : ''}" data-filter="${f.id}" aria-pressed="${filterIds.includes(f.id)}" aria-label="${U.esc(filterName(f))}">${filterArt(f, 34)}<span>${U.esc(filterCode(f) || filterName(f))}</span></button>`).join('')}</div>`
+      : '<p class="hint">Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.</p>'}
+    ${isIR ? `<div class="qlabel">ISO (Infrarot)</div>
+    <div class="chipwrap" id="isoRow"><span class="chipset">${chipHtml(IR_ISOS, iso)}</span>
+      <input class="chip-input" id="isoOther" inputmode="numeric" placeholder="andere" value="${!iso || IR_ISOS.includes(iso) ? '' : U.esc(iso)}"></div>` : ''}
     <div class="qlabel">Blende</div>
     <div class="chipwrap" id="apRow"><span class="chipset" id="apChips">${chipHtml(apList(), ap)}</span>
       <input class="chip-input" id="apOther" placeholder="andere" value="${!ap || apList().includes(ap) ? '' : U.esc(ap)}"></div>
@@ -1011,6 +1027,8 @@ async function viewFrame(idWithQuery) {
   const save = () => {
     if (!frame.date) frame.date = nowLocal();
     if (!frame.lensId && lensId) frame.lensId = lensId;
+    if (!frame.filterIds && filterIds.length) frame.filterIds = [...filterIds];
+    if (isIR && !frame.iso && iso) frame.iso = iso;
     clearTimeout(t); t = setTimeout(() => DB.put('frames', frame), 300);
   };
   const setChip = (rowId, otherId, key) => {
@@ -1031,6 +1049,27 @@ async function viewFrame(idWithQuery) {
     });
   };
   setChip('apRow', 'apOther', 'aperture');
+  const drawTop = () => { view.querySelector('#frameFilters').innerHTML = filterChips() + (isIR && frame.iso ? `<span class="ffchip iso">ISO ${U.esc(frame.iso)}</span>` : ''); };
+  view.querySelector('#filterRow')?.addEventListener('click', e => {
+    const b = e.target.closest('[data-filter]'); if (!b) return;
+    const fid = b.dataset.filter;
+    filterIds = filterIds.includes(fid) ? filterIds.filter(x => x !== fid) : [...filterIds, fid];
+    frame.filterIds = [...filterIds];
+    b.classList.toggle('on', filterIds.includes(fid)); b.setAttribute('aria-pressed', filterIds.includes(fid));
+    if (roll) { roll.lastFilterIds = [...filterIds]; DB.put('rolls', roll); }
+    U.haptic && U.haptic(10); drawTop(); save();
+  });
+  if (isIR) {
+    const row = view.querySelector('#isoRow'), other = view.querySelector('#isoOther');
+    const setIso = v => { frame.iso = v; if (roll) { roll.lastIso = v; DB.put('rolls', roll); } drawTop(); save(); };
+    row.addEventListener('click', e => {
+      const b = e.target.closest('.chip'); if (!b) return;
+      const same = String(frame.iso || '') === b.dataset.v;
+      row.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', !same && c === b)); other.value = '';
+      setIso(same ? '' : b.dataset.v);
+    });
+    other.addEventListener('input', () => { row.querySelectorAll('.chip').forEach(c => c.classList.remove('on')); setIso(other.value.replace(/[^\d]/g, '')); });
+  }
   setChip('shRow', 'shOther', 'shutter');
   view.querySelector('#note').addEventListener('input', e => { frame.note = e.target.value; save(); });
   view.querySelector('#lensRow')?.addEventListener('click', e => {
@@ -1229,7 +1268,7 @@ async function albumData(id) {
   // Kurzzeile unter dem Foto: Brennweite, Blende, Zeit, Notiz; sonst nur der Tag
   const line = f => {
     const l = lenses.get(f.lensId);
-    const bits = [l?.focal ? `${l.focal} mm` : '', f.aperture ? `f/${String(f.aperture).replace(/^f\//, '').replace('.', ',')}` : '', f.shutter ? (/^\d+$/.test(f.shutter) ? `${f.shutter} s` : f.shutter) : ''].filter(Boolean);
+    const bits = [f.iso ? `ISO ${f.iso}` : '', l?.focal ? `${l.focal} mm` : '', f.aperture ? `f/${String(f.aperture).replace(/^f\//, '').replace('.', ',')}` : '', f.shutter ? (/^\d+$/.test(f.shutter) ? `${f.shutter} s` : f.shutter) : ''].filter(Boolean);
     const r = rolls.get(f.rollId);
     // Aufnahmetag, ersatzweise der Tag der Entwicklung
     const d = f.date || r?.dev?.backAt || r?.dev?.devDate || r?.dev?.sentAt || '';

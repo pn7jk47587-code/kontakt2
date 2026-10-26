@@ -676,6 +676,9 @@ Letzte Messung	Last reading
 bei ISO {0}	at ISO {0}
 Messung übernommen	Reading applied
 Blenden	stops
+ISO (Infrarot)	ISO (infrared)
+Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.	No filters yet. Add them in the camera cabinet under “Filters”.
+Schraubfilter, lässt Licht ab etwa 720 nm durch.	Screw-in filter, passes light from about 720 nm.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();
