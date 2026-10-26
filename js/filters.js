@@ -39,7 +39,7 @@ const COKIN_GROUPS = [
     ['140', 'Oval C.Spot White'], ['141', 'Oval C.Spot Black'], ['672', 'C.Spot Pink/Blue'], ['673', 'C.Spot Yellow/Pink'], ['674', 'C.Spot Blue/Yellow']]],
   ['weich', 'Weichzeichner und Pastell', [
     ['080', 'Color Varnish'], ['081', 'Color Vaseline'], ['082', 'Color Diffuser'], ['086', 'Pastel 1'], ['087', 'Pastel 2'],
-    ['088', 'Cold Color Diffuser'], ['089', 'Warm Color Diffuser'], ['694', 'Sunsoft'], ['695', 'Champagne'], ['696', 'Softwarm'],
+    ['083', 'Diffuser 1 (alte Nr., heute 830)'], ['084', 'Diffuser 2 (alte Nr., heute 840)'], ['088', 'Cold Color Diffuser'], ['089', 'Warm Color Diffuser'], ['694', 'Sunsoft'], ['695', 'Champagne'], ['696', 'Softwarm'],
     ['820', 'Diffuser Light'], ['830', 'Diffuser 1'], ['840', 'Diffuser 2'], ['850', 'Diffuser 3'],
     ['142', 'Net Filter 1 White'], ['143', 'Net Filter 1 Black'], ['144', 'Net Filter 2 White'], ['145', 'Net Filter 2 Black'],
     ['148', 'Wedding 1 White'], ['149', 'Wedding 1 Black']]],
@@ -61,7 +61,9 @@ const COKIN_SRC = [
 
 async function getFilters() { return (await DB.get('meta', 'filters'))?.list || []; }
 async function saveFilters(list) { await DB.put('meta', { id: 'filters', list }); }
-const seriesOf = k => COKIN_SERIES.find(s => s[0] === k);
+// Ältere Cokin-Größe B (Aufdruck „B“ auf dem Ring), nur für vorhandene Filter, nicht in der Auswahl
+const COKIN_SERIES_OLD = [['B', 'B', 'B-Serie (alt)', null]];
+const seriesOf = k => COKIN_SERIES.find(s => s[0] === k) || COKIN_SERIES_OLD.find(s => s[0] === k);
 const filterCode = f => f.code ? (f.series || '') + f.code : '';
 // Schiebefilter (Cokin & Co., in den Halter gesteckt) oder Schraubfilter (aufs Objektiv geschraubt). Eigene Filter ohne Angabe gelten als Schraubfilter.
 const filterKind = f => f.code ? 'slide' : (f.kind || 'screw');
@@ -226,6 +228,7 @@ function openFilterEditor(f) {
   ov.className = 'modalbg';
   ov.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="feTitle">
+      ${filterImg(f) ? `<img class="fe-photo" src="${filterImg(f)}" alt="">` : ''}
       <h2 id="feTitle"><span class="filterbadge${f.code ? '' : ' own'}" id="feBadge">${U.esc(filterCode(f) || 'F')}</span> ${U.esc(filterName(f))}</h2>
       ${f.code ? `<div class="seggroup" id="feSeries">${COKIN_SERIES.map(([k, sz, nm]) => `<button type="button" class="seg${k === f.series ? ' on' : ''}" data-s="${k}"><b>${sz}</b><span class="sub2">${nm}</span></button>`).join('')}</div>`
         : `<label class="fld"><span>Name</span><input id="feName" maxlength="60" value="${U.esc(f.name || '')}"></label>
@@ -359,6 +362,44 @@ async function openAccEditor(a) {
   $('acDel')?.addEventListener('click', async () => { await saveAccessories((await getAccessories()).filter(x => x.id !== ed.id)); close(); U.toast('Zubehör entfernt'); route(); });
 }
 
+/* ---------- Fotos der Filter: freigestellt aus Rebeccas Aufnahmen auf dem Leuchtpult, einheitlich 400 × 400 px.
+   Cokin-Filter nach Nummer (gilt für jede Größe, eigene Aufnahme der Serie hat Vorrang), eigene Filter über das Feld img. ---------- */
+const FILTER_IMG_SER = { B160: 'b160', B058: 'b058' };
+const FILTER_IMG_CODE = Object.fromEntries(['005', '021', '029', '056', '061', '084', '086', '103', '121', '124', '132', '133', '151', '160', '185', '195', '196', '201', '230', '345', '397'].map(c => [c, 'a' + c]));
+function filterImg(f) {
+  if (!f) return null;
+  const k = f.img || FILTER_IMG_SER[(f.series || '') + f.code] || (f.code && FILTER_IMG_CODE[f.code]);
+  return k ? `img/filter-${k}.webp` : null;
+}
+
+// Rebeccas Filter (Stand 26.10.2026). Feste Kennungen, damit ein erneutes Laden nichts doppelt anlegt.
+const OWNLESS = 'Ohne Herstellerangabe.';
+const CF_NOTE = 'Effektfilter mit Klarglas-Mitte, Hersteller unbekannt (Aufdruck „PAT NO. 13783“).';
+const SEED_FILTERS = [
+  ...[['160', 'A', 1], ['160', 'B', 1, 'Am Ring ist nur „160“ lesbar. Serie vermutlich B wie beim Sternfilter B058.'], ['058', 'B', 1], ['056', 'A', 1],
+    ['121', 'A', 2], ['124', 'A', 1], ['132', 'A', 1], ['133', 'A', 1], ['151', 'A', 1],
+    ['005', 'A', 1], ['021', 'A', 1], ['029', 'A', 1], ['084', 'A', 2], ['086', 'A', 1], ['230', 'A', 1],
+    ['061', 'A', 1], ['185', 'A', 1], ['195', 'A', 1], ['196', 'A', 1], ['201', 'A', 1], ['103', 'A', 1],
+    ['345', 'A', 1, 'Zwei Masken: schwarz mit Loch und klar mit schwarzem Punkt.'], ['397', 'A', 1]]
+    .map(([code, series, count, notes]) => ({ id: `f-${series.toLowerCase()}${code}`, code, series, count, ...(notes ? { notes } : {}) })),
+  ...[['grad-hell', 'Verlaufsfilter Gelb hell'], ['grad-tabak', 'Verlaufsfilter Tabak'], ['grad-oliv', 'Verlaufsfilter Oliv'], ['grad-gruengrau', 'Verlaufsfilter Graugrün'], ['grad-rose', 'Verlaufsfilter Rosé']]
+    .map(([img, name]) => ({ id: 'f-' + img, code: '', name, kind: 'slide', series: null, count: 1, img, notes: OWNLESS })),
+  ...[['cf1', 'CF-1 Aurora'], ['cf3', 'CF-3 Radial Zoom'], ['cf4', 'CF-4 Swirl'], ['cf7', 'CF-7 Barrel'], ['cf10', 'CF-10 Diamond Cross']]
+    .map(([img, name]) => ({ id: 'f-' + img, code: '', name, kind: 'slide', series: null, count: 1, img, notes: CF_NOTE })),
+  { id: 'f-zeiss-g1', code: '', name: 'Carl Zeiss Jena G1 (Gelb)', kind: 'screw', thread: '49', series: null, count: 1, img: 'zeiss-g1', notes: 'Gelbfilter, Aufdruck „G 1 / M 49“.' }
+];
+// Fehlende Filter ergänzen. Cokin-Filter gelten als vorhanden, wenn Nummer und Serie schon in der Liste stehen.
+async function mergeSeedFilters() {
+  const list = await getFilters();
+  let n = 0;
+  for (const s of SEED_FILTERS) {
+    const has = list.some(f => f.id === s.id || (s.code && f.code === s.code && f.series === s.series));
+    if (!has) { list.push(JSON.parse(JSON.stringify(s))); n++; }
+  }
+  if (n) await saveFilters(list);
+  return n;
+}
+
 /* ---------- Bild eines Filters: Cokin-Filter als eckige Scheibe, Schraubfilter rund. Farbe nach Filterart. ---------- */
 function filterTint(f) {
   const n = (filterName(f) || '').toLowerCase(), c = f.code || '';
@@ -377,6 +418,8 @@ function filterTint(f) {
   return { a: '#cfe3ee', b: '#cfe3ee' };
 }
 function filterArt(f, size = 40) {
+  const src = filterImg(f);
+  if (src) return `<img class="filterart fimg" src="${src}" alt="" width="${size}" height="${size}" loading="lazy">`;
   const t = filterTint(f), id = 'fa' + Math.random().toString(36).slice(2, 7);
   const round = filterKind(f) === 'screw';
   const fill = t.grad

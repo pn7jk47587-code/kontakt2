@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 21;
+const SEED_VERSION = 22;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -19,6 +19,8 @@ const FORMATS = ['Kleinbild (135)', 'Mittelformat (120)', 'Halbformat', 'Instant
 async function boot() {
   const meta = await DB.get('meta', 'seed');
   if (!meta || meta.v < SEED_VERSION) {
+    // Alle Skripte (auch filters.js) müssen geladen sein, bevor die Ergänzungen laufen
+    if (document.readyState === 'loading') await new Promise(r => document.addEventListener('DOMContentLoaded', r, { once: true }));
     // Vivitar Point and Shoot war ein Platzhalter für die Superheadz Olive San: Eintrag umziehen, Rollen und Objektive mitnehmen
     const viv = await DB.get('cameras', 'cam-vivitar-ps');
     if (viv) {
@@ -49,6 +51,8 @@ async function boot() {
         await DB.put('meta', { id: 'filters', list: fl });
       }
     }
+    // Rebeccas Cokin- und Effektfilter mit Fotos (26.10.2026): fehlende ergänzen, vorhandene bleiben unverändert
+    if (meta && meta.v < 22) await mergeSeedFilters();
     if (meta && meta.v >= 17 && meta.v < 19) {
       // Neue Kameras und Objektive vom 25.10.2026 nachtragen, ohne gelöschte Beispielausrüstung zurückzuholen
       const ci = new Set((await DB.all('cameras')).map(c => c.id)), li = new Set((await DB.all('lenses')).map(l => l.id));
@@ -112,7 +116,8 @@ async function loadSeedGear() {
   const lenses = SEED_LENSES.filter(l => !lensIds.has(l.id)).map(l => JSON.parse(JSON.stringify(l)));
   await DB.putMany('cameras', cams);
   await DB.putMany('lenses', lenses);
-  return cams.length + lenses.length;
+  const nf = await mergeSeedFilters();
+  return cams.length + lenses.length + nf;
 }
 
 // Kopfzeile: links immer die Startseite (Kreis mit App-Symbol), rechts immer das Profil

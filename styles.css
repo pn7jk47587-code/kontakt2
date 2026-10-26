@@ -1535,3 +1535,8 @@ section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounde
 #fpsThread .chip.mine { border-color: var(--teal); font-weight: 800; }
 #fpsThread .chip.on { background: var(--teal); color: #fff; border-color: var(--teal); }
 #fpsThread .chipset { display: flex; flex-wrap: wrap; gap: 6px; } #fpsThread .chip { padding: 0 11px; }
+
+/* Filterfotos */
+img.filterart.fimg { display: block; object-fit: contain; flex: 0 0 auto; }
+.ideatag img.filterart.fimg { display: inline-block; vertical-align: -3px; }
+.fe-photo { display: block; width: 150px; height: 150px; object-fit: contain; margin: 0 auto 4px; }
