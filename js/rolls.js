@@ -63,6 +63,7 @@ async function viewRolls() {
   const hero = await profileHero();
   const camMap = new Map(cams.map(c => [c.id, c]));
   const allFrames = await DB.all('frames');
+  const allFilters = await getFilters();
   rolls.sort((a, b) => (b.loadedAt || b.createdAt || '').localeCompare(a.loadedAt || a.createdAt || ''));
   let html = hero + `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;
   const order = [['entwurf', 'Film in der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']];
@@ -87,7 +88,7 @@ async function viewRolls() {
         : `<a class="cardact open-album" href="#/album/${r.id}" aria-label="Fotoalbum öffnen">${ART.album}<span>Ansehen</span></a>`;
       html += `<div class="rollcard st-${g}">
         <a class="rc-link" href="#/${g === 'entwickelt' ? 'album' : 'rolle'}/${r.id}">
-          <div class="strip">${thumbs.length ? thumbs.map(u => `<img src="${u}" alt="">`).join('') : `<div class="strip-art">${await filmArt(st, 44)}${cam ? await camArt(cam, 56) : ''}</div>`}</div>
+          <div class="strip">${thumbs.length ? thumbs.map(u => `<img src="${u}" alt="">`).join('') : `<div class="strip-art">${await filmArt(st, 44)}${cam ? await camArt(cam, 56) : ''}${rollIrFilters(r, fr, allFilters).map(f => `<span class="stripfilter" title="${U.esc(filterName(f))}">${filterArt(f, 34)}</span>`).join('')}</div>`}</div>
           <div class="rc-body">
             <div class="rc-title">${U.esc(r.title || U.stockLabel(st))}</div>
             <div class="rc-sub">${U.esc(camLabel(cam) || r.camera || '')}${r.loadedAt ? ' · ' + U.fmtDate(r.loadedAt) : ''}</div>
@@ -571,7 +572,7 @@ async function viewRoll(id, tab) {
   if (inCam && tab === 'entwicklung') tab = 'bilder';
   view.innerHTML = `
     <div class="rollhead">
-      <div class="rh-art">${await filmArt(stock, 52)}${cam ? await camArt(cam, 66) : ''}</div>
+      <div class="rh-art">${await filmArt(stock, 52)}${cam ? await camArt(cam, 66) : ''}${rollIrFilters(roll, await framesOf(roll.id), await getFilters()).map(f => filterArt(f, 38)).join('')}</div>
       <div class="rh-txt"><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">EI ${U.esc(roll.ei || stock?.boxIso || '?')}${camLabel(cam) || roll.camera ? ' · ' + U.esc(camLabel(cam) || roll.camera) : ''}</span>
         <br><span class="stagebadge st-${roll.status || 'entwurf'}">${STATUS[roll.status || 'entwurf'].label}</span></div>
       ${TRASH_BTN(roll.id).replace('class="trashbtn"', 'class="trashbtn big"')}
@@ -710,6 +711,12 @@ async function openLeakPicker(roll, done) {
     close(); U.toast(on.size ? `${on.size} ${on.size === 1 ? 'Lightleak' : 'Lightleaks'} vermerkt` : 'Keine Lightleaks vermerkt');
     done && done();
   });
+}
+
+// Infrarotfilter einer Rolle: in einem Bild gewählt oder zuletzt für die Rolle gewählt
+function rollIrFilters(roll, frames, filters) {
+  const ids = new Set([...(roll.lastFilterIds || []), ...frames.flatMap(f => f.filterIds || [])]);
+  return filters.filter(f => ids.has(f.id) && isIrFilter(f));
 }
 
 /* ---------- Einträge der Bilder verschieben ----------

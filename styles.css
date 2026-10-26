@@ -1519,3 +1519,7 @@ section.ideas .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounde
 .cell.droptarget { outline: 2.5px solid var(--teal); outline-offset: 2px; }
 .dragghost { position: fixed; z-index: 1000; pointer-events: none; transform: scale(1.08); box-shadow: 0 14px 30px rgba(0,0,0,.3); opacity: .95; animation: none !important; }
 .grid.reorder .cell, .grid.reorder .cell img { -webkit-user-drag: none; }
+
+/* Startseite: Infrarotfilter neben Film und Kamera */
+.stripfilter { display: inline-flex; align-items: center; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.rh-art .filterart { flex: 0 0 auto; }
