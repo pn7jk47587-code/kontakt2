@@ -214,3 +214,10 @@ Archivieren: Für Rollen, die du schon früher entwickelt hast, tippst du im Pro
 Favoriten im Kameraschrank: Jede Kamera, jedes Objektiv, jeder Filter und jedes Zubehör hat oben links am Bild einen kleinen Stern. Ein Tipp darauf macht den Eintrag zum Favoriten (gelber Stern) und schiebt ihn sofort an den Anfang seiner Liste, ein zweiter Tipp nimmt ihn wieder heraus. Favoriten stehen auch in der Filtersuche der Bildansicht unter „Alle Filter“ vorne. Die eigene Reihenfolge durch Ziehen gilt weiter, jeweils innerhalb der Favoriten und der übrigen Einträge.
 
 Updates: Holst du die App aus dem Hintergrund, fragt sie nach einer neuen Version. Ist eine da, lädt sie die neuen Dateien unter Umgehung des Browser-Zwischenspeichers und startet sich einmal neu. Vorher zeigte der erste Start nach einem Update oft noch den alten Stand. GitHub Pages braucht nach dem Hochladen selbst etwa eine bis wenige Minuten, bis die neue Version ausgeliefert wird.
+
+Kameraschrank in Kacheln: Im Profil zeigt der aufgeklappte Kameraschrank nur noch vier Kacheln, Kameras, Objektive, Filter und Zubehör, jeweils mit Anzahl und dem Bild des ersten Favoriten (sonst des ersten Eintrags). Ein Tipp öffnet die Seite dieses Teils mit der vollständigen Liste, dem Plus zum Anlegen, Sternen und Ziehen. Oben wechselt eine Leiste direkt zwischen den vier Teilen, der Pfeil unten rechts führt zurück ins Profil. Nach dem Bearbeiten einer Kamera oder eines Objektivs führt der Haken zurück auf diese Seite.
+
+Favoriten in „Alle Fotos“: Jedes Foto hat unten rechts einen Stern. Favoriten stehen zusätzlich ganz oben in der Reihe „Favoriten“.
+
+Fotoalben auf der Startseite: Jede Karte im Bereich „Fotoalbum“ hat oben rechts einen kleinen Pfeil. Er klappt die Karte auf eine schmale Zeile mit Name und Datum zusammen und wieder auf. Der ganze Bereich „Fotoalbum“ lässt sich wie bisher über seine Überschrift einklappen.
+

@@ -86,7 +86,8 @@ async function viewRolls() {
       const act = g === 'entwurf' ? `<button class="cardact to-dev" data-dev="${r.id}" aria-label="Film in Entwicklung geben">${ART.arrow}<span>Entwickeln</span></button>`
         : g === 'belichtet' ? `<button class="cardact to-album" data-pickup="${r.id}" aria-label="Film abgeholt, Scans hochladen">${ART.up}<span>Scans hochladen</span></button>`
         : `<a class="cardact open-album" href="#/album/${r.id}" aria-label="Fotoalbum öffnen">${ART.album}<span>Ansehen</span></a>`;
-      html += `<div class="rollcard st-${g}">
+      const small = g === 'entwickelt' && (() => { try { return localStorage.getItem('kb-albumfold-' + r.id) === '1'; } catch (_) { return false; } })();
+      html += `<div class="rollcard st-${g}${small ? ' small' : ''}" data-rc="${r.id}">${g === 'entwickelt' ? `<button type="button" class="rcfold" data-rcfold="${r.id}" aria-expanded="${!small}" aria-label="${small ? 'Album aufklappen' : 'Album einklappen'}"><span class="foldchev" aria-hidden="true"></span></button>` : ''}
         <a class="rc-link" href="#/${g === 'entwickelt' ? 'album' : 'rolle'}/${r.id}">
           <div class="strip">${thumbs.length ? thumbs.map(u => `<img src="${u}" alt="">`).join('') : `<div class="strip-art">${await filmArt(st, 44)}${cam ? await camArt(cam, 56) : ''}${rollIrFilters(r, fr, allFilters).map(f => `<span class="stripfilter" title="${U.esc(filterName(f))}">${filterArt(f, 34)}</span>`).join('')}</div>`}</div>
           <div class="rc-body">
@@ -103,6 +104,13 @@ async function viewRolls() {
   view.querySelectorAll('[data-dev]').forEach(b => b.addEventListener('click', () => openDevModal(rolls.find(r => r.id === b.dataset.dev), () => route())));
   view.querySelectorAll('[data-pickup]').forEach(b => b.addEventListener('click', () => openPickupModal(rolls.find(r => r.id === b.dataset.pickup), () => route())));
   setupLongPress(view, { rolls, stocks, camMap, allFrames });
+  view.querySelectorAll('[data-rcfold]').forEach(b => b.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    const card = b.closest('.rollcard'), small = card.classList.toggle('small');
+    b.setAttribute('aria-expanded', !small); b.setAttribute('aria-label', small ? 'Album aufklappen' : 'Album einklappen');
+    try { localStorage.setItem('kb-albumfold-' + b.dataset.rcfold, small ? '1' : '0'); } catch (_) {}
+    U.haptic && U.haptic(8);
+  }));
   view.querySelector('.newroll').addEventListener('click', e => { e.preventDefault(); openLoadSheet(e.currentTarget); });
 }
 
@@ -1649,7 +1657,11 @@ async function viewAllPhotos() {
   const arBtn = `<div class="archcorner"><a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`;
   if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
-  let html = '', cur = null;
+  // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
+  const pstar = f => `<button type="button" class="pfav${f.fav ? ' on' : ''}" data-pfav="${f.id}" aria-pressed="${!!f.fav}" aria-label="${f.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</button>`;
+  const favs = d.frames.map((f, i) => [f, i]).filter(([f]) => f.fav);
+  let html = favs.length ? `<div class="rollsep favsep">★ Favoriten · ${favs.length}</div><div class="photogrid favgrid">${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`).join('')}</div>` : '';
+  let cur = null;
   d.frames.forEach((f, i) => {
     if (f.rollId !== cur) {
       if (cur !== null) html += '</div>';
@@ -1658,9 +1670,16 @@ async function viewAllPhotos() {
       const st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
       html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid">`;
     }
-    html += `<a href="#/foto/alle/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`;
+    html += `<a href="#/foto/alle/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`;
   });
   view.innerHTML = arBtn + html + '</div>';
+  view.querySelectorAll('[data-pfav]').forEach(b => b.addEventListener('click', async e => {
+    e.preventDefault(); e.stopPropagation();
+    const f = await DB.get('frames', b.dataset.pfav); if (!f) return;
+    f.fav = !f.fav; await DB.put('frames', f);
+    U.haptic && U.haptic(f.fav ? [12, 40, 12] : 10);
+    const y = window.scrollY; document.querySelectorAll('.donebtn').forEach(x => x.remove()); await viewAllPhotos(); window.scrollTo(0, y);
+  }));
   // Pfeil unten rechts: zurück zum Profil
   const back = document.createElement('button');
   back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück zum Profil');
@@ -1822,7 +1841,9 @@ function setupFavs(root) {
   root.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest?.('.favstar')) act(e); }, true);
 }
 
-async function cabinetHtml(fold = false) {
+// Kameraschrank. Im Profil (fold) nur vier Kacheln, jede führt in ihre eigene Seite #/schrank/<teil>. Mit only wird genau ein Teil gezeigt.
+const CAB_PARTS = [['kameras', 'Kameras'], ['objektive', 'Objektive'], ['filter', 'Filter'], ['zubehoer', 'Zubehör']];
+async function cabinetHtml(fold = false, only = null) {
   const cams = gearSort(await DB.all('cameras'), camSortFb);
   const lenses = gearSort(await DB.all('lenses'), lensSortFb);
   const [rolls, frames] = [await DB.all('rolls'), await DB.all('frames')];
@@ -1867,27 +1888,69 @@ async function cabinetHtml(fold = false) {
         <div class="cabhead foldhead"><h3>${title}<span class="cabcount">${count}</span></h3><span class="cabtools"><button class="fridgeplus" data-add="${add}" aria-label="${add === 'kamera' ? 'Kamera' : 'Objektiv'} hinzufügen">+</button><span class="foldchev" aria-hidden="true"></span></span></div>
         <div class="foldbody">${body}</div>
       </div>`;
-  return `
-    <section class="cabinet${fold ? ' fold' : ''}${fold && (fresh || foldOpen('cabinet')) ? ' open' : ''}" data-fold="cabinet">
-      <div class="fridgetop foldhead">
-        <span class="fridgeicon cabicon">${ART.cabinet}</span>
-        <div><h2>Kameraschrank</h2><span class="sub2">${cams.length} ${cams.length === 1 ? 'Kamera' : 'Kameras'} · ${lenses.length} ${lenses.length === 1 ? 'Objektiv' : 'Objektive'}${nFilters ? ` · ${nFilters} Filter` : ''}</span></div>
-        ${fold ? '<span class="foldchev" aria-hidden="true"></span>' : ''}
-      </div>
-      <div class="foldbody">
-      ${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist" data-sort="cameras">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
+  const partCams = () => `${sub('cab-cams', 'Kameras', working.length, 'kamera', `<div class="flist" data-sort="cameras">${camRows.length ? camRows.join('') : '<p class="hint">Noch keine Kamera. Lege mit dem Plus deine erste an.</p>'}</div>
         ${brokenRows.length ? `<div class="brokenhead">Kaputt</div><div class="flist" data-sort="cameras">${brokenRows.join('')}</div>` : ''}`, freshCam || foldOpen('cab-cams'))}
       ${inactiveRows.length ? `
       <div class="cabsub fold inactivesub${foldOpen('cab-inactive') ? ' open' : ''}" data-fold="cab-inactive">
         <div class="cabhead foldhead"><h3>Inaktiv<span class="cabcount">${inactiveRows.length}</span></h3><span class="cabtools"><span class="foldchev" aria-hidden="true"></span></span></div>
         <div class="foldbody"><p class="hint inactivehint">Kameras, die gerade im Regal liegen. Sie erscheinen nicht bei „Film einlegen“.</p><div class="flist" data-sort="cameras">${inactiveRows.join('')}</div></div>
-      </div>` : ''}
-      ${sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine aktiven Objektive.</p>'}</div>
-        ${inactiveLensRows.length ? `<div class="brokenhead">Inaktiv</div><div class="flist" data-sort="lenses">${inactiveLensRows.join('')}</div>` : ''}`, freshLens || foldOpen('cab-lenses'))}
+      </div>` : ''}`;
+  const partLenses = () => sub('cab-lenses', 'Objektive', lenses.length, 'objektiv', `<div class="flist" data-sort="lenses">${lensRows.length ? lensRows.join('') : '<p class="hint">Noch keine aktiven Objektive.</p>'}</div>
+        ${inactiveLensRows.length ? `<div class="brokenhead">Inaktiv</div><div class="flist" data-sort="lenses">${inactiveLensRows.join('')}</div>` : ''}`, freshLens || foldOpen('cab-lenses'));
+  if (only) {
+    // Eigene Seite: der Teil steht offen da, ohne Einklappen
+    const html = only === 'kameras' ? partCams() : only === 'objektive' ? partLenses()
+      : only === 'filter' ? await filtersSubHtml(lenses, true) : await accessoriesSubHtml(cams, true);
+    return `<section class="cabinet cabpage">${html.replace(/class="cabsub fold(?! inactivesub)( open)?"/, 'class="cabsub cabsolo"')}</section>`;
+  }
+  if (fold) {
+    const filters = await getFilters(), accs = await getAccessories();
+    const favFirst = list => [...list].sort((a, b) => !!b.fav - !!a.fav);
+    const c0 = favFirst(cams.filter(c => !c.inactive && !c.broken))[0] || cams[0], l0 = favFirst(lenses.filter(l => !l.inactive))[0] || lenses[0], f0 = favFirst(filters)[0], a0 = favFirst(accs)[0];
+    const nAcc = accs.reduce((n, a) => n + (a.count || 1), 0);
+    const tile = (k, label, n, art) => `<a class="cabtile" href="#/schrank/${k}"><span class="cabtileart">${art}</span><span class="cabtilename">${label}</span><span class="sub2">${n}</span></a>`;
+    return `
+    <section class="cabinet fold${fresh || foldOpen('cabinet') ? ' open' : ''}" data-fold="cabinet">
+      <div class="fridgetop foldhead">
+        <span class="fridgeicon cabicon">${ART.cabinet}</span>
+        <div><h2>Kameraschrank</h2><span class="sub2">${cams.length} ${cams.length === 1 ? 'Kamera' : 'Kameras'} · ${lenses.length} ${lenses.length === 1 ? 'Objektiv' : 'Objektive'}${nFilters ? ` · ${nFilters} Filter` : ''}</span></div>
+        <span class="foldchev" aria-hidden="true"></span>
+      </div>
+      <div class="foldbody"><div class="cabtiles">
+        ${tile('kameras', 'Kameras', `${working.length} aktiv${inactiveRows.length + brokenRows.length ? ` · ${inactiveRows.length + brokenRows.length} weitere` : ''}`, c0 ? await camArt(c0, 64) : ART.cabinet)}
+        ${tile('objektive', 'Objektive', `${lenses.length}`, l0 ? ART.lens(l0, 50) : '')}
+        ${tile('filter', 'Filter', `${nFilters}`, f0 ? filterArt(f0, 46) : '')}
+        ${tile('zubehoer', 'Zubehör', `${nAcc}`, a0 ? accIcon(a0.kind, 36) : accIcon('sonst', 36))}
+      </div></div>
+    </section>`;
+  }
+  return `
+    <section class="cabinet" data-fold="cabinet">
+      <div class="fridgetop">
+        <span class="fridgeicon cabicon">${ART.cabinet}</span>
+        <div><h2>Kameraschrank</h2></div>
+      </div>
+      <div class="foldbody">
+      ${partCams()}
+      ${partLenses()}
       ${await filtersSubHtml(lenses, foldOpen('cab-filters'))}
       ${await accessoriesSubHtml(cams, foldOpen('cab-acc'))}
       </div>
     </section>`;
+}
+
+async function viewCabinetPart(k) {
+  const part = CAB_PARTS.find(p => p[0] === k);
+  if (!part) { location.replace('#/profil'); return; }
+  setHeader(part[1]);
+  view.innerHTML = `<div class="cabnav">${CAB_PARTS.map(([key, label]) => `<a class="seg${key === k ? ' on' : ''}" href="#/schrank/${key}">${label}</a>`).join('')}</div>` + await cabinetHtml(false, k);
+  setupFolds(view);
+  setupCabinet(view);
+  const back = document.createElement('button');
+  back.className = 'donebtn'; back.setAttribute('aria-label', 'Zurück zum Profil');
+  back.innerHTML = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M19 12H6M11.5 6 5.5 12l6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  document.body.appendChild(back);
+  back.addEventListener('click', () => { location.hash = '#/profil'; });
 }
 
 // Plus im Kameraschrank: kurzes Vibrieren, danach leuchtet der neue Eintrag beim Zurückkommen auf
@@ -2035,7 +2098,7 @@ async function viewLens(id) {
       lens.cameraIds = [...view.querySelectorAll('#camChecks input:checked')].map(i => i.value);
       await DB.put('lenses', lens);
     });
-    view.querySelector('#delLens')?.addEventListener('click', async () => { await DB.del('lenses', lens.id); location.replace('#/kameras'); });
+    view.querySelector('#delLens')?.addEventListener('click', async () => { await DB.del('lenses', lens.id); location.replace('#/schrank/objektive'); });
   };
   draw();
 }
@@ -2113,5 +2176,5 @@ async function viewCamera(id) {
     await deleteImage(cam.photoId); cam.photoId = rec.id; await DB.put('cameras', cam); route();
   });
   view.querySelector('#camPhotoRm')?.addEventListener('click', async () => { await deleteImage(cam.photoId); cam.photoId = null; await DB.put('cameras', cam); route(); });
-  view.querySelector('#delCam')?.addEventListener('click', async () => { await DB.del('cameras', cam.id); location.replace('#/kameras'); });
+  view.querySelector('#delCam')?.addEventListener('click', async () => { await DB.del('cameras', cam.id); location.replace('#/schrank/kameras'); });
 }

@@ -308,6 +308,7 @@ async function routeView() {
       case 'foto': return await viewPhoto(parts[1], parts[2]);
       case 'alle-fotos': return await viewAllPhotos();
       case 'archiv': return await viewArchive();
+      case 'schrank': return await viewCabinetPart(parts[1]);
       case 'kameras': return await viewCameras();
       case 'kamera': return await viewCamera(parts[1]);
       case 'objektiv': return await viewLens(parts[1]);

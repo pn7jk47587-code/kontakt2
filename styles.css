@@ -1690,3 +1690,31 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .archlink svg { flex: 0 0 auto; }
 .archcorner { display: flex; justify-content: flex-end; margin: 8px 14px -4px; }
 .archcorner .archlink { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; text-decoration: none; }
+
+/* Kameraschrank: vier Kacheln im Profil, eigene Seite je Teil */
+.cabtiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.cabtile { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 10px; border-radius: 20px; border: 1px solid var(--line); background: var(--solid, #fff); color: var(--text); text-decoration: none; min-height: 118px; justify-content: flex-end; }
+.cabtileart { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 56px; color: var(--muted); }
+.cabtileart img, .cabtileart svg { max-height: 60px; width: auto; }
+.cabtilename { font-weight: 700; font-size: 16px; }
+.cabtile:active { transform: scale(.98); }
+.cabnav { display: flex; gap: 6px; overflow-x: auto; margin: 10px 14px 4px; scrollbar-width: none; }
+.cabnav::-webkit-scrollbar { display: none; }
+.cabnav .seg { flex: 0 0 auto; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--text); font-size: 14px; font-weight: 600; text-decoration: none; }
+.cabnav .seg.on { background: var(--teal); border-color: var(--teal); color: #fff; }
+.cabpage { margin: 8px 14px 90px; }
+.cabsub.cabsolo > .cabhead .foldchev { display: none; }
+/* Alle Fotos: Favoritenstern */
+.photogrid a { position: relative; }
+.pfav { position: absolute; right: 4px; bottom: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); color: #fff; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.pfav svg { fill: none; }
+.pfav.on { background: rgba(255,255,255,.92); color: #e2a400; }
+.pfav.on svg { fill: #f5c518; }
+.favsep { color: #b98500; }
+/* Startseite: Fotoalbum-Karten einzeln einklappen */
+.rollcard { position: relative; }
+.rcfold { position: absolute; top: 8px; right: 8px; z-index: 3; width: 30px; height: 30px; border-radius: 50%; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.8); box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.rollcard.small .strip { display: none; }
+.rollcard.small .rc-body { padding-right: 44px; }
+.rcfold .foldchev { margin: 0; transform: translateY(2px) rotate(225deg); }
+.rollcard.small .rcfold .foldchev { transform: rotate(45deg) translate(-2px, -2px); }
