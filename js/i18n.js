@@ -724,6 +724,7 @@ Bild 1 ist belegt, nach vorne geht nichts mehr	Frame 1 is in use, nothing can mo
 Alle Einträge eins nach hinten	All entries moved one forward
 Alle Einträge eins nach vorne	All entries moved one back
 Eintrag von Bild {0} auf Bild {1} verschoben	Entry moved from frame {0} to frame {1}
+Bitte wählen	Please choose
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

@@ -1790,8 +1790,8 @@ function setupGearDrag(list) {
 async function viewLens(id) {
   const cams = gearSort(await DB.all('cameras'), camSortFb);
   if (id === 'neu') {
-    const l = { id: U.uid(), maker: '', focal: '50', kind: 'normal', mount: 'Nikon F', cameraIds: [] };
-    l.cameraIds = cams.filter(c => c.mount === l.mount).map(c => c.id);
+    const l = { id: U.uid(), maker: '', focal: '50', kind: 'normal', mount: '', cameraIds: [] };
+    // Ohne Vorauswahl: Bajonett und passende Kameras wählt man selbst
     await DB.put('lenses', l);
     try { sessionStorage.setItem('kb-newgear', l.id); } catch (_) {}
     FRESH_ID = l.id;
@@ -1818,9 +1818,9 @@ async function viewLens(id) {
       </div>
       ${field('Hersteller', 'maker')}
       ${field('Bezeichnung', 'name')}
-      <label class="fld"><span>Bajonett</span><select data-f="mount">${MOUNTS.map(m => `<option>${U.esc(m)}</option>`).join('')}</select></label>
+      <label class="fld"><span>Bajonett</span><select data-f="mount"><option value="">Bitte wählen</option>${MOUNTS.map(m => `<option>${U.esc(m)}</option>`).join('')}</select></label>
       <div class="qlabel">Passt an</div>
-      <div class="camchecks" id="camChecks">${cams.map(c => `<label class="camcheck${c.mount && c.mount !== lens.mount ? ' other' : ''}"><input type="checkbox" value="${c.id}" ${lens.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}<br><span class="sub2">${U.esc(c.mount || 'Bajonett offen')}</span></span></label>`).join('')}</div>
+      <div class="camchecks" id="camChecks">${cams.map(c => `<label class="camcheck${lens.mount && c.mount && c.mount !== lens.mount ? ' other' : ''}"><input type="checkbox" value="${c.id}" ${lens.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}<br><span class="sub2">${U.esc(c.mount || 'Bajonett offen')}</span></span></label>`).join('')}</div>
       <label class="check"><input type="checkbox" data-f="inactive"> Objektiv ist inaktiv</label>
       <p class="hint" style="margin:-4px 0 10px">Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.</p>
       ${area('Notizen', 'notes', 'Eigenheiten, Filtergewinde, Macken …')}
@@ -1831,7 +1831,7 @@ async function viewLens(id) {
       setHeader(lensLabel(lens) || 'Objektiv', {});
       view.querySelectorAll('.camcheck').forEach(el => {
         const c = cams.find(x => x.id === el.querySelector('input').value);
-        el.classList.toggle('other', !!(c.mount && c.mount !== lens.mount));
+        el.classList.toggle('other', !!(lens.mount && c.mount && c.mount !== lens.mount));
       });
     });
     view.querySelector('#kindRow').addEventListener('click', async e => {
