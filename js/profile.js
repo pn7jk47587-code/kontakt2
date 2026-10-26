@@ -297,6 +297,8 @@ async function viewProfile() {
 
     ${await diaryFoldHtml()}
 
+    ${await ideasFoldHtml()}
+
     ${await shotsFoldHtml()}
 
     <section class="spend fold${foldOpen('spend') ? ' open' : ''}" data-fold="spend">
@@ -362,6 +364,7 @@ async function viewProfile() {
   });
   setupCabinet(view);
   setupDiaryFold(view);
+  setupIdeas(view);
   setupFolds(view);
   view.querySelector('#spendReset')?.addEventListener('click', () => {
     const ov = document.createElement('div');
@@ -644,6 +647,7 @@ async function resetPhotosAndProfile() {
     for (const r of await DB.all(st)) if (strip(r)) await DB.put(st, r);
   }
   for (const d of await allDiaries()) { d.photos = (d.photos || []).filter(p => !ids.has(p.imgId)); await DB.put('meta', d); }
+  const ideas = await getIdeas(); if (ideas.length) { ideas.forEach(i => { i.imgIds = (i.imgIds || []).filter(x => !ids.has(x)); }); await saveIdeas(ideas); }
   await DB.del('meta', 'profile');
   PROFILE = null;
   U.toast('Zurückgesetzt');

@@ -690,6 +690,24 @@ Insgesamt	In total
 Noch keine Fotos mit Aufnahmetag.	No photos with a date yet.
 {0} Fotos	{0} photos
 {0} Foto	{0} photo
+Ideen	Ideas
+Idee	Idea
+{0} Ideen	{0} ideas
+{0} Idee	{0} idea
+Neue Idee	New idea
+Idee hinzufügen	Add idea
+Idee löschen	Delete idea
+Idee löschen?	Delete idea?
+Idee gespeichert	Idea saved
+Idee gelöscht	Idea deleted
+Beschreibung	Description
+Beispielbilder	Example pictures
+Bild hinzufügen	Add picture
+Bild entfernen	Remove picture
+Ohne Beschreibung	No description
+Motiv, Licht, Technik, wo du es gesehen hast …	Subject, light, technique, where you saw it …
+Noch keine Filter im Kameraschrank.	No filters in the camera cabinet yet.
+Halte hier fest, was du ausprobieren willst: ein Motiv, eine Technik, ein Bild aus Social Media. Lege mit dem Plus die erste Idee an.	Keep what you want to try here: a subject, a technique, a picture from social media. Add your first idea with the plus.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();
