@@ -199,7 +199,7 @@ async function goUp() {
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
   const done = document.querySelector('.donebtn.goesback');
   if (done) { done.click(); return; }
-  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];
+  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', analytics: '#/profil', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];
   if (parts.length) location.hash = up || '#/';
 }
 
@@ -320,6 +320,7 @@ async function routeView() {
       case 'foto': return await viewPhoto(parts[1], parts[2]);
       case 'alle-fotos': return await viewAllPhotos();
       case 'archiv': return await viewArchive();
+      case 'analytics': return await viewAnalytics();
       case 'schrank': return await viewCabinetPart(parts[1]);
       case 'kameras': return await viewCameras();
       case 'kamera': return await viewCamera(parts[1]);

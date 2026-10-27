@@ -807,6 +807,16 @@ Hier kannst du deine Ausrüstung hinzufügen. Öffne den Kameraschrank.	Add your
 Tippe auf das Plus und lege eine Kamera an.	Tap the plus and add a camera.
 Tippe auf „Kameras“ und öffne deine neue Kamera.	Tap “Cameras” and open your new camera.
 Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe auf den Pfeil oben links, um zurückzugehen.	Great, now you’re ready to load your first film into the camera. Tap the arrow at the top left to go back.
+Analytics	Analytics
+Deine Filme	Your films
+Filme, Fotos und Geld	Films, photos and money
+Der Klassiker. Gut und günstig. So wie du.	The classic. Good and cheap. Just like you.
+Du magst wohl keine Farben, huh?	Not a fan of colours, huh?
+Du bist reich oder warst reich. Jedenfalls hattest du mal Geld.	You are rich or used to be. Either way, you once had money.
+Halation Enjoyer 3000. Das bist du.	Halation Enjoyer 3000. That’s you.
+Die Qualität des Bildes ist dir egal. Hauptsache billig.	You don’t care about image quality. As long as it’s cheap.
+Okay? Du willst wirklich eigenständig die Filmindustrie am Leben halten.	Okay? You really want to keep the film industry alive single-handedly.
+Ich weiß nichts über Ilford, deswegen fällt mir kein sassy Satz ein. Sorry.	I don’t know anything about Ilford, so I can’t think of a sassy line. Sorry.
 `;
   const EXACT = new Map(), PATS = [];
   const norm = s => s.replace(/\s+/g, ' ').trim();

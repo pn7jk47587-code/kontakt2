@@ -1773,3 +1773,34 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .undobar span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 /* Suchfeld bleibt beim Scrollen der Treffer oben im Fenster sichtbar */
 .modal input[type=search]:focus, .modal input[type=search]:not(:placeholder-shown), .lsbody input[type=search]:focus { position: sticky; top: 0; z-index: 3; background-color: var(--solid, #fff); box-shadow: 0 6px 12px -8px rgba(0,0,0,.25); }
+
+/* Analytics */
+.analyticstile .fridgeicon { color: #a35cff; }
+.favfilm { margin: 14px 16px 6px; padding: 22px 18px 20px; border-radius: 26px; text-align: center; color: var(--text);
+  background: linear-gradient(160deg, rgba(255,179,71,.28), rgba(255,79,110,.18) 50%, rgba(163,92,255,.2)); border: 1px solid rgba(255,79,110,.35); }
+.favart { display: inline-flex; margin-bottom: 8px; }
+.favline { margin: 0; font-size: 20px; line-height: 1.3; text-wrap: balance; }
+.favline b { font-weight: 800; }
+.favquip { margin: 10px 0 0; font-size: 16px; font-style: italic; line-height: 1.4; text-wrap: balance; color: var(--text); opacity: .85; }
+.rankcard { margin: 12px 16px; }
+.ranktitle { margin: 0 0 10px; font-size: 18px; }
+.rankrow { display: grid; grid-template-columns: 22px 44px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 0; }
+.rankrow + .rankrow { border-top: 1px solid var(--line); }
+.rankno { font-weight: 800; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+.rankrow.first .rankno { color: #ff4f6e; }
+.rankart { display: flex; justify-content: center; }
+.rankmain { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.rankname { font-weight: 650; overflow-wrap: anywhere; }
+.rankbar { height: 6px; border-radius: 3px; background: var(--bg2); overflow: hidden; }
+.rankbar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ffb347, #ff8a3d 30%, #ff4f6e 65%, #a35cff); }
+.rankn { font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Statusanzeigen im Lightleak-Look (Variante A): Licht fällt von links wie an der Filmkante ein */
+.toast, .undobar { overflow: hidden; isolation: isolate; border-color: transparent !important; background: rgba(255,255,255,.92) !important; color: #1b2230 !important;
+  box-shadow: 0 10px 30px rgba(40,60,100,.18), 0 0 0 1px rgba(255,138,61,.18) !important; }
+.toast { padding-left: 26px !important; }
+.undobar { padding-left: 22px !important; }
+.toast::before, .undobar::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(120% 140% at 0% 50%, rgba(255,138,61,.95), rgba(255,79,110,.55) 28%, rgba(163,92,255,.25) 48%, transparent 62%); mix-blend-mode: multiply; }
+html[data-mood="moon"] .toast, html[data-mood="moon"] .undobar { background: rgba(24,32,62,.94) !important; color: #eef1f7 !important; }
+html[data-mood="moon"] .toast::before, html[data-mood="moon"] .undobar::before { mix-blend-mode: screen; }

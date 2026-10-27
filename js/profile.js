@@ -299,25 +299,7 @@ async function viewProfile() {
 
     ${await ideasFoldHtml()}
 
-    ${await shotsFoldHtml()}
-
-    <section class="spend fold${foldOpen('spend') ? ' open' : ''}" data-fold="spend">
-      <div class="fridgetop foldhead">
-        <span class="fridgeicon spendicon">€</span>
-        <div><h2>Geld</h2><span class="sub2">diesen Monat ${euro(spend.month)}</span></div>
-        <span class="foldchev" aria-hidden="true"></span>
-      </div>
-      <div class="foldbody">
-      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
-      <div class="spendsplit three">
-        <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
-        <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
-        <div><span class="sub2">Scans</span><b>${euro(spend.scan)}</b></div>
-      </div>
-      <details class="txhist"><summary>Verlauf</summary>${historyHtml(tx)}
-        ${tx.length ? '<button class="btn danger small" id="spendReset">Ausgaben zurücksetzen</button>' : ''}</details>
-      </div>
-    </section>`;
+    ${await analyticsTileHtml()}`;
   const nameIn = view.querySelector('#pName');
   const fit = () => { nameIn.size = Math.max(2, nameIn.value.length + 1); };
   fit();
@@ -367,25 +349,6 @@ async function viewProfile() {
   setupDiaryFold(view);
   setupIdeas(view);
   setupFolds(view);
-  view.querySelector('#spendReset')?.addEventListener('click', () => {
-    const ov = document.createElement('div');
-    ov.className = 'modalbg';
-    ov.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="rsTitle">
-      <h2 id="rsTitle">Ausgaben zurücksetzen?</h2>
-      <p class="hint">Der Filmgeldberg und dieser Monat stehen danach auf 0 €. Filme, Rollen und Fotos bleiben erhalten. Was du danach kaufst oder entwickeln lässt, zählt wieder.</p>
-      <div class="modalfoot"><button class="closex" id="rsNo" aria-label="Abbrechen">${ART.x}</button><button class="btn danger" id="rsYes">Zurücksetzen</button></div>
-    </div>`;
-    document.body.appendChild(ov);
-    ov.querySelector('#rsNo').addEventListener('click', () => ov.remove());
-    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
-    ov.querySelector('#rsYes').addEventListener('click', async () => {
-      const all = transactions(await DB.all('fridge'), await DB.all('rolls'), await stocksMap());
-      const map = {};
-      all.forEach(t => { map[t.key] = (map[t.key] || 0) + t.amount; });
-      await DB.put('meta', { id: 'spendReset', at: new Date().toISOString(), cleared: map });
-      ov.remove(); U.toast('Ausgaben zurückgesetzt'); route();
-    });
-  });
   view.querySelector('#openSettings').addEventListener('click', openSettings);
   try { if (sessionStorage.getItem('kb-open-settings')) { sessionStorage.removeItem('kb-open-settings'); openSettings(); } } catch (_) {}
 }
@@ -684,6 +647,116 @@ function shotList(allFrames, rolls) {
     });
   }
   return out;
+}
+
+/* ---------- Analytics: Lieblingsfilm, Ranking der Filme, Fotos und Geld ---------- */
+// Spruch zum Lieblingsfilm (Texte von Rebecca)
+function filmQuip(st) {
+  if (!st) return '';
+  const id = st.id || '', mk = (st.maker || '').toLowerCase(), nm = (st.name || '').toLowerCase();
+  if (id.startsWith('kodak-gold') || (mk === 'kodak' && nm.startsWith('gold'))) return 'Der Klassiker. Gut und günstig. So wie du.';
+  if (id === 'agfa-color400' || (mk.startsWith('agfa') && nm.startsWith('color'))) return 'Du magst wohl keine Farben, huh?';
+  if (nm.includes('portra')) return 'Du bist reich oder warst reich. Jedenfalls hattest du mal Geld.';
+  if (mk === 'cinestill') return 'Halation Enjoyer 3000. Das bist du.';
+  if (mk === 'foma' || nm.includes('fomapan')) return 'Die Qualität des Bildes ist dir egal. Hauptsache billig.';
+  if (mk === 'harman' && st.type !== 'sw') return 'Okay? Du willst wirklich eigenständig die Filmindustrie am Leben halten.';
+  if (mk === 'ilford') return 'Ich weiß nichts über Ilford, deswegen fällt mir kein sassy Satz ein. Sorry.';
+  return '';
+}
+// Rollen je Film, meistbenutzter zuerst; bei Gleichstand der zuletzt eingelegte
+async function filmRanking() {
+  const rolls = (await DB.all('rolls')).filter(r => r.stockId && r.stockId !== 'film-unbekannt');
+  const stocks = await stocksMap();
+  const m = new Map();
+  for (const r of rolls) {
+    const e = m.get(r.stockId) || { st: stocks.get(r.stockId), n: 0, last: '' };
+    e.n++; const d = r.loadedAt || r.createdAt || ''; if (d > e.last) e.last = d;
+    m.set(r.stockId, e);
+  }
+  return [...m.values()].filter(e => e.st).sort((a, b) => b.n - a.n || b.last.localeCompare(a.last));
+}
+const ANALYTICS_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 20V11M10 20V5M15 20v-7M20 20V8"/></svg>';
+async function analyticsTileHtml() {
+  const top = (await filmRanking())[0];
+  return `<a class="tile photostile analyticstile" href="#/analytics">
+      <span class="fridgeicon">${ANALYTICS_IC}</span>
+      <div><h2>Analytics</h2><span class="sub2">${top ? `Dein Lieblingsfilm: ${U.esc(U.stockLabel(top.st))}` : 'Filme, Fotos und Geld'}</span></div>
+      <span class="chev">›</span>
+    </a>`;
+}
+async function spendFoldHtml() {
+  const allEntries = await DB.all('fridge');
+  const [stocks, rolls] = [await stocksMap(), await DB.all('rolls')];
+  const cleared = (await DB.get('meta', 'spendReset'))?.cleared || {};
+  const tx = transactions(allEntries, rolls, stocks)
+    .map(t => ({ ...t, amount: Math.round((t.amount - (cleared[t.key] || 0)) * 100) / 100 }))
+    .filter(t => t.amount > 0.004);
+  const spend = spending(tx);
+  return `
+    <section class="spend fold${foldOpen('spend') ? ' open' : ''}" data-fold="spend">
+      <div class="fridgetop foldhead">
+        <span class="fridgeicon spendicon">€</span>
+        <div><h2>Geld</h2><span class="sub2">diesen Monat ${euro(spend.month)}</span></div>
+        <span class="foldchev" aria-hidden="true"></span>
+      </div>
+      <div class="foldbody">
+      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
+      <div class="spendsplit three">
+        <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
+        <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
+        <div><span class="sub2">Scans</span><b>${euro(spend.scan)}</b></div>
+      </div>
+      <details class="txhist"><summary>Verlauf</summary>${historyHtml(tx)}
+        ${tx.length ? '<button class="btn danger small" id="spendReset">Ausgaben zurücksetzen</button>' : ''}</details>
+      </div>
+    </section>`;
+}
+function setupSpend(root) {
+  root.querySelector('#spendReset')?.addEventListener('click', () => {
+    const ov = document.createElement('div');
+    ov.className = 'modalbg';
+    ov.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="rsTitle">
+      <h2 id="rsTitle">Ausgaben zurücksetzen?</h2>
+      <p class="hint">Der Filmgeldberg und dieser Monat stehen danach auf 0 €. Filme, Rollen und Fotos bleiben erhalten. Was du danach kaufst oder entwickeln lässt, zählt wieder.</p>
+      <div class="modalfoot"><button class="closex" id="rsNo" aria-label="Abbrechen">${ART.x}</button><button class="btn danger" id="rsYes">Zurücksetzen</button></div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.querySelector('#rsNo').addEventListener('click', () => ov.remove());
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+    ov.querySelector('#rsYes').addEventListener('click', async () => {
+      const all = transactions(await DB.all('fridge'), await DB.all('rolls'), await stocksMap());
+      const map = {};
+      all.forEach(t => { map[t.key] = (map[t.key] || 0) + t.amount; });
+      await DB.put('meta', { id: 'spendReset', at: new Date().toISOString(), cleared: map });
+      ov.remove(); U.toast('Ausgaben zurückgesetzt'); route();
+    });
+  });
+}
+async function viewAnalytics() {
+  setHeader('Analytics');
+  const rank = await filmRanking();
+  const top = rank[0], max = top ? top.n : 1;
+  const rows = await Promise.all(rank.slice(0, 10).map(async (e, i) => `
+    <div class="rankrow${i === 0 ? ' first' : ''}"><span class="rankno">${i + 1}</span><span class="rankart">${await filmArt(e.st, 40)}</span>
+      <span class="rankmain"><span class="rankname">${U.esc(U.stockLabel(e.st))}</span><span class="rankbar"><i style="width:${Math.max(6, Math.round(e.n / max * 100))}%"></i></span></span>
+      <span class="rankn">${e.n} ${e.n === 1 ? 'Rolle' : 'Rollen'}</span></div>`));
+  const quip = filmQuip(top?.st);
+  view.innerHTML = `
+    <section class="favfilm">
+      ${top ? `<span class="favart">${await filmArt(top.st, 96)}</span>
+        <p class="favline">Dein Lieblingsfilm ist <b>${U.esc(U.stockLabel(top.st))}</b>.</p>
+        ${quip ? `<p class="favquip">${U.esc(quip)}</p>` : ''}`
+      : '<p class="favline">Noch kein Lieblingsfilm. Leg deinen ersten Film ein.</p>'}
+    </section>
+    <section class="card rankcard">
+      <h2 class="ranktitle">Deine Filme</h2>
+      ${rows.length ? rows.join('') : '<p class="hint">Noch keine Rollen.</p>'}
+      ${rank.length > 10 ? `<p class="hint">und ${rank.length - 10} weitere</p>` : ''}
+    </section>
+    ${await shotsFoldHtml()}
+    ${await spendFoldHtml()}`;
+  setupFolds(view);
+  setupSpend(view);
 }
 
 async function shotsFoldHtml() {
