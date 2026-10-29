@@ -503,6 +503,7 @@ async function createRoll(wiz, loadedAt) {
   await DB.put('rolls', roll);
   await DB.putMany('frames', frames);
   try { sessionStorage.removeItem(WIZ_KEY); } catch (_) {}
+  FX.film(stock);
   if (!wiz.fridgeId) askFilmPrice(roll, stock); else { U.toast('Film eingelegt'); location.replace('#/rolle/' + roll.id); }
 }
 
@@ -2194,6 +2195,10 @@ async function viewLens(id) {
       <div class="camchecks" id="camChecks">${cams.map(c => `<label class="camcheck${lens.mount && c.mount && c.mount !== lens.mount ? ' other' : ''}"><input type="checkbox" value="${c.id}" ${lens.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}<br><span class="sub2">${U.esc(c.mount || 'Bajonett offen')}</span></span></label>`).join('')}</div>
       <label class="check"><input type="checkbox" data-f="inactive"> Objektiv ist inaktiv</label>
       <p class="hint" style="margin:-4px 0 10px">Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.</p>
+      <div class="two">
+        ${field('Kaufpreis (€)', 'price', { attrs: 'inputmode="decimal" placeholder="z. B. 80"' })}
+        ${field('Gekauft am', 'boughtAt', { type: 'date' })}
+      </div>
       ${area('Notizen', 'notes', 'Eigenheiten, Filtergewinde, Macken …')}
     </div>
     ${used || FRESH_ID === lens.id ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
@@ -2271,6 +2276,10 @@ async function viewCamera(id) {
     </div>
     ${select('Illustration', 'art.kind', [['slr', 'Spiegelreflex'], ['mf', 'Mittelformat-Würfel'], ['compact', 'Kompaktkamera']])}
     ${select('Farbe Spiegelreflex', 'art.body', [['black', 'Schwarz'], ['chrome', 'Chrom']])}
+    <div class="two">
+      ${field('Kaufpreis (€)', 'price', { attrs: 'inputmode="decimal" placeholder="z. B. 120"' })}
+      ${field('Gekauft am', 'boughtAt', { type: 'date' })}
+    </div>
     ${area('Notizen', 'notes', 'Eigenheiten, Batterie, Macken …')}
   </div>
   <div class="card">

@@ -236,6 +236,8 @@ function openFilterEditor(f) {
            <label class="fld" id="feThreadBox"${filterKind(f) === 'screw' ? '' : ' hidden'}><span>Gewindedurchmesser (mm)</span><input id="feThread" inputmode="decimal" placeholder="z. B. 52" value="${U.esc(String(f.thread || '').replace('.', ','))}"></label>`}
       ${(f.colors || []).length ? `<details class="gelbox"><summary>${f.colors.length} Farben${f.code === '375' ? ' und Halter' : ''}</summary><div class="gellist">${f.colors.map(c => `<span class="gelitem"><img src="img/filter-${c.img}.webp" alt="" width="30" height="30">${U.esc(c.name)}</span>`).join('')}${f.code === '375' ? '<span class="gelitem"><img src="img/filter-b375-halter.webp" alt="" width="30" height="30">Halter</span>' : ''}</div></details>` : ''}
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="feMinus" aria-label="weniger">−</button><span id="feCount">${f.count || 1}</span><button type="button" id="fePlus" aria-label="mehr">+</button></div></div>
+      <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="fePrice" inputmode="decimal" placeholder="für alle zusammen" value="${U.esc(f.price != null ? String(f.price).replace('.', ',') : '')}"></label>
+        <label class="fld"><span>Gekauft am</span><input type="date" id="feBought" value="${U.esc(f.boughtAt || '')}"></label></div>
       <label class="fld"><span>Notizen</span><textarea id="feNotes" rows="3" placeholder="Kratzer, Adapterring, gekauft bei …">${U.esc(f.notes || '')}</textarea></label>
       <button class="btn danger small" id="feDel">Filter entfernen</button>
       <div class="modalfoot"><button class="closex" id="feNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="feOk" aria-label="Speichern">${ART.check}</button></div>
@@ -260,6 +262,7 @@ function openFilterEditor(f) {
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   $('feOk').addEventListener('click', async () => {
     ed.notes = $('feNotes').value.trim();
+    { const p = parseFloat($('fePrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('feBought').value || null; }
     if ($('feName')) ed.name = $('feName').value.trim() || f.name;
     if ($('feThread')) { const t = $('feThread').value.replace(',', '.').replace(/[^\d.]/g, ''); ed.thread = filterKind(ed) === 'screw' && t ? t : null; }
     const list = (await getFilters()).map(x => x.id === f.id ? ed : x);
@@ -335,6 +338,8 @@ async function openAccEditor(a) {
       </div>
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="acMinus" aria-label="weniger">−</button><span id="acCount">${ed.count || 1}</span><button type="button" id="acPlus" aria-label="mehr">+</button></div></div>
       ${cams.length ? `<div class="qlabel">Passt an</div><div class="camchecks" id="acCams">${cams.map(c => `<label class="camcheck"><input type="checkbox" value="${c.id}" ${ed.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}</span></label>`).join('')}</div>` : ''}
+      <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="acPrice" inputmode="decimal" placeholder="für alle zusammen" value="${U.esc(ed.price != null ? String(ed.price).replace('.', ',') : '')}"></label>
+        <label class="fld"><span>Gekauft am</span><input type="date" id="acBought" value="${U.esc(ed.boughtAt || '')}"></label></div>
       <label class="fld"><span>Notizen</span><textarea id="acNotes" rows="3" placeholder="Leitzahl, Gewinde, Batterie, Macken …">${U.esc(ed.notes || '')}</textarea></label>
       ${isNew ? '' : '<button class="btn danger small" id="acDel">Zubehör entfernen</button>'}
       <div class="modalfoot"><button class="closex" id="acNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="acOk" aria-label="Speichern">${ART.check}</button></div>
@@ -352,6 +357,7 @@ async function openAccEditor(a) {
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   $('acOk').addEventListener('click', async () => {
     ed.maker = $('acMaker').value.trim(); ed.name = $('acName').value.trim(); ed.notes = $('acNotes').value.trim();
+    { const p = parseFloat($('acPrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('acBought').value || null; }
     ed.cameraIds = [...ov.querySelectorAll('#acCams input:checked')].map(i => i.value);
     const list = await getAccessories();
     const i = list.findIndex(x => x.id === ed.id);

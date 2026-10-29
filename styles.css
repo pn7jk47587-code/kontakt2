@@ -1804,3 +1804,24 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
   background: radial-gradient(120% 140% at 0% 50%, rgba(255,138,61,.95), rgba(255,79,110,.55) 28%, rgba(163,92,255,.25) 48%, transparent 62%); mix-blend-mode: multiply; }
 html[data-mood="moon"] .toast, html[data-mood="moon"] .undobar { background: rgba(24,32,62,.94) !important; color: #eef1f7 !important; }
 html[data-mood="moon"] .toast::before, html[data-mood="moon"] .undobar::before { mix-blend-mode: screen; }
+
+/* Film-Effekte beim Einlegen oder Einlagern */
+/* Kodak Gold: alles golden, bis man wieder tippt */
+/* Filter als Überlagerung (backdrop-filter), damit fest stehende Leisten nicht mitrutschen */
+html.fx-gold body::before, html.fx-bw body::before { content: ""; position: fixed; inset: 0; z-index: 2999; pointer-events: none; animation: fxin .4s ease both; }
+html.fx-gold body::before { -webkit-backdrop-filter: sepia(.9) saturate(2.6) hue-rotate(-14deg) brightness(.98) contrast(1.05); backdrop-filter: sepia(.9) saturate(2.6) hue-rotate(-14deg) brightness(.98) contrast(1.05); }
+html.fx-bw body::before { -webkit-backdrop-filter: grayscale(1) contrast(1.08); backdrop-filter: grayscale(1) contrast(1.08); }
+@keyframes fxin { from { opacity: 0; } }
+html.fx-gold body::after { content: ""; position: fixed; inset: 0; z-index: 3000; pointer-events: none;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,236,150,.45) 45%, transparent 60%) no-repeat; background-size: 250% 100%; animation: goldshine 2.2s ease-in-out infinite; mix-blend-mode: soft-light; }
+@keyframes goldshine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+/* Portra: Münzregen */
+.fx-coins { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 3000; pointer-events: none; }
+/* CineStill: Leuchtelemente glühen rot wie Halation */
+html.fx-halation { --teal: #ff3b24; --tint: rgba(255,59,36,.14); --tint2: rgba(255,59,36,.45); --st1: #ff3b24; --st2: #ff2a3a; --st3: #ff4a2a; }
+html.fx-halation :is(.btn, .okbtn, .donebtn, .fridgeplus, .chip.on, .seg.on, .cardact, .newroll, #backBtn, .homebtn, .profbtn, .favstar.on, .pfav.on, .toast, .modebtn, .nextarrow, .heroav) {
+  box-shadow: 0 0 0 1px rgba(255,59,36,.7), 0 0 14px 4px rgba(255,40,20,.65), 0 0 34px 10px rgba(255,40,20,.3) !important; transition: box-shadow .4s ease; }
+html.fx-halation :is(h1, h2, .wordmark, .frowname, .rc-title) { text-shadow: 0 0 6px rgba(255,50,30,.85), 0 0 18px rgba(255,40,20,.5); }
+html.fx-halation img.artimg, html.fx-halation .crowart img { filter: drop-shadow(0 0 8px rgba(255,40,20,.8)); }
+/* Schwarzweißfilm: alles kurz schwarzweiß */
+@media (prefers-reduced-motion: reduce) { html.fx-gold body::after, html.fx-gold body::before, html.fx-bw body::before { animation: none; } }

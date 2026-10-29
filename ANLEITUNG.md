@@ -239,3 +239,7 @@ Analytics: Im Profil ersetzt die Karte „Analytics“ (unter Ideen) die bisheri
 
 Statusanzeigen: Meldungen wie „Bild gespeichert“ und „Gelöscht · Rückgängig“ sehen aus wie ein Lightleak: Von links fällt Licht in Orange, Pinkrot und Violett in die helle Kapsel, im Mondschein in die dunkle.
 
+Film-Effekte: Legst du einen Film ein oder neu in den Kühlschrank (auch wenn du die Anzahl erhöhst), reagiert die App je nach Film. Kodak Gold: die ganze Oberfläche wird golden, mit einem langsam wandernden Glanz, bis du das nächste Mal irgendwo hintippst. Portra: Goldmünzen mit Euro-Zeichen regnen über den Bildschirm. CineStill (Farbfilme): für etwa 2,5 Sekunden glühen alle Leuchtelemente rot wie der Halation-Effekt, also Knöpfe, Plus, Profilbild, Überschriften und Kamerabilder. Schwarzweißfilme: für etwa 2,5 Sekunden wird alles schwarzweiß. Bei „Bewegung reduzieren“ fallen die Münzen und der Glanz weg. Für Harman Phoenix gibt es vier Entwürfe eines Phönix (eigene Seite „Phönix-Animation“), eingebaut wird der ausgewählte.
+
+Kaufpreise der Ausrüstung: Kamera und Objektiv haben die Felder „Kaufpreis (€)“ und „Gekauft am“, Filter und Zubehör ebenso (Preis für alle Stücke des Eintrags zusammen). Die Beträge erscheinen in Analytics unter „Geld“ als eigener Posten „Ausrüstung“, im Verlauf im Monat des Kaufs, ohne Kaufdatum unter „ohne Datum“. „Ausgaben zurücksetzen“ setzt sie mit zurück.
+

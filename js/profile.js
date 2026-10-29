@@ -202,8 +202,8 @@ function labPrice(roll, stock, scan, lab) {
 }
 
 // Alle Buchungen: Filmkäufe im Kühlschrank, einzeln verbuchte Filme, Entwicklung und Scan
-function transactions(fridgeEntries, rolls, stocks) {
-  const tx = [];
+function transactions(fridgeEntries, rolls, stocks, gear = []) {
+  const tx = [...gear];
   for (const e of fridgeEntries) {
     if (e.price == null) continue;
     const n = e.bought ?? e.count ?? 0;
@@ -220,10 +220,20 @@ function transactions(fridgeEntries, rolls, stocks) {
   }
   return tx.sort((a, b) => b.date.localeCompare(a.date));
 }
+// Ausrüstung mit Kaufpreis: Kameras, Objektive, Filter, Zubehör
+async function gearTx() {
+  const num = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isNaN(n) || n <= 0 ? 0 : Math.round(n * 100) / 100; };
+  const out = [];
+  for (const c of await DB.all('cameras')) if (num(c.price)) out.push({ key: 'gc:' + c.id, date: c.boughtAt || '', kind: 'gear', amount: num(c.price), label: camLabel(c) || 'Kamera' });
+  for (const l of await DB.all('lenses')) if (num(l.price)) out.push({ key: 'gl:' + l.id, date: l.boughtAt || '', kind: 'gear', amount: num(l.price), label: lensLabel(l) || 'Objektiv' });
+  for (const f of await getFilters()) if (num(f.price)) out.push({ key: 'gf:' + f.id, date: f.boughtAt || '', kind: 'gear', amount: num(f.price), label: `Filter ${filterCode(f) || filterName(f)}` });
+  for (const a of await getAccessories()) if (num(a.price)) out.push({ key: 'ga:' + a.id, date: a.boughtAt || '', kind: 'gear', amount: num(a.price), label: [a.maker, a.name].filter(Boolean).join(' ') || 'Zubehör' });
+  return out;
+}
 function spending(tx) {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const r = { total: 0, month: 0, film: 0, dev: 0, scan: 0 };
+  const r = { total: 0, month: 0, film: 0, dev: 0, scan: 0, gear: 0 };
   for (const t of tx) {
     r.total += t.amount; r[t.kind] += t.amount;
     if (t.date.slice(0, 7) === ym) r.month += t.amount;
@@ -235,13 +245,13 @@ function historyHtml(tx) {
   if (!tx.length) return '<p class="hint">Noch keine Buchungen.</p>';
   const groups = new Map();
   for (const t of tx) { const k = t.date.slice(0, 7) || 'ohne Datum'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
-  const KIND = { film: 'Film', dev: 'Entwicklung', scan: 'Scan' };
+  const KIND = { film: 'Film', dev: 'Entwicklung', scan: 'Scan', gear: 'Ausrüstung' };
   return [...groups].map(([k, list]) => {
     const [y, m] = k.split('-');
     const sum = kind => list.filter(t => t.kind === kind).reduce((n, t) => n + t.amount, 0);
     return `<div class="txmonth">
       <div class="txhead"><b>${m ? I18N.t(MONTHS[Number(m) - 1]) + ' ' + y : I18N.t(k)}</b><span>${euro(list.reduce((n, t) => n + t.amount, 0))}</span></div>
-      <div class="txsplit">${['film', 'dev', 'scan'].map(kd => `<span>${KIND[kd]} ${euro(sum(kd))}</span>`).join('')}</div>
+      <div class="txsplit">${['film', 'dev', 'scan', 'gear'].filter(kd => kd !== 'gear' || sum(kd)).map(kd => `<span>${KIND[kd]} ${euro(sum(kd))}</span>`).join('')}</div>
       ${list.map(t => `<div class="txrow"><span>${U.esc(t.label)}</span><span>${euro(t.amount)}</span></div>`).join('')}
     </div>`;
   }).join('');
@@ -531,6 +541,7 @@ async function openFridgeModal(entry, fromBtn) {
     entry.expiresAt = $('frExp').value || null;
     await DB.put('fridge', entry);
     close(); U.toast(isNew ? 'Im Filmkühlschrank' : 'Gespeichert'); route();
+    if (isNew || entry.count > startCount) FX.film(await DB.get('stocks', entry.stockId));
   });
   $('frDel')?.addEventListener('click', async () => { await DB.del('fridge', entry.id); close(); route(); });
 }
@@ -688,7 +699,7 @@ async function spendFoldHtml() {
   const allEntries = await DB.all('fridge');
   const [stocks, rolls] = [await stocksMap(), await DB.all('rolls')];
   const cleared = (await DB.get('meta', 'spendReset'))?.cleared || {};
-  const tx = transactions(allEntries, rolls, stocks)
+  const tx = transactions(allEntries, rolls, stocks, await gearTx())
     .map(t => ({ ...t, amount: Math.round((t.amount - (cleared[t.key] || 0)) * 100) / 100 }))
     .filter(t => t.amount > 0.004);
   const spend = spending(tx);
@@ -700,11 +711,12 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
-      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
-      <div class="spendsplit three">
+      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear ? ' und Ausrüstung' : ''} ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
+      <div class="spendsplit four">
         <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
         <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
         <div><span class="sub2">Scans</span><b>${euro(spend.scan)}</b></div>
+        <div><span class="sub2">Ausrüstung</span><b>${euro(spend.gear)}</b></div>
       </div>
       <details class="txhist"><summary>Verlauf</summary>${historyHtml(tx)}
         ${tx.length ? '<button class="btn danger small" id="spendReset">Ausgaben zurücksetzen</button>' : ''}</details>
@@ -724,7 +736,7 @@ function setupSpend(root) {
     ov.querySelector('#rsNo').addEventListener('click', () => ov.remove());
     ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
     ov.querySelector('#rsYes').addEventListener('click', async () => {
-      const all = transactions(await DB.all('fridge'), await DB.all('rolls'), await stocksMap());
+      const all = transactions(await DB.all('fridge'), await DB.all('rolls'), await stocksMap(), await gearTx());
       const map = {};
       all.forEach(t => { map[t.key] = (map[t.key] || 0) + t.amount; });
       await DB.put('meta', { id: 'spendReset', at: new Date().toISOString(), cleared: map });
