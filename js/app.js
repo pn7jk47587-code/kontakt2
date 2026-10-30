@@ -300,12 +300,24 @@ async function goUp() {
   document.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') { if (s?.fired) { const stop = ev => { ev.stopPropagation(); ev.preventDefault(); }; document.addEventListener('click', stop, { capture: true, once: true }); setTimeout(() => document.removeEventListener('click', stop, true), 60); } s = null; } }, true);
 })();
 
+// Innere Liste mit eigenem Scrollbereich (z. B. Filmliste im Kühlschrank-Fenster) zwischen Fingerziel und Fenster
+const innerScroller = (target, stop) => {
+  for (let el = target; el && el !== stop; el = el.parentElement) {
+    const oy = getComputedStyle(el).overflowY;
+    if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight + 1) return el;
+  }
+  return null;
+};
+
 // Fenster und die „Film einlegen“-Karte nach unten wegwischen
 (() => {
   let d = null;
   document.addEventListener('touchstart', e => {
     const m = e.target.closest('.modal, .loadsheet');
     if (!m) return;
+    // In einer inneren Liste scrollt nur die Liste, das Fenster lässt sich dort nicht wegziehen
+    const inner = innerScroller(e.target, m);
+    if (inner && !inner.classList.contains('lsbody')) return;
     const scroller = m.classList.contains('loadsheet') ? m.querySelector('.lsbody') : m;
     if (scroller.scrollTop > 0 && !e.target.closest('.lshead')) return;
     d = { m, y: e.touches[0].clientY, x: e.touches[0].clientX, dy: 0 };
@@ -353,7 +365,8 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
   document.addEventListener('touchstart', e => {
     if (!lock) return;
     const m = e.target.closest('.modal, .loadsheet');
-    t = { y: e.touches[0].clientY, m, sc: m ? (m.classList.contains('loadsheet') ? m.querySelector('.lsbody') : m) : null, moved: false };
+    const own = m ? (m.classList.contains('loadsheet') ? m.querySelector('.lsbody') : m) : null;
+    t = { y: e.touches[0].clientY, m, sc: (m && innerScroller(e.target, m)) || own, inner: !!(m && innerScroller(e.target, m) && innerScroller(e.target, m) !== own), moved: false };
   }, { passive: true });
   document.addEventListener('touchmove', e => {
     if (!lock || !t) return;
@@ -362,6 +375,7 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
     if (e.target.closest('input[type=range]')) return;
     const dy = e.touches[0].clientY - t.y, sc = t.sc;
     const atEnd = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 1;
+    if (t.inner) return;                                     // innere Liste: normal scrollen, am Ende einfach stehen bleiben
     if (dy < 0 && atEnd) {                                   // weiter nach oben ziehen, obwohl nichts mehr kommt
       e.preventDefault();
       t.moved = true;
