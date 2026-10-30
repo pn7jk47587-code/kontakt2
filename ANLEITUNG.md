@@ -267,3 +267,6 @@ Wischen in der Filmliste des Kühlschrank-Fensters scrollt nur die Liste. Vorher
 
 ## Version in den Einstellungen (30.10.2026)
 Oben rechts in den Einstellungen steht klein die Version der App (z. B. „Version 132“) und darunter Datum und Uhrzeit der letzten Änderung in Berliner Zeit. Beides kommt aus js/version.js (APP_VERSION, APP_BUILT). Die Datei wird bei jedem Update zusammen mit der Cache-Version in sw.js hochgezählt, so dass die Anzeige immer zur installierten Fassung passt.
+
+## Easter Egg Bombus (30.10.2026)
+Wer beim Film-Einlegen einer Rolle einen Namen gibt, der nach Urlaub oder Italien klingt, bekommt Besuch von Bombus (Bild: img/bombus.webp, freigestellt aus Rebeccas Foto). Er sitzt unten in der Mitte über einem leicht verschwommenen Hintergrund und sagt in einer Sprechblase: „Bombus denkt, dass man maximal 3 Finger braucht, um eine Hasselblad zu bedienen. Er wird aufgrund des Urlaubs jedoch bis zu deiner Rückkehr mit dem Abbeißen warten.“ Ein Tipp irgendwo schließt ihn. Auslöser sind Namensteile wie Urlaub, Ferien, Vacanza, Vacation, Holiday, Sizilien, Sicilia, Italien, Italia sowie sizilianische Orte (Palermo, Catania, Syrakus/Siracusa, Taormina, Cefalù, Ätna/Etna, Agrigent, Trapani, Marsala, Noto), egal ob groß oder klein geschrieben und auch als Teil eines Wortes („Italienreise“). Nur beim Einlegen, nicht beim späteren Umbenennen.

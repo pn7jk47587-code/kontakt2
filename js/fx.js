@@ -168,6 +168,17 @@ const FX = (() => {
     requestAnimationFrame(frame);
     U.haptic && U.haptic([8, 40, 12]);
   }
+  /* Easter Egg: Rolle mit Urlaubs- oder Italien-Namen. Bombus erscheint mit Sprechblase, ein Tipp schließt. */
+  const BOMBUS_RE = /urlaub|ferien|vacanz|vacation|holiday|sizil|sicil|itali|palermo|catania|syrakus|siracusa|taormina|cefal|ätna|etna|agrigent|trapani|marsala|noto\b/i;
+  function bombus() {
+    const ov = document.createElement('div');
+    ov.className = 'fx-bombus'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Bombus');
+    ov.innerHTML = `<div class="bombuswrap"><p class="bombusbubble">Bombus denkt, dass man maximal 3 Finger braucht, um eine Hasselblad zu bedienen. Er wird aufgrund des Urlaubs jedoch bis zu deiner Rückkehr mit dem Abbeißen warten.</p><img src="img/bombus.webp" alt="Bombus" class="bombusimg"></div>`;
+    document.body.appendChild(ov);
+    U.haptic && U.haptic([10, 60, 10]);
+    const close = () => { ov.classList.add('out'); setTimeout(() => ov.remove(), reduce() ? 0 : 260); };
+    setTimeout(() => ov.addEventListener('click', close), 400);
+  }
   function timed(cls, ms) {
     html.classList.add(cls);
     setTimeout(() => html.classList.remove(cls), ms);
@@ -182,6 +193,9 @@ const FX = (() => {
       else if (k === 'halation') { timed('fx-halation', 2600); U.haptic && U.haptic(20); }
       else if (k === 'bw') timed('fx-bw', 2400);
     },
-    kind
+    kind,
+    // Rollenname prüfen und gegebenenfalls Bombus zeigen
+    rollName(name) { if (name && BOMBUS_RE.test(name)) setTimeout(bombus, 450); },
+    bombus
   };
 })();

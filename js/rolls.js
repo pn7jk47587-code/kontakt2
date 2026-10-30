@@ -504,6 +504,7 @@ async function createRoll(wiz, loadedAt) {
   await DB.putMany('frames', frames);
   try { sessionStorage.removeItem(WIZ_KEY); } catch (_) {}
   FX.film(stock);
+  FX.rollName(roll.title);
   if (!wiz.fridgeId) askFilmPrice(roll, stock); else { U.toast('Film eingelegt'); location.replace('#/rolle/' + roll.id); }
 }
 
