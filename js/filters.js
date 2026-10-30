@@ -83,7 +83,7 @@ async function filtersSubHtml(lenses, open) {
       ${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}
       <span class="frowmain">
         <span class="frowname">${U.esc(filterName(f))}</span>
-        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${(f.colors || []).length ? `<span class="gelstrip" title="${U.esc(f.colors.map(c => c.name).join(', '))}" style="background:linear-gradient(90deg,${f.colors.map((c, i, a) => `${c.hex} ${i / a.length * 100}% ${(i + 1) / a.length * 100}%`).join(',')})"></span><span>${f.colors.length} Farben</span>` : ''}${f.notes ? `<span>${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
+        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${(f.colors || []).length ? `<span class="gelstrip" title="${U.esc(f.colors.map(c => c.name).join(', '))}" style="background:linear-gradient(90deg,${f.colors.map((c, i, a) => `${c.hex} ${i / a.length * 100}% ${(i + 1) / a.length * 100}%`).join(',')})"></span><span>${f.colors.length} Farben</span>` : ''}${f.notes ? `<span class="chipnote">${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
       </span>
       <span class="frowcount">×${f.count || 1}</span>
     </button>`;
