@@ -57,6 +57,7 @@ async function camArt(cam, size = 120) {
 
 /* ---------- Startseite: Film einlegen und die drei Stadien ---------- */
 async function viewRolls() {
+  setTimeout(() => { if ((location.hash || '#/') === '#/' || location.hash === '#') FX.homeShown(); }, 0);
   setHeader('');
   titleEl.innerHTML = WORDMARK;
   const [rolls, stocks, cams] = [await DB.all('rolls'), await stocksMap(), await DB.all('cameras')];

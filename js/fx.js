@@ -168,12 +168,13 @@ const FX = (() => {
     requestAnimationFrame(frame);
     U.haptic && U.haptic([8, 40, 12]);
   }
-  /* Easter Egg: Rolle mit Urlaubs- oder Italien-Namen. Bombus erscheint mit Sprechblase, ein Tipp schließt. */
+  /* Easter Egg: Rolle mit Urlaubs- oder Italien-Namen. Nach dem Einlegen merkt sich die App das; beim nächsten Aufruf der Startseite
+     sitzt Bombus mittig auf seiner Textblase. Ein Tipp schließt. */
   const BOMBUS_RE = /urlaub|ferien|vacanz|vacation|holiday|sizil|sicil|itali|palermo|catania|syrakus|siracusa|taormina|cefal|ätna|etna|agrigent|trapani|marsala|noto\b/i;
   function bombus() {
     const ov = document.createElement('div');
     ov.className = 'fx-bombus'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', 'Bombus');
-    ov.innerHTML = `<div class="bombuswrap"><p class="bombusbubble">Bombus denkt, dass man maximal 3 Finger braucht, um eine Hasselblad zu bedienen. Er wird aufgrund des Urlaubs jedoch bis zu deiner Rückkehr mit dem Abbeißen warten.</p><img src="img/bombus.webp" alt="Bombus" class="bombusimg"></div>`;
+    ov.innerHTML = `<div class="bombuswrap"><img src="img/bombus.webp" alt="Bombus" class="bombusimg"><p class="bombusbubble">Bombus denkt, dass man maximal 3 Finger braucht, um eine Hasselblad zu bedienen. Er wird aufgrund des Urlaubs jedoch bis zu deiner Rückkehr mit dem Abbeißen warten.</p></div>`;
     document.body.appendChild(ov);
     U.haptic && U.haptic([10, 60, 10]);
     const close = () => { ov.classList.add('out'); setTimeout(() => ov.remove(), reduce() ? 0 : 260); };
@@ -195,7 +196,9 @@ const FX = (() => {
     },
     kind,
     // Rollenname prüfen und gegebenenfalls Bombus zeigen
-    rollName(name) { if (name && BOMBUS_RE.test(name)) setTimeout(bombus, 450); },
+    rollName(name) { if (name && BOMBUS_RE.test(name)) { try { sessionStorage.setItem('kb-bombus', '1'); } catch (_) {} } },
+    // Startseite: wartet Bombus, erscheint er jetzt
+    homeShown() { let p = null; try { p = sessionStorage.getItem('kb-bombus'); sessionStorage.removeItem('kb-bombus'); } catch (_) {} if (p) setTimeout(bombus, 500); },
     bombus
   };
 })();
