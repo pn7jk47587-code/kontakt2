@@ -456,29 +456,32 @@ async function openFridgeModal(entry, fromBtn) {
   const current = stocks.find(s => s.id === entry.stockId);
   const ov = document.createElement('div');
   ov.className = 'modalbg';
+  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 30)}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${FORMAT_LABEL[entry.format]}</span></span></span>`;
+  // Kompakt ohne Überschrift: Format oben (bleibt beim Scrollen stehen), gewählter Film als schmale Zeile, Suche mit Lupe links,
+  // darunter vier gleich große Felder in zwei Reihen und unten rechts der Haken
   ov.innerHTML = `
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="frTitle">
+    <div class="modal frmodal" role="dialog" aria-modal="true" aria-label="${isNew ? 'Film in den Kühlschrank legen' : 'Film im Kühlschrank bearbeiten'}">
       <div class="seggroup fmtpick" id="frFmt">
         <button type="button" class="seg${entry.format === '135' ? ' on' : ''}" data-f="135" aria-label="Kleinbild">${ART.fmt135}<span>135</span></button>
         <button type="button" class="seg${entry.format === '120' ? ' on' : ''}" data-f="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
       </div>
-      <h2 id="frTitle">${isNew ? 'Film in den Kühlschrank' : U.esc(current ? U.stockLabel(current) : 'Film')}</h2>
       ${isNew ? `
         <div class="frslot empty" id="frSlot" aria-live="polite"><span class="frslotart"></span><span class="frslottxt">Film wählen</span></div>
         <input type="search" placeholder=" " id="frQ" aria-label="Suchen" autocomplete="off">
-        <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>` : ''}
-      <div class="fld"><span>Anzahl Rollen</span>
-        <div class="stepper"><button type="button" id="frMinus" aria-label="weniger">−</button><span id="frCount">${entry.count}</span><button type="button" id="frPlus" aria-label="mehr">+</button></div>
-      </div>
-      <div class="two">
-        <label class="fld"><span>Preis pro Rolle (€)</span><input id="frPrice" inputmode="decimal" value="${entry.price != null ? String(entry.price).replace('.', ',') : ''}"></label>
+        <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>`
+      : `<div class="frslot" id="frSlot">${current ? await slotHtml(current) : '<span class="frslottxt">Film</span>'}</div>`}
+      <div class="frgrid">
+        <div class="fld"><span>Anzahl</span>
+          <div class="stepper"><button type="button" id="frMinus" aria-label="weniger">−</button><span id="frCount">${entry.count}</span><button type="button" id="frPlus" aria-label="mehr">+</button></div>
+        </div>
+        <label class="fld"><span>Preis (€)</span><input id="frPrice" inputmode="decimal" value="${entry.price != null ? String(entry.price).replace('.', ',') : ''}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="frBought" value="${entry.boughtAt || ''}"></label>
+        <label class="fld"><span>Läuft ab</span><input type="month" id="frExp" value="${U.esc(entry.expiresAt || '')}"></label>
       </div>
-      <label class="fld"><span>Läuft ab (Monat, optional)</span><input type="month" id="frExp" value="${U.esc(entry.expiresAt || '')}"></label>
       ${isNew ? '' : '<button class="btn danger small" id="frDel">Aus dem Kühlschrank nehmen</button>'}
       <div class="modalfoot">
         <button class="closex" id="frCancel" aria-label="Abbrechen">${ART.x}</button>
-        <button class="btn accent" id="frSave" ${isNew ? 'disabled' : ''}>${isNew ? 'In den Kühlschrank legen' : 'Speichern'}</button>
+        <button class="okbtn" id="frSave" aria-label="${isNew ? 'In den Kühlschrank legen' : 'Speichern'}" ${isNew ? 'disabled' : ''}>${ART.check}</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -496,7 +499,6 @@ async function openFridgeModal(entry, fromBtn) {
   // Gewählter Film fliegt aus der Liste in das Feld oben und rastet dort ein
   const fillSlot = async b => {
     const slot = $('frSlot'), st = stocks.find(x => x.id === entry.stockId);
-    const kind = SW_TYPES.includes(st.type) ? 'SW' : 'Farbe';
     const from = b.getBoundingClientRect(), to = slot.getBoundingClientRect();
     const ghost = document.createElement('div');
     ghost.className = 'frghost'; ghost.textContent = U.stockLabel(st);
@@ -507,12 +509,12 @@ async function openFridgeModal(entry, fromBtn) {
       ghost.style.transform = `translate(${to.left - from.left}px, ${to.top - from.top}px)`;
       ghost.style.width = to.width + 'px'; ghost.style.height = to.height + 'px'; ghost.style.opacity = '.2';
     });
-    const art = await filmArt(st, 52);
+    const inner = await slotHtml(st);
     setTimeout(() => {
       ghost.remove();
-      slot.classList.remove('empty', 'pop'); void slot.offsetWidth;
-      slot.innerHTML = `<span class="frslotart">${art}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${kind}</span><span>${FORMAT_LABEL[entry.format]}</span></span></span><span class="frslotok">${ART.check}</span>`;
-      slot.classList.add('pop');
+      slot.classList.remove('empty', 'slotpop'); void slot.offsetWidth;
+      slot.innerHTML = inner + `<span class="frslotok">${ART.check}</span>`;
+      slot.classList.add('slotpop');
       U.haptic();
     }, reduce ? 0 : 320);
   };
@@ -530,7 +532,7 @@ async function openFridgeModal(entry, fromBtn) {
     filter();
     const chosen = ov.querySelector('.fropt.on');
     if (chosen && chosen.hidden) { chosen.classList.remove('on'); entry.stockId = null; $('frSave').disabled = true; const sl = $('frSlot'); sl.className = 'frslot empty'; sl.innerHTML = '<span class="frslotart"></span><span class="frslottxt">Film wählen</span>'; }
-    else if (chosen) { const c = ov.querySelector('#frSlot .frowchips span:last-child'); if (c) c.textContent = FORMAT_LABEL[entry.format]; }
+    else { const c = ov.querySelector('#frSlot .frowchips span:last-child'); if (c) c.textContent = FORMAT_LABEL[entry.format]; }
   });
   filter();
   $('frMinus').addEventListener('click', () => { entry.count = Math.max(1, (entry.count || 1) - 1); $('frCount').textContent = entry.count; });

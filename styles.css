@@ -1858,3 +1858,38 @@ html, body { overscroll-behavior-y: none; }
 button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar, .photogrid, .framestrip, .favstar, .pfav, .fridgeplus, .donebtn, .newfilm, .lensbtn, .kindbtn, .leakpick {
   -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .overlay img, .photoview img { -webkit-user-select: none; user-select: none; }
+/* Film in den Kühlschrank: kompakt, ohne Überschrift */
+.frmodal { padding-top: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.frmodal > * { flex: 0 0 auto; }
+/* Nur die Filmliste scrollt, die Formatwahl oben bleibt immer ganz sichtbar */
+.frmodal .frlist { flex: 0 1 auto; min-height: 88px; }
+.frmodal .fmtpick { padding: 0 0 8px; }
+.frmodal .fmtpick .seg { width: 48px; height: 48px; }
+.frmodal .fmtpick .seg svg { width: 22px; height: 22px; }
+.frslot { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 10px; margin: 4px 0 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); }
+.frslot.empty { justify-content: center; border-style: dashed; background: none; color: var(--muted); font-size: 14px; }
+.frslotart { flex: 0 0 auto; display: flex; align-items: center; }
+.frslotart:empty { display: none; }
+.frslotart svg, .frslotart img { width: 30px !important; height: 30px !important; }
+.frslottxt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.frslottxt b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frslotok { flex: 0 0 auto; color: var(--teal); display: flex; }
+.frslotok svg { width: 20px; height: 20px; }
+/* Lupe links am Rand; beim Antippen wächst das Feld nach rechts */
+.frmodal #frQ, .frmodal #frQ:placeholder-shown:not(:focus) { margin-left: 0; margin-right: auto; }
+.frmodal #frQ:focus, .frmodal #frQ:not(:placeholder-shown) { padding-left: 40px; padding-right: 14px; background-position: 13px 50%; }
+.frmodal .frlist { margin: 8px 0 12px; }
+/* Vier gleich große Felder in zwei Reihen, alle mit derselben Rundung */
+.frgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 10px; }
+.frgrid .fld { margin: 0; min-width: 0; }
+.frgrid .fld > span { font-size: 12px; margin-bottom: 3px; }
+.frgrid input, .frgrid .stepper { width: 100%; height: 44px; border-radius: 12px !important; min-width: 0; }
+.frgrid .stepper { display: flex; justify-content: space-between; }
+.frgrid .stepper button { flex: 0 0 44px; height: 42px; }
+.frgrid .stepper span { flex: 1 1 auto; }
+.frmodal .modalfoot { margin-top: 14px; }
+.frmodal #frDel { margin-top: 12px; }
+.frgrid #frPrice { max-width: 100%; }
+.frslot.slotpop { animation: slotpop .32s cubic-bezier(.2,1.3,.4,1); }
+@keyframes slotpop { 0% { transform: scale(.96); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .frslot.slotpop { animation: none; } }
