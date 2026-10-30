@@ -1816,7 +1816,7 @@ html.fx-gold body::after { content: ""; position: fixed; inset: 0; z-index: 3000
   background: linear-gradient(115deg, transparent 30%, rgba(255,236,150,.45) 45%, transparent 60%) no-repeat; background-size: 250% 100%; animation: goldshine 2.2s ease-in-out infinite; mix-blend-mode: soft-light; }
 @keyframes goldshine { from { background-position: 120% 0; } to { background-position: -120% 0; } }
 /* Portra: Münzregen */
-.fx-coins { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 3000; pointer-events: none; }
+.fx-coins, .fx-phoenix { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 3000; pointer-events: none; }
 /* CineStill: Leuchtelemente glühen rot wie Halation */
 html.fx-halation { --teal: #ff3b24; --tint: rgba(255,59,36,.14); --tint2: rgba(255,59,36,.45); --st1: #ff3b24; --st2: #ff2a3a; --st3: #ff4a2a; }
 html.fx-halation :is(.btn, .okbtn, .donebtn, .fridgeplus, .chip.on, .seg.on, .cardact, .newroll, #backBtn, .homebtn, .profbtn, .favstar.on, .pfav.on, .toast, .modebtn, .nextarrow, .heroav) {

@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 23;
+const SEED_VERSION = 24;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -53,6 +53,13 @@ async function boot() {
     }
     // Rebeccas Cokin- und Effektfilter mit Fotos (26.10.2026): fehlende ergänzen, vorhandene bleiben unverändert
     if (meta && meta.v < 23) await mergeSeedFilters();  // v22: eigene Filter, v23: Farbfolien-Set B375
+    // v24: Nikon AF Nikkor 50 mm hat f/1,4 (Angabe Rebecca 30.10.2026), nicht f/2,8. Auch im Gear-Lager korrigieren.
+    if (meta && meta.v < 24) {
+      const fix = l => l && String(l.maker || '').toLowerCase() === 'nikon' && String(l.focal) === '50' && String(l.maxAp).replace(',', '.') === '2.8' && (l.maxAp = '1.4', true);
+      for (const l of await DB.all('lenses')) if (fix(l)) await DB.put('lenses', l);
+      const st = await DB.get('meta', 'gearStash');
+      if (st) { Object.values(st.lenses || {}).forEach(fix); await DB.put('meta', st); }
+    }
     if (meta && meta.v >= 17 && meta.v < 19) {
       // Neue Kameras und Objektive vom 25.10.2026 nachtragen, ohne gelöschte Beispielausrüstung zurückzuholen
       const ci = new Set((await DB.all('cameras')).map(c => c.id)), li = new Set((await DB.all('lenses')).map(l => l.id));

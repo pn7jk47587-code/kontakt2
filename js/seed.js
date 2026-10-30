@@ -431,7 +431,7 @@ const GEAR_SETS = {
     label: 'Rebeccas Gear',
     cams: { 'cam-nikon-f3': true, 'cam-praktica-l2': true, 'cam-minolta-xg1': true, 'cam-superheadz-olivesan': true, 'cam-hasselblad-500cm': false, 'cam-olympus-superzoom70': false },
     lenses: {
-      'lens-nikon-50': { name: 'AF Nikkor', maxAp: '2.8', filterThread: '52' }, 'lens-nikon-28': { name: 'AF Nikkor', maxAp: '2.8' },
+      'lens-nikon-50': { name: 'AF Nikkor', maxAp: '1.4', filterThread: '52' }, 'lens-nikon-28': { name: 'AF Nikkor', maxAp: '2.8' },
       'lens-helios-44m': {}, 'lens-minolta-rokkor-pf-50': {}, 'lens-nikon-80-200': {}, 'lens-hqc-maginon-35-70': {},
       'lens-minolta-md-75-150': {}, 'lens-olivesan-22': {}, 'lens-beroflex-28': {},
       'lens-canon-fd-200': {}, 'lens-kiron-80-200': {}, 'lens-pentax-m-50': {}
