@@ -326,10 +326,14 @@ async function goUp() {
   });
 })();
 
+// Die App lässt sich nicht zoomen: kein Zwei-Finger-Zoom (iOS-Gesten) und kein Doppeltipp-Zoom. Fotos zoomen über U.pinch.
+['gesturestart', 'gesturechange'].forEach(ev => document.addEventListener(ev, e => e.preventDefault(), { passive: false }));
+document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.target.closest('[data-pinch]')) e.preventDefault(); }, { passive: false });
+
 // Offenes Fenster: Hintergrund steht still. Das Fenster selbst federt beim Ziehen nach oben ein Stück mit und schnappt zurück.
 (() => {
   let lock = null;
-  const OPEN = '.modalbg, .loadsheet';
+  const OPEN = '.modalbg, .loadsheet, .overlay, .mtr';
   const apply = () => {
     const open = !!document.querySelector(OPEN);
     if (open && !lock) {
@@ -353,6 +357,7 @@ async function goUp() {
   }, { passive: true });
   document.addEventListener('touchmove', e => {
     if (!lock || !t) return;
+    if (e.target.closest('.mtr, .overlay')) return;        // Belichtungsmesser und Fotoansicht regeln ihre Gesten selbst
     if (!t.m) { e.preventDefault(); return; }               // Hintergrund: nichts bewegt sich
     if (e.target.closest('input[type=range]')) return;
     const dy = e.touches[0].clientY - t.y, sc = t.sc;

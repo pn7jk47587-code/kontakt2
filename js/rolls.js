@@ -953,7 +953,8 @@ function zoom(src) {
   const ov = document.createElement('div');
   ov.className = 'overlay';
   ov.innerHTML = `<img src="${src}" alt=""><button class="btn small close">Schließen</button>`;
-  ov.addEventListener('click', ev => { if (ev.target.classList.contains('close') || ev.target === ov) ov.remove(); });
+  const pz = U.pinch(ov.querySelector('img'));
+  ov.addEventListener('click', ev => { if (ev.target.classList.contains('close') || (ev.target === ov && !pz.zoomed)) ov.remove(); });
   document.body.appendChild(ov);
 }
 
@@ -1573,6 +1574,8 @@ async function viewPhoto(albumId, frameId) {
   done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig, zurück zum Raster'); done.innerHTML = ART.check;
   document.body.appendChild(done);
   done.addEventListener('click', async () => { await saveTitle(); location.hash = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId; });
+  // Zwei Finger: Foto vergrößern (nur das Foto, nicht die App)
+  fig.querySelectorAll('.flipimgs img').forEach(img => U.pinch(img));
   // Tippen auf den linken oder rechten Rand des Fotos: zurück oder weiter
   fig.querySelector('.flipimgs').addEventListener('click', e => {
     const r = e.currentTarget.getBoundingClientRect(), x = (e.clientX - r.left) / r.width;
@@ -1597,9 +1600,11 @@ function flipPhone(el, n, d) {
 // Wischgesten und Pfeiltasten für eine Ansicht; räumt sich beim Seitenwechsel selbst auf
 function swipe(root, h) {
   let t0 = null;
-  const s = e => { t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  // Vergrößertes Foto oder zwei Finger: keine Wischgeste
+  const s = e => { t0 = e.touches.length > 1 || root.querySelector('[data-zoomed="1"]') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
   const en = e => {
     if (!t0) return;
+    if (e.touches.length || root.querySelector('[data-zoomed="1"]')) { t0 = null; return; }
     const dx = e.changedTouches[0].clientX - t0.x, dy = e.changedTouches[0].clientY - t0.y; t0 = null;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) (dx < 0 ? h.left : h.right)?.();
     else if (Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx) * 1.3) (dy < 0 ? h.up : h.down)?.();

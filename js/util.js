@@ -116,6 +116,36 @@ const U = {
     if (!v) return null;
     return v instanceof Blob ? v : new Blob([v], { type: rec.type || 'image/jpeg' });
   },
+  // Eigenes Zoomen mit zwei Fingern für ein Foto. Die App selbst lässt sich nicht zoomen (siehe app.js), Fotos schon.
+  // Vergrößert lässt sich das Foto mit einem Finger verschieben. el.dataset.zoomed ist dann "1", Wischgesten und Tipps ruhen.
+  pinch(el) {
+    let s = 1, tx = 0, ty = 0, g = null, moved = 0;
+    const set = () => { el.style.transform = s > 1 ? `translate(${tx}px, ${ty}px) scale(${s})` : ''; el.dataset.zoomed = s > 1 ? '1' : ''; };
+    const dist = t => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    const mid = t => ({ x: (t[0].clientX + t[1].clientX) / 2, y: (t[0].clientY + t[1].clientY) / 2 });
+    const clamp = () => { const r = el.getBoundingClientRect(), w = r.width / s, h = r.height / s, mx = w * (s - 1) / 2, my = h * (s - 1) / 2; tx = Math.max(-mx, Math.min(mx, tx)); ty = Math.max(-my, Math.min(my, ty)); };
+    el.style.touchAction = 'none'; el.style.transformOrigin = '50% 50%'; el.dataset.pinch = '1';
+    el.addEventListener('touchstart', e => {
+      const t = e.touches;
+      if (t.length === 2) { g = { d: dist(t), s, m: mid(t), tx, ty }; moved = Date.now(); }
+      else if (t.length === 1 && s > 1) g = { x: t[0].clientX, y: t[0].clientY, tx, ty };
+    }, { passive: true });
+    el.addEventListener('touchmove', e => {
+      if (!g) return;
+      const t = e.touches; e.preventDefault(); e.stopPropagation();
+      if (t.length === 2 && g.d) { const m = mid(t); s = Math.max(1, Math.min(5, g.s * dist(t) / g.d)); tx = g.tx + m.x - g.m.x; ty = g.ty + m.y - g.m.y; }
+      else if (t.length === 1 && g.x != null) { tx = g.tx + t[0].clientX - g.x; ty = g.ty + t[0].clientY - g.y; moved = Date.now(); }
+      clamp(); set();
+    }, { passive: false });
+    el.addEventListener('touchend', e => {
+      if (e.touches.length === 0) { g = null; if (s < 1.05) { s = 1; tx = ty = 0; set(); } }
+      else if (e.touches.length === 1 && s > 1) g = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx, ty };
+    });
+    // Ein Tipp direkt nach dem Zoomen oder Verschieben zählt nicht als Tipp
+    el.addEventListener('click', e => { if (s > 1 || Date.now() - moved < 350) { e.stopPropagation(); e.preventDefault(); } }, true);
+    const reset = () => { s = 1; tx = ty = 0; set(); };
+    return { reset, get zoomed() { return s > 1; } };
+  },
   forgetImg(id) {
     for (const k of [id, id + ':t']) {
       if (U._urls.has(k)) { const u = U._urls.get(k); if (u.startsWith('blob:')) URL.revokeObjectURL(u); U._urls.delete(k); }
