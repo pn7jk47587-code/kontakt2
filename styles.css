@@ -1896,3 +1896,6 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 /* Filmliste scrollt für sich, ohne das Fenster mitzuziehen */
 .frlist { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
 .frslot[hidden] { display: none; }
+/* Einstellungen: Version und letzte Änderung oben rechts in der Ecke */
+.setmodal { position: relative; }
+.appver { position: absolute; top: 16px; right: max(16px, env(safe-area-inset-right, 0px)); font-size: 11px; line-height: 1.35; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; pointer-events: none; }

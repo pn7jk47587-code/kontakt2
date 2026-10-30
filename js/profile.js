@@ -369,8 +369,9 @@ async function openSettings() {
   const ov = document.createElement('div');
   ov.className = 'modalbg';
   ov.innerHTML = `
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="modal setmodal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
       <h2 id="setTitle">Einstellungen</h2>
+      <span class="appver" title="App-Version und letzte Änderung">${typeof APP_VERSION !== 'undefined' ? `Version ${APP_VERSION.replace('kb-v', '')}<br>${(() => { const [d, t] = APP_BUILT.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}, ${t}`; })()}` : ''}</span>
       <div class="sethead"><span class="langic" aria-hidden="true">Aa</span><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Farbschema</span></div>
