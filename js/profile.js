@@ -456,7 +456,7 @@ async function openFridgeModal(entry, fromBtn) {
   const current = stocks.find(s => s.id === entry.stockId);
   const ov = document.createElement('div');
   ov.className = 'modalbg';
-  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 30)}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${FORMAT_LABEL[entry.format]}</span></span></span>`;
+  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 40)}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${FORMAT_LABEL[entry.format]}</span></span></span>`;
   // Kompakt ohne Überschrift: Format oben (bleibt beim Scrollen stehen), gewählter Film als schmale Zeile, Suche mit Lupe links,
   // darunter vier gleich große Felder in zwei Reihen und unten rechts der Haken
   ov.innerHTML = `
@@ -466,7 +466,7 @@ async function openFridgeModal(entry, fromBtn) {
         <button type="button" class="seg${entry.format === '120' ? ' on' : ''}" data-f="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
       </div>
       ${isNew ? `
-        <div class="frslot empty" id="frSlot" aria-live="polite"><span class="frslotart"></span><span class="frslottxt">Film wählen</span></div>
+        <div class="frslot empty" id="frSlot" aria-live="polite" hidden></div>
         <input type="search" placeholder=" " id="frQ" aria-label="Suchen" autocomplete="off">
         <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>`
       : `<div class="frslot" id="frSlot">${current ? await slotHtml(current) : '<span class="frslottxt">Film</span>'}</div>`}
@@ -499,6 +499,8 @@ async function openFridgeModal(entry, fromBtn) {
   // Gewählter Film fliegt aus der Liste in das Feld oben und rastet dort ein
   const fillSlot = async b => {
     const slot = $('frSlot'), st = stocks.find(x => x.id === entry.stockId);
+    // Erst beim Wählen erscheint die Filmzeile (kein Platzhalter vorher)
+    if (slot.hidden) { slot.hidden = false; slot.innerHTML = '<span class="frslottxt">&nbsp;</span>'; }
     const from = b.getBoundingClientRect(), to = slot.getBoundingClientRect();
     const ghost = document.createElement('div');
     ghost.className = 'frghost'; ghost.textContent = U.stockLabel(st);
@@ -531,7 +533,7 @@ async function openFridgeModal(entry, fromBtn) {
     ov.querySelectorAll('#frFmt .seg').forEach(x => x.classList.toggle('on', x === b));
     filter();
     const chosen = ov.querySelector('.fropt.on');
-    if (chosen && chosen.hidden) { chosen.classList.remove('on'); entry.stockId = null; $('frSave').disabled = true; const sl = $('frSlot'); sl.className = 'frslot empty'; sl.innerHTML = '<span class="frslotart"></span><span class="frslottxt">Film wählen</span>'; }
+    if (chosen && chosen.hidden) { chosen.classList.remove('on'); entry.stockId = null; $('frSave').disabled = true; const sl = $('frSlot'); sl.className = 'frslot empty'; sl.innerHTML = ''; sl.hidden = true; }
     else { const c = ov.querySelector('#frSlot .frowchips span:last-child'); if (c) c.textContent = FORMAT_LABEL[entry.format]; }
   });
   filter();

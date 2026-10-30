@@ -1866,13 +1866,13 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 .frmodal .fmtpick { padding: 0 0 8px; }
 .frmodal .fmtpick .seg { width: 48px; height: 48px; }
 .frmodal .fmtpick .seg svg { width: 22px; height: 22px; }
-.frslot { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 4px 10px; margin: 4px 0 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); }
+.frslot { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 6px 12px; margin: 4px 0 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); }
 .frslot.empty { justify-content: center; border-style: dashed; background: none; color: var(--muted); font-size: 14px; }
 .frslotart { flex: 0 0 auto; display: flex; align-items: center; }
 .frslotart:empty { display: none; }
-.frslotart svg, .frslotart img { width: 30px !important; height: 30px !important; }
+.frslotart svg, .frslotart img { width: 40px !important; height: 40px !important; }
 .frslottxt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.frslottxt b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.frslottxt b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .frslotok { flex: 0 0 auto; color: var(--teal); display: flex; }
 .frslotok svg { width: 20px; height: 20px; }
 /* Lupe links am Rand; beim Antippen wächst das Feld nach rechts */
@@ -1895,3 +1895,4 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 @media (prefers-reduced-motion: reduce) { .frslot.slotpop { animation: none; } }
 /* Filmliste scrollt für sich, ohne das Fenster mitzuziehen */
 .frlist { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
+.frslot[hidden] { display: none; }
