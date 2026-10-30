@@ -127,6 +127,75 @@ async function loadSeedGear() {
   return cams.length + lenses.length + nf;
 }
 
+// Gear-Set umschalten: Einträge des Sets anlegen bzw. aktiv/inaktiv setzen. Alles andere wandert in ein Lager (meta gearStash)
+// und kommt beim Zurückschalten unverändert wieder, samt Fotos, Preisen und Favoriten. Ausrüstung mit Filmrollen bleibt als inaktiv stehen.
+const gearKey = (...p) => p.filter(Boolean).join(' ').toLowerCase().replace(/[^a-z0-9]/g, '');
+async function applyGearSet(key) {
+  const set = GEAR_SETS[key]; if (!set) return;
+  const stash = (await DB.get('meta', 'gearStash')) || { id: 'gearStash', cameras: {}, lenses: {}, acc: {} };
+  const rolls = await DB.all('rolls'), frames = await DB.all('frames');
+  const usedCams = new Set(rolls.map(r => r.cameraId).filter(Boolean));
+  const usedLenses = new Set([...rolls.map(r => r.fixedLensId), ...frames.map(f => f.lensId)].filter(Boolean));
+  const clone = o => JSON.parse(JSON.stringify(o));
+  // Kameras
+  const cams = await DB.all('cameras'); const camById = new Map(cams.map(c => [c.id, c]));
+  const outCams = [];
+  for (const [id, active] of Object.entries(set.cams)) {
+    let c = camById.get(id) || stash.cameras[id];
+    if (!c) { const d = SEED_CAMERAS.find(x => x.id === id); if (!d) continue; c = { ...clone(d), isoDial: SEED_ISO_DIAL[id] ?? d.isoDial ?? false, multiExp: d.multiExp ?? true }; }
+    delete stash.cameras[id]; camById.delete(id);
+    c.inactive = !active; outCams.push(c);
+  }
+  await DB.putMany('cameras', outCams);
+  // Nur Ausrüstung aus einem der Gear-Sets wird beiseitegelegt. Selbst angelegte Einträge, die zu keinem Set gehören, bleiben im Schrank.
+  const anyCam = new Set(Object.values(GEAR_SETS).flatMap(g => Object.keys(g.cams)));
+  for (const c of camById.values()) {
+    if (!anyCam.has(c.id)) continue;
+    if (usedCams.has(c.id)) { if (!c.inactive) { c.inactive = true; await DB.put('cameras', c); } }
+    else { stash.cameras[c.id] = c; await DB.del('cameras', c.id); }
+  }
+  // Objektive: per id, sonst per Name (selbst angelegte Objektive haben zufällige ids)
+  const lenses = await DB.all('lenses'); const left = new Map(lenses.map(l => [l.id, l]));
+  const defs = [...SEED_LENSES, ...GEAR_EXTRA_LENSES];
+  const outLenses = [];
+  for (const [id, patch] of Object.entries(set.lenses)) {
+    const d = defs.find(x => x.id === id); if (!d) continue;
+    const want = { ...clone(d), ...patch };
+    const k = gearKey(want.maker, want.name, want.focal);
+    let l = left.get(id) || [...left.values()].find(x => gearKey(x.maker, x.name, x.focal) === k) || stash.lenses[id] || Object.values(stash.lenses).find(x => gearKey(x.maker, x.name, x.focal) === k);
+    if (l) {
+      delete stash.lenses[l.id]; left.delete(l.id); l.inactive = !!want.inactive;
+      for (const [f, v] of Object.entries(patch)) if (l[f] === undefined || l[f] === '' || l[f] === null) l[f] = v;
+    }
+    else l = want;
+    outLenses.push(l);
+  }
+  await DB.putMany('lenses', outLenses);
+  const setLensKeys = new Set(Object.values(GEAR_SETS).flatMap(g => Object.keys(g.lenses)));
+  const setLensNames = new Set(defs.filter(d => setLensKeys.has(d.id)).map(d => gearKey(d.maker, d.name, d.focal)));
+  for (const l of left.values()) {
+    if (!setLensKeys.has(l.id) && !setLensNames.has(gearKey(l.maker, l.name, l.focal))) continue;
+    if (usedLenses.has(l.id)) { if (!l.inactive) { l.inactive = true; await DB.put('lenses', l); } }
+    else { stash.lenses[l.id] = l; await DB.del('lenses', l.id); }
+  }
+  // Zubehör
+  const acc = await getAccessories(); const accLeft = new Map(acc.map(a => [a.id, a])); const outAcc = [];
+  for (const d of set.acc) {
+    const k = gearKey(d.name);
+    const a = accLeft.get(d.id) || acc.find(x => accLeft.has(x.id) && gearKey(x.name) === k && x.kind === d.kind) || stash.acc[d.id] || Object.values(stash.acc).find(x => gearKey(x.name) === k && x.kind === d.kind) || clone(d);
+    delete stash.acc[a.id]; accLeft.delete(a.id); outAcc.push(a);
+  }
+  const setAcc = Object.values(GEAR_SETS).flatMap(g => g.acc);
+  for (const a of accLeft.values()) {
+    if (setAcc.some(d => d.id === a.id || (gearKey(d.name) === gearKey(a.name) && d.kind === a.kind))) stash.acc[a.id] = a;
+    else outAcc.push(a);
+  }
+  await saveAccessories(outAcc);
+  await DB.put('meta', stash);
+  await DB.put('meta', { id: 'gearSet', key });
+  await mergeSeedFilters();
+}
+
 // Kopfzeile: links immer die Startseite (Kreis mit App-Symbol), rechts immer das Profil
 function setHeader(title, { action = '' } = {}) {
   titleEl.textContent = title || '';
@@ -683,7 +752,7 @@ async function viewMore() {
   </div>
   <div class="card">
     <h3 class="sub">Sicherung</h3>
-    <p>Alle Daten liegen nur auf diesem Gerät. Eine Sicherung als ZIP-Datei schützt vor Datenverlust, etwa beim Löschen der Website-Daten oder einem Gerätewechsel.</p>
+    <p>Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.</p>
     <p class="hint">Letzte Sicherung: ${lastBackup ? U.fmtDate(lastBackup) : 'noch keine'}</p>
     <button class="btn wide" id="exp">Sicherung erstellen</button>
     <label class="btn ghost wide">Sicherung einspielen<input type="file" accept=".zip,application/zip" hidden id="imp"></label>
@@ -722,7 +791,10 @@ async function viewMore() {
 async function exportZip() {
   U.toast('Erstelle Sicherung …');
   const zip = new JSZip();
-  const data = { app: 'kontaktbogen', version: 1, exportedAt: new Date().toISOString() };
+  const data = { app: 'kontaktbogen', version: 2, exportedAt: new Date().toISOString() };
+  // Version 2: auch die Geräte-Einstellungen aus localStorage (Lichtmodus, Sprache, aufgeklappte Bereiche, Alben, Sortierung, gesehene Hinweise)
+  data.local = {};
+  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('kb-')) data.local[k] = localStorage.getItem(k); } } catch (_) {}
   for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) data[s] = await DB.all(s);
   const imgs = await DB.all('images');
   data.images = imgs.map(({ blob, thumb, data, tdata, ...rest }) => rest);
@@ -758,19 +830,20 @@ async function importZip(file) {
     if (data.app !== 'kontaktbogen') throw new Error('Keine Lightleak-Sicherung');
     for (const s of DB.STORES) await DB.clear(s);
     for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) await DB.putMany(s, data[s] || []);
-    let n = 0;
+    try { for (const [k, v] of Object.entries(data.local || {})) if (k.startsWith('kb-')) localStorage.setItem(k, v); } catch (_) {}
+    let n = 0; const total = (data.images || []).length;
     for (const meta of data.images || []) {
       const full = zip.file(`bilder/${meta.id}.jpg`), small = zip.file(`bilder/${meta.id}_klein.jpg`);
       if (!full) continue;
-      const data = await full.async('arraybuffer');
-      const tdata = small ? await small.async('arraybuffer') : data;
-      await DB.put('images', { ...meta, data, tdata, type: 'image/jpeg' });
-      if (++n % 10 === 0) U.toast(`Bilder: ${n}/${data.images.length}`);
+      const buf = await full.async('arraybuffer');
+      const tbuf = small ? await small.async('arraybuffer') : buf;
+      await DB.put('images', { ...meta, data: buf, tdata: tbuf, type: meta.type || 'image/jpeg' });
+      if (++n % 10 === 0) U.toast(`Bilder: ${n}/${total}`);
     }
     U._urls.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); }); U._urls.clear();
     U.toast('Sicherung eingespielt');
     location.hash = '#/';
-    route();
+    location.reload();
   } catch (e) {
     alert('Einspielen fehlgeschlagen: ' + e.message);
   }

@@ -364,7 +364,8 @@ async function viewProfile() {
 }
 
 // Einstellungen und weitere Bereiche in einem Fenster, damit das Profil bei vier Bereichen bleibt
-function openSettings() {
+async function openSettings() {
+  const gearSetKey = (await DB.get('meta', 'gearSet'))?.key || '';
   const ov = document.createElement('div');
   ov.className = 'modalbg';
   ov.innerHTML = `
@@ -388,8 +389,8 @@ function openSettings() {
       <div class="sethead">${ART.x}<span>Reset/Test</span></div>
       <p class="hint" style="margin:0 0 8px">Löscht alle hochgeladenen Fotos, deinen Namen und dein Profilbild. Rollen, Filme, Kameras und Preise bleiben.</p>
       <button type="button" class="btn danger small" id="resetAll">Fotos, Name und Profilbild löschen</button>
-      <p class="hint" style="margin:14px 0 8px">Die Beispielkameras und -objektive sind beim ersten Start schon im Kameraschrank. Gelöschte lassen sich hier wieder laden.</p>
-      <button type="button" class="btn ghost small" id="seedGear">Beispielausrüstung laden</button>
+      <p class="hint" style="margin:14px 0 8px">Wessen Ausrüstung steht im Kameraschrank? Was nicht zum gewählten Gear gehört, wird beiseitegelegt und kommt beim Zurückwechseln unverändert wieder. Ausrüstung mit Filmrollen bleibt als inaktiv stehen.</p>
+      <div class="seg gearset" id="gearSet" role="group" aria-label="Ausrüstung">${Object.entries(GEAR_SETS).map(([k, g]) => `<button type="button" data-gear="${k}" aria-pressed="${gearSetKey === k}" class="${gearSetKey === k ? 'on' : ''}">${g.label}</button>`).join('')}</div>
       <div class="modalfoot"><button class="closex" id="setClose" aria-label="Schließen">${ART.x}</button><span></span></div>
     </div>`;
   document.body.appendChild(ov);
@@ -420,10 +421,13 @@ function openSettings() {
     cf.addEventListener('click', e => { if (e.target === cf) cf.remove(); });
     cf.querySelector('#raYes').addEventListener('click', async () => { await resetPhotosAndProfile(); cf.remove(); ov.remove(); });
   });
-  ov.querySelector('#seedGear').addEventListener('click', async () => {
-    const n = await loadSeedGear();
-    U.toast(n ? 'Beispielausrüstung geladen' : 'Beispielausrüstung ist schon da');
-    if (n && location.hash.startsWith('#/profil')) { ov.remove(); route(); }
+  ov.querySelector('#gearSet').addEventListener('click', async e => {
+    const b = e.target.closest('[data-gear]'); if (!b || b.disabled) return;
+    ov.querySelectorAll('#gearSet button').forEach(x => { x.disabled = true; });
+    await applyGearSet(b.dataset.gear);
+    ov.querySelectorAll('#gearSet button').forEach(x => { const on = x === b; x.disabled = false; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+    U.haptic && U.haptic();
+    U.toast(GEAR_SETS[b.dataset.gear].label + ' im Kameraschrank');
   });
   const close = () => ov.remove();
   ov.querySelector('#setClose').addEventListener('click', close);
@@ -665,9 +669,12 @@ function shotList(allFrames, rolls) {
 function filmQuip(st) {
   if (!st) return '';
   const id = st.id || '', mk = (st.maker || '').toLowerCase(), nm = (st.name || '').toLowerCase();
+  // Infrarot zuerst (Typ ir oder Name), egal von welchem Hersteller
+  if (st.type === 'ir' || /infra|aerochrome|\bir\s?\d/.test(nm)) return 'Harkonnen Enjoyer 2000.';
   if (id.startsWith('kodak-gold') || (mk === 'kodak' && nm.startsWith('gold'))) return 'Der Klassiker. Gut und günstig. So wie du.';
   if (id === 'agfa-color400' || (mk.startsWith('agfa') && nm.startsWith('color'))) return 'Du magst wohl keine Farben, huh?';
   if (nm.includes('portra')) return 'Du bist reich oder warst reich. Jedenfalls hattest du mal Geld.';
+  if (mk.startsWith('lomo') || (st.id || '').startsWith('lomo-')) return 'Du willst keine Fotos machen. Du machst Kunst. Cool.';
   if (mk === 'cinestill') return 'Halation Enjoyer 3000. Das bist du.';
   if (mk === 'foma' || nm.includes('fomapan')) return 'Die Qualität des Bildes ist dir egal. Hauptsache billig.';
   if (mk === 'harman' && st.type !== 'sw') return 'Okay? Du willst wirklich eigenständig die Filmindustrie am Leben halten.';

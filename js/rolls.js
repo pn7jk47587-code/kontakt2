@@ -1762,7 +1762,8 @@ async function viewAllPhotos() {
     }
     html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : pstar(f)}</a>`;
   });
-  view.innerHTML = arBtn + html + '</div>';
+  view.innerHTML = arBtn + html + '</div>' + (sorting ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
+  view.querySelector('#apZip')?.addEventListener('click', async e => { const b = e.currentTarget; b.disabled = true; try { await exportZip(); } finally { b.disabled = false; } });
   view.querySelector('#apSort')?.addEventListener('click', async () => {
     ALLPHOTOS_SORT = !ALLPHOTOS_SORT; U.haptic && U.haptic(10);
     document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await viewAllPhotos(); window.scrollTo(0, y);

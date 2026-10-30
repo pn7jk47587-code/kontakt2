@@ -411,3 +411,41 @@ const SEED_IMG = Object.fromEntries([
 ].map(id => [id, 'img/' + id + '.webp']));
 // Erste Phoenix 200 (rote Packung); die blaue Packung gehört zu Phoenix II
 SEED_IMG['harman-phoenix200'] = 'img/harman-phoenix200-rot.webp';
+
+/* ---------- Gear-Sets (30.10.2026): Rebeccas und Leos Ausrüstung, umschaltbar in den Einstellungen ---------- */
+// Rebecca: Stand ihrer Screenshots vom 30.10.2026. Leo: alle übrigen Kameras, alle aktiv.
+const GEAR_EXTRA_LENSES = [
+  { id: 'lens-helios-44m', maker: 'Helios', name: '44 M', focal: '50', kind: 'normal', mount: 'Nikon F', filterThread: '52', cameraIds: ['cam-praktica-l2'] },
+  { id: 'lens-minolta-rokkor-pf-50', maker: 'Minolta', name: 'MC Rokkor - PF', focal: '50', kind: 'normal', mount: 'Minolta SR (MC/MD)', maxAp: '2', cameraIds: ['cam-minolta-xg1'] },
+  { id: 'lens-hqc-maginon-35-70', maker: 'HQC', name: 'Maginon-Serie', focal: '35 - 70', kind: 'zoom', mount: 'M42', maxAp: '3.5', cameraIds: ['cam-praktica-l2'] },
+  { id: 'lens-beroflex-28', maker: 'Beroflex', name: 'Auto MC', focal: '28', kind: 'wide', mount: 'M42', maxAp: '2.8', filterThread: '52', cameraIds: ['cam-praktica-l2'] },
+  { id: 'lens-canon-fd-200', maker: 'Canon', name: 'FD 200 1:4', focal: '200', kind: 'tele', mount: 'Canon FD', maxAp: '4', cameraIds: [], inactive: true },
+  { id: 'lens-kiron-80-200', maker: 'Kiron', name: 'Macro 1:4', focal: '80 - 200', kind: 'zoom', mount: 'Minolta SR (MC/MD)', maxAp: '4.5', cameraIds: [], inactive: true },
+  // Carl Zeiss Planar 80 mm f/2.8 C (verchromt, Leos Hasselblad). Kleinste Blende 22 laut Skala auf dem Foto, Filter Bajonett 50 laut KEH (C-Version)
+  { id: 'lens-hb-planar-80', maker: 'Zeiss', name: 'Planar', focal: '80', kind: 'normal', mount: 'Hasselblad V', maxAp: '2.8', minAp: '22', cameraIds: ['cam-hasselblad-500cm'],
+    notes: 'Filter: Bajonett 50 (C-Version).' },
+  { id: 'lens-pentax-m-50', maker: 'SMC', name: 'Pentax-M 1:2', focal: '50', kind: 'normal', mount: 'Pentax K', maxAp: '2', cameraIds: [], inactive: true }
+];
+const GEAR_SETS = {
+  rebecca: {
+    label: 'Rebeccas Gear',
+    cams: { 'cam-nikon-f3': true, 'cam-praktica-l2': true, 'cam-minolta-xg1': true, 'cam-superheadz-olivesan': true, 'cam-hasselblad-500cm': false, 'cam-olympus-superzoom70': false },
+    lenses: {
+      'lens-nikon-50': { name: 'AF Nikkor', maxAp: '2.8', filterThread: '52' }, 'lens-nikon-28': { name: 'AF Nikkor', maxAp: '2.8' },
+      'lens-helios-44m': {}, 'lens-minolta-rokkor-pf-50': {}, 'lens-nikon-80-200': {}, 'lens-hqc-maginon-35-70': {},
+      'lens-minolta-md-75-150': {}, 'lens-olivesan-22': {}, 'lens-beroflex-28': {},
+      'lens-canon-fd-200': {}, 'lens-kiron-80-200': {}, 'lens-pentax-m-50': {}
+    },
+    acc: [
+      { id: 'acc-holga-blitz', kind: 'blitz', name: 'Holga', maker: '', count: 1, cameraIds: ['cam-minolta-xg1', 'cam-nikon-f3', 'cam-praktica-l2'], notes: '' },
+      { id: 'acc-sunpack-blitz', kind: 'blitz', name: 'Sunpack', maker: '', count: 1, cameraIds: ['cam-minolta-xg1', 'cam-nikon-f3', 'cam-praktica-l2'], notes: '' }
+    ]
+  },
+  leo: {
+    label: 'Leos Gear',
+    cams: { 'cam-hasselblad-500cm': true, 'cam-olympus-superzoom70': true, 'cam-minolta-hi-matic-7s': true, 'cam-praktica-bx20': true, 'cam-canon-prima-zoom76': true, 'cam-leica-c2': true },
+    lenses: { 'lens-hb-planar-80': {}, 'lens-hb-distagon-50': {}, 'lens-hb-sonnar-150': {}, 'lens-minolta-rokkor-45': {}, 'lens-prakticar-50': {} },
+    acc: []
+  }
+};
+SEED_IMG['lens-hb-planar-80'] = 'img/lens-hb-planar-80.webp';

@@ -101,6 +101,7 @@ const ART = (() => {
   // Objektiv in Seitenansicht. Die Form zeigt die Art (Weitwinkel kurz und breit, Normal kurz, Tele lang, Zoom lang mit Ringen),
   // die Zahl auf dem Tubus die Brennweite.
   function lens(l, size = 72) {
+    if (l?.id && typeof SEED_IMG !== 'undefined' && SEED_IMG[l.id]) { const h = Math.round(size * 64 / 88); return `<img class="artimg lensimg" src="${SEED_IMG[l.id]}" alt="" style="width:${h}px;height:${h}px">`; }
     const kind = l?.kind || 'normal';
     const id = 'l' + Math.random().toString(36).slice(2, 7);
     const len = { wide: 34, normal: 40, tele: 66, zoom: 74 }[kind] || 40;

@@ -571,6 +571,16 @@ Tippe auf den Haken, um die Kamera zu speichern.	Tap the tick to save the camera
 Öffne den Kameraschrank und tippe deine neue Kamera an.	Open the camera cabinet and tap your new camera.
 Zurück zum Profil, dort steht deine neue Kamera.	Back to the profile, your new camera is there.
 Die Beispielkameras und -objektive sind beim ersten Start schon im Kameraschrank. Gelöschte lassen sich hier wieder laden.	The sample cameras and lenses are already in the camera cabinet at first start. Deleted ones can be loaded again here.
+Alle {0} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.	Save all {0} photos with rolls, notes, favourites, order and settings as a ZIP file. Restore it under Settings › Backup and storage.
+Du willst keine Fotos machen. Du machst Kunst. Cool.	You don't want to take photos. You make art. Cool.
+Harkonnen Enjoyer 2000.	Harkonnen Enjoyer 2000.
+Als ZIP sichern	Save as ZIP
+Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
+Rebeccas Gear	Rebecca's gear
+Leos Gear	Leo's gear
+Rebeccas Gear im Kameraschrank	Rebecca's gear is in the cabinet
+Leos Gear im Kameraschrank	Leo's gear is in the cabinet
+Wessen Ausrüstung steht im Kameraschrank? Was nicht zum gewählten Gear gehört, wird beiseitegelegt und kommt beim Zurückwechseln unverändert wieder. Ausrüstung mit Filmrollen bleibt als inaktiv stehen.	Whose gear is in the cabinet? Anything not in the chosen set is put aside and comes back unchanged when you switch back. Gear used on rolls stays as inactive.
 Beispielausrüstung laden	Load sample gear
 Beispielausrüstung geladen	Sample gear loaded
 Beispielausrüstung ist schon da	Sample gear is already there

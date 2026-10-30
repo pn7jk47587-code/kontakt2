@@ -1825,3 +1825,12 @@ html.fx-halation :is(h1, h2, .wordmark, .frowname, .rc-title) { text-shadow: 0 0
 html.fx-halation img.artimg, html.fx-halation .crowart img { filter: drop-shadow(0 0 8px rgba(255,40,20,.8)); }
 /* Schwarzweißfilm: alles kurz schwarzweiß */
 @media (prefers-reduced-motion: reduce) { html.fx-gold body::after, html.fx-gold body::before, html.fx-bw body::before { animation: none; } }
+/* Gear-Set-Wahl in den Einstellungen */
+.gearset { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glassline); box-shadow: var(--glassshadow); margin-bottom: 4px; }
+.gearset button { flex: 1; min-height: 44px; border: 0; border-radius: 999px; background: transparent; color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+.gearset button.on { background: var(--solid); box-shadow: 0 1px 4px rgba(30,40,70,.18); color: var(--teal); }
+.gearset button:disabled { opacity: .6; }
+.artimg.lensimg { border-radius: 50%; object-fit: cover; }
+.zipcard { margin-top: 22px; }
+.zipcard p { margin: 0 0 10px; font-size: 14px; color: var(--muted); }
+.zipcard .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
