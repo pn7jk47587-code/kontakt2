@@ -575,6 +575,9 @@ Alle {0} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als
 Du willst keine Fotos machen. Du machst Kunst. Cool.	You don't want to take photos. You make art. Cool.
 Bombus denkt, dass man maximal 3 Finger braucht, um eine Hasselblad zu bedienen. Er wird aufgrund des Urlaubs jedoch bis zu deiner Rückkehr mit dem Abbeißen warten.	Bombus thinks you need at most 3 fingers to operate a Hasselblad. Because of your holiday, however, he will wait with the biting until you return.
 Harkonnen Enjoyer 2000.	Harkonnen Enjoyer 2000.
+Gib der Rolle noch einen Namen.	Give the roll a name first.
+Gib der Rolle einen Namen	Give the roll a name
+z. B. Sommer an der Ostsee	e.g. Summer by the sea
 Als ZIP sichern	Save as ZIP
 Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
 Rebeccas Gear	Rebecca's gear

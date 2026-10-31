@@ -369,10 +369,10 @@ async function wizardStep1(wiz, root = view) {
       <div class="chips" id="exp"></div>
     </section>
     <section class="wizsec">
-      <label class="fld"><span>Name der Rolle</span><input id="rollTitle" maxlength="80" value="${U.esc(wiz.title || '')}" enterkeyhint="done"></label>
+      <label class="fld"><span>Name der Rolle</span><input id="rollTitle" maxlength="80" value="${U.esc(wiz.title || '')}" enterkeyhint="done" required aria-required="true" placeholder="z. B. Sommer an der Ostsee"></label>
       <label class="fld"><span>Eingelegt am</span><input type="date" id="loadedAt" value="${wiz.loadedAt || U.today()}"></label>
     </section>
-    <div class="wizfoot">${NEXT_BTN('next', 'Film in die Kamera legen', true)}</div>`;
+    <div class="wizfoot"><p class="hint namehint" id="nameHint" hidden>Gib der Rolle noch einen Namen.</p>${NEXT_BTN('next', 'Film in die Kamera legen', true)}</div>`;
   const renderExp = () => {
     const cam = cams.find(c => c.id === wiz.cameraId);
     const options = expOptions(wiz, cam);
@@ -396,7 +396,7 @@ async function wizardStep1(wiz, root = view) {
     wizSave(wiz); refresh();
   });
   root.querySelector('#loadedAt').addEventListener('input', e => { wiz.loadedAt = e.target.value; wizSave(wiz); });
-  root.querySelector('#rollTitle').addEventListener('input', e => { wiz.title = e.target.value; wizSave(wiz); });
+  root.querySelector('#rollTitle').addEventListener('input', e => { wiz.title = e.target.value; wizSave(wiz); refresh(); });
 
   const filter = (box, q, extra) => box && box.querySelectorAll('[data-q]').forEach(el => {
     el.hidden = !(el.dataset.q.includes(q.toLowerCase().trim()) && (!extra || extra(el)));
@@ -416,7 +416,10 @@ async function wizardStep1(wiz, root = view) {
       none.textContent = 'Ups, der Film liegt noch nicht im Kühlschrank.';
     }
     root.querySelectorAll('#cams [data-cam]').forEach(el => { el.hidden = !fmtOk(el); });
-    root.querySelector('#next').disabled = !(wiz.stockId && parseInt(wiz.expChoice) > 0);
+    // Einlegen nur mit Film, Anzahl und Rollennamen
+    const named = !!(wiz.title || '').trim(), ready = !!(wiz.stockId && parseInt(wiz.expChoice) > 0);
+    root.querySelector('#next').disabled = !(ready && named);
+    root.querySelector('#nameHint').hidden = !(ready && !named);
   };
   const toNext = () => root.querySelector('#expSec').scrollIntoView({ behavior: 'smooth', block: 'center' });
   const toFilm = () => root.querySelector('#filmSec').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -481,6 +484,7 @@ function expOptions(wiz, cam) {
 }
 
 async function createRoll(wiz, loadedAt) {
+  if (!(wiz.title || '').trim()) { U.toast('Gib der Rolle einen Namen'); return; }
   const stock = await DB.get('stocks', wiz.stockId);
   const cam = wiz.cameraId ? await DB.get('cameras', wiz.cameraId) : null;
   const n = parseInt(wiz.expChoice);

@@ -1908,3 +1908,4 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 @keyframes bombusin { from { transform: translateY(40px) scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes bombusbg { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fx-bombus, .bombuswrap { animation: none; } }
+.wizfoot .namehint { flex: 1 1 auto; align-self: center; margin: 0 12px 0 0; text-align: right; font-size: 14px; color: var(--muted); }
