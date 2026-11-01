@@ -1108,7 +1108,7 @@ function rollInfo(body, roll) {
   body.innerHTML = `
   <div class="card" id="infoform">
     ${field('Name der Rolle', 'title')}
-    <div class="fld"><span>Film</span><div class="filmselrow"><span class="filmselart" id="filmArt"></span><select data-f="stockId" id="stocksel"></select></div></div>
+    <div class="fld"><span>Film</span><button type="button" class="filmpickbtn" id="stockBtn" aria-label="Film ändern"><span class="filmselart" id="filmArt"></span><span class="filmpickname" id="stockName"></span><span class="filmpickchg">Ändern</span></button></div>
     <label class="fld"><span>Kamera</span><select data-f="cameraId" id="camsel"></select></label>
     <label class="fld"><span>Festes Objektiv für alle Frames</span><select id="lenssel"></select></label>
     <div id="isoBox"></div>
@@ -1148,6 +1148,7 @@ function rollInfo(body, roll) {
   const extras = async () => {
     const [stock, cam] = await Promise.all([DB.get('stocks', roll.stockId), roll.cameraId ? DB.get('cameras', roll.cameraId) : null]);
     body.querySelector('#filmArt').innerHTML = stock ? await filmArt(stock, 40) : '';
+    body.querySelector('#stockName').textContent = stock ? U.stockLabel(stock) : 'Film wählen';
     const box = body.querySelector('#isoBox');
     if (!cam || cam.isoDial !== true) { box.innerHTML = ''; return; }
     const tips = [];
@@ -1158,10 +1159,15 @@ function rollInfo(body, roll) {
     box.querySelector('#rollIso').addEventListener('input', async e => { roll.ei = e.target.value.replace(/[^\d]/g, ''); await DB.put('rolls', roll); });
   };
   extras();
-  body.querySelector('#stocksel').addEventListener('change', () => setTimeout(() => { extras(); fillDiary(); }, 80));
+  // Film ändern, auch bei fertigen und archivierten Alben: Suche wie beim Einlegen
+  body.querySelector('#stockBtn').addEventListener('click', () => openStockPicker(async id => {
+    roll.stockId = id; await DB.put('rolls', roll);
+    U.toast('Film geändert'); U.haptic && U.haptic(10);
+    // Kopf der Rolle (Filmbild, Name, EI) neu zeichnen, Reiter „Rolle“ bleibt offen
+    const y = window.scrollY; await viewRoll(roll.id, 'info'); window.scrollTo(0, y);
+  }, null, 'Film ändern'));
   body.querySelector('#camsel').addEventListener('change', () => setTimeout(extras, 80));
   Promise.all([DB.all('stocks'), DB.all('cameras')]).then(([st, cams]) => {
-    body.querySelector('#stocksel').innerHTML = st.sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b))).map(s => `<option value="${s.id}">${U.esc(U.stockLabel(s))}</option>`).join('');
     body.querySelector('#camsel').innerHTML = '<option value="">ohne Angabe</option>' + cams.filter(c => (!c.broken && !c.inactive) || c.id === roll.cameraId).map(c => `<option value="${c.id}">${U.esc(camLabel(c))}${c.broken ? ' (kaputt)' : c.inactive ? ' (inaktiv)' : ''}</option>`).join('');
     bind(body.querySelector('#infoform'), roll, 'rolls');
   });
@@ -1907,7 +1913,7 @@ async function viewArchive() {
   const camCards = await Promise.all(cams.map(async c => `<button type="button" class="pick cam" data-cam="${c.id}"><span class="pickart">${await camArt(c, 84)}</span><span class="pickname">${U.esc(camLabel(c))}</span></button>`));
   const today = U.today();
   view.innerHTML = `
-    <p class="hint pad">Für Rollen, die du schon früher entwickelt hast. Pflicht sind nur die Fotos. Beschriften kannst du die Bilder danach in der Rolle.</p>
+    <p class="hint pad">Für Rollen, die du schon früher entwickelt hast. Pflicht sind die Fotos und der Film (oder „Weiß ich nicht mehr“). Beschriften kannst du die Bilder danach in der Rolle.</p>
     <section class="wizsec">
       <h2 class="wiztitle">1 · Fotos</h2>
       <label class="btn accent archup">${ARCHIVE_IC}<span id="arUpTxt">Fotos auswählen</span><input type="file" accept="image/*" multiple hidden id="arFiles"></label>
@@ -1931,7 +1937,8 @@ async function viewArchive() {
     </section>
     <section class="wizsec">
       <h2 class="wiztitle">5 · Film und Name</h2>
-      <div class="fld"><span>Film</span><button type="button" class="btn ghost small" id="arStock">Film wählen</button></div>
+      <div class="arfilm" id="arFilm"><button type="button" class="filmpickbtn" id="arStock"><span class="filmselart" id="arStockArt"></span><span class="filmpickname" id="arStockName">Film wählen</span><span class="filmpickchg">Pflicht</span></button>
+        <button type="button" class="btn ghost small" id="arStockUnknown">Weiß ich nicht mehr</button></div>
       <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
       <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80" placeholder="z. B. Sommer an der Ostsee"></label>
     </section>`;
@@ -1943,8 +1950,10 @@ async function viewArchive() {
   $('arFiles').addEventListener('change', e => {
     ed.files = [...e.target.files];
     $('arUpTxt').textContent = ed.files.length ? `${ed.files.length} ${ed.files.length === 1 ? 'Foto' : 'Fotos'} ausgewählt` : 'Fotos auswählen';
-    save.disabled = !ed.files.length; save.classList.toggle('ready', !!ed.files.length);
+    ready();
   });
+  // Archivieren erst mit Fotos und einer Filmangabe
+  const ready = () => { const ok = !!ed.files.length && !!ed.stockId; save.disabled = !ok; save.classList.toggle('ready', ok); };
   $('arFrom').addEventListener('change', () => { if (!$('arTo').value || $('arTo').value < $('arFrom').value) $('arTo').value = $('arFrom').value; $('arTo').min = $('arFrom').value; });
   $('arDevOpts').addEventListener('click', e => {
     const b = e.target.closest('[data-o]'); if (!b) return;
@@ -1954,18 +1963,23 @@ async function viewArchive() {
     const b = e.target.closest('[data-cam]'); if (!b) return;
     ed.camId = b.dataset.cam; view.querySelectorAll('#arCams .pick').forEach(x => x.classList.toggle('on', x === b)); U.haptic && U.haptic(8);
   });
+  $('arStockUnknown').addEventListener('click', () => {
+    ed.stockId = 'film-unbekannt'; $('arStockArt').innerHTML = ''; $('arStockName').textContent = 'Unbekannter Film';
+    $('arStock').classList.add('on'); $('arStock').querySelector('.filmpickchg').textContent = 'Ändern'; $('arStockUnknown').classList.add('on'); U.haptic && U.haptic(8); ready();
+  });
   $('arStock').addEventListener('click', () => openStockPicker(async id => {
     ed.stockId = id; const st = await DB.get('stocks', id);
-    $('arStock').innerHTML = `${await filmArt(st, 26)}<span>${U.esc(U.stockLabel(st))}</span>`;
+    $('arStockArt').innerHTML = await filmArt(st, 36); $('arStockName').textContent = U.stockLabel(st);
+    $('arStock').classList.add('on'); $('arStock').querySelector('.filmpickchg').textContent = 'Ändern'; $('arStockUnknown').classList.remove('on'); ready();
     if (st?.formats?.length && !st.formats.includes(ed.format)) { ed.format = st.formats[0] === '120' ? '120' : '135'; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x.dataset.f === ed.format)); }
-  }));
+  }, null, 'Film wählen'));
   $('arFmt').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; ed.format = b.dataset.f; view.querySelectorAll('#arFmt .seg').forEach(x => x.classList.toggle('on', x === b)); });
   save.addEventListener('click', async () => {
     if (!ed.files.length) { U.toast('Wähle zuerst die Fotos aus'); return; }
+    if (!ed.stockId) { U.toast('Wähle den Film aus'); return; }
     const from = $('arFrom').value || null, to = $('arTo').value || from, dev = $('arDev').value || null;
     const cam = cams.find(c => c.id === ed.camId), lab = labs.find(l => l.id === ed.dev);
-    if (!ed.stockId) {
-      ed.stockId = 'film-unbekannt';
+    if (ed.stockId === 'film-unbekannt') {
       if (!(await DB.get('stocks', ed.stockId))) await DB.put('stocks', { id: ed.stockId, maker: '', name: 'Unbekannter Film', type: 'farbneg', process: '', boxIso: '', formats: ['135', '120'], reciprocity: { model: 'unknown' }, builtin: false });
     }
     const roll = {

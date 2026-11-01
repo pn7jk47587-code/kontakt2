@@ -291,3 +291,10 @@ Frame: Unter „Filter“ steht „Blitz“ mit „Ohne Blitz / Mit Blitz“. Mi
 
 ## Foto löschen in der Albumansicht (01.11.2026)
 In der Einzelansicht eines Fotos (aus dem fertigen Album oder aus „Alle Fotos“) steht oben rechts neben dem Profilbild der bekannte Mülleimer. Ein Tipp löscht das Foto und springt zum nächsten Foto, beim letzten zum vorigen, ohne weitere Fotos zurück zum Raster. Fünf Sekunden lang steht unten „Foto gelöscht · Rückgängig“, danach wird die Bilddatei endgültig entfernt. Gelöscht wird nur das hochgeladene Foto; die Einträge des Bildes (Blende, Zeit, Notiz, Titel, Datum) bleiben in der Rolle erhalten, so dass sich später ein anderes Foto zuordnen lässt.
+
+## Beispielfotos zu Filtern (01.11.2026)
+Ein Tipp auf einen Filter im Kameraschrank öffnet wie bisher sein Fenster. Neu ist dort „Beispielfotos“. Darunter stehen in einer aufklappbaren Liste alle hochgeladenen Fotos, bei denen dieser Filter im Frame eingetragen ist (beim Farbfolien-Set B375 auch jede einzelne Farbe), neueste zuerst. Ein Tipp auf ein Foto setzt einen Haken und macht es zum Beispielfoto; es erscheint dann groß oben mit Rollenname und Bildnummer. Ein Tipp auf ein großes Beispielfoto vergrößert es. Die Auswahl wird sofort gespeichert. Gibt es noch kein Foto mit dem Filter, erklärt ein Hinweis, wie die Fotos dorthin kommen.
+
+## Film beim Archivieren und in fertigen Alben (01.11.2026)
+Beim Archivieren ist der Film jetzt Pflicht. Unter „5 · Film und Name“ öffnet „Film wählen“ die Filmsuche; wer es nicht mehr weiß, tippt „Weiß ich nicht mehr“ (die Rolle bekommt dann „Unbekannter Film“). Der Archivieren-Knopf unten rechts wird erst aktiv, wenn Fotos ausgewählt sind und eine Filmangabe gemacht ist. Der Rollenname bleibt beim Archivieren freiwillig.
+In jeder Rolle, auch in fertigen und archivierten Alben, steht im Reiter „Rolle“ der Film jetzt als Zeile mit Filmbild und „Ändern“. Ein Tipp öffnet dieselbe Filmsuche wie beim Einlegen; nach der Wahl wird der Kopf der Rolle (Filmbild, Name, EI) sofort aktualisiert. Ins Album kommt man über „Rolle“ oben im Album. Vorher war hier eine lange Auswahlliste ohne Suche.

@@ -596,6 +596,18 @@ Leitzahl eintragen. Sie steht im Datenblatt oder in der Tabelle hinten auf dem B
 Noch kein Blitz im Zubehör. Mit Leitzahl angelegt, rechnet die App sie hier ein.	No flash among your accessories yet. Add one with its guide number and the app uses it here.
 Foto löschen	Delete photo
 Foto gelöscht	Photo deleted
+Beispielfotos	Example photos
+Lädt …	Loading …
+Noch kein Foto mit diesem Filter. Sobald du ihn bei einem Bild einträgst und das Foto hochgeladen ist, kannst du es hier als Beispiel auswählen.	No photo with this filter yet. Once you add it to a frame and the photo is uploaded, you can pick it here as an example.
+Tippe unten auf Fotos, um sie als Beispiel für diesen Filter festzuhalten.	Tap photos below to keep them as examples for this filter.
+Fotos mit diesem Filter · {0}	Photos with this filter · {0}
+Film ändern	Change film
+Film geändert	Film changed
+Ändern	Change
+Pflicht	Required
+Weiß ich nicht mehr	I don't remember
+Wähle den Film aus	Choose the film
+Für Rollen, die du schon früher entwickelt hast. Pflicht sind die Fotos und der Film (oder „Weiß ich nicht mehr“). Beschriften kannst du die Bilder danach in der Rolle.	For rolls you developed earlier. Photos and film (or "I don't remember") are required. You can label the photos afterwards in the roll.
 Als ZIP sichern	Save as ZIP
 Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
 Rebeccas Gear	Rebecca's gear

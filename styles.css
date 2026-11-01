@@ -1931,3 +1931,32 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 .flashtable td { padding: 6px; border-bottom: 1px solid var(--line); }
 .flashtable tr.on td { color: var(--teal); font-weight: 700; }
 .flashtable tr.out td { opacity: .4; }
+/* Filter: Beispielfotos */
+.feex { margin: 6px 0 4px; }
+.feexsel { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 10px; }
+.feexbig { position: relative; padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: var(--bg2); cursor: zoom-in; aspect-ratio: 3 / 2; }
+.feexbig img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.feexbig span { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 8px 5px; font-size: 11px; text-align: left; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.6)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feexall { border: 1px solid var(--line); border-radius: 12px; padding: 0 10px; }
+.feexall summary { cursor: pointer; padding: 10px 0; font-size: 14px; font-weight: 600; list-style: none; }
+.feexall summary::-webkit-details-marker { display: none; }
+.feexall[open] { padding-bottom: 10px; }
+.feexgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; max-height: 40vh; overflow-y: auto; overscroll-behavior: contain; }
+.feexpick { position: relative; padding: 0; border: 0; border-radius: 6px; overflow: hidden; aspect-ratio: 1; background: var(--bg2); cursor: pointer; }
+.feexpick img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.feexpick i { position: absolute; right: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,.25); box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+.feexpick.on i { background: var(--teal); }
+.feexpick.on i::after { content: ""; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.feexpick.on { outline: 2px solid var(--teal); outline-offset: -2px; }
+.overlay { z-index: 1350; }
+/* Film-Auswahl als Knopf mit Bild (Archivieren, Reiter Rolle) */
+.filmpickbtn { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 6px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.filmpickbtn .filmselart { flex: 0 0 auto; display: flex; }
+.filmpickbtn .filmselart:empty { display: none; }
+.filmpickbtn .filmselart svg, .filmpickbtn .filmselart img { width: 36px !important; height: 36px !important; }
+.filmpickname { flex: 1 1 auto; min-width: 0; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.filmpickchg { flex: 0 0 auto; font-size: 13px; color: var(--teal); }
+.arfilm { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; align-items: flex-start; }
+.arfilm .filmpickbtn:not(.on) { border-style: dashed; }
+.arfilm .filmpickbtn:not(.on) .filmpickname { color: var(--muted); font-weight: 500; }
+.arfilm .btn.on { border-color: var(--teal); color: var(--teal); }

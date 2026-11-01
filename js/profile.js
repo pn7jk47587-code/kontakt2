@@ -148,13 +148,13 @@ async function fridgeRow(e, st, { pick = false, on = false } = {}) {
 }
 
 // Auswahl aus allen Filmen (für einen Film, der nicht im Kühlschrank liegt)
-async function openStockPicker(onPick, format) {
+async function openStockPicker(onPick, format, title) {
   const stocks = (await DB.all('stocks')).filter(s => !format || !s.formats || s.formats.includes(format)).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
   const ov = document.createElement('div');
   ov.className = 'modalbg';
   ov.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="spTitle">
-      <h2 id="spTitle">Neuer Film${format ? ` · ${FORMAT_LABEL[format] || format}` : ''}</h2>
+      <h2 id="spTitle">${U.esc(title || 'Neuer Film')}${format && !title ? ` · ${FORMAT_LABEL[format] || format}` : ''}</h2>
       <input type="search" placeholder=" " id="spQ" aria-label="Suchen" autocomplete="off">
       <div class="frlist tall" id="spList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>
       <p class="hint">Film fehlt? <a href="#/film/neu">Neu in der Filmliste anlegen</a></p>
