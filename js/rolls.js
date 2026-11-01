@@ -1618,12 +1618,16 @@ async function albumData(id) {
 async function viewAlbum(id) {
   const d = await albumData(id);
   if (!d) { location.replace('#/'); return; }
-  setHeader(d.title, { action: d.roll ? `<a class="toplink" href="#/rolle/${d.roll.id}">Rolle</a>${TRASH_BTN(d.roll.id)}` : '' });
-  if (!d.frames.length) { view.innerHTML = '<div class="empty">Noch keine Fotos im Album.</div>'; return; }
+  // Kopfzeile nur mit Titel. Film, Kamera und Entwicklung erreicht man über die gut sichtbare Zeile unter dem Namen (vorher „Rolle“ klein oben rechts).
+  setHeader(d.title);
+  const st = d.roll ? d.stocks.get(d.roll.stockId) : null, cm = d.roll ? d.cams.get(d.roll.cameraId) : null;
+  const infoRow = d.roll ? `<a class="albuminfo" href="#/rolle/${d.roll.id}/info"><span class="aiart">${await filmArt(st, 40)}</span><span class="aitxt"><b>${U.esc(U.stockLabel(st))}</b><span class="sub2">${U.esc(camLabel(cm) || d.roll.camera || 'Kamera unbekannt')}</span></span><span class="aiedit">Bearbeiten</span><span class="chev">›</span></a>` : '';
+  if (!d.frames.length) { view.innerHTML = infoRow + '<div class="empty">Noch keine Fotos im Album.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   const leakCam = !!(d.roll && d.cams.get(d.roll.cameraId)?.lightLeaks);
   view.innerHTML = `
     ${d.roll ? `<label class="rollname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : ''}
+    ${infoRow}
     <div class="photogrid">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${f.leak ? '<span class="leakdot" title="Lightleak"></span>' : ''}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
