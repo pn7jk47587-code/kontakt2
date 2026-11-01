@@ -301,3 +301,6 @@ In jeder Rolle, auch in fertigen und archivierten Alben, steht im Reiter „Roll
 
 ## Album: Zeile zu Film und Kamera statt „Rolle“ oben rechts (01.11.2026)
 Im fertigen Album stand oben rechts klein „Rolle“ neben dem Mülleimer. Das überlappte bei langen Titeln mit der Überschrift und war kaum zu finden. Beides ist aus der Kopfzeile verschwunden. Unter „Name der Rolle“ steht jetzt eine eigene Zeile mit Filmbild, Filmname, Kamera und „Bearbeiten ›“. Ein Tipp öffnet den Reiter „Rolle“ mit Film, Kamera, Objektiv, Daten und Notizen; von dort sind auch „Entwicklung“ und der Mülleimer zum Löschen der Rolle erreichbar.
+
+## Reihenfolge im Album (01.11.2026)
+Im fertigen Album einer Rolle, auch bei archivierten Rollen, steht rechts über den Fotos „Reihenfolge“. Ein Tipp schaltet in den Sortiermodus: Die Fotos wackeln und tragen ihre Bildnummer. Ein Foto kurz gedrückt halten, dann an die neue Stelle ziehen; Scrollen bleibt möglich, nahe am Rand scrollt die Ansicht beim Ziehen mit. „Fertig“ beendet den Modus. Verschoben wird nur das Foto (mit Lightleak-Markierung und Favorit), Einträge wie Blende, Zeit oder Notiz bleiben bei ihrer Bildnummer, genau wie in „Alle Fotos“. Beim Verlassen des Albums endet der Sortiermodus von selbst.

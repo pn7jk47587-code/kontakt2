@@ -1628,10 +1628,19 @@ async function viewAlbum(id) {
   view.innerHTML = `
     ${d.roll ? `<label class="rollname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : ''}
     ${infoRow}
-    <div class="photogrid">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${f.leak ? '<span class="leakdot" title="Lightleak"></span>' : ''}</a>`).join('')}</div>
+    ${d.frames.length > 1 ? `<div class="archcorner albsort"><button type="button" class="archlink${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}">${MOVE_IC}<span>${ALBUM_SORT ? 'Fertig' : 'Reihenfolge'}</span></button></div>` : ''}
+    ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Verschoben wird nur das Foto, Einträge wie Blende oder Notiz bleiben bei ihrer Bildnummer.</p>' : ''}
+    <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
   view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
+  // Reihenfolge der Fotos per Ziehen ändern (wie in „Alle Fotos“)
+  view.querySelector('#albSort')?.addEventListener('click', async () => {
+    ALBUM_SORT = !ALBUM_SORT; U.haptic && U.haptic(10);
+    const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
+  });
+  while (PHOTOSORT_OFF.length) PHOTOSORT_OFF.pop()();
+  if (ALBUM_SORT) view.querySelectorAll('.photogrid.sorting').forEach(g => setupPhotoSort(g, () => viewAlbum(id)));
   let pick = null;
   try { pick = sessionStorage.getItem('kb-leakpick'); if (pick === id) sessionStorage.removeItem('kb-leakpick'); } catch (_) {}
   if (leakCam && pick === id) setTimeout(() => openLeakPicker(d.roll, () => route()), 350);
@@ -1802,9 +1811,11 @@ function autoScrollAt(x, y, tick) {
 function stopAutoScroll() { AUTOSCROLL.y = null; AUTOSCROLL.tick = null; }
 
 let ALLPHOTOS_SORT = false;
+let ALBUM_SORT = false;
+window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/album/')) ALBUM_SORT = false; });
 window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/alle-fotos')) ALLPHOTOS_SORT = false; });
 // Reihenfolge der Scans einer Rolle per Ziehen ändern. Verschoben werden nur Scan, Lightleak-Markierung und Favorit.
-function setupPhotoSort(grid) {
+function setupPhotoSort(grid, redraw = viewAllPhotos) {
   // Scrollen bleibt möglich: erst langes Drücken (ohne Bewegung) hebt ein Foto an, danach folgt es dem Finger
   const SCAN = ['imgId', 'leak', 'fav'];
   let drag = null, timer = null, start = null;
@@ -1853,7 +1864,7 @@ function setupPhotoSort(grid) {
     const [m] = scans.splice(from, 1); scans.splice(to, 0, m);
     for (let i = 0; i < fr.length; i++) { for (const k of SCAN) { if (scans[i][k] === undefined) delete fr[i][k]; else fr[i][k] = scans[i][k]; } await DB.put('frames', fr[i]); }
     U.haptic && U.haptic([15, 40, 15]);
-    document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await viewAllPhotos(); window.scrollTo(0, y);
+    document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await redraw(); window.scrollTo(0, y);
   };
   // Beim Neuzeichnen und beim Verlassen der Seite die Dokument-Listener wieder abmelden
   const off = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); };
