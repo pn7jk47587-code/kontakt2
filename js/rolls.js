@@ -1928,6 +1928,59 @@ async function viewAllPhotos() {
    Die Rolle entsteht direkt im Fotoalbum (Status „entwickelt“, archived: true). Die Scans füllen Bild 1, 2, 3 … nach Dateinamen.
    Beschriften und Einstellungen gehen danach wie gewohnt in der Rolle. Alles außer den Fotos ist freiwillig. */
 const ARCHIVE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v9.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 10 2.5 6.5 9 5l3 5M20 10l1.5-3.5L15 5l-3 5"/><path d="M9.5 14h5"/></svg>';
+/* Zeitraum in einem Kalender: erster Tipp = Beginn, zweiter Tipp = Ende. Gleicher Tag zweimal = ein Tag. Keine Tage in der Zukunft. */
+function openRangePicker(from, to, onDone) {
+  const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const today = U.today();
+  let a = from || null, b = to || null;
+  const start = new Date((a || today) + 'T12:00'); let y = start.getFullYear(), m = start.getMonth();
+  const thisYear = new Date().getFullYear();
+  const ov = document.createElement('div');
+  ov.className = 'modalbg';
+  ov.innerHTML = `<div class="modal rangemodal" role="dialog" aria-modal="true" aria-label="Zeitraum wählen">
+      <div class="rphead"><button type="button" class="rpnav" data-d="-1" aria-label="Voriger Monat">‹</button>
+        <select id="rpM" aria-label="Monat">${MONTHS.map((n, i) => `<option value="${i}">${n}</option>`).join('')}</select>
+        <select id="rpY" aria-label="Jahr">${Array.from({ length: 60 }, (_, i) => thisYear - i).map(v => `<option>${v}</option>`).join('')}</select>
+        <button type="button" class="rpnav" data-d="1" aria-label="Nächster Monat">›</button></div>
+      <p class="rpstate" id="rpState"></p>
+      <div class="rpweek">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(d => `<span>${d}</span>`).join('')}</div>
+      <div class="rpgrid" id="rpGrid"></div>
+      <div class="modalfoot"><button class="closex" id="rpNo" aria-label="Abbrechen">${ART.x}</button><button type="button" class="btn ghost small" id="rpClear">Zurücksetzen</button><button class="okbtn" id="rpOk" aria-label="Übernehmen">${ART.check}</button></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const $ = id => ov.querySelector('#' + id);
+  const draw = () => {
+    $('rpM').value = m; $('rpY').value = y;
+    const first = new Date(y, m, 1), lead = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
+    let html = '<span></span>'.repeat(lead);
+    for (let d = 1; d <= days; d++) {
+      const v = iso(new Date(y, m, d)), fut = v > today;
+      const inR = a && b && v >= a && v <= b, edge = v === a || v === b;
+      html += `<button type="button" class="rpday${inR ? ' in' : ''}${edge ? ' edge' : ''}${v === today ? ' today' : ''}" data-v="${v}"${fut ? ' disabled' : ''}>${d}</button>`;
+    }
+    $('rpGrid').innerHTML = html;
+    $('rpState').textContent = !a ? 'Ersten Tag antippen' : !b ? `Ab ${U.fmtDate(a)} · jetzt den letzten Tag antippen` : a === b ? U.fmtDate(a) : `${U.fmtDate(a)} bis ${U.fmtDate(b)}`;
+  };
+  const step = d => { m += d; if (m < 0) { m = 11; y--; } if (m > 11) { m = 0; y++; } if (y > thisYear || (y === thisYear && m > new Date().getMonth())) { y = thisYear; m = new Date().getMonth(); } draw(); };
+  ov.querySelectorAll('.rpnav').forEach(n => n.addEventListener('click', () => step(+n.dataset.d)));
+  $('rpM').addEventListener('change', e => { m = +e.target.value; step(0); });
+  $('rpY').addEventListener('change', e => { y = +e.target.value; step(0); });
+  const finish = () => { onDone(a, b || a); ov.remove(); };
+  $('rpGrid').addEventListener('click', e => {
+    const t = e.target.closest('[data-v]'); if (!t || t.disabled) return;
+    const v = t.dataset.v; U.haptic && U.haptic(8);
+    if (!a || (a && b)) { a = v; b = null; draw(); return; }
+    if (v < a) { a = v; draw(); return; }
+    b = v; draw(); setTimeout(finish, 350);   // Zeitraum vollständig: kurz zeigen, dann schließen
+  });
+  $('rpClear').addEventListener('click', () => { a = b = null; draw(); });
+  $('rpOk').addEventListener('click', finish);
+  $('rpNo').addEventListener('click', () => ov.remove());
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  draw();
+}
+
 async function viewArchive() {
   setHeader('Archivieren');
   const cams = gearSort(await DB.all('cameras'), camSortFb);
@@ -1944,10 +1997,9 @@ async function viewArchive() {
     </section>
     <section class="wizsec">
       <h2 class="wiztitle">2 · Fotografiert ungefähr</h2>
-      <div class="two">
-        <label class="fld"><span>Von</span><input type="date" id="arFrom" max="${today}"></label>
-        <label class="fld"><span>Bis</span><input type="date" id="arTo" max="${today}"></label>
-      </div>
+      <input type="hidden" id="arFrom"><input type="hidden" id="arTo">
+      <button type="button" class="filmpickbtn rangebtn" id="arRange"><span class="rangeic" aria-hidden="true">${ART.calIc || ''}</span><span class="filmpickname" id="arRangeTxt">Zeitraum wählen</span><span class="filmpickchg">Kalender</span></button>
+      <p class="hint">Im Kalender erst den ersten, dann den letzten Tag antippen. Für einen einzelnen Tag denselben Tag zweimal.</p>
     </section>
     <section class="wizsec">
       <h2 class="wiztitle">3 · Entwicklung</h2>
@@ -1977,7 +2029,12 @@ async function viewArchive() {
   });
   // Archivieren erst mit Fotos und einer Filmangabe
   const ready = () => { const ok = !!ed.files.length && !!ed.stockId; save.disabled = !ok; save.classList.toggle('ready', ok); };
-  $('arFrom').addEventListener('change', () => { if (!$('arTo').value || $('arTo').value < $('arFrom').value) $('arTo').value = $('arFrom').value; $('arTo').min = $('arFrom').value; });
+  const fmtD = v => v ? U.fmtDate(v) : '';
+  $('arRange').addEventListener('click', () => openRangePicker($('arFrom').value, $('arTo').value, (a, b) => {
+    $('arFrom').value = a || ''; $('arTo').value = b || a || '';
+    $('arRangeTxt').textContent = a ? (b && b !== a ? `${fmtD(a)} bis ${fmtD(b)}` : fmtD(a)) : 'Zeitraum wählen';
+    $('arRange').classList.toggle('on', !!a);
+  }));
   $('arDevOpts').addEventListener('click', e => {
     const b = e.target.closest('[data-o]'); if (!b) return;
     ed.dev = b.dataset.o; view.querySelectorAll('#arDevOpts button').forEach(x => x.classList.toggle('on', x === b)); U.haptic && U.haptic(8);

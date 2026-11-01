@@ -307,3 +307,6 @@ Im fertigen Album einer Rolle, auch bei archivierten Rollen, steht rechts über 
 
 ## Alle Fotos: Favoriten zuklappbar (01.11.2026)
 Die Reihe „★ Favoriten · Anzahl“ oben in „Alle Fotos“ ist jetzt ein Schalter mit Pfeil. Beim Hineinnavigieren ist sie zugeklappt, ein Tipp klappt die Favoriten auf und wieder zu. Der Zustand bleibt, solange man in „Alle Fotos“ und den Einzelfotos daraus unterwegs ist (auch beim Setzen eines Sterns), und ist beim nächsten Besuch wieder zugeklappt.
+
+## Archivieren: Zeitraum in einem Kalender (01.11.2026)
+„2 · Fotografiert ungefähr“ hat statt der zwei Datumsfelder Von und Bis eine Zeile „Zeitraum wählen“ mit Kalendersymbol. Ein Tipp öffnet einen Monatskalender (Montag zuerst, Monat und Jahr per Auswahl oder Pfeilen, bis 60 Jahre zurück, keine Tage in der Zukunft). Erster Tipp setzt den ersten Tag, zweiter Tipp den letzten; der Bereich dazwischen wird markiert, und der Kalender schließt sich nach einem Moment von selbst. Tippt man beim zweiten Mal einen früheren Tag, wird er der neue Beginn. Für einen einzelnen Tag denselben Tag zweimal antippen. „Zurücksetzen“ leert die Auswahl, der Haken übernimmt auch nur einen Beginn. Danach steht der Zeitraum in der Zeile, z. B. „12.07.2025 bis 24.07.2025“.

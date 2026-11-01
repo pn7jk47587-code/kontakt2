@@ -610,6 +610,14 @@ Wähle den Film aus	Choose the film
 Für Rollen, die du schon früher entwickelt hast. Pflicht sind die Fotos und der Film (oder „Weiß ich nicht mehr“). Beschriften kannst du die Bilder danach in der Rolle.	For rolls you developed earlier. Photos and film (or "I don't remember") are required. You can label the photos afterwards in the roll.
 Bearbeiten	Edit
 Kamera unbekannt	Camera unknown
+Zeitraum wählen	Choose period
+Kalender	Calendar
+Im Kalender erst den ersten, dann den letzten Tag antippen. Für einen einzelnen Tag denselben Tag zweimal.	In the calendar tap the first day, then the last. For a single day tap the same day twice.
+Ersten Tag antippen	Tap the first day
+Zurücksetzen	Reset
+Übernehmen	Apply
+Voriger Monat	Previous month
+Nächster Monat	Next month
 Als ZIP sichern	Save as ZIP
 Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
 Rebeccas Gear	Rebecca's gear
