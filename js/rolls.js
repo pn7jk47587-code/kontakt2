@@ -1642,7 +1642,8 @@ async function viewPhoto(albumId, frameId) {
   const i = d.frames.findIndex(f => f.id === frameId);
   if (i < 0) { location.replace('#/album/' + albumId); return; }
   const f = d.frames[i];
-  setHeader('');
+  // Oben rechts: Mülleimer zum Löschen eines versehentlich hochgeladenen Fotos
+  setHeader('', { action: `<button class="trashbtn" id="phDel" aria-label="Foto löschen" title="Foto löschen">${TRASH_BTN('').match(/<svg[\s\S]*<\/svg>/)[0]}</button>` });
   const url = await U.imgUrl(f.imgId);
   const phones = (await Promise.all([f.phoneId, f.double ? f.phoneId2 : null].filter(Boolean).map(x => U.imgUrl(x)))).filter(Boolean);
   const ln = d.line(f);
@@ -1670,6 +1671,19 @@ async function viewPhoto(albumId, frameId) {
   const done = document.createElement('button');
   done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig, zurück zum Raster'); done.innerHTML = ART.check;
   document.body.appendChild(done);
+  document.getElementById('phDel')?.addEventListener('click', async () => {
+    await saveTitle();
+    const imgId = f.imgId, back = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId;
+    const target = d.frames[i + 1] || d.frames[i - 1];
+    f.imgId = null; await DB.put('frames', f);
+    U.haptic && U.haptic(15);
+    location.replace(target ? `#/foto/${albumId}/${target.id}` : back);
+    let undone = false;
+    U.undo('Foto gelöscht', async () => {
+      undone = true; const cur = await DB.get('frames', f.id); if (!cur) return;
+      cur.imgId = imgId; await DB.put('frames', cur); location.replace(`#/foto/${albumId}/${f.id}`);
+    }, async () => { if (!undone) await deleteImage(imgId); });
+  });
   done.addEventListener('click', async () => { await saveTitle(); location.hash = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId; });
   // Zwei Finger: Foto vergrößern (nur das Foto, nicht die App)
   fig.querySelectorAll('.flipimgs img').forEach(img => U.pinch(img));
