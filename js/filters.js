@@ -236,6 +236,8 @@ function openFilterEditor(f) {
            <label class="fld" id="feThreadBox"${filterKind(f) === 'screw' ? '' : ' hidden'}><span>Gewindedurchmesser (mm)</span><input id="feThread" inputmode="decimal" placeholder="z. B. 52" value="${U.esc(String(f.thread || '').replace('.', ','))}"></label>`}
       ${(f.colors || []).length ? `<details class="gelbox"><summary>${f.colors.length} Farben${f.code === '375' ? ' und Halter' : ''}</summary><div class="gellist">${f.colors.map(c => `<span class="gelitem"><img src="img/filter-${c.img}.webp" alt="" width="30" height="30">${U.esc(c.name)}</span>`).join('')}${f.code === '375' ? '<span class="gelitem"><img src="img/filter-b375-halter.webp" alt="" width="30" height="30">Halter</span>' : ''}</div></details>` : ''}
       <div class="feex"><div class="qlabel">Beispielfotos</div><div id="feEx"><p class="hint">Lädt …</p></div></div>
+      ${(f.colors || []).length ? `<div class="feex"><div class="qlabel">Farben · für Fotos je Farbe antippen</div><div class="fecolors" id="feColors"></div></div>
+      <div class="feex"><div class="qlabel">Kombinationen</div><div id="feCombos"></div></div>` : ''}
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="feMinus" aria-label="weniger">−</button><span id="feCount">${f.count || 1}</span><button type="button" id="fePlus" aria-label="mehr">+</button></div></div>
       <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="fePrice" inputmode="decimal" placeholder="für alle zusammen" value="${U.esc(f.price != null ? String(f.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="feBought" value="${U.esc(f.boughtAt || '')}"></label></div>
@@ -256,36 +258,28 @@ function openFilterEditor(f) {
     ed.kind = b.dataset.k; ov.querySelectorAll('#feKind .seg').forEach(x => x.classList.toggle('on', x === b));
     $('feThreadBox').hidden = ed.kind !== 'screw';
   });
-  // Beispielfotos: aus allen Fotos, bei denen dieser Filter eingetragen ist (beim Farbfolien-Set auch jede einzelne Farbe).
-  // Ausgewählte stehen groß oben als Referenz; die Auswahl wird sofort gespeichert.
-  (async () => {
-    const uses = id => id === f.id || String(id).startsWith(f.id + '#');
-    const rolls = new Map((await DB.all('rolls')).map(r => [r.id, r]));
-    const used = (await DB.all('frames')).filter(fr => fr.imgId && (fr.filterIds || []).some(uses))
-      .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
-    const thumbs = new Map(await Promise.all(used.map(async fr => [fr.id, await U.imgUrl(fr.imgId, true)])));
-    let picks = (f.examples || []).filter(id => used.some(u => u.id === id));
-    const label = fr => [rolls.get(fr.rollId)?.title, 'Bild ' + (fr.index === 0 ? '0' : fr.index)].filter(Boolean).join(' · ');
-    const persist = async () => { ed.examples = [...picks]; const list = await getFilters(); const it = list.find(x => x.id === f.id); if (it) { it.examples = [...picks]; await saveFilters(list); } };
-    const draw = () => {
-      const box = $('feEx'); if (!box) return;
-      if (!used.length) { box.innerHTML = '<p class="hint">Noch kein Foto mit diesem Filter. Sobald du ihn bei einem Bild einträgst und das Foto hochgeladen ist, kannst du es hier als Beispiel auswählen.</p>'; return; }
-      const sel = picks.map(id => used.find(u => u.id === id)).filter(Boolean);
-      box.innerHTML = (sel.length ? `<div class="feexsel">${sel.map(fr => `<button type="button" class="feexbig" data-zoom="${fr.id}" aria-label="${U.esc(label(fr))} vergrößern"><img src="${thumbs.get(fr.id)}" alt=""><span>${U.esc(label(fr))}</span></button>`).join('')}</div>` : '<p class="hint">Tippe unten auf Fotos, um sie als Beispiel für diesen Filter festzuhalten.</p>')
-        + `<details class="feexall"${sel.length ? '' : ' open'}><summary>Fotos mit diesem Filter · ${used.length}</summary><div class="feexgrid">${used.map(fr => `<button type="button" class="feexpick${picks.includes(fr.id) ? ' on' : ''}" data-pick="${fr.id}" aria-pressed="${picks.includes(fr.id)}" aria-label="${U.esc(label(fr))}"><img src="${thumbs.get(fr.id)}" alt="" loading="lazy"><i></i></button>`).join('')}</div></details>`;
-    };
-    draw();
-    $('feEx').addEventListener('click', async e => {
-      const z = e.target.closest('[data-zoom]');
-      if (z) { const fr = used.find(u => u.id === z.dataset.zoom); if (fr) zoom(await U.imgUrl(fr.imgId) || thumbs.get(fr.id)); return; }
-      const p = e.target.closest('[data-pick]'); if (!p) return;
-      const id = p.dataset.pick;
-      picks = picks.includes(id) ? picks.filter(x => x !== id) : [...picks, id];
-      U.haptic && U.haptic(10); await persist();
-      const open = $('feEx').querySelector('.feexall')?.open;
-      draw(); const d = $('feEx').querySelector('.feexall'); if (d) d.open = open;
+  // Beispielfotos (eigene Uploads und Fotos aus Frames); beim Farbfolien-Set zusätzlich eine Kachel je Farbe und Kombinationen
+  const fresh = async () => (await getFilters()).find(x => x.id === f.id) || f;
+  const drawSet = async () => {
+    const cur = await fresh();
+    if ($('feColors')) $('feColors').innerHTML = await filterColorTiles(cur);
+    if ($('feCombos')) $('feCombos').innerHTML = await filterComboList(cur);
+  };
+  renderFilterExamples($('feEx'), f, null);
+  if ((f.colors || []).length) {
+    drawSet();
+    $('feColors').addEventListener('click', async e => {
+      const t = e.target.closest('[data-color]'); if (!t) return;
+      const cur = await fresh(); const c = cur.colors.find(x => x.k === t.dataset.color);
+      if (c) openFilterColor(cur, c, drawSet);
     });
-  })();
+    $('feCombos').addEventListener('click', async e => {
+      const del = e.target.closest('[data-delup]');
+      if (del) { await removeFilterUpload(f.id, del.dataset.delup); drawSet(); return; }
+      const z = e.target.closest('[data-zoomimg]'); if (z) { zoom(await U.imgUrl(z.dataset.zoomimg)); return; }
+      if (e.target.closest('#feComboAdd')) openFilterCombo(await fresh(), drawSet);
+    });
+  }
   $('feMinus').addEventListener('click', () => { ed.count = Math.max(1, ed.count - 1); $('feCount').textContent = ed.count; });
   $('fePlus').addEventListener('click', () => { ed.count = Math.min(99, ed.count + 1); $('feCount').textContent = ed.count; });
   const close = () => ov.remove();
@@ -296,7 +290,8 @@ function openFilterEditor(f) {
     { const p = parseFloat($('fePrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('feBought').value || null; }
     if ($('feName')) ed.name = $('feName').value.trim() || f.name;
     if ($('feThread')) { const t = $('feThread').value.replace(',', '.').replace(/[^\d.]/g, ''); ed.thread = filterKind(ed) === 'screw' && t ? t : null; }
-    const list = (await getFilters()).map(x => x.id === f.id ? ed : x);
+    // Beispielfotos werden sofort gespeichert und hier nicht vom Stand beim Öffnen überschrieben
+    const list = (await getFilters()).map(x => x.id === f.id ? { ...ed, examples: x.examples, colorExamples: x.colorExamples, uploads: x.uploads } : x);
     await saveFilters(list); close(); U.toast('Gespeichert'); route();
   });
   $('feDel').addEventListener('click', async () => {
@@ -493,3 +488,125 @@ function filterArt(f, size = 40) {
 const IR_FILM_IDS = ['ilford-sfx200'];
 const isIrFilm = st => !!st && (st.type === 'ir' || IR_FILM_IDS.includes(st.id));
 const isIrFilter = f => filterTint(f).a === '#2a0508';
+
+
+/* ---------- Beispielfotos zu Filtern ----------
+   f.examples: Frame-ids (ganzer Filter), f.colorExamples[k]: Frame-ids je Farbe,
+   f.uploads: eigene Fotos { id, imgId, color?, combo?: [Farbschlüssel] }. Alles liegt im Filtereintrag (meta filters). */
+const usesFilterId = (id, base, ck) => ck ? id === base + '#' + ck : (id === base || String(id).startsWith(base + '#'));
+async function patchFilter(id, fn) { const list = await getFilters(); const it = list.find(x => x.id === id); if (!it) return null; fn(it); await saveFilters(list); return it; }
+async function removeFilterUpload(fid, upId) {
+  let img = null;
+  await patchFilter(fid, it => { const u = (it.uploads || []).find(x => x.id === upId); img = u?.imgId; it.uploads = (it.uploads || []).filter(x => x.id !== upId); });
+  if (img) await deleteImage(img);
+  U.haptic && U.haptic(10);
+}
+async function filterFramesFor(f, ck) {
+  const rolls = new Map((await DB.all('rolls')).map(r => [r.id, r]));
+  const used = (await DB.all('frames')).filter(fr => fr.imgId && (fr.filterIds || []).some(id => usesFilterId(id, f.id, ck)))
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+  return { used, label: fr => [rolls.get(fr.rollId)?.title, 'Bild ' + (fr.index === 0 ? '0' : fr.index)].filter(Boolean).join(' · ') };
+}
+// Beispielbereich: oben eigene Uploads und ausgewählte Frame-Fotos groß, dann „Foto hochladen“, darunter aufklappbar alle Fotos mit dem Filter
+async function renderFilterExamples(box, f0, ck, onChange) {
+  const { used, label } = await filterFramesFor(f0, ck);
+  const thumbs = new Map(await Promise.all(used.map(async fr => [fr.id, await U.imgUrl(fr.imgId, true)])));
+  const draw = async () => {
+    const f = (await getFilters()).find(x => x.id === f0.id) || f0;
+    const picks = (ck ? (f.colorExamples || {})[ck] : f.examples) || [];
+    const ups = (f.uploads || []).filter(u => ck ? u.color === ck && !u.combo : !u.color && !u.combo);
+    const upUrls = await Promise.all(ups.map(u => U.imgUrl(u.imgId, true)));
+    const sel = picks.map(id => used.find(u => u.id === id)).filter(Boolean);
+    const big = [...ups.map((u, i) => `<div class="feexbig"><button type="button" class="feexzoom" data-zoomimg="${u.imgId}" aria-label="Vergrößern"><img src="${upUrls[i]}" alt=""></button><span>Eigenes Foto</span><button type="button" class="feexdel" data-delup="${u.id}" aria-label="Foto entfernen">${ART.x}</button></div>`),
+      ...sel.map(fr => `<div class="feexbig"><button type="button" class="feexzoom" data-zoomimg="${fr.imgId}" aria-label="Vergrößern"><img src="${thumbs.get(fr.id)}" alt=""></button><span>${U.esc(label(fr))}</span></div>`)];
+    box.innerHTML = (big.length ? `<div class="feexsel">${big.join('')}</div>` : '')
+      + `<label class="btn ghost small feexup">${ART.pickup}<span>Foto hochladen</span><input type="file" accept="image/*" multiple hidden></label>`
+      + (used.length ? `<details class="feexall"${big.length ? '' : ' open'}><summary>Fotos aus deinen Rollen · ${used.length}</summary><div class="feexgrid">${used.map(fr => `<button type="button" class="feexpick${picks.includes(fr.id) ? ' on' : ''}" data-pick="${fr.id}" aria-pressed="${picks.includes(fr.id)}" aria-label="${U.esc(label(fr))}"><img src="${thumbs.get(fr.id)}" alt="" loading="lazy"><i></i></button>`).join('')}</div></details>`
+        : '<p class="hint">Fotos aus deinen Rollen erscheinen hier zur Auswahl, sobald du den Filter bei einem Bild einträgst und das Foto hochgeladen ist.</p>');
+    box.querySelector('.feexup input').addEventListener('change', async e => {
+      const files = [...e.target.files]; if (!files.length) return;
+      U.toast(files.length > 1 ? `${files.length} Fotos werden gespeichert …` : 'Foto wird gespeichert …');
+      const recs = []; for (const file of files) recs.push(await U.storeImage(file, 'filter'));
+      await patchFilter(f0.id, it => { it.uploads = [...(it.uploads || []), ...recs.map(r => ({ id: U.uid(), imgId: r.id, ...(ck ? { color: ck } : {}) }))]; });
+      U.haptic && U.haptic([12, 40, 12]); await draw(); onChange && onChange();
+    });
+  };
+  box.onclick = async e => {
+    const z = e.target.closest('[data-zoomimg]'); if (z) { zoom(await U.imgUrl(z.dataset.zoomimg)); return; }
+    const d = e.target.closest('[data-delup]'); if (d) { await removeFilterUpload(f0.id, d.dataset.delup); await draw(); onChange && onChange(); return; }
+    const p = e.target.closest('[data-pick]'); if (!p) return;
+    const open = box.querySelector('.feexall')?.open;
+    await patchFilter(f0.id, it => {
+      const list = ck ? ((it.colorExamples = it.colorExamples || {})[ck] = it.colorExamples[ck] || []) : (it.examples = it.examples || []);
+      const i = list.indexOf(p.dataset.pick); if (i >= 0) list.splice(i, 1); else list.push(p.dataset.pick);
+    });
+    U.haptic && U.haptic(10); await draw(); const det = box.querySelector('.feexall'); if (det) det.open = open; onChange && onChange();
+  };
+  await draw();
+}
+// Farbkacheln des Sets mit Anzahl der Fotos je Farbe
+async function filterColorTiles(f) {
+  const frames = (await DB.all('frames')).filter(fr => fr.imgId);
+  return f.colors.map(c => {
+    const n = frames.filter(fr => (fr.filterIds || []).includes(f.id + '#' + c.k)).length + (f.uploads || []).filter(u => u.color === c.k && !u.combo).length;
+    return `<button type="button" class="fecolor" data-color="${c.k}"><img src="img/filter-${c.img}.webp" alt=""><span>${U.esc(c.name)}</span>${n ? `<b>${n}</b>` : ''}</button>`;
+  }).join('');
+}
+async function filterComboList(f) {
+  const combos = (f.uploads || []).filter(u => (u.combo || []).length);
+  const urls = await Promise.all(combos.map(u => U.imgUrl(u.imgId, true)));
+  const cname = k => (f.colors.find(c => c.k === k) || {}).name || k;
+  return (combos.length ? `<div class="fecombos">${combos.map((u, i) => `<div class="fecombo"><button type="button" class="feexzoom" data-zoomimg="${u.imgId}" aria-label="Vergrößern"><img src="${urls[i]}" alt=""></button>
+      <div class="fecombotxt"><span class="fecombochips">${u.combo.map(k => { const c = f.colors.find(x => x.k === k); return c ? `<img src="img/filter-${c.img}.webp" alt="" title="${U.esc(c.name)}">` : ''; }).join('')}</span><span class="sub2">${U.esc(u.combo.map(cname).join(' + '))}</span></div>
+      <button type="button" class="feexdel" data-delup="${u.id}" aria-label="Kombination entfernen">${ART.x}</button></div>`).join('')}</div>` : '<p class="hint">Noch keine Kombination. Wähle zwei oder mehr Farben, die du übereinander benutzt hast, und lade das Ergebnis hoch.</p>')
+    + '<button type="button" class="btn ghost small" id="feComboAdd">+ Kombination hinzufügen</button>';
+}
+// Eine Farbe des Sets: eigene Beispielfotos nur für dieses Plättchen
+function openFilterColor(f, c, onClose) {
+  const ov = document.createElement('div');
+  ov.className = 'modalbg';
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fcTitle">
+      <div class="fecolorhead"><img src="img/filter-${c.img}.webp" alt=""><div><h2 id="fcTitle">${U.esc(c.name)}</h2><p class="sub2">${U.esc(filterName(f))}</p></div></div>
+      <div class="feex"><div class="qlabel">Beispielfotos mit dieser Farbe</div><div id="fcEx"><p class="hint">Lädt …</p></div></div>
+      <div class="modalfoot"><button class="closex" id="fcNo" aria-label="Schließen">${ART.x}</button><span></span></div></div>`;
+  document.body.appendChild(ov);
+  const close = () => { ov.remove(); onClose && onClose(); };
+  ov.querySelector('#fcNo').addEventListener('click', close);
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  renderFilterExamples(ov.querySelector('#fcEx'), f, c.k);
+}
+// Kombination: Farben wählen, dann das Ergebnis hochladen
+function openFilterCombo(f, onDone) {
+  const chosen = new Set();
+  const ov = document.createElement('div');
+  ov.className = 'modalbg';
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="fkTitle">
+      <h2 id="fkTitle">Kombination</h2>
+      <p class="hint">Welche Farben lagen übereinander? Mindestens zwei antippen, dann das Foto hochladen.</p>
+      <div class="fecolors pick" id="fkColors">${f.colors.map(c => `<button type="button" class="fecolor" data-k="${c.k}" aria-pressed="false"><img src="img/filter-${c.img}.webp" alt=""><span>${U.esc(c.name)}</span></button>`).join('')}</div>
+      <label class="btn accent wide feexup disabled" id="fkUp">${ART.pickup}<span>Ergebnis hochladen</span><input type="file" accept="image/*" hidden disabled></label>
+      <div class="modalfoot"><button class="closex" id="fkNo" aria-label="Abbrechen">${ART.x}</button><span class="sub2" id="fkCount"></span></div></div>`;
+  document.body.appendChild(ov);
+  const $ = id => ov.querySelector('#' + id);
+  const sync = () => {
+    const ok = chosen.size >= 2;
+    $('fkUp').classList.toggle('disabled', !ok); $('fkUp').querySelector('input').disabled = !ok;
+    $('fkCount').textContent = chosen.size ? `${chosen.size} ${chosen.size === 1 ? 'Farbe' : 'Farben'}` : '';
+  };
+  $('fkColors').addEventListener('click', e => {
+    const b = e.target.closest('[data-k]'); if (!b) return;
+    if (chosen.has(b.dataset.k)) chosen.delete(b.dataset.k); else chosen.add(b.dataset.k);
+    b.classList.toggle('on', chosen.has(b.dataset.k)); b.setAttribute('aria-pressed', chosen.has(b.dataset.k));
+    U.haptic && U.haptic(8); sync();
+  });
+  $('fkUp').querySelector('input').addEventListener('change', async e => {
+    const file = e.target.files[0]; if (!file || chosen.size < 2) return;
+    const rec = await U.storeImage(file, 'filter');
+    await patchFilter(f.id, it => { it.uploads = [...(it.uploads || []), { id: U.uid(), imgId: rec.id, combo: [...chosen] }]; });
+    U.toast('Kombination gespeichert'); U.haptic && U.haptic([12, 40, 12]);
+    ov.remove(); onDone && onDone();
+  });
+  $('fkNo').addEventListener('click', () => ov.remove());
+  ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
+  sync();
+}

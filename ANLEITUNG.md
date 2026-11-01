@@ -313,3 +313,15 @@ Die Reihe „★ Favoriten · Anzahl“ oben in „Alle Fotos“ ist jetzt ein S
 
 ## Verschieben nimmt die Einträge mit (01.11.2026)
 Beim Neuanordnen in „Alle Fotos“ und im Album wandert jetzt das ganze Bild: Foto, Handyfotos, Blende, Zeit, Objektiv, Filter, Blitz, Notiz, Titel, Aufnahmetag, Favorit und Lightleak-Markierung. Fest bleiben nur die Bildnummern als Plätze. Vorher wurde nur das Foto verschoben und die Einträge blieben bei ihrer Bildnummer, so dass bereits kommentierte Bilder danach falsch beschriftet waren. Geprüft: Bild 1 an Platz 3 gezogen, Notiz und Blende sind mitgewandert.
+
+## Filter: eigene Beispielfotos, Farbkacheln und Kombinationen (01.11.2026)
+Im Fenster eines Filters steht unter „Beispielfotos“ jetzt „Foto hochladen“ (auch mehrere auf einmal). Eigene Fotos erscheinen groß oben mit „Eigenes Foto“ und einem × zum Entfernen; daneben die aus den Rollen ausgewählten Fotos. Darunter klappt „Fotos aus deinen Rollen“ auf, Auswahl per Tipp wie bisher.
+Beim Farbfolien-Set (Creative Filters B 375) folgt eine Kachel je Farbe mit Bild, Name und der Zahl der Fotos. Ein Tipp öffnet die Farbe mit eigenen Beispielfotos nur für dieses Plättchen: hochladen oder aus den Rollen wählen (dort erscheinen alle Bilder, bei denen genau diese Farbe eingetragen ist).
+Darunter stehen „Kombinationen“: „+ Kombination hinzufügen“ öffnet die Farbkacheln zum Antippen; ab zwei Farben wird „Ergebnis hochladen“ aktiv. Jede Kombination zeigt das Foto, die kleinen Farbplättchen und die Namen (z. B. „Signalrot mit Loch + Kobaltblau“), mit × zum Entfernen.
+Speicherung im Filtereintrag: examples (Frame-ids), colorExamples (Frame-ids je Farbe), uploads (eigene Fotos mit optional color oder combo). Alles wird sofort gespeichert und ist in der ZIP-Sicherung enthalten.
+
+## Filter nachtragen bei bestehenden Fotos (01.11.2026)
+In der Einzelansicht eines Fotos (Album oder „Alle Fotos“) steht unter dem Titel „Filter“ mit den eingetragenen Filtern und „Filter eintragen“ bzw. „Ändern“; es öffnet dieselbe Filtersuche wie im Frame. Im Album steht unter „Fotoalbum ansehen“ zusätzlich „Filter für alle Bilder eintragen“: Die gewählten Filter werden bei allen Bildern der Rolle ergänzt, schon eingetragene bleiben. So tauchen auch alte und archivierte Fotos bei den Filtern als Beispiele zur Auswahl auf.
+
+## Fotos nachtragen im Album (01.11.2026)
+Im Album steht über den Fotos neben „Reihenfolge“ jetzt „Fotos nachtragen“ (auch in einem leeren Album). Die gewählten Dateien werden nach Dateinamen sortiert und füllen zuerst Bilder, die noch kein Foto haben; weitere kommen als neue Bilder hinten an die Rolle. Danach stehen sie sofort im Album und lassen sich mit „Reihenfolge“ an die richtige Stelle ziehen.

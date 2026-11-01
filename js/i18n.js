@@ -620,6 +620,30 @@ Voriger Monat	Previous month
 Nächster Monat	Next month
 Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.	Drag a photo to the right place within its roll. Aperture, shutter speed, notes and all other entries move with it.
 Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.	Press and hold a photo, then drag it to the right place. Aperture, shutter speed, notes and all other entries move with it.
+Foto hochladen	Upload photo
+Eigenes Foto	Own photo
+Fotos aus deinen Rollen · {0}	Photos from your rolls · {0}
+Fotos aus deinen Rollen erscheinen hier zur Auswahl, sobald du den Filter bei einem Bild einträgst und das Foto hochgeladen ist.	Photos from your rolls appear here once you add the filter to a frame and the photo is uploaded.
+Farben · für Fotos je Farbe antippen	Colours · tap for photos per colour
+Kombinationen	Combinations
+Kombination	Combination
++ Kombination hinzufügen	+ Add combination
+Noch keine Kombination. Wähle zwei oder mehr Farben, die du übereinander benutzt hast, und lade das Ergebnis hoch.	No combination yet. Choose two or more colours you stacked and upload the result.
+Welche Farben lagen übereinander? Mindestens zwei antippen, dann das Foto hochladen.	Which colours were stacked? Tap at least two, then upload the photo.
+Ergebnis hochladen	Upload result
+Kombination gespeichert	Combination saved
+Beispielfotos mit dieser Farbe	Example photos with this colour
+Foto entfernen	Remove photo
+Kombination entfernen	Remove combination
+Filter eintragen	Add filter
+Filter für alle Bilder eintragen	Add filter to all photos
+Filter bei {0} Bildern eingetragen	Filter added to {0} photos
+Filter bei {0} Bild eingetragen	Filter added to {0} photo
+War schon überall eingetragen	Was already added everywhere
+keiner	none
+Fotos nachtragen	Add photos
+{0} Fotos nachgetragen	{0} photos added
+{0} Foto nachgetragen	{0} photo added
 Als ZIP sichern	Save as ZIP
 Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
 Rebeccas Gear	Rebecca's gear

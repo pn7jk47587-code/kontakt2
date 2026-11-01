@@ -1992,3 +1992,34 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 .rpday.today { box-shadow: inset 0 0 0 1px var(--line); }
 .rpday.in { background: rgba(15,152,147,.18); border-radius: 0; }
 .rpday.edge { background: var(--teal); color: #fff; font-weight: 700; border-radius: 10px; }
+/* Filter: eigene Fotos, Farbkacheln, Kombinationen */
+.feexbig { position: relative; }
+.feexzoom { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.feexzoom img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.feexdel { position: absolute; right: 4px; top: 4px; width: 28px; height: 28px; border-radius: 50%; border: 0; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; }
+.feexdel svg { width: 14px; height: 14px; }
+.feexdel::after { content: ""; position: absolute; inset: -8px; }
+.feexup { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.feexup svg { width: 18px; height: 18px; }
+.feexup.disabled { opacity: .45; pointer-events: none; }
+.fecolors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fecolor { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font: inherit; font-size: 12px; cursor: pointer; text-align: center; }
+.fecolor img { width: 48px; height: 48px; object-fit: contain; }
+.fecolor b { position: absolute; right: 6px; top: 6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--teal); color: #fff; font-size: 11px; line-height: 20px; }
+.fecolors.pick .fecolor.on { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal) inset; }
+.fecombos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.fecombo { position: relative; display: flex; align-items: center; gap: 10px; padding: 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); }
+.fecombo .feexzoom { flex: 0 0 72px; width: 72px; height: 54px; border-radius: 8px; overflow: hidden; }
+.fecombotxt { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fecombochips { display: flex; gap: 2px; }
+.fecombochips img { width: 24px; height: 24px; object-fit: contain; }
+.fecombo .feexdel { position: static; flex: 0 0 auto; background: var(--line); color: var(--text); }
+.fecolorhead { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.fecolorhead img { width: 72px; height: 72px; object-fit: contain; }
+.fecolorhead h2 { margin: 0; }
+.fecolorhead .sub2 { margin: 2px 0 0; }
+/* Einzelfoto: Filter nachtragen */
+.phfilters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 4px; }
+.phflabel { font-size: 12px; color: var(--muted); margin-right: 2px; }
+.phfilters .btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.archlink svg { flex: 0 0 auto; }

@@ -1622,18 +1622,39 @@ async function viewAlbum(id) {
   setHeader(d.title);
   const st = d.roll ? d.stocks.get(d.roll.stockId) : null, cm = d.roll ? d.cams.get(d.roll.cameraId) : null;
   const infoRow = d.roll ? `<a class="albuminfo" href="#/rolle/${d.roll.id}/info"><span class="aiart">${await filmArt(st, 40)}</span><span class="aitxt"><b>${U.esc(U.stockLabel(st))}</b><span class="sub2">${U.esc(camLabel(cm) || d.roll.camera || 'Kamera unbekannt')}</span></span><span class="aiedit">Bearbeiten</span><span class="chev">›</span></a>` : '';
-  if (!d.frames.length) { view.innerHTML = infoRow + '<div class="empty">Noch keine Fotos im Album.</div>'; return; }
+  // Fotos nachtragen: füllen zuerst Bilder ohne Foto (nach Dateinamen sortiert), weitere kommen als neue Bilder hinten dran
+  const addPhotosBtn = d.roll ? `<label class="archlink">${ART.pickup}<span>Fotos nachtragen</span><input type="file" accept="image/*" multiple hidden id="albAdd"></label>` : '';
+  const wireAdd = () => view.querySelector('#albAdd')?.addEventListener('change', async e => {
+    const files = [...e.target.files]; if (!files.length) return;
+    const n = await assignScans(d.roll, files);
+    U.toast(`${n} ${n === 1 ? 'Foto' : 'Fotos'} nachgetragen`); U.haptic && U.haptic([12, 40, 12]);
+    const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
+  });
+  if (!d.frames.length) { view.innerHTML = infoRow + `<div class="archcorner albsort">${addPhotosBtn}</div><div class="empty">Noch keine Fotos im Album.</div>`; wireAdd(); return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   const leakCam = !!(d.roll && d.cams.get(d.roll.cameraId)?.lightLeaks);
   view.innerHTML = `
     ${d.roll ? `<label class="rollname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : ''}
     ${infoRow}
-    ${d.frames.length > 1 ? `<div class="archcorner albsort"><button type="button" class="archlink${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}">${MOVE_IC}<span>${ALBUM_SORT ? 'Fertig' : 'Reihenfolge'}</span></button></div>` : ''}
+    <div class="archcorner albsort">${ALBUM_SORT ? '' : addPhotosBtn}${d.frames.length > 1 ? `<button type="button" class="archlink${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}">${MOVE_IC}<span>${ALBUM_SORT ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}</div>
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
     <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
+    ${d.roll ? `<div class="modewrap"><button class="btn ghost small" id="albFilters">${SEARCH_IC}Filter für alle Bilder eintragen</button></div>` : ''}
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
   view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
+  wireAdd();
+  // Filter nachträglich für die ganze Rolle: wird bei allen Bildern ergänzt, schon eingetragene Filter bleiben
+  view.querySelector('#albFilters')?.addEventListener('click', async () => {
+    const all = await getFilters();
+    openFrameFilterSearch(all, [], d.roll, async ids => {
+      if (!ids.length) return;
+      const frs = await framesOf(d.roll.id); let n = 0;
+      for (const fr of frs) { const had = fr.filterIds || []; const next = [...new Set([...had, ...ids])]; if (next.length !== had.length) { fr.filterIds = next; await DB.put('frames', fr); n++; } }
+      d.roll.lastFilterIds = [...ids]; await DB.put('rolls', d.roll);
+      U.toast(n ? `Filter bei ${n} ${n === 1 ? 'Bild' : 'Bildern'} eingetragen` : 'War schon überall eingetragen'); U.haptic && U.haptic([12, 40, 12]);
+    });
+  });
   // Reihenfolge der Fotos per Ziehen ändern (wie in „Alle Fotos“)
   view.querySelector('#albSort')?.addEventListener('click', async () => {
     ALBUM_SORT = !ALBUM_SORT; U.haptic && U.haptic(10);
@@ -1673,6 +1694,7 @@ async function viewPhoto(albumId, frameId) {
       ${phones.length ? `<span class="phlbl">Handy</span>` : ''}
       <figcaption>
         <label class="titlefld"><span>Titel</span><input id="phTitle" value="${U.esc(f.title || '')}" maxlength="120" enterkeyhint="done"></label>
+        <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
         ${ln.spec ? `<p class="photospec">${U.esc(ln.spec)}</p>` : ''}
         ${phones.length ? '<p class="photodate">Nach oben wischen: Handyfoto</p>' : ''}
@@ -1704,6 +1726,22 @@ async function viewPhoto(albumId, frameId) {
     }, async () => { if (!undone) await deleteImage(imgId); });
   });
   done.addEventListener('click', async () => { await saveTitle(); location.hash = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId; });
+  // Filter nachtragen: auch bei fertigen und archivierten Rollen, damit das Foto später beim Filter als Beispiel auftaucht
+  const allFilters = await getFilters();
+  const drawPhFilters = () => {
+    const fs = (f.filterIds || []).map(id => filterById(allFilters, id)).filter(Boolean);
+    const box = view.querySelector('#phFilters'); if (!box) return;
+    box.innerHTML = `<span class="phflabel">Filter</span>${fs.length ? fs.map(x => `<span class="ffchip">${filterArt(x, 22)}<span>${U.esc(filterShort(x))}</span></span>`).join('') : '<span class="sub2">keiner</span>'}<button type="button" class="btn ghost small" id="phFilterEdit">${SEARCH_IC}${fs.length ? 'Ändern' : 'Filter eintragen'}</button>`;
+    box.querySelector('#phFilterEdit').addEventListener('click', async () => {
+      const roll = await DB.get('rolls', f.rollId);
+      openFrameFilterSearch(allFilters, (f.filterIds || []).filter(id => filterById(allFilters, id)), roll, async ids => {
+        f.filterIds = [...ids]; await DB.put('frames', f);
+        if (roll) { roll.lastFilterIds = [...ids]; await DB.put('rolls', roll); }
+        U.haptic && U.haptic(10); drawPhFilters();
+      });
+    });
+  };
+  drawPhFilters();
   // Zwei Finger: Foto vergrößern (nur das Foto, nicht die App)
   fig.querySelectorAll('.flipimgs img').forEach(img => U.pinch(img));
   // Tippen auf den linken oder rechten Rand des Fotos: zurück oder weiter
