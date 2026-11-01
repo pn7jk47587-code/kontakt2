@@ -52,7 +52,7 @@ async function viewDiary(stockId) {
   };
   view.innerHTML = `
     <div class="diaryhead"><span class="stockart">${await filmArt(stock, 56)}</span><div><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">ISO ${U.esc(stock.isoLabel || stock.boxIso || '?')}</span></div></div>
-    <div class="card"><label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5" placeholder="Wie verhält sich der Film? Welche ISO, welches Licht, welches Labor?">${U.esc(d.notes || '')}</textarea></label></div>
+    <div class="card"><label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5">${U.esc(d.notes || '')}</textarea></label></div>
     <p class="hint pad">Lade für jede Lichtsituation Fotos hoch, die du mit diesem Film gemacht hast.</p>
     <div class="diarytags">${DIARY_TAGS.map(card).join('')}</div>`;
   let tmr = null;

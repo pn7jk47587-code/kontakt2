@@ -381,7 +381,7 @@ async function wizardStep1(wiz, root = view) {
       <div class="chips" id="exp"></div>
     </section>
     <section class="wizsec">
-      <label class="fld"><span>Name der Rolle</span><input id="rollTitle" maxlength="80" value="${U.esc(wiz.title || '')}" enterkeyhint="done" required aria-required="true" placeholder="z. B. Sommer an der Ostsee"></label>
+      <label class="fld"><span>Name der Rolle</span><input id="rollTitle" maxlength="80" value="${U.esc(wiz.title || '')}" enterkeyhint="done" required aria-required="true"></label>
       <label class="fld"><span>Eingelegt am</span><input type="date" id="loadedAt" value="${wiz.loadedAt || U.today()}"></label>
     </section>
     <div class="wizfoot"><p class="hint namehint" id="nameHint" hidden>Gib der Rolle noch einen Namen.</p>${NEXT_BTN('next', 'Film in die Kamera legen', true)}</div>`;
@@ -758,7 +758,7 @@ function openFrameFilterSearch(filters, chosen, roll, onDone, onCancel) {
   ov.innerHTML = `
     <div class="modal ffsearch" role="dialog" aria-modal="true" aria-labelledby="ffsTitle">
       <h2 id="ffsTitle">Filter wählen</h2>
-      <input type="search" id="ffsQ" placeholder="Nummer oder Name, z. B. 121 oder Pol" aria-label="Filter suchen" autocomplete="off">
+      <input type="search" id="ffsQ" placeholder=" " aria-label="Filter suchen" autocomplete="off">
       <div class="ffslist" id="ffsList"></div>
       <div class="modalfoot"><button class="closex" id="ffsNo" aria-label="Abbrechen">${ART.x}</button><span class="sub2" id="ffsCount"></span><button class="okbtn" id="ffsOk" aria-label="Übernehmen">${ART.check}</button></div>
     </div>`;
@@ -1084,7 +1084,7 @@ async function rollDev(body, roll, stock) {
       ${field('Charge / Ansatz', 'dev.batch')}
     </div>
     ${field('Gescannt mit', 'dev.scanner')}
-    ${area('Notizen zur Entwicklung', 'dev.notes', 'Ergebnis, Auffälligkeiten …')}
+    ${area('Notizen zur Entwicklung', 'dev.notes', '')}
   </div>`;
   const sync = () => {
     const self = roll.dev.mode === 'selbst';
@@ -1114,7 +1114,7 @@ function rollInfo(body, roll) {
     <div id="isoBox"></div>
     ${field('Eingelegt am', 'loadedAt', { type: 'date' })}
     ${field('Voll am', 'finishedAt', { type: 'date' })}
-    ${area('Notizen zur Rolle', 'notes', 'Thema, Reise, Besonderheiten …', 4)}
+    ${area('Notizen zur Rolle', 'notes', '', 4)}
     ${select('Status korrigieren', 'status', [['entwurf', 'In der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']])}
   </div>
   <div id="diaryCard"></div>
@@ -1361,7 +1361,7 @@ async function viewFrame(idWithQuery) {
       <details class="flashcalc"${frame.flashCalcOpen ? ' open' : ''}><summary>Blitzrechner</summary>
         <div class="flgrid">
           <label class="fld"><span>ISO</span><input id="flIso" inputmode="numeric" value="${isoV}"></label>
-          <label class="fld"><span>Leitzahl</span><input id="flGn" inputmode="decimal" placeholder="z. B. 20" value="${gn ? String(gn).replace('.', ',') : ''}"></label>
+          <label class="fld"><span>Leitzahl</span><input id="flGn" inputmode="decimal" value="${gn ? String(gn).replace('.', ',') : ''}"></label>
           <label class="fld"><span>Entfernung (m)</span><input id="flDist" inputmode="decimal" value="${String(dist).replace('.', ',')}"></label>
         </div>
         ${gn > 0 ? calc + `<table class="flashtable"><thead><tr><th>Entfernung</th><th>Blende</th></tr></thead><tbody>${rows}</tbody></table>
@@ -1684,7 +1684,7 @@ async function viewAlbum(id) {
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
 function placeFieldHtml(id, value, cls = 'fld') {
-  return `<div class="${cls} placefld"><span>Ort</span><div class="placerow"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" placeholder="z. B. Hafen Sassnitz" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="btn ghost small placegps" id="${id}Gps" aria-label="Aktuellen Standort eintragen">${PIN_IC}<span>Standort</span></button></div></div>`;
+  return `<div class="${cls} placefld"><span>Ort</span><div class="placerow"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="btn ghost small placegps" id="${id}Gps" aria-label="Aktuellen Standort eintragen">${PIN_IC}<span>Standort</span></button></div></div>`;
 }
 async function wirePlace(root, id, obj, persist) {
   const inp = root.querySelector('#' + id), dl = root.querySelector('#' + id + 'List'), gps = root.querySelector('#' + id + 'Gps');
@@ -1733,7 +1733,7 @@ async function viewPhoto(albumId, frameId) {
       <figcaption>
         <label class="titlefld"><span>Titel</span><input id="phTitle" value="${U.esc(f.title || '')}" maxlength="120" enterkeyhint="done"></label>
         ${placeFieldHtml('phPlace', f.place, 'titlefld')}
-        <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2" placeholder="Wer ist drauf, wo genau, was wolltest du ausprobieren …">${U.esc(f.info || '')}</textarea></label>
+        <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2">${U.esc(f.info || '')}</textarea></label>
         <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
         ${ln.spec ? `<p class="photospec">${U.esc(ln.spec)}</p>` : ''}
@@ -2088,7 +2088,6 @@ async function viewArchive() {
       <h2 class="wiztitle">2 · Fotografiert ungefähr</h2>
       <input type="hidden" id="arFrom"><input type="hidden" id="arTo">
       <button type="button" class="filmpickbtn rangebtn" id="arRange"><span class="rangeic" aria-hidden="true">${ART.calIc || ''}</span><span class="filmpickname" id="arRangeTxt">Zeitraum wählen</span><span class="filmpickchg">Kalender</span></button>
-      <p class="hint">Im Kalender erst den ersten, dann den letzten Tag antippen. Für einen einzelnen Tag denselben Tag zweimal.</p>
     </section>
     <section class="wizsec">
       <h2 class="wiztitle">3 · Entwicklung</h2>
@@ -2104,7 +2103,7 @@ async function viewArchive() {
       <div class="arfilm" id="arFilm"><button type="button" class="filmpickbtn" id="arStock"><span class="filmselart" id="arStockArt"></span><span class="filmpickname" id="arStockName">Film wählen</span><span class="filmpickchg">Pflicht</span></button>
         <button type="button" class="btn ghost small" id="arStockUnknown">Weiß ich nicht mehr</button></div>
       <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
-      <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80" placeholder="z. B. Sommer an der Ostsee"></label>
+      <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80"></label>
     </section>`;
   const $ = id => view.querySelector('#' + id);
   // Unten rechts: Archivieren (statt eines Zurück-Pfeils, der wie ein Haken wirkt)
@@ -2486,7 +2485,7 @@ async function viewLens(id) {
         ${field('Brennweite (mm)', 'focal')}
         ${field('Lichtstärke (größte Blende)', 'maxAp')}
         ${field('Kleinste Blende', 'minAp')}
-        ${field('Filtergewinde ⌀ (mm)', 'filterThread', { attrs: 'inputmode="decimal" placeholder="z. B. 52"' })}
+        ${field('Filtergewinde ⌀ (mm)', 'filterThread', { attrs: 'inputmode="decimal"' })}
       </div>
       ${field('Hersteller', 'maker')}
       ${field('Bezeichnung', 'name')}
@@ -2496,10 +2495,10 @@ async function viewLens(id) {
       <label class="check"><input type="checkbox" data-f="inactive"> Objektiv ist inaktiv</label>
       <p class="hint" style="margin:-4px 0 10px">Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.</p>
       <div class="two">
-        ${field('Kaufpreis (€)', 'price', { attrs: 'inputmode="decimal" placeholder="z. B. 80"' })}
+        ${field('Kaufpreis (€)', 'price', { attrs: 'inputmode="decimal"' })}
         ${field('Gekauft am', 'boughtAt', { type: 'date' })}
       </div>
-      ${area('Notizen', 'notes', 'Eigenheiten, Filtergewinde, Macken …')}
+      ${area('Notizen', 'notes', '')}
     </div>
     ${used || FRESH_ID === lens.id ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
     bind(view.querySelector('#lf'), lens, 'lenses', () => {
@@ -2564,7 +2563,6 @@ async function viewCamera(id) {
       <label class="check"><input type="checkbox" data-f="shutterX"> X</label>
       <label class="check"><input type="checkbox" data-f="shutterAuto"> Zeitautomatik</label>
     </div>
-    <p class="hint" style="margin:-4px 0 6px">X: eigene Blitzstellung am Zeitenrad (X oder Blitzsymbol). Sie erscheint dann auch bei den Belichtungszeiten im Frame.</p>
     ${select('Blitzsynchronzeit', 'flashSync', FLASH_SYNC_OPTS)}
     ${cam.flashNote ? `<p class="hint" style="margin:-4px 0 8px">${U.esc(cam.flashNote)}</p>` : ''}
     <label class="check"><input type="checkbox" data-f="isoDial"> ISO-Einstellung an der Kamera</label>
@@ -2581,10 +2579,10 @@ async function viewCamera(id) {
     ${select('Illustration', 'art.kind', [['slr', 'Spiegelreflex'], ['mf', 'Mittelformat-Würfel'], ['compact', 'Kompaktkamera']])}
     ${select('Farbe Spiegelreflex', 'art.body', [['black', 'Schwarz'], ['chrome', 'Chrom']])}
     <div class="two">
-      ${field('Kaufpreis (€)', 'price', { attrs: 'inputmode="decimal" placeholder="z. B. 120"' })}
+      ${field('Kaufpreis (€)', 'price', { attrs: 'inputmode="decimal"' })}
       ${field('Gekauft am', 'boughtAt', { type: 'date' })}
     </div>
-    ${area('Notizen', 'notes', 'Eigenheiten, Batterie, Macken …')}
+    ${area('Notizen', 'notes', '')}
   </div>
   <div class="card">
     <div class="cabhead"><h3>Objektive für diese Kamera</h3><a class="fridgeplus" href="#/objektiv/neu" aria-label="Objektiv hinzufügen">+</a></div>

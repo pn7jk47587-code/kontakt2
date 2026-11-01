@@ -119,7 +119,7 @@ async function openFilterPicker() {
       <h2 id="fpkTitle">Filter hinzufügen</h2>
       <div class="seggroup" id="fpkKind"><button type="button" class="seg on" data-k="slide">Schiebefilter</button><button type="button" class="seg" data-k="screw">Schraubfilter</button></div>
       <div id="fpkScrew" hidden>
-        <label class="fld"><span>Name</span><input id="fpsName" maxlength="60" placeholder="z. B. Hoya R72, B+W UV"></label>
+        <label class="fld"><span>Name</span><input id="fpsName" maxlength="60"></label>
         <div class="qlabel">Gewindedurchmesser</div>
         <div class="chipwrap" id="fpsThread"><span class="chipset">${[...new Set([...threadsMine, ...THREADS])].sort((a, b) => parseFloat(a) - parseFloat(b)).map(t => `<button type="button" class="chip${threadsMine.includes(t) ? ' mine' : ''}" data-v="${t}">${mm(t)}</button>`).join('')}</span>
           <input class="chip-input" id="fpsThreadOther" inputmode="decimal" placeholder="andere"></div>
@@ -137,7 +137,7 @@ async function openFilterPicker() {
             <span class="stepper small"><button type="button" data-d="-1" aria-label="weniger">−</button><span class="fpkn">1</span><button type="button" data-d="1" aria-label="mehr">+</button></span>
           </div>`).join('')}</div>`).join('')}
         <div class="fpkgroup"><div class="fpkhead">Anderer Schiebefilter</div>
-          <div class="fpkown"><input id="fpkOwn" maxlength="60" placeholder="z. B. Lee 0.6 ND Grad" aria-label="Anderer Schiebefilter"></div></div>
+          <div class="fpkown"><input id="fpkOwn" maxlength="60" aria-label="Anderer Schiebefilter"></div></div>
       </div>
       <p class="hint fpksrc">Nummern und Namen aus den Cokin-Katalogen 2000 und 2015. Nicht jeder Filter gibt es in jeder Größe oder noch neu zu kaufen.</p>
       </div>
@@ -233,15 +233,15 @@ function openFilterEditor(f) {
       ${f.code ? `<div class="seggroup" id="feSeries">${COKIN_SERIES.map(([k, sz, nm]) => `<button type="button" class="seg${k === f.series ? ' on' : ''}" data-s="${k}"><b>${sz}</b><span class="sub2">${nm}</span></button>`).join('')}</div>`
         : `<label class="fld"><span>Name</span><input id="feName" maxlength="60" value="${U.esc(f.name || '')}"></label>
            <div class="seggroup" id="feKind"><button type="button" class="seg${filterKind(f) === 'slide' ? ' on' : ''}" data-k="slide">Schiebefilter</button><button type="button" class="seg${filterKind(f) === 'screw' ? ' on' : ''}" data-k="screw">Schraubfilter</button></div>
-           <label class="fld" id="feThreadBox"${filterKind(f) === 'screw' ? '' : ' hidden'}><span>Gewindedurchmesser (mm)</span><input id="feThread" inputmode="decimal" placeholder="z. B. 52" value="${U.esc(String(f.thread || '').replace('.', ','))}"></label>`}
+           <label class="fld" id="feThreadBox"${filterKind(f) === 'screw' ? '' : ' hidden'}><span>Gewindedurchmesser (mm)</span><input id="feThread" inputmode="decimal" value="${U.esc(String(f.thread || '').replace('.', ','))}"></label>`}
       ${(f.colors || []).length ? `<details class="gelbox"><summary>${f.colors.length} Farben${f.code === '375' ? ' und Halter' : ''}</summary><div class="gellist">${f.colors.map(c => `<span class="gelitem"><img src="img/filter-${c.img}.webp" alt="" width="30" height="30">${U.esc(c.name)}</span>`).join('')}${f.code === '375' ? '<span class="gelitem"><img src="img/filter-b375-halter.webp" alt="" width="30" height="30">Halter</span>' : ''}</div></details>` : ''}
       <div class="feex"><div class="qlabel">Beispielfotos</div><div id="feEx"><p class="hint">Lädt …</p></div></div>
       ${(f.colors || []).length ? `<div class="feex"><div class="qlabel">Farben · für Fotos je Farbe antippen</div><div class="fecolors" id="feColors"></div></div>
       <div class="feex"><div class="qlabel">Kombinationen</div><div id="feCombos"></div></div>` : ''}
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="feMinus" aria-label="weniger">−</button><span id="feCount">${f.count || 1}</span><button type="button" id="fePlus" aria-label="mehr">+</button></div></div>
-      <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="fePrice" inputmode="decimal" placeholder="für alle zusammen" value="${U.esc(f.price != null ? String(f.price).replace('.', ',') : '')}"></label>
+      <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="fePrice" inputmode="decimal" value="${U.esc(f.price != null ? String(f.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="feBought" value="${U.esc(f.boughtAt || '')}"></label></div>
-      <label class="fld"><span>Notizen</span><textarea id="feNotes" rows="3" placeholder="Kratzer, Adapterring, gekauft bei …">${U.esc(f.notes || '')}</textarea></label>
+      <label class="fld"><span>Notizen</span><textarea id="feNotes" rows="3">${U.esc(f.notes || '')}</textarea></label>
       <button class="btn danger small" id="feDel">Filter entfernen</button>
       <div class="modalfoot"><button class="closex" id="feNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="feOk" aria-label="Speichern">${ART.check}</button></div>
     </div>`;
@@ -364,10 +364,10 @@ async function openAccEditor(a) {
       </div>
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="acMinus" aria-label="weniger">−</button><span id="acCount">${ed.count || 1}</span><button type="button" id="acPlus" aria-label="mehr">+</button></div></div>
       ${cams.length ? `<div class="qlabel">Passt an</div><div class="camchecks" id="acCams">${cams.map(c => `<label class="camcheck"><input type="checkbox" value="${c.id}" ${ed.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}</span></label>`).join('')}</div>` : ''}
-      <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="acPrice" inputmode="decimal" placeholder="für alle zusammen" value="${U.esc(ed.price != null ? String(ed.price).replace('.', ',') : '')}"></label>
+      <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="acPrice" inputmode="decimal" value="${U.esc(ed.price != null ? String(ed.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="acBought" value="${U.esc(ed.boughtAt || '')}"></label></div>
-      <label class="fld" id="acGnBox"${ed.kind === 'blitz' ? '' : ' hidden'}><span>Leitzahl (ISO 100, Meter)</span><input id="acGn" inputmode="decimal" placeholder="steht im Datenblatt oder hinten auf dem Blitz" value="${U.esc(ed.gn != null ? String(ed.gn).replace('.', ',') : '')}"></label>
-      <label class="fld"><span>Notizen</span><textarea id="acNotes" rows="3" placeholder="Gewinde, Batterie, Macken …">${U.esc(ed.notes || '')}</textarea></label>
+      <label class="fld" id="acGnBox"${ed.kind === 'blitz' ? '' : ' hidden'}><span>Leitzahl (ISO 100, Meter)</span><input id="acGn" inputmode="decimal" value="${U.esc(ed.gn != null ? String(ed.gn).replace('.', ',') : '')}"></label>
+      <label class="fld"><span>Notizen</span><textarea id="acNotes" rows="3">${U.esc(ed.notes || '')}</textarea></label>
       ${isNew ? '' : '<button class="btn danger small" id="acDel">Zubehör entfernen</button>'}
       <div class="modalfoot"><button class="closex" id="acNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="acOk" aria-label="Speichern">${ART.check}</button></div>
     </div>`;

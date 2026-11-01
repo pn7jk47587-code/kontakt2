@@ -713,7 +713,7 @@ async function viewStock(id) {
     ${field('Quelle dafür', 'communitySource')}
     <h3 class="sub">Eigene Präferenz</h3>
     ${field('Meine ISO/EI', 'myIso')}
-    ${area('Warum, Erfahrungen', 'myNotes', 'Entwickler, Licht, Ergebnis …')}
+    ${area('Warum, Erfahrungen', 'myNotes', '')}
     <h3 class="sub">Nacht und Langzeit</h3>
     <div class="note">${recipText}<br><span class="sub2">Quelle: ${src}</span></div>
     <h3 class="sub">Belichtungsspielraum</h3>
@@ -723,7 +723,7 @@ async function viewStock(id) {
       ${field('Blenden über', 'latOver', { num: true })}
     </div>
     ${field('Quelle Spielraum', 'latSource')}
-    ${area('Belichtungsspielraum nachts (eigene Notizen)', 'nightNotes', 'Wie verhält sich der Film bei Unterbelichtung, Lichtquellen, Langzeit?', 4)}
+    ${area('Belichtungsspielraum nachts (eigene Notizen)', 'nightNotes', '', 4)}
     ${r.model === 'unknown' || r.model === 'custom' || !stock.builtin ? `
       <h3 class="sub">Eigener Schwarzschild-Faktor</h3>
       <p class="hint">Nur eintragen, wenn du eine Quelle oder eigene Tests hast. Formel Tc = Tm^p.</p>

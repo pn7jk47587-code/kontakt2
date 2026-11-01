@@ -50,7 +50,7 @@ async function openIdeaEditor(idea) {
   ov.innerHTML = `
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="idTitle">
       <h2 id="idTitle">${isNew ? 'Neue Idee' : 'Idee'}</h2>
-      <label class="fld"><span>Beschreibung</span><textarea id="idText" rows="5" placeholder="Motiv, Licht, Technik, wo du es gesehen hast …">${U.esc(ed.text || '')}</textarea></label>
+      <label class="fld"><span>Beschreibung</span><textarea id="idText" rows="5">${U.esc(ed.text || '')}</textarea></label>
       <div class="qlabel">Beispielbilder</div>
       <div class="dtgrid" id="idImgs"></div>
       <label class="btn ghost small" style="margin-top:8px">Bild hinzufügen<input type="file" accept="image/*" multiple hidden id="idUp"></label>
