@@ -340,7 +340,8 @@ async function openAccEditor(a) {
       ${cams.length ? `<div class="qlabel">Passt an</div><div class="camchecks" id="acCams">${cams.map(c => `<label class="camcheck"><input type="checkbox" value="${c.id}" ${ed.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}</span></label>`).join('')}</div>` : ''}
       <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="acPrice" inputmode="decimal" placeholder="für alle zusammen" value="${U.esc(ed.price != null ? String(ed.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="acBought" value="${U.esc(ed.boughtAt || '')}"></label></div>
-      <label class="fld"><span>Notizen</span><textarea id="acNotes" rows="3" placeholder="Leitzahl, Gewinde, Batterie, Macken …">${U.esc(ed.notes || '')}</textarea></label>
+      <label class="fld" id="acGnBox"${ed.kind === 'blitz' ? '' : ' hidden'}><span>Leitzahl (ISO 100, Meter)</span><input id="acGn" inputmode="decimal" placeholder="steht im Datenblatt oder hinten auf dem Blitz" value="${U.esc(ed.gn != null ? String(ed.gn).replace('.', ',') : '')}"></label>
+      <label class="fld"><span>Notizen</span><textarea id="acNotes" rows="3" placeholder="Gewinde, Batterie, Macken …">${U.esc(ed.notes || '')}</textarea></label>
       ${isNew ? '' : '<button class="btn danger small" id="acDel">Zubehör entfernen</button>'}
       <div class="modalfoot"><button class="closex" id="acNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="acOk" aria-label="Speichern">${ART.check}</button></div>
     </div>`;
@@ -349,6 +350,7 @@ async function openAccEditor(a) {
   $('acKinds').addEventListener('click', e => {
     const b = e.target.closest('[data-k]'); if (!b) return;
     ed.kind = b.dataset.k; ov.querySelectorAll('.acckind').forEach(x => x.classList.toggle('on', x === b));
+    $('acGnBox').hidden = ed.kind !== 'blitz';
   });
   $('acMinus').addEventListener('click', () => { ed.count = Math.max(1, (ed.count || 1) - 1); $('acCount').textContent = ed.count; });
   $('acPlus').addEventListener('click', () => { ed.count = Math.min(99, (ed.count || 1) + 1); $('acCount').textContent = ed.count; });
@@ -358,6 +360,7 @@ async function openAccEditor(a) {
   $('acOk').addEventListener('click', async () => {
     ed.maker = $('acMaker').value.trim(); ed.name = $('acName').value.trim(); ed.notes = $('acNotes').value.trim();
     { const p = parseFloat($('acPrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('acBought').value || null; }
+    { const g = parseFloat($('acGn').value.replace(',', '.')); ed.gn = ed.kind === 'blitz' && g > 0 ? g : null; }
     ed.cameraIds = [...ov.querySelectorAll('#acCams input:checked')].map(i => i.value);
     const list = await getAccessories();
     const i = list.findIndex(x => x.id === ed.id);

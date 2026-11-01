@@ -449,3 +449,26 @@ const GEAR_SETS = {
   }
 };
 SEED_IMG['lens-hb-planar-80'] = 'img/lens-hb-planar-80.webp';
+
+/* ---------- Blitzsynchronisation (01.11.2026) ----------
+   flashSync: kürzeste Zeit mit Blitz ('alle' = Zentralverschluss, 'eingebaut' = Kompaktkamera mit Blitzautomatik).
+   shutterX: eigene Blitzstellung am Zeitenrad (X oder Blitzsymbol). Quellen in der Anleitung. */
+const SEED_FLASH = {
+  // Nikon-Datenblatt (Nikon F3/F3HP Specifications, eecs.yorku.ca): „16 shutter speeds from 8 sec to 1/2000 sec, including X (1/80 sec)“
+  'cam-nikon-f3': { flashSync: '1/80', shutterX: true, flashNote: 'Laut Nikon-Datenblatt „X“ am Zeitenrad = 1/80 s, Blitz bei allen Zeiten bis 1/80 s.' },
+  // Minolta-Anleitung XG-1: „1/60 is the maximum shutter speed for proper X synchronization“, keine X-Stellung am Rad
+  'cam-minolta-xg1': { flashSync: '1/60', shutterX: false, flashNote: 'Laut Minolta-Anleitung höchstens 1/60 s. Keine eigene X-Stellung; Minolta-Auto-Electroflash der X-Serie stellt 1/60 s selbst ein.' },
+  // Praktica-L2-Anleitung (butkus.org): Blitzsymbol am Zeitenknopf, etwa 1/125 s
+  'cam-praktica-l2': { flashSync: '1/125', shutterX: true, flashNote: 'Laut Praktica-Anleitung Blitzsymbol am Zeitenknopf, entspricht etwa 1/125 s. Längere Zeiten gehen auch.' },
+  // Praktica-BX20-Anleitung (butkus.org): „X synchronization (approx. 1/100s)“, Blitzsymbol am Zeitenrad
+  'cam-praktica-bx20': { flashSync: '1/100', shutterX: true, flashNote: 'Laut Praktica-Anleitung Blitzsymbol am Zeitenrad, etwa 1/100 s.' },
+  // Hasselblad-Handbuch: Zentralverschluss im C-Objektiv, Blitz bei allen Zeiten bis 1/500 s, Hebel X/M am Objektiv
+  'cam-hasselblad-500cm': { flashSync: 'alle', shutterX: false, flashNote: 'Zentralverschluss im Objektiv: Blitz bei allen Zeiten bis 1/500 s. Am Objektiv den Synchronhebel auf X stellen (springt nach jeder Aufnahme auf X zurück).' },
+  // Zentralverschluss (Seiko), Blitzschuh mit X-Kontakt. cameracollector.net nennt in der Tabelle nur „30“ ohne Einheit.
+  'cam-minolta-hi-matic-7s': { flashSync: 'alle', shutterX: false, flashNote: 'Zentralverschluss mit X-Kontakt im Blitzschuh, damit eigentlich Blitz bei allen Zeiten. cameracollector.net nennt „30“ (vermutlich 1/30 s) ohne Erklärung. Bitte in der Anleitung prüfen.' },
+  'cam-olympus-superzoom70': { flashSync: 'eingebaut', flashNote: 'Eingebauter Blitz, Belichtung automatisch.' },
+  'cam-canon-prima-zoom76': { flashSync: 'eingebaut', flashNote: 'Eingebauter Blitz, Belichtung automatisch.' },
+  'cam-leica-c2': { flashSync: 'eingebaut', flashNote: 'Eingebauter Blitz, Belichtung automatisch.' },
+  'cam-superheadz-olivesan': { flashNote: 'Synchronzeit nicht gefunden. Der Verschluss hat fest 1/125 s.' }
+};
+SEED_CAMERAS.forEach(c => Object.assign(c, SEED_FLASH[c.id] || {}));

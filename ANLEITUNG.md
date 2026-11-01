@@ -273,3 +273,18 @@ Wer beim Film-Einlegen einer Rolle einen Namen gibt, der nach Urlaub oder Italie
 
 ## Rollenname ist Pflicht (31.10.2026)
 Beim Film-Einlegen muss die Rolle einen Namen bekommen. Das Feld „Name der Rolle“ zeigt als Beispiel „z. B. Sommer an der Ostsee“. Solange es leer ist, bleibt der Pfeil zum Einlegen gesperrt, und sobald Film und Anzahl Frames gewählt sind, steht links neben dem Pfeil „Gib der Rolle noch einen Namen.“. Nur Leerzeichen zählen nicht als Name. Archivierte Rollen (Archivieren in „Alle Fotos“) sind davon nicht betroffen.
+
+## Blitz: X-Stellung, Synchronzeit und Blitzrechner (01.11.2026)
+Kamera im Kameraschrank: Neben B, T und Zeitautomatik gibt es „X“ für eine eigene Blitzstellung am Zeitenrad (X oder Blitzsymbol). Ist sie angehakt, steht „X“ im Frame auch bei den Belichtungszeiten. Darunter wählt „Blitzsynchronzeit“ die kürzeste Zeit mit Blitz, „Alle Zeiten (Zentralverschluss)“ oder „Eingebauter Blitz (Automatik)“. Unter dem Feld steht, woher der Wert stammt.
+
+Recherchierte Werte (beim Update einmalig eingetragen, wo noch nichts stand, auch für beiseitegelegte Gear-Sets):
+Nikon F3: 1/80 s, „X“ am Zeitenrad (Nikon F3/F3HP Specifications: „including X (1/80 sec)“, eecs.yorku.ca/~oz/nikon/bodylens/F3.htm).
+Minolta XG-1: 1/60 s, keine eigene X-Stellung; Minolta-Blitze der X-Serie stellen 1/60 s selbst ein (Minolta-Anleitung: „1/60 is the maximum shutter speed for proper X synchronization“, pacificrimcamera.com/rl/02967/02967.pdf).
+Praktica L2: etwa 1/125 s über das Blitzsymbol am Zeitenknopf (Praktica-Anleitung, butkus.org/chinon/praktica/praktica_lb2/praktica_l2.pdf).
+Praktica BX20: etwa 1/100 s über das Blitzsymbol (Praktica-Anleitung: „X synchronization (approx. 1/100s)“, butkus.org/chinon/praktica/praktica_bx20).
+Hasselblad 500C: Zentralverschluss im Objektiv, Blitz bei allen Zeiten bis 1/500 s, Synchronhebel am Objektiv auf X (Hasselblad-Handbuch, piticu.github.io/hsbld).
+Minolta Hi-Matic 7s: Zentralverschluss mit X-Kontakt im Blitzschuh, damit eigentlich alle Zeiten; cameracollector.net nennt nur „30“ ohne Einheit. Offen, bitte in der Anleitung prüfen.
+Olympus Superzoom 70, Canon Prima Zoom 76, Leica C2: eingebauter Blitz mit Automatik.
+Superheadz Olive San: keine Angabe gefunden (Verschluss fest 1/125 s).
+
+Frame: Unter „Filter“ steht „Blitz“ mit „Ohne Blitz / Mit Blitz“. Mit Blitz erscheinen die Blitze aus dem Zubehör zum Antippen (passende zur Kamera zuerst, der zuletzt benutzte der Rolle ist vorgewählt) und ein Satz zur Synchronzeit der Kamera. Ist eine kürzere Zeit eingestellt, wird der Satz rot: Ein Teil des Bildes bliebe dunkel. Darunter klappt der „Blitzrechner“ auf. Eingaben: ISO (vorbelegt mit ISO des Frames, EI der Rolle oder Nennempfindlichkeit), Leitzahl und Entfernung in Metern. Ergebnis: Blende = Leitzahl × √(ISO/100) ÷ Entfernung, gerundet auf Drittelstufen, mit Knopf „f/… als Blende übernehmen“, die Reichweite bei der eingestellten Blende und eine Tabelle für 0,5 bis 20 m. Werte außerhalb der Blenden des gewählten Objektivs sind grau und werden im Text erklärt. Die Leitzahl gehört zum Blitz: Im Rechner geändert, wird sie im Zubehör gespeichert. Im Zubehör hat ein Blitz dafür das Feld „Leitzahl (ISO 100, Meter)“. Die Rechnung gilt für direkten Blitz ohne Diffusor; Filter verlängern die Belichtung zusätzlich.

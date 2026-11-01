@@ -26,10 +26,22 @@ function camShutters(c) {
   if (c.auto && !c.shutterFast) return ['Auto'];
   if (!c.shutterFast) return SHUTTERS;
   const a = SPEEDS.indexOf(c.shutterFast), b = SPEEDS.indexOf(c.shutterSlow || '1');
-  return [...SPEEDS.slice(a, b + 1), ...(c.shutterB ? ['B'] : []), ...(c.shutterT ? ['T'] : []), ...(c.shutterAuto ? ['Auto'] : [])];
+  return [...SPEEDS.slice(a, b + 1), ...(c.shutterX ? ['X'] : []), ...(c.shutterB ? ['B'] : []), ...(c.shutterT ? ['T'] : []), ...(c.shutterAuto ? ['Auto'] : [])];
 }
 const chipHtml = (list, cur, sec) => list.map(v => `<button type="button" class="chip${cur === v ? ' on' : ''}" data-v="${v}">${v.replace('.', ',')}${sec && /^\d+$/.test(v) ? ' s' : ''}</button>`).join('');
 const FORMAT_LABEL = { '135': 'Kleinbild', '120': 'Mittelformat' };
+// Blitzsynchronzeit: kürzeste Zeit, bei der der Verschluss beim Zünden ganz offen ist
+const FLASH_SYNC_OPTS = [['', 'keine Angabe'], ['alle', 'Alle Zeiten (Zentralverschluss)'], ['eingebaut', 'Eingebauter Blitz (Automatik)'], ...['1/250', '1/125', '1/100', '1/90', '1/80', '1/60', '1/50', '1/40', '1/30'].map(v => [v, v + ' s'])];
+// „X“ am Zeitenrad steht für die Synchronzeit der Kamera
+const shutterSec = (v, cam) => v === 'X' && cam && /^1\//.test(cam.flashSync || '') ? U.parseShutter(cam.flashSync) : U.parseShutter(v);
+function flashSyncText(cam) {
+  if (!cam) return 'Keine Kamera gewählt. Bei Schlitzverschlüssen meist 1/60 s oder länger.';
+  const n = camLabel(cam), fs = cam.flashSync;
+  if (fs === 'alle') return `${n}: Zentralverschluss, Blitz bei allen Zeiten.`;
+  if (fs === 'eingebaut') return `${n}: eingebauter Blitz, die Kamera stellt alles selbst ein.`;
+  if (fs) return `${n}: Blitz bei ${fs} s oder länger${cam.shutterX ? ', am Zeitenrad „X“' : ''}.`;
+  return `${n}: Synchronzeit nicht hinterlegt. Im Kameraschrank eintragen.`;
+}
 
 function nowLocal() {
   const d = new Date();
@@ -1189,6 +1201,8 @@ async function viewFrame(idWithQuery) {
   let filterIds = (frame.filterIds || roll?.lastFilterIds || []).filter(id => filterById(myFilters, id));
   const IR_ISOS = ['8', '10', '12', '16', '20', '25'];
   const iso = String(frame.iso || (isIR ? roll?.lastIso || '' : ''));
+  // Blitze aus dem Zubehör, passende zur Kamera zuerst
+  const flashes = (await getAccessories()).filter(a => a.kind === 'blitz').sort((a, b) => ((b.cameraIds || []).includes(roll?.cameraId) - (a.cameraIds || []).includes(roll?.cameraId)));
   const filterChips = () => filterIds.map(id => filterById(myFilters, id)).filter(Boolean)
     .map(f => `<span class="ffchip">${filterArt(f, 22)}<span>${U.esc(filterShort(f))}</span></span>`).join('');
 
@@ -1205,6 +1219,9 @@ async function viewFrame(idWithQuery) {
     ${myFilters.length ? `<div class="seggroup ffuse" id="filterUse"><button type="button" class="seg${filterIds.length ? '' : ' on'}" data-use="0">Ohne Filter</button><button type="button" class="seg${filterIds.length ? ' on' : ''}" data-use="1">Mit Filter</button></div>
     <div class="ffsel" id="filterSel"${filterIds.length ? '' : ' hidden'}></div>`
       : '<p class="hint">Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.</p>'}
+    <div class="qlabel">Blitz</div>
+    <div class="seggroup ffuse" id="flashUse"><button type="button" class="seg${frame.flash ? '' : ' on'}" data-fl="0">Ohne Blitz</button><button type="button" class="seg${frame.flash ? ' on' : ''}" data-fl="1">Mit Blitz</button></div>
+    <div class="flashbox" id="flashBox"${frame.flash ? '' : ' hidden'}></div>
     ${isIR ? `<div class="qlabel">ISO (Infrarot)</div>
     <div class="chipwrap" id="isoRow"><span class="chipset">${chipHtml(IR_ISOS, iso)}</span>
       <input class="chip-input" id="isoOther" inputmode="numeric" placeholder="andere" value="${!iso || IR_ISOS.includes(iso) ? '' : U.esc(iso)}"></div>` : ''}
@@ -1304,6 +1321,80 @@ async function viewFrame(idWithQuery) {
     other.addEventListener('input', () => { row.querySelectorAll('.chip').forEach(c => c.classList.remove('on')); setIso(other.value.replace(/[^\d]/g, '')); });
   }
   setChip('shRow', 'shOther', 'shutter');
+  // ---------- Blitz: Synchronzeit der Kamera und aufklappbarer Blitzrechner ----------
+  // Leitzahl LZ = Blende × Entfernung (Meter, ISO 100). Bei anderer ISO wächst LZ mit der Wurzel: LZ_ISO = LZ × √(ISO/100).
+  const STOPS = [1, 1.1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.5, 2.8, 3.2, 3.5, 4, 4.5, 5, 5.6, 6.3, 7.1, 8, 9, 10, 11, 13, 14, 16, 18, 20, 22, 25, 29, 32, 36, 40, 45, 51, 57, 64];
+  const nearStop = n => STOPS.reduce((b, v) => Math.abs(Math.log2(v / n)) < Math.abs(Math.log2(b / n)) ? v : b, STOPS[0]);
+  const fmtN = v => 'f/' + String(v).replace('.', ',');
+  const num = v => parseFloat(String(v ?? '').replace(',', '.'));
+  const drawFlash = () => {
+    const box = view.querySelector('#flashBox'); if (!box) return;
+    const fl = flashes.find(f => f.id === frame.flashId) || (flashes.length === 1 ? flashes[0] : null);
+    const isoV = num(frame.flashIso) || num(frame.iso) || num(roll?.ei) || num(stock?.boxIso) || 100;
+    const gn = num(frame.flashGn) || num(fl?.gn) || '';
+    const dist = num(frame.flashDist) || 3;
+    const sync = cam?.flashSync, tSet = shutterSec(frame.shutter, cam), tSync = /^1\//.test(sync || '') ? U.parseShutter(sync) : 0;
+    const tooFast = tSync && tSet > 0 && tSet < tSync - 1e-6;
+    const lens = curLens(), maxAp = num(lens?.maxAp), minAp = num(lens?.minAp);
+    let calc = '', rows = '';
+    if (gn > 0) {
+      const g = gn * Math.sqrt(isoV / 100), n = g / dist, st = nearStop(n);
+      const warn = maxAp && n < maxAp ? ` Das ist offener als das Objektiv (${fmtN(maxAp)}): näher heran oder empfindlicherer Film.` : minAp && n > minAp ? ` Weiter als ${fmtN(minAp)} lässt sich nicht abblenden: weiter weg, Blitz streuen oder indirekt blitzen.` : '';
+      calc = `<p class="flashres">Bei ${String(dist).replace('.', ',')} m und ISO ${isoV}: <b>${fmtN(st)}</b> <span class="sub2">(genau ${String(Math.round(n * 10) / 10).replace('.', ',')})</span>${warn}</p>
+        <button type="button" class="btn ghost small" id="flApply" data-v="${st}">${fmtN(st)} als Blende übernehmen</button>`;
+      const ds = [0.5, 1, 1.5, 2, 3, 4, 5, 7, 10, 15, 20];
+      rows = ds.map(d => { const v = g / d, sv = nearStop(v), out = (maxAp && v < maxAp) || (minAp && v > minAp); return `<tr class="${d === dist ? 'on' : ''}${out ? ' out' : ''}"><td>${String(d).replace('.', ',')} m</td><td>${fmtN(sv)}</td></tr>`; }).join('');
+      const apSet = num(String(frame.aperture || '').replace(/^f\//, ''));
+      if (apSet > 0) calc += `<p class="sub2" style="margin:8px 0 0">Mit der eingestellten Blende ${fmtN(apSet)} reicht der Blitz etwa ${String(Math.round(g / apSet * 10) / 10).replace('.', ',')} m.</p>`;
+    }
+    box.innerHTML = `
+      ${flashes.length ? `<div class="flashpick" id="flashPick">${flashes.map(f => `<button type="button" class="chip${fl && fl.id === f.id ? ' on' : ''}" data-flash="${f.id}">${U.esc([f.maker, f.name].filter(Boolean).join(' ') || 'Blitz')}</button>`).join('')}</div>` : '<p class="hint">Noch kein Blitz im Zubehör. Mit Leitzahl angelegt, rechnet die App sie hier ein.</p>'}
+      <p class="flashsync${tooFast ? ' warn' : ''}">${U.esc(flashSyncText(cam))}${tooFast ? ` Eingestellt ist ${U.esc(frame.shutter)} s, das ist schneller: Ein Teil des Bildes bleibt dunkel.` : ''}</p>
+      <details class="flashcalc"${frame.flashCalcOpen ? ' open' : ''}><summary>Blitzrechner</summary>
+        <div class="flgrid">
+          <label class="fld"><span>ISO</span><input id="flIso" inputmode="numeric" value="${isoV}"></label>
+          <label class="fld"><span>Leitzahl</span><input id="flGn" inputmode="decimal" placeholder="z. B. 20" value="${gn ? String(gn).replace('.', ',') : ''}"></label>
+          <label class="fld"><span>Entfernung (m)</span><input id="flDist" inputmode="decimal" value="${String(dist).replace('.', ',')}"></label>
+        </div>
+        ${gn > 0 ? calc + `<table class="flashtable"><thead><tr><th>Entfernung</th><th>Blende</th></tr></thead><tbody>${rows}</tbody></table>
+          <p class="hint" style="margin-top:6px">Blende = Leitzahl × √(ISO/100) ÷ Entfernung, gerundet auf Drittelstufen. Grau: außerhalb der Blenden des Objektivs. Gilt für direkten Blitz ohne Diffusor, Filter verlängern die Belichtung zusätzlich.</p>`
+        : '<p class="hint">Leitzahl eintragen. Sie steht im Datenblatt oder in der Tabelle hinten auf dem Blitz (Wert bei ISO 100 und Meter).</p>'}
+      </details>`;
+    box.querySelector('#flashPick')?.addEventListener('click', e => {
+      const b = e.target.closest('[data-flash]'); if (!b) return;
+      frame.flashId = frame.flashId === b.dataset.flash ? null : b.dataset.flash; frame.flashGn = null;
+      if (roll) { roll.lastFlashId = frame.flashId; DB.put('rolls', roll); }
+      save(); drawFlash();
+    });
+    box.querySelector('.flashcalc').addEventListener('toggle', e => { frame.flashCalcOpen = e.target.open; save(); });
+    const upd = (id, key) => box.querySelector('#' + id).addEventListener('change', async e => {
+      frame[key] = num(e.target.value) || null;
+      // Leitzahl gehört zum Blitz: im Zubehör mitspeichern
+      if (key === 'flashGn' && fl && frame.flashGn) { const list = await getAccessories(); const a = list.find(x => x.id === fl.id); if (a) { a.gn = frame.flashGn; fl.gn = frame.flashGn; await saveAccessories(list); } frame.flashGn = null; }
+      save(); drawFlash();
+    });
+    upd('flIso', 'flashIso'); upd('flGn', 'flashGn'); upd('flDist', 'flashDist');
+    box.querySelector('#flApply')?.addEventListener('click', e => {
+      const v = String(e.currentTarget.dataset.v);
+      frame.aperture = v; if (!frame.shot) frame.shot = true;
+      view.querySelector('#apChips').innerHTML = chipHtml(apList(), v);
+      view.querySelector('#apOther').value = apList().includes(v) ? '' : v;
+      U.haptic && U.haptic(10); save(); drawFlash();
+    });
+  };
+  view.querySelector('#flashUse').addEventListener('click', e => {
+    const b = e.target.closest('[data-fl]'); if (!b) return;
+    frame.flash = b.dataset.fl === '1';
+    if (frame.flash && !frame.flashId && roll?.lastFlashId && flashes.some(f => f.id === roll.lastFlashId)) frame.flashId = roll.lastFlashId;
+    view.querySelectorAll('#flashUse .seg').forEach(x => x.classList.toggle('on', x === b));
+    view.querySelector('#flashBox').hidden = !frame.flash;
+    U.haptic && U.haptic(10); save(); drawFlash();
+  });
+  // Blende oder Zeit geändert: Hinweise im Blitzbereich neu rechnen
+  ['apRow', 'shRow'].forEach(r => view.querySelector('#' + r).addEventListener('click', () => setTimeout(drawFlash, 0)));
+  ['apOther', 'shOther'].forEach(r => view.querySelector('#' + r).addEventListener('input', () => setTimeout(drawFlash, 0)));
+  view.querySelector('#lensRow')?.addEventListener('click', () => setTimeout(drawFlash, 0));
+  drawFlash();
   view.querySelector('#note').addEventListener('input', e => { frame.note = e.target.value; save(); });
   view.querySelector('#lensRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-lens]'); if (!b) return;
@@ -2273,8 +2364,12 @@ async function viewCamera(id) {
     <div class="row gap" style="padding:0">
       <label class="check"><input type="checkbox" data-f="shutterB"> B</label>
       <label class="check"><input type="checkbox" data-f="shutterT"> T</label>
+      <label class="check"><input type="checkbox" data-f="shutterX"> X</label>
       <label class="check"><input type="checkbox" data-f="shutterAuto"> Zeitautomatik</label>
     </div>
+    <p class="hint" style="margin:-4px 0 6px">X: eigene Blitzstellung am Zeitenrad (X oder Blitzsymbol). Sie erscheint dann auch bei den Belichtungszeiten im Frame.</p>
+    ${select('Blitzsynchronzeit', 'flashSync', FLASH_SYNC_OPTS)}
+    ${cam.flashNote ? `<p class="hint" style="margin:-4px 0 8px">${U.esc(cam.flashNote)}</p>` : ''}
     <label class="check"><input type="checkbox" data-f="isoDial"> ISO-Einstellung an der Kamera</label>
     <label class="check"><input type="checkbox" data-f="multiExp"> Doppelbelichtung möglich</label>
     <label class="check"><input type="checkbox" data-f="lightLeaks"> Kamera hat Lightleaks</label>

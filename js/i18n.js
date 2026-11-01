@@ -578,6 +578,22 @@ Harkonnen Enjoyer 2000.	Harkonnen Enjoyer 2000.
 Gib der Rolle noch einen Namen.	Give the roll a name first.
 Gib der Rolle einen Namen	Give the roll a name
 z. B. Sommer an der Ostsee	e.g. Summer by the sea
+Blitz	Flash
+Ohne Blitz	No flash
+Mit Blitz	With flash
+Blitzrechner	Flash calculator
+Leitzahl	Guide number
+Entfernung (m)	Distance (m)
+Entfernung	Distance
+Blende	Aperture
+Blitzsynchronzeit	Flash sync speed
+Alle Zeiten (Zentralverschluss)	All speeds (leaf shutter)
+Eingebauter Blitz (Automatik)	Built-in flash (automatic)
+Leitzahl (ISO 100, Meter)	Guide number (ISO 100, metres)
+steht im Datenblatt oder hinten auf dem Blitz	in the data sheet or on the back of the flash
+X: eigene Blitzstellung am Zeitenrad (X oder Blitzsymbol). Sie erscheint dann auch bei den Belichtungszeiten im Frame.	X: dedicated flash setting on the shutter dial (X or flash symbol). It then also appears among the shutter speeds in the frame.
+Leitzahl eintragen. Sie steht im Datenblatt oder in der Tabelle hinten auf dem Blitz (Wert bei ISO 100 und Meter).	Enter the guide number. It is in the data sheet or the table on the back of the flash (value for ISO 100 and metres).
+Noch kein Blitz im Zubehör. Mit Leitzahl angelegt, rechnet die App sie hier ein.	No flash among your accessories yet. Add one with its guide number and the app uses it here.
 Als ZIP sichern	Save as ZIP
 Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
 Rebeccas Gear	Rebecca's gear

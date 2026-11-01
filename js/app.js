@@ -1,5 +1,5 @@
 /* Kontaktbogen: Filmrollen, Bilder, Notizen. Läuft komplett im Browser, Daten in IndexedDB. */
-const SEED_VERSION = 24;
+const SEED_VERSION = 25;
 const view = document.getElementById('view');
 const titleEl = document.getElementById('title');
 const WORDMARK = '<span class="wordmark" aria-label="Lightleak">light<span>leak</span></span>';
@@ -53,6 +53,13 @@ async function boot() {
     }
     // Rebeccas Cokin- und Effektfilter mit Fotos (26.10.2026): fehlende ergänzen, vorhandene bleiben unverändert
     if (meta && meta.v < 23) await mergeSeedFilters();  // v22: eigene Filter, v23: Farbfolien-Set B375
+    // v25: Blitzsynchronzeit und X-Stellung der Kameras nachtragen, wo noch nichts eingetragen ist (auch im Gear-Lager)
+    if (meta && meta.v < 25) {
+      const fill = c => { const d = SEED_FLASH[c?.id]; if (!d) return false; let ch = false; for (const [k, v] of Object.entries(d)) if (c[k] === undefined) { c[k] = v; ch = true; } return ch; };
+      for (const c of await DB.all('cameras')) if (fill(c)) await DB.put('cameras', c);
+      const st = await DB.get('meta', 'gearStash');
+      if (st) { Object.values(st.cameras || {}).forEach(fill); await DB.put('meta', st); }
+    }
     // v24: Nikon AF Nikkor 50 mm hat f/1,4 (Angabe Rebecca 30.10.2026), nicht f/2,8. Auch im Gear-Lager korrigieren.
     if (meta && meta.v < 24) {
       const fix = l => l && String(l.maker || '').toLowerCase() === 'nikon' && String(l.focal) === '50' && String(l.maxAp).replace(',', '.') === '2.8' && (l.maxAp = '1.4', true);

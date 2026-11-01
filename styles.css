@@ -1909,3 +1909,25 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 @keyframes bombusbg { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .fx-bombus, .bombuswrap { animation: none; } }
 .wizfoot .namehint { flex: 1 1 auto; align-self: center; margin: 0 12px 0 0; text-align: right; font-size: 14px; color: var(--muted); }
+/* Blitz im Frame: Synchronzeit und aufklappbarer Blitzrechner */
+.flashbox { margin: 8px 0 4px; }
+.flashpick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.flashsync { margin: 0 0 8px; font-size: 14px; color: var(--muted); }
+.flashsync.warn { color: #d9534f; }
+.flashcalc { border: 1px solid var(--line); border-radius: 14px; padding: 0 12px; background: var(--bg2); }
+.flashcalc summary { list-style: none; cursor: pointer; padding: 12px 0; font-weight: 650; display: flex; align-items: center; justify-content: space-between; }
+.flashcalc summary::-webkit-details-marker { display: none; }
+.flashcalc summary::after { content: ""; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s; margin-right: 4px; opacity: .6; }
+.flashcalc[open] summary::after { transform: rotate(-135deg); }
+.flashcalc[open] { padding-bottom: 12px; }
+.flgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.flgrid .fld { margin: 0; min-width: 0; }
+.flgrid .fld > span { font-size: 12px; }
+.flgrid input { border-radius: 12px; min-width: 0; }
+.flashres { margin: 12px 0 8px; font-size: 15px; }
+.flashres b { font-size: 18px; color: var(--teal); }
+.flashtable { width: 100%; border-collapse: collapse; margin-top: 10px; font-variant-numeric: tabular-nums; font-size: 14px; }
+.flashtable th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.flashtable td { padding: 6px; border-bottom: 1px solid var(--line); }
+.flashtable tr.on td { color: var(--teal); font-weight: 700; }
+.flashtable tr.out td { opacity: .4; }
