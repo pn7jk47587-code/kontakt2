@@ -2023,3 +2023,12 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 .phflabel { font-size: 12px; color: var(--muted); margin-right: 2px; }
 .phfilters .btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
 .archlink svg { flex: 0 0 auto; }
+/* Einzelfoto: private Infos, nicht im Fotoalbum */
+.infofld textarea { width: 100%; min-height: 44px; font-size: 16px; line-height: 1.4; padding: 8px 10px; border-radius: 12px; border: 1px dashed var(--line); background: transparent; resize: none; }
+.infofld textarea:focus { outline: none; border-style: solid; border-color: var(--teal); }
+/* Aufnahmeort */
+.placerow { display: flex; gap: 8px; align-items: center; }
+.placerow input { flex: 1 1 auto; min-width: 0; }
+.placegps { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; height: 40px; }
+.titlefld.placefld input { font-family: inherit; font-size: 16px; }
+.titlefld.placefld > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 2px; }

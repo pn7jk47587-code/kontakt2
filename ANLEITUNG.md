@@ -325,3 +325,9 @@ In der Einzelansicht eines Fotos (Album oder „Alle Fotos“) steht unter dem T
 
 ## Fotos nachtragen im Album (01.11.2026)
 Im Album steht über den Fotos neben „Reihenfolge“ jetzt „Fotos nachtragen“ (auch in einem leeren Album). Die gewählten Dateien werden nach Dateinamen sortiert und füllen zuerst Bilder, die noch kein Foto haben; weitere kommen als neue Bilder hinten an die Rolle. Danach stehen sie sofort im Album und lassen sich mit „Reihenfolge“ an die richtige Stelle ziehen.
+
+## Infos und Ort zu jedem Foto (01.11.2026)
+In der Einzelansicht eines Fotos stehen unter dem Titel zwei neue Felder, dieselben auch in der Bildansicht eines Frames unter „Notizen“.
+„Ort“: freier Text, z. B. „Hafen Sassnitz“. Beim Tippen schlägt die App Orte vor, die schon bei anderen Fotos stehen. „Standort“ trägt den aktuellen Ort per GPS ein; der Ortsname kommt von OpenStreetMap (Nominatim), ohne Netz stehen dort die Koordinaten. Die Koordinaten werden zusätzlich gespeichert. Der Ort erscheint im Fotoalbum neben dem Datum.
+„Infos · nur für dich“: freier Text für alles, was nicht ins Album soll (wer drauf ist, was du ausprobiert hast …). Er erscheint nur in diesen beiden Ansichten, nicht im Fotoalbum. Die vorhandenen „Notizen“ im Frame bleiben wie bisher die Bildunterschrift im Album.
+Beides ist in der ZIP-Sicherung enthalten.

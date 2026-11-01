@@ -1239,6 +1239,8 @@ async function viewFrame(idWithQuery) {
       <input class="chip-input" id="shOther" placeholder="andere" value="${!sh || shList.includes(sh) ? '' : U.esc(sh)}"></div>
     <div id="recip" class="hint"></div>
     <label class="fld"><span>Notizen</span><textarea id="note" rows="3">${U.esc(frame.note || '')}</textarea></label>
+    ${placeFieldHtml('framePlace', frame.place)}
+    <label class="fld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="info" rows="2">${U.esc(frame.info || '')}</textarea></label>
     ${!scanUrl ? phoneBoxes(frame, phoneUrl, phoneUrl2) : ''}
     <div class="frametools">
       ${cam && cam.multiExp === false ? '' : `<button class="dblbtn${frame.double ? ' on' : ''}" id="dbl" aria-pressed="${!!frame.double}" aria-label="Doppelbelichtung" title="Doppelbelichtung">${ART.double}</button>`}
@@ -1402,6 +1404,8 @@ async function viewFrame(idWithQuery) {
   view.querySelector('#lensRow')?.addEventListener('click', () => setTimeout(drawFlash, 0));
   drawFlash();
   view.querySelector('#note').addEventListener('input', e => { frame.note = e.target.value; save(); });
+  view.querySelector('#info').addEventListener('input', e => { frame.info = e.target.value; save(); });
+  wirePlace(view, 'framePlace', frame, save);
   view.querySelector('#lensRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-lens]'); if (!b) return;
     lensId = lensId === b.dataset.lens ? null : b.dataset.lens;
@@ -1609,7 +1613,7 @@ async function albumData(id) {
     const d = f.date || r?.dev?.backAt || r?.dev?.devDate || r?.dev?.sentAt || '';
     const film = U.stockLabel(stocks.get(r?.stockId));
     const gear = [film, fav ? camLabel(cams.get(r?.cameraId)) : ''].filter(Boolean).join(' · ');
-    const date = d ? U.fmtDate(d) : '';
+    const date = [f.place, d ? U.fmtDate(d) : ''].filter(Boolean).join(', ');
     return { tech: bits.join(' · '), note: f.note || f.memory || '', date, gear, spec: [gear, date].filter(Boolean).join(', ') };
   };
   return { frames, title, roll, line, fav, rolls, stocks, cams };
@@ -1675,6 +1679,40 @@ async function viewAlbum(id) {
   }
 }
 
+/* Aufnahmeort: freier Text, Vorschläge aus schon benutzten Orten, „Standort“ füllt den Ort über GPS
+   (Ortsname per OpenStreetMap Nominatim, ohne Netz nur die Koordinaten). */
+const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
+async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
+function placeFieldHtml(id, value, cls = 'fld') {
+  return `<div class="${cls} placefld"><span>Ort</span><div class="placerow"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" placeholder="z. B. Hafen Sassnitz" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="btn ghost small placegps" id="${id}Gps" aria-label="Aktuellen Standort eintragen">${PIN_IC}<span>Standort</span></button></div></div>`;
+}
+async function wirePlace(root, id, obj, persist) {
+  const inp = root.querySelector('#' + id), dl = root.querySelector('#' + id + 'List'), gps = root.querySelector('#' + id + 'Gps');
+  if (!inp) return;
+  dl.innerHTML = (await placeOptions()).map(p => `<option value="${U.esc(p)}">`).join('');
+  let t;
+  const save = () => { clearTimeout(t); obj.place = inp.value.trim(); if (!obj.place) { delete obj.placeLat; delete obj.placeLng; } persist(); };
+  inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(save, 400); });
+  inp.addEventListener('change', save);
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+  gps.addEventListener('click', () => {
+    if (!navigator.geolocation) { U.toast('Standort ist auf diesem Gerät nicht verfügbar'); return; }
+    gps.disabled = true; U.toast('Suche Standort …');
+    navigator.geolocation.getCurrentPosition(async pos => {
+      const { latitude: la, longitude: lo } = pos.coords;
+      let name = `${la.toFixed(4)}, ${lo.toFixed(4)}`;
+      try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=de&lat=${la}&lon=${lo}`);
+        const j = await r.json(), a = j.address || {};
+        const local = a.suburb || a.village || a.town || a.city_district || a.neighbourhood || '', city = a.city || a.town || a.village || a.municipality || '';
+        const n = [local !== city ? local : '', city].filter(Boolean).join(', ');
+        if (n) name = n;
+      } catch (_) { /* ohne Netz bleiben die Koordinaten */ }
+      inp.value = name; obj.placeLat = la; obj.placeLng = lo; save(); gps.disabled = false; U.haptic && U.haptic(10);
+    }, () => { gps.disabled = false; U.toast('Standort nicht freigegeben'); }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+  });
+}
+
 // Einzelfoto: nur ansehen. Wischen hoch/runter zeigt das Handyfoto, links/rechts blättert.
 async function viewPhoto(albumId, frameId) {
   const d = await albumData(albumId);
@@ -1694,6 +1732,8 @@ async function viewPhoto(albumId, frameId) {
       ${phones.length ? `<span class="phlbl">Handy</span>` : ''}
       <figcaption>
         <label class="titlefld"><span>Titel</span><input id="phTitle" value="${U.esc(f.title || '')}" maxlength="120" enterkeyhint="done"></label>
+        ${placeFieldHtml('phPlace', f.place, 'titlefld')}
+        <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2" placeholder="Wer ist drauf, wo genau, was wolltest du ausprobieren …">${U.esc(f.info || '')}</textarea></label>
         <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
         ${ln.spec ? `<p class="photospec">${U.esc(ln.spec)}</p>` : ''}
@@ -1703,10 +1743,16 @@ async function viewPhoto(albumId, frameId) {
   const fig = view.querySelector('.flipper');
   let tt;
   const tIn = view.querySelector('#phTitle');
-  const saveTitle = () => { clearTimeout(tt); f.title = tIn.value.trim(); return DB.put('frames', f); };
+  const saveTitle = () => { clearTimeout(tt); f.title = tIn.value.trim(); const ii = view.querySelector('#phInfo'); if (ii) f.info = ii.value.trim(); return DB.put('frames', f); };
   tIn.addEventListener('input', () => { clearTimeout(tt); tt = setTimeout(saveTitle, 350); });
   tIn.addEventListener('keydown', e => { if (e.key === 'Enter') tIn.blur(); });
   tIn.addEventListener('blur', saveTitle);
+  wirePlace(view, 'phPlace', f, () => DB.put('frames', f));
+  // Infos: freier Text, nur hier und in der Bildansicht sichtbar, nicht im Fotoalbum
+  const infoIn = view.querySelector('#phInfo'); let it;
+  const saveInfo = () => { clearTimeout(it); f.info = infoIn.value.trim(); return DB.put('frames', f); };
+  infoIn.addEventListener('input', () => { clearTimeout(it); it = setTimeout(saveInfo, 400); infoIn.style.height = 'auto'; infoIn.style.height = infoIn.scrollHeight + 'px'; });
+  infoIn.addEventListener('blur', saveInfo);
   const go = async g => { if (g) { await saveTitle(); location.replace(`#/foto/${albumId}/${g.id}`); } };
   // Haken unten rechts: Titel speichern und zurück zum Raster
   const done = document.createElement('button');
