@@ -1629,7 +1629,7 @@ async function viewAlbum(id) {
     ${d.roll ? `<label class="rollname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : ''}
     ${infoRow}
     ${d.frames.length > 1 ? `<div class="archcorner albsort"><button type="button" class="archlink${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}">${MOVE_IC}<span>${ALBUM_SORT ? 'Fertig' : 'Reihenfolge'}</span></button></div>` : ''}
-    ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Verschoben wird nur das Foto, Einträge wie Blende oder Notiz bleiben bei ihrer Bildnummer.</p>' : ''}
+    ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
     <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
@@ -1819,7 +1819,9 @@ window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/a
 // Reihenfolge der Scans einer Rolle per Ziehen ändern. Verschoben werden nur Scan, Lightleak-Markierung und Favorit.
 function setupPhotoSort(grid, redraw = viewAllPhotos) {
   // Scrollen bleibt möglich: erst langes Drücken (ohne Bewegung) hebt ein Foto an, danach folgt es dem Finger
-  const SCAN = ['imgId', 'leak', 'fav'];
+  // Beim Verschieben wandert das ganze Bild mit allen Einträgen (Foto, Blende, Zeit, Objektiv, Filter, Notiz, Titel, Datum, Favorit …).
+  // Fest bleiben nur die Plätze selbst: id, Rolle, Bildnummer und Bonusbild-Kennung.
+  const FIXED = ['id', 'rollId', 'index', 'bonus'];
   let drag = null, timer = null, start = null;
   const cells = () => [...grid.querySelectorAll(':scope > a')];
   grid.addEventListener('click', e => e.preventDefault(), true);
@@ -1862,9 +1864,12 @@ function setupPhotoSort(grid, redraw = viewAllPhotos) {
     if (to === from || to < 0) return;
     const ids = cells().map(c => c.dataset.fid);
     const fr = await Promise.all(ids.map(id => DB.get('frames', id)));
-    const scans = fr.map(f => Object.fromEntries(SCAN.map(k => [k, f[k]])));
-    const [m] = scans.splice(from, 1); scans.splice(to, 0, m);
-    for (let i = 0; i < fr.length; i++) { for (const k of SCAN) { if (scans[i][k] === undefined) delete fr[i][k]; else fr[i][k] = scans[i][k]; } await DB.put('frames', fr[i]); }
+    const content = fr.map(f => Object.fromEntries(Object.entries(f).filter(([k]) => !FIXED.includes(k))));
+    const [m] = content.splice(from, 1); content.splice(to, 0, m);
+    for (let i = 0; i < fr.length; i++) {
+      const keep = Object.fromEntries(FIXED.filter(k => k in fr[i]).map(k => [k, fr[i][k]]));
+      await DB.put('frames', { ...keep, ...content[i] });
+    }
     U.haptic && U.haptic([15, 40, 15]);
     document.querySelectorAll('.donebtn').forEach(x => x.remove()); const y = window.scrollY; await redraw(); window.scrollTo(0, y);
   };
@@ -1883,7 +1888,7 @@ async function viewAllPhotos() {
   const d = await albumData('alle');
   const sorting = ALLPHOTOS_SORT;
   const arBtn = `<div class="archcorner">${d.frames.length > 1 ? `<button type="button" class="archlink${sorting ? ' on' : ''}" id="apSort" aria-pressed="${sorting}">${MOVE_IC}<span>${sorting ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`
-    + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Verschoben wird nur das Foto, Einträge wie Blende oder Notiz bleiben bei ihrer Bildnummer.</p>' : '');
+    + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : '');
   if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
