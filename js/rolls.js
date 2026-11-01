@@ -1812,6 +1812,8 @@ function stopAutoScroll() { AUTOSCROLL.y = null; AUTOSCROLL.tick = null; }
 
 let ALLPHOTOS_SORT = false;
 let ALBUM_SORT = false;
+let FAV_OPEN = false;
+window.addEventListener('hashchange', () => { if (location.hash !== '#/alle-fotos' && !location.hash.startsWith('#/foto/alle/')) FAV_OPEN = false; });
 window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/album/')) ALBUM_SORT = false; });
 window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/alle-fotos')) ALLPHOTOS_SORT = false; });
 // Reihenfolge der Scans einer Rolle per Ziehen ändern. Verschoben werden nur Scan, Lightleak-Markierung und Favorit.
@@ -1887,7 +1889,8 @@ async function viewAllPhotos() {
   // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
   const pstar = f => `<button type="button" class="pfav${f.fav ? ' on' : ''}" data-pfav="${f.id}" aria-pressed="${!!f.fav}" aria-label="${f.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</button>`;
   const favs = d.frames.map((f, i) => [f, i]).filter(([f]) => f.fav);
-  let html = favs.length ? `<div class="rollsep favsep">★ Favoriten · ${favs.length}</div><div class="photogrid favgrid">${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`).join('')}</div>` : '';
+  // Favoriten-Reihe klappt auf und zu; beim Hineinnavigieren ist sie zugeklappt
+  let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}">★ Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`).join('')}</div>` : '';
   let cur = null;
   d.frames.forEach((f, i) => {
     if (f.rollId !== cur) {
@@ -1900,6 +1903,11 @@ async function viewAllPhotos() {
     html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : pstar(f)}</a>`;
   });
   view.innerHTML = arBtn + html + '</div>' + (sorting ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
+  view.querySelector('#favToggle')?.addEventListener('click', e => {
+    FAV_OPEN = !FAV_OPEN; U.haptic && U.haptic(8);
+    const b = e.currentTarget; b.classList.toggle('open', FAV_OPEN); b.setAttribute('aria-expanded', FAV_OPEN);
+    view.querySelector('.favgrid').hidden = !FAV_OPEN;
+  });
   view.querySelector('#apZip')?.addEventListener('click', async e => { const b = e.currentTarget; b.disabled = true; try { await exportZip(); } finally { b.disabled = false; } });
   view.querySelector('#apSort')?.addEventListener('click', async () => {
     ALLPHOTOS_SORT = !ALLPHOTOS_SORT; U.haptic && U.haptic(10);

@@ -304,3 +304,6 @@ Im fertigen Album stand oben rechts klein „Rolle“ neben dem Mülleimer. Das 
 
 ## Reihenfolge im Album (01.11.2026)
 Im fertigen Album einer Rolle, auch bei archivierten Rollen, steht rechts über den Fotos „Reihenfolge“. Ein Tipp schaltet in den Sortiermodus: Die Fotos wackeln und tragen ihre Bildnummer. Ein Foto kurz gedrückt halten, dann an die neue Stelle ziehen; Scrollen bleibt möglich, nahe am Rand scrollt die Ansicht beim Ziehen mit. „Fertig“ beendet den Modus. Verschoben wird nur das Foto (mit Lightleak-Markierung und Favorit), Einträge wie Blende, Zeit oder Notiz bleiben bei ihrer Bildnummer, genau wie in „Alle Fotos“. Beim Verlassen des Albums endet der Sortiermodus von selbst.
+
+## Alle Fotos: Favoriten zuklappbar (01.11.2026)
+Die Reihe „★ Favoriten · Anzahl“ oben in „Alle Fotos“ ist jetzt ein Schalter mit Pfeil. Beim Hineinnavigieren ist sie zugeklappt, ein Tipp klappt die Favoriten auf und wieder zu. Der Zustand bleibt, solange man in „Alle Fotos“ und den Einzelfotos daraus unterwegs ist (auch beim Setzen eines Sterns), und ist beim nächsten Besuch wieder zugeklappt.
