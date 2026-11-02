@@ -653,6 +653,14 @@ Aktuellen Standort eintragen	Use current location
 Suche Standort …	Looking for your location …
 Standort nicht freigegeben	Location not allowed
 Standort ist auf diesem Gerät nicht verfügbar	Location is not available on this device
+Neueste zuerst	Newest first
+Älteste zuerst	Oldest first
+Name	Name
+Kameras	Cameras
+Objektive	Lenses
+Blitze	Flashes
+Rollen sortieren	Sort rolls
+Fotos mit	Photos with
 Als ZIP sichern	Save as ZIP
 Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.	All data lives only on this device. The backup is a ZIP file with every photo in full size and everything else: rolls, frames, notes, cabinet, fridge, favourites, orders, labs and settings. "Restore backup" brings back exactly this state, also after a reset or on a new iPhone.
 Rebeccas Gear	Rebecca's gear

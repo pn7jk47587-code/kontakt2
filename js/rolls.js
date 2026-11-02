@@ -1717,6 +1717,7 @@ async function wirePlace(root, id, obj, persist) {
 async function viewPhoto(albumId, frameId) {
   const d = await albumData(albumId);
   if (!d) { location.replace('#/'); return; }
+  if (albumId === 'alle') { arrangeAllPhotos(d); if (AP_ITEM && d.frames.some(x => x.id === frameId && apMatch(d, x, AP_ITEM))) d.frames = d.frames.filter(x => apMatch(d, x, AP_ITEM)); }
   const i = d.frames.findIndex(f => f.id === frameId);
   if (i < 0) { location.replace('#/album/' + albumId); return; }
   const f = d.frames[i];
@@ -1897,7 +1898,8 @@ function stopAutoScroll() { AUTOSCROLL.y = null; AUTOSCROLL.tick = null; }
 let ALLPHOTOS_SORT = false;
 let ALBUM_SORT = false;
 let FAV_OPEN = false;
-window.addEventListener('hashchange', () => { if (location.hash !== '#/alle-fotos' && !location.hash.startsWith('#/foto/alle/')) FAV_OPEN = false; });
+let AP_ITEM = '';
+window.addEventListener('hashchange', () => { if (location.hash !== '#/alle-fotos' && !location.hash.startsWith('#/foto/alle/')) { FAV_OPEN = false; AP_ITEM = ''; } });
 window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/album/')) ALBUM_SORT = false; });
 window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/alle-fotos')) ALLPHOTOS_SORT = false; });
 // Reihenfolge der Scans einer Rolle per Ziehen ändern. Verschoben werden nur Scan, Lightleak-Markierung und Favorit.
@@ -1966,6 +1968,31 @@ function setupPhotoSort(grid, redraw = viewAllPhotos) {
 const PHOTOSORT_OFF = [];
 window.addEventListener('hashchange', () => { while (PHOTOSORT_OFF.length) PHOTOSORT_OFF.pop()(); });
 
+// Alle Fotos: Rollen sortieren und Fotos nach einem Teil aus dem Kameraschrank filtern (auch fürs Blättern in der Einzelansicht)
+function apMatch(d, f, item) {
+  if (!item) return true;
+  const k = item.slice(0, 1), id = item.slice(2);
+  if (k === 'c') return d.rolls.get(f.rollId)?.cameraId === id;
+  if (k === 'l') return f.lensId === id;
+  if (k === 'f') return (f.filterIds || []).some(x => x === id || (!id.includes('#') && String(x).startsWith(id + '#')));
+  if (k === 'a') return !!f.flash && f.flashId === id;
+  return true;
+}
+function arrangeAllPhotos(d) {
+  let order = 'date';
+  try { order = localStorage.getItem('kb-ap-order') || 'date'; } catch (_) {}
+  const rollKey = {
+    date: r => r?.loadedAt || '', dateOld: r => r?.loadedAt || '',
+    film: r => U.stockLabel(d.stocks.get(r?.stockId)).toLowerCase(), name: r => (r?.title || '\uffff').toLowerCase(), cam: r => (camLabel(d.cams.get(r?.cameraId)) || r?.camera || '\uffff').toLowerCase()
+  };
+  const rollIds = [...new Set(d.frames.map(f => f.rollId))];
+  const kf = rollKey[order] || rollKey.date;
+  rollIds.sort((a, b) => { const x = kf(d.rolls.get(a)), y = kf(d.rolls.get(b)); const c = x < y ? -1 : x > y ? 1 : 0; return order === 'date' ? -c || String(d.rolls.get(b)?.loadedAt || '').localeCompare(String(d.rolls.get(a)?.loadedAt || '')) : c; });
+  const rpos = new Map(rollIds.map((id, i) => [id, i]));
+  d.frames.sort((a, b) => rpos.get(a.rollId) - rpos.get(b.rollId) || a.index - b.index);
+  return { order };
+}
+
 async function viewAllPhotos() {
   // Archivieren oben rechts in der Kopfzeile, nur in dieser Ansicht
   setHeader('Alle Fotos');
@@ -1974,10 +2001,32 @@ async function viewAllPhotos() {
   const arBtn = `<div class="archcorner">${d.frames.length > 1 ? `<button type="button" class="archlink${sorting ? ' on' : ''}" id="apSort" aria-pressed="${sorting}">${MOVE_IC}<span>${sorting ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`
     + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : '');
   if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
+  // Rollen sortieren (Datum, Film, Name, Kamera) und Fotos nach einem Teil aus dem Kameraschrank filtern
+  const { order } = arrangeAllPhotos(d); let item = AP_ITEM;
+  const [allLenses, allFilters, allAcc] = await Promise.all([DB.all('lenses'), getFilters(), getAccessories()]);
+  const usedCams = new Set([...d.rolls.values()].map(r => r.cameraId).filter(Boolean));
+  const usedLens = new Set(d.frames.map(f => f.lensId).filter(Boolean));
+  const usedFl = new Set(d.frames.flatMap(f => f.filterIds || []));
+  const usedFlash = new Set(d.frames.map(f => f.flash && f.flashId).filter(Boolean));
+  const opt = (v, t) => `<option value="${v}"${item === v ? ' selected' : ''}>${U.esc(t)}</option>`;
+  const grp = (label, opts) => opts.length ? `<optgroup label="${label}">${opts.join('')}</optgroup>` : '';
+  const flOpts = [];
+  for (const fl of allFilters) {
+    if ([...usedFl].some(id => id === fl.id || String(id).startsWith(fl.id + '#'))) flOpts.push(opt('f:' + fl.id, (filterCode(fl) ? filterCode(fl) + ' ' : '') + filterName(fl)));
+    for (const c of fl.colors || []) if (usedFl.has(fl.id + '#' + c.k)) flOpts.push(opt('f:' + fl.id + '#' + c.k, '· ' + c.name));
+  }
+  const itemSel = `<select id="apItem" aria-label="Fotos mit">${opt('', 'Alle Fotos')}
+    ${grp('Kameras', [...d.cams.values()].filter(c => usedCams.has(c.id)).map(c => opt('c:' + c.id, camLabel(c))))}
+    ${grp('Objektive', allLenses.filter(l => usedLens.has(l.id)).map(l => opt('l:' + l.id, lensLabel(l))))}
+    ${grp('Filter', flOpts)}
+    ${grp('Blitze', allAcc.filter(a => usedFlash.has(a.id)).map(a => opt('a:' + a.id, [a.maker, a.name].filter(Boolean).join(' ') || 'Blitz')))}</select>`;
+  if (item && !d.frames.some(f => apMatch(d, f, item))) { item = AP_ITEM = ''; }
+  d.frames = d.frames.filter(f => apMatch(d, f, item));
+  const toolbar = sorting ? '' : `<div class="aptools"><select id="apOrder" aria-label="Rollen sortieren">${[['date', 'Neueste zuerst'], ['dateOld', 'Älteste zuerst'], ['film', 'Film'], ['name', 'Name'], ['cam', 'Kamera']].map(([v, t]) => `<option value="${v}"${order === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${itemSel}</div>`;
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
   const pstar = f => `<button type="button" class="pfav${f.fav ? ' on' : ''}" data-pfav="${f.id}" aria-pressed="${!!f.fav}" aria-label="${f.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</button>`;
-  const favs = d.frames.map((f, i) => [f, i]).filter(([f]) => f.fav);
+  const favs = item ? [] : d.frames.map((f, i) => [f, i]).filter(([f]) => f.fav);
   // Favoriten-Reihe klappt auf und zu; beim Hineinnavigieren ist sie zugeklappt
   let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}">★ Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`).join('')}</div>` : '';
   let cur = null;
@@ -1991,7 +2040,9 @@ async function viewAllPhotos() {
     }
     html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : pstar(f)}</a>`;
   });
-  view.innerHTML = arBtn + html + '</div>' + (sorting ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
+  view.innerHTML = arBtn + toolbar + html + '</div>' + (sorting || item ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
+  view.querySelector('#apOrder')?.addEventListener('change', async e => { try { localStorage.setItem('kb-ap-order', e.target.value); } catch (_) {} await viewAllPhotos(); });
+  view.querySelector('#apItem')?.addEventListener('change', async e => { AP_ITEM = e.target.value; await viewAllPhotos(); window.scrollTo(0, 0); });
   view.querySelector('#favToggle')?.addEventListener('click', e => {
     FAV_OPEN = !FAV_OPEN; U.haptic && U.haptic(8);
     const b = e.currentTarget; b.classList.toggle('open', FAV_OPEN); b.setAttribute('aria-expanded', FAV_OPEN);
