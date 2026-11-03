@@ -113,7 +113,7 @@ const U = {
     try { if (localStorage.getItem('kb-rethumb') === '1') return; } catch (_) {}
     const ids = (await DB.all('images')).filter(r => (r.data || r.blob) && !(r.tw >= U.THUMB)).map(r => r.id);
     for (const id of ids) {
-      await new Promise(r => (window.requestIdleCallback || setTimeout)(r, 30));
+      await new Promise(r => window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 800 }) : setTimeout(r, 30));
       try {
         const rec = await DB.get('images', id); if (!rec) continue;
         const blob = U.recBlob(rec, false); if (!blob) continue;
