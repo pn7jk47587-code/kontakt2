@@ -3,7 +3,7 @@
 const APERTURES = ['1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22'];
 // Zeiten von der kürzesten zur längsten. Ohne Kameradaten gilt die volle Reihe.
 const SPEEDS = ['1/4000', '1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', '15', '30', '40'];
-const SHUTTERS = ['1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', 'B', 'Auto'];
+const SHUTTERS = ['1/2000', '1/1000', '1/500', '1/250', '1/125', '1/60', '1/30', '1/15', '1/8', '1/4', '1/2', '1', '2', '4', '8', 'B'];
 const STOPS = ['1', '1.4', '2', '2.8', '4', '5.6', '8', '11', '16', '22', '32', '45', '64'];
 // Zahlen auch aus „f/16“, „f16“, „1:2.8“ oder „2,8“ lesen
 const num = v => { const m = String(v ?? '').replace(',', '.').replace(/^\s*(f\s*\/?|1\s*:)\s*/i, '').match(/\d+(\.\d+)?/); return m ? parseFloat(m[0]) : NaN; };
@@ -20,13 +20,12 @@ function lensApertures(l) {
   if (!list.some(x => Math.abs(parseFloat(x) - mn) < 0.05)) list.push(String(mn));
   return list.length ? list : APERTURES;
 }
-// Zeiten einer Kamera: kürzeste Zeit zuerst, dann B, T, Automatik
+// Zeiten einer Kamera: kürzeste Zeit zuerst, dann X, B, T (keine Zeitautomatik: keine Kamera im Schrank belichtet automatisch)
 function camShutters(c) {
   if (!c) return SHUTTERS;
-  if (c.auto && !c.shutterFast) return ['Auto'];
   if (!c.shutterFast) return SHUTTERS;
   const a = SPEEDS.indexOf(c.shutterFast), b = SPEEDS.indexOf(c.shutterSlow || '1');
-  return [...SPEEDS.slice(a, b + 1), ...(c.shutterX ? ['X'] : []), ...(c.shutterB ? ['B'] : []), ...(c.shutterT ? ['T'] : []), ...(c.shutterAuto ? ['Auto'] : [])];
+  return [...SPEEDS.slice(a, b + 1), ...(c.shutterX ? ['X'] : []), ...(c.shutterB ? ['B'] : []), ...(c.shutterT ? ['T'] : [])];
 }
 const chipHtml = (list, cur, sec) => list.map(v => `<button type="button" class="chip${cur === v ? ' on' : ''}" data-v="${v}">${v.replace('.', ',')}${sec && /^\d+$/.test(v) ? ' s' : ''}</button>`).join('');
 const FORMAT_LABEL = { '135': 'Kleinbild', '120': 'Mittelformat' };
@@ -2800,7 +2799,6 @@ async function viewCamera(id) {
       <label class="check"><input type="checkbox" data-f="shutterB"> B</label>
       <label class="check"><input type="checkbox" data-f="shutterT"> T</label>
       <label class="check"><input type="checkbox" data-f="shutterX"> X</label>
-      <label class="check"><input type="checkbox" data-f="shutterAuto"> Zeitautomatik</label>
     </div>
     ${select('Blitzsynchronzeit', 'flashSync', FLASH_SYNC_OPTS)}
     ${cam.flashNote ? `<p class="hint" style="margin:-4px 0 8px">${U.esc(cam.flashNote)}</p>` : ''}
