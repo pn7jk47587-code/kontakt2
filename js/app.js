@@ -211,8 +211,9 @@ async function applyGearSet(key) {
 }
 
 // Kopfzeile: links immer die Startseite (Kreis mit App-Symbol), rechts immer das Profil
-function setHeader(title, { action = '' } = {}) {
+function setHeader(title, { action = '', soft = false } = {}) {
   titleEl.textContent = title || '';
+  titleEl.classList.toggle('soft', soft);
   const has = !!PROFILE;
   // Unterseiten: oben links der Zurück-Pfeil (wie in iOS). Startseite und Profil: oben links das App-Symbol zur Startseite.
   const h = location.hash || '#/';

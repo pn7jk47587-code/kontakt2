@@ -12,8 +12,9 @@ function loadLeaflet() {
 }
 
 async function mapPhotos() {
-  const fr = (await DB.all('frames')).filter(f => f.placeLat != null && f.placeLng != null && (f.imgId || f.phoneId));
-  return Promise.all(fr.map(async f => ({ f, url: await U.imgUrl(f.imgId || f.phoneId, true) })));
+  // auch Bilder ohne Scan und ohne Handyfoto (noch nicht entwickelt): dann mit Platzhalter
+  const fr = (await DB.all('frames')).filter(f => f.placeLat != null && f.placeLng != null);
+  return Promise.all(fr.map(async f => ({ f, url: f.imgId || f.phoneId ? await U.imgUrl(f.imgId || f.phoneId, true) : null })));
 }
 
 async function viewMap() {
@@ -46,7 +47,7 @@ async function viewMap() {
       const first = g.items[0];
       const icon = L.divIcon({
         className: 'mapthumb',
-        html: `<span class="mtimg"${first.url ? ` style="background-image:url('${first.url}')"` : ''}></span>${g.items.length > 1 ? `<span class="mtn">${g.items.length}</span>` : ''}`,
+        html: `<span class="mtimg${first.url ? '' : ' mtph'}"${first.url ? ` style="background-image:url('${first.url}')"` : ''}>${first.url ? '' : `<b>${U.esc(frameLabel(first.f))}</b>`}</span>${g.items.length > 1 ? `<span class="mtn">${g.items.length}</span>` : ''}`,
         iconSize: [52, 52], iconAnchor: [26, 58]
       });
       const m = L.marker(map.layerPointToLatLng(g.px), { icon, keyboard: true, title: first.f.place || '' }).addTo(layer);

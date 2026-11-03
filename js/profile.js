@@ -277,7 +277,7 @@ async function viewProfile() {
   const total = entries.reduce((n, e) => n + (e.count || 0), 0);
   const allFr = await DB.all('frames');
   const photos = allFr.filter(f => f.imgId);
-  const located = allFr.filter(f => f.placeLat != null && (f.imgId || f.phoneId)).length;
+  const located = allFr.filter(f => f.placeLat != null).length;
   view.innerHTML = `
     <div class="profilehead">
       <button class="gearbtn" id="openSettings" aria-label="Einstellungen">${ART.menu}</button>
@@ -292,11 +292,6 @@ async function viewProfile() {
       <span class="chev">›</span>
     </a>
 
-    <a class="tile photostile" href="#/karte">
-      <span class="fridgeicon photoicon">${PIN_IC}</span>
-      <div><h2>Karte</h2><span class="sub2">${located} ${located === 1 ? 'Foto' : 'Fotos'} mit Ort</span></div>
-      <span class="chev">›</span>
-    </a>
 
     <section class="fridge fold${foldOpen('fridge') ? ' open' : ''}" data-fold="fridge">
       <div class="fridgetop foldhead">
@@ -317,7 +312,13 @@ async function viewProfile() {
 
     ${await ideasFoldHtml()}
 
-    ${await analyticsTileHtml()}`;
+    ${await analyticsTileHtml()}
+
+    <a class="tile photostile" href="#/karte">
+      <span class="fridgeicon photoicon">${PIN_IC}</span>
+      <div><h2>Karte</h2><span class="sub2">${located} ${located === 1 ? 'Bild' : 'Bilder'} mit Ort</span></div>
+      <span class="chev">›</span>
+    </a>`;
   const nameIn = view.querySelector('#pName');
   const fit = () => { nameIn.size = Math.max(2, nameIn.value.length + 1); };
   fit();

@@ -1186,7 +1186,7 @@ async function viewFrame(idWithQuery) {
   const pos = all.findIndex(f => f.id === frame.id);
   const prev = all[pos - 1], next = all[pos + 1];
   const regularCount = all.filter(f => !f.bonus).length;
-  setHeader(frame.bonus ? 'Bonusbild' : `Bild ${frame.index} von ${regularCount}`);
+  setHeader(frame.bonus ? 'B' : frameLabel(frame), { soft: true });
 
   const scanUrl = frame.imgId ? await U.imgUrl(frame.imgId) : null;
   const phoneUrl = frame.phoneId ? await U.imgUrl(frame.phoneId) : null;
@@ -1217,38 +1217,34 @@ async function viewFrame(idWithQuery) {
   view.innerHTML = `
   <div class="framestrip" role="slider" aria-label="Bild wählen" aria-valuemin="1" aria-valuemax="${all.length}" aria-valuenow="${all.findIndex(f => f.id === frame.id) + 1}">${all.map(f => `<i data-id="${f.id}" class="${f.id === frame.id ? 'on' : ''}${f.bonus ? ' b' : ''}${f.shot || f.imgId || f.note ? ' used' : ''}"></i>`).join('')}</div>
   ${U.hintOnce('frame-swipe', 'Wische auf dem Bild nach links oder rechts zum nächsten oder vorigen Bild. Unten rechts speichert der Haken und führt zurück zur Rolle.')}
-  <label class="framedate"><span>Aufgenommen am</span><span class="fdval" id="frameDateTxt">${frame.date ? U.fmtDate(String(frame.date).slice(0, 10)) : 'Datum wählen'}</span><input type="date" id="frameDate" value="${U.esc(String(frame.date || '').slice(0, 10))}" max="${U.today()}" aria-label="Aufnahmetag"></label>
   <div class="framefilters" id="frameFilters">${filterChips()}${isIR && iso ? `<span class="ffchip iso">ISO ${U.esc(iso)}</span>` : ''}</div>
   <div id="media"></div>
   <div class="card quick">
-    ${camLenses.length ? `<div class="qlabel">Objektiv</div>
-    <div class="lensrow" id="lensRow">${camLenses.map(l => `<button type="button" class="lensbtn${lensId === l.id ? ' on' : ''}" data-lens="${l.id}" aria-label="${U.esc(lensLabel(l))}" aria-pressed="${lensId === l.id}">${ART.lens(l, 54)}</button>`).join('')}</div>` : ''}
-    <div class="qlabel">Filter</div>
-    ${myFilters.length ? `<div class="seggroup ffuse" id="filterUse"><button type="button" class="seg${filterIds.length ? '' : ' on'}" data-use="0">Ohne Filter</button><button type="button" class="seg${filterIds.length ? ' on' : ''}" data-use="1">Mit Filter</button></div>
-    <div class="ffsel" id="filterSel"${filterIds.length ? '' : ' hidden'}></div>`
-      : '<p class="hint">Noch keine Filter. Lege sie im Kameraschrank unter „Filter“ an.</p>'}
-    <div class="qlabel">Blitz</div>
-    <div class="seggroup ffuse" id="flashUse"><button type="button" class="seg${frame.flash ? '' : ' on'}" data-fl="0">Ohne Blitz</button><button type="button" class="seg${frame.flash ? ' on' : ''}" data-fl="1">Mit Blitz</button></div>
-    <div class="flashbox" id="flashBox"${frame.flash ? '' : ' hidden'}></div>
-    ${isIR ? `<div class="qlabel">ISO (Infrarot)</div>
-    <div class="chipwrap" id="isoRow"><span class="chipset">${chipHtml(IR_ISOS, iso)}</span>
-      <input class="chip-input" id="isoOther" inputmode="numeric" placeholder="andere" value="${!iso || IR_ISOS.includes(iso) ? '' : U.esc(iso)}"></div>` : ''}
+    ${camLenses.length ? `<div class="lensrow" id="lensRow">${camLenses.map(l => `<button type="button" class="lensbtn${lensId === l.id ? ' on' : ''}" data-lens="${l.id}" aria-label="${U.esc(lensLabel(l))}" aria-pressed="${lensId === l.id}">${ART.lens(l, 54)}</button>`).join('')}</div>` : ''}
     <div class="qlabel">Blende</div>
-    <div class="chipwrap" id="apRow"><span class="chipset" id="apChips">${chipHtml(apList(), ap)}</span>
+    <div class="chipwrap fitchips" id="apRow"><span class="chipset" id="apChips">${chipHtml(apList(), ap)}</span>
       <input class="chip-input" id="apOther" placeholder="andere" value="${!ap || apList().includes(ap) ? '' : U.esc(ap)}"></div>
     <div class="qlabel">Belichtungszeit</div>
-    <div class="chipwrap" id="shRow"><span class="chipset">${chipHtml(shList, sh, true)}</span>
+    <div class="chipwrap fitchips" id="shRow"><span class="chipset">${chipHtml(shList, sh, true)}</span>
       <input class="chip-input" id="shOther" placeholder="andere" value="${!sh || shList.includes(sh) ? '' : U.esc(sh)}"></div>
     <div id="recip" class="hint"></div>
-    <label class="fld"><span>Notizen</span><textarea id="note" rows="3">${U.esc(frame.note || '')}</textarea></label>
-    ${placeFieldHtml('framePlace', frame.place, 'fld', frame)}
-    <label class="fld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="info" rows="2">${U.esc(frame.info || '')}</textarea></label>
-    ${!scanUrl ? phoneBoxes(frame, phoneUrl, phoneUrl2) : ''}
-    <div class="frametools">
-      ${cam && cam.multiExp === false ? '' : `<button class="dblbtn${frame.double ? ' on' : ''}" id="dbl" aria-pressed="${!!frame.double}" aria-label="Doppelbelichtung" title="Doppelbelichtung">${ART.double}</button>`}
-      <button class="dblbtn${frame.meter ? ' on' : ''}" id="meterBtn" aria-label="Belichtungsmesser" title="Belichtungsmesser">${ART.meter}</button>
-      ${frame.meter ? `<span class="meterlast"><span>Letzte Messung</span> <b>LW ${(Math.round(frame.meter.ev100 * 10) / 10).toLocaleString(I18N.locale())}</b> <span>bei ISO ${U.esc(String(frame.meter.iso || frame.meter.ei || ''))}</span></span>` : ''}
+    ${isIR ? `<div class="qlabel">ISO (Infrarot)</div>
+    <div class="chipwrap fitchips" id="isoRow"><span class="chipset">${chipHtml(IR_ISOS, iso)}</span>
+      <input class="chip-input" id="isoOther" inputmode="numeric" placeholder="andere" value="${!iso || IR_ISOS.includes(iso) ? '' : U.esc(iso)}"></div>` : ''}
+    <div class="togrow">
+      <button type="button" class="togbtn${frame.flash ? ' on' : ''}" id="flashTog" aria-label="Blitz" aria-pressed="${!!frame.flash}">${FLASH_TOG_IC}</button>
+      <button type="button" class="togbtn${filterIds.length ? ' on' : ''}" id="filterTog" aria-label="Filter" aria-pressed="${filterIds.length > 0}">${FILTER_TOG_IC}</button>
+      ${cam && cam.multiExp === false ? '' : `<button type="button" class="togbtn${frame.double ? ' on' : ''}" id="dbl" aria-label="Doppelbelichtung" aria-pressed="${!!frame.double}">${ART.double}</button>`}
+      ${!scanUrl ? `<button type="button" class="togbtn${phoneUrl ? ' on hasimg' : ''}" id="phoneTog" aria-label="Handyfoto">${phoneUrl ? `<img src="${phoneUrl}" alt="">` : PHONE_TOG_IC}</button>` : ''}
+      <button type="button" class="togbtn${frame.meter ? ' on' : ''}" id="meterBtn" aria-label="Belichtungsmesser">${ART.meter}</button>
     </div>
+    ${frame.meter ? `<p class="meterlast"><span>Letzte Messung</span> <b>LW ${(Math.round(frame.meter.ev100 * 10) / 10).toLocaleString(I18N.locale())}</b> <span>bei ISO ${U.esc(String(frame.meter.iso || frame.meter.ei || ''))}</span></p>` : ''}
+    <div class="placetime">
+      <div class="placefld1"><button type="button" class="placepin" id="framePlaceGps" aria-label="Standort abfragen">${PIN_IC}</button><input id="framePlace" list="framePlaceList" maxlength="80" value="${U.esc(frame.place || '')}" enterkeyhint="done" autocomplete="off" aria-label="Ort" placeholder="Ort"><datalist id="framePlaceList"></datalist></div>
+      <label class="timefld"><span id="frameTimeTxt">${frame.date ? fmtShot(frame.date) : '–'}</span><input type="datetime-local" id="frameTime" value="${U.esc(String(frame.date || '').slice(0, 16))}" aria-label="Aufnahmezeit"></label>
+    </div>
+    <textarea id="note" class="mininote" rows="1" placeholder="Notizen" aria-label="Notizen">${U.esc(frame.note || '')}</textarea>
+    <textarea id="info" class="mininote" rows="1" placeholder="Infos, nur für dich" aria-label="Infos, nur für dich, erscheinen nicht im Fotoalbum">${U.esc(frame.info || '')}</textarea>
   </div>`;
 
   renderMedia(view.querySelector('#media'), scanUrl, [phoneUrl, phoneUrl2].filter(Boolean), frame);
@@ -1259,7 +1255,7 @@ async function viewFrame(idWithQuery) {
   const flush = () => { clearTimeout(t); return DB.put('frames', frame); };
   const save = () => {
     if (!frame.date) autoLocate(frame, () => placeRefresh && placeRefresh());
-    if (!frame.date) { frame.date = nowLocal(); const di = view.querySelector('#frameDate'); if (di) { di.value = frame.date.slice(0, 10); view.querySelector('#frameDateTxt').textContent = U.fmtDate(di.value); } }
+    if (!frame.date) { frame.date = nowLocal(); showTime(); }
     if (!frame.lensId && lensId) frame.lensId = lensId;
     if (!frame.filterIds && filterIds.length) frame.filterIds = [...filterIds];
     if (isIR && !frame.iso && iso) frame.iso = iso;
@@ -1283,14 +1279,13 @@ async function viewFrame(idWithQuery) {
     });
   };
   setChip('apRow', 'apOther', 'aperture');
-  // Aufnahmetag von Hand: zählt im Profil beim Fotozähler. Leeren entfernt den Tag.
-  view.querySelector('#frameDate').addEventListener('change', e => {
+  // Aufnahmezeit: steht neben dem Ort, minutengenau; von Hand geändert zählt sie als gesetzt
+  const showTime = () => { view.querySelector('#frameTimeTxt').textContent = frame.date ? fmtShot(frame.date) : '–'; view.querySelector('#frameTime').value = String(frame.date || '').slice(0, 16); };
+  view.querySelector('#frameTime').addEventListener('change', e => {
     const v = e.target.value;
-    frame.date = v ? v + (String(frame.date || '').slice(10) || 'T12:00') : null;
-    frame.dateSet = !!v;
-    view.querySelector('#frameDateTxt').textContent = v ? U.fmtDate(v) : 'Datum wählen';
+    frame.date = v ? v + ':00' : null; frame.dateSet = !!v; delete frame.wx;
     if (v && !frame.shot) frame.shot = true;
-    clearTimeout(t); DB.put('frames', frame); U.haptic && U.haptic(10);
+    showTime(); clearTimeout(t); DB.put('frames', frame); U.haptic && U.haptic(10);
   });
   const drawTop = () => { view.querySelector('#frameFilters').innerHTML = filterChips() + (isIR && frame.iso ? `<span class="ffchip iso">ISO ${U.esc(frame.iso)}</span>` : ''); };
   // Filter: erst „Mit Filter“ wählen, dann öffnet sich die Suche. Gewählte Filter stehen darunter, ein Tipp auf „Ändern“ öffnet die Suche erneut.
@@ -1306,18 +1301,11 @@ async function viewFrame(idWithQuery) {
       + `<button type="button" class="btn ghost small ffedit" id="filterEdit">${SEARCH_IC}${fs.length ? 'Ändern' : 'Filter suchen'}</button>`;
     sel.querySelector('#filterEdit').addEventListener('click', () => openFrameFilterSearch(myFilters, filterIds, roll, ids => { setFilters(ids); syncUse(); }));
   };
-  const syncUse = () => {
-    const use = filterIds.length > 0 || view.querySelector('#filterUse [data-use="1"]')?.classList.contains('pending');
-    view.querySelectorAll('#filterUse .seg').forEach(x => x.classList.toggle('on', (x.dataset.use === '1') === use));
-    const sel = view.querySelector('#filterSel'); if (sel) sel.hidden = !use;
-  };
-  drawSel();
-  view.querySelector('#filterUse')?.addEventListener('click', e => {
-    const b = e.target.closest('[data-use]'); if (!b) return;
+  const filterTog = view.querySelector('#filterTog');
+  const syncUse = () => { const use = filterIds.length > 0; filterTog.classList.toggle('on', use); filterTog.setAttribute('aria-pressed', use); };
+  filterTog.addEventListener('click', () => {
     U.haptic && U.haptic(10);
-    if (b.dataset.use === '0') { setFilters([]); syncUse(); return; }
-    view.querySelectorAll('#filterUse .seg').forEach(x => x.classList.toggle('on', x === b));
-    view.querySelector('#filterSel').hidden = false;
+    if (!myFilters.length) { U.toast('Noch keine Filter im Kameraschrank'); return; }
     openFrameFilterSearch(myFilters, filterIds, roll, ids => { setFilters(ids); syncUse(); }, () => syncUse());
   });
   if (isIR) {
@@ -1339,7 +1327,7 @@ async function viewFrame(idWithQuery) {
   const fmtN = v => 'f/' + String(v).replace('.', ',');
   const num = v => parseFloat(String(v ?? '').replace(',', '.'));
   const drawFlash = () => {
-    const box = view.querySelector('#flashBox'); if (!box) return;
+    const box = document.querySelector('#flashBox'); if (!box) return;
     const fl = flashes.find(f => f.id === frame.flashId) || (flashes.length === 1 ? flashes[0] : null);
     const isoV = num(frame.flashIso) || num(frame.iso) || num(roll?.ei) || num(stock?.boxIso) || 100;
     const gn = num(frame.flashGn) || num(fl?.gn) || '';
@@ -1393,21 +1381,30 @@ async function viewFrame(idWithQuery) {
       U.haptic && U.haptic(10); save(); drawFlash();
     });
   };
-  view.querySelector('#flashUse').addEventListener('click', e => {
-    const b = e.target.closest('[data-fl]'); if (!b) return;
-    frame.flash = b.dataset.fl === '1';
-    if (frame.flash && !frame.flashId && roll?.lastFlashId && flashes.some(f => f.id === roll.lastFlashId)) frame.flashId = roll.lastFlashId;
-    view.querySelectorAll('#flashUse .seg').forEach(x => x.classList.toggle('on', x === b));
-    view.querySelector('#flashBox').hidden = !frame.flash;
-    U.haptic && U.haptic(10); save(); drawFlash();
+  // Blitz: eigenes Fenster mit Blitzauswahl, Synchronzeit und Rechner
+  const flashTog = view.querySelector('#flashTog');
+  const syncFlash = () => { flashTog.classList.toggle('on', !!frame.flash); flashTog.setAttribute('aria-pressed', !!frame.flash); };
+  flashTog.addEventListener('click', () => {
+    U.haptic && U.haptic(10);
+    if (!frame.flash) { frame.flash = true; if (!frame.flashId && roll?.lastFlashId && flashes.some(f => f.id === roll.lastFlashId)) frame.flashId = roll.lastFlashId; save(); syncFlash(); }
+    const ov = document.createElement('div'); ov.className = 'modalbg';
+    ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Blitz"><div class="flashbox" id="flashBox"></div>
+      <div class="modalfoot"><button class="btn ghost small" id="flOff">Ohne Blitz</button><button class="okbtn" id="flOk" aria-label="Fertig">${ART.check}</button></div></div>`;
+    document.body.appendChild(ov); drawFlash();
+    ov.querySelector('#flOk').addEventListener('click', () => ov.remove());
+    ov.querySelector('#flOff').addEventListener('click', () => { frame.flash = false; save(); syncFlash(); ov.remove(); });
+    ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
   });
   // Blende oder Zeit geändert: Hinweise im Blitzbereich neu rechnen
   ['apRow', 'shRow'].forEach(r => view.querySelector('#' + r).addEventListener('click', () => setTimeout(drawFlash, 0)));
   ['apOther', 'shOther'].forEach(r => view.querySelector('#' + r).addEventListener('input', () => setTimeout(drawFlash, 0)));
   view.querySelector('#lensRow')?.addEventListener('click', () => setTimeout(drawFlash, 0));
   drawFlash();
-  view.querySelector('#note').addEventListener('input', e => { frame.note = e.target.value; save(); });
-  view.querySelector('#info').addEventListener('input', e => { frame.info = e.target.value; save(); });
+  view.querySelectorAll('.mininote').forEach(ta => {
+    const grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+    grow(); ta.addEventListener('input', () => { frame[ta.id] = ta.value; grow(); save(); });
+  });
+  fitChipRows(view);
   let placeRefresh = null; wirePlace(view, 'framePlace', frame, save).then(fn => { placeRefresh = fn; });
   view.querySelector('#lensRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-lens]'); if (!b) return;
@@ -1417,6 +1414,7 @@ async function viewFrame(idWithQuery) {
     const cur = String(frame.aperture || '');
     view.querySelector('#apChips').innerHTML = chipHtml(apList(), cur);
     view.querySelector('#apOther').value = !cur || apList().includes(cur) ? '' : cur;
+    fitChipRows(view);
     save();
     if (lensId && roll) { roll.lastLensId = lensId; DB.put('rolls', roll); }
   });
@@ -1441,10 +1439,44 @@ async function viewFrame(idWithQuery) {
       }
     });
   });
+  // Handyfoto und Doppelbelichtung: eigenes Fenster mit dem Referenzfoto (bei Doppelbelichtung zwei)
+  const openPhoneModal = (dblMode) => {
+    const ov = document.createElement('div'); ov.className = 'modalbg';
+    let changed = false;
+    const draw = async () => {
+      const u1 = frame.phoneId ? await U.imgUrl(frame.phoneId) : null, u2 = frame.double && frame.phoneId2 ? await U.imgUrl(frame.phoneId2) : null;
+      ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${dblMode ? 'Doppelbelichtung' : 'Handyfoto'}">
+        ${phoneBoxes(frame, u1, u2)}
+        <div class="modalfoot">${dblMode ? '<button class="btn ghost small" id="dblOff">Keine Doppelbelichtung</button>' : '<span></span>'}<button class="okbtn" id="phOk" aria-label="Fertig">${ART.check}</button></div></div>`;
+      const up = async (input, kind) => {
+        const file = input.files[0]; if (!file) return;
+        U.toast('Speichere Bild …');
+        const rec = await U.storeImage(file, 'phone');
+        if (kind === 'phone2') { await deleteImage(frame.phoneId2); frame.phoneId2 = rec.id; }
+        else { await deleteImage(frame.phoneId); frame.phoneId = rec.id; }
+        applyPhoneExif(frame, rec.exif);
+        if (!frame.date) frame.date = nowLocal();
+        changed = true; await flush(); draw();
+      };
+      const q = sel => ov.querySelector(sel);
+      q('#qPhone')?.addEventListener('change', e => up(e.target, 'phone'));
+      q('#qPhoneCam')?.addEventListener('change', e => up(e.target, 'phone'));
+      q('#qPhone2')?.addEventListener('change', e => up(e.target, 'phone2'));
+      q('#qPhoneCam2')?.addEventListener('change', e => up(e.target, 'phone2'));
+      q('#qPhoneRm')?.addEventListener('click', async () => { await deleteImage(frame.phoneId); frame.phoneId = null; changed = true; await flush(); draw(); });
+      q('#qPhoneRm2')?.addEventListener('click', async () => { await deleteImage(frame.phoneId2); frame.phoneId2 = null; changed = true; await flush(); draw(); });
+      ov.querySelectorAll('.phonethumb').forEach(img => img.addEventListener('click', e => zoom(e.target.src)));
+      q('#phOk').addEventListener('click', close);
+      q('#dblOff')?.addEventListener('click', async () => { frame.double = false; changed = true; await flush(); close(); });
+    };
+    const close = () => { ov.remove(); if (changed) route(); };
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    document.body.appendChild(ov); draw();
+  };
+  view.querySelector('#phoneTog')?.addEventListener('click', () => openPhoneModal(false));
   view.querySelector('#dbl')?.addEventListener('click', async () => {
-    frame.double = !frame.double;
-    if (!frame.date) frame.date = nowLocal();
-    await flush(); route();
+    if (!frame.double) { frame.double = true; if (!frame.date) frame.date = nowLocal(); await flush(); const b = view.querySelector('#dbl'); b.classList.add('on'); b.setAttribute('aria-pressed', true); }
+    openPhoneModal(true);
   });
 
   function showRecip() {
@@ -1457,24 +1489,6 @@ async function viewFrame(idWithQuery) {
       : `Schwarzschild: ${U.esc(r.msg)}`;
   }
   showRecip();
-
-  const upload = async (input, kind) => {
-    const file = input.files[0]; if (!file) return;
-    U.toast('Speichere Bild …');
-    const rec = await U.storeImage(file, 'phone');
-    if (kind === 'phone2') { await deleteImage(frame.phoneId2); frame.phoneId2 = rec.id; }
-    else { await deleteImage(frame.phoneId); frame.phoneId = rec.id; }
-    applyPhoneExif(frame, rec.exif);
-    if (!frame.date) frame.date = nowLocal();
-    await flush(); route();
-  };
-  view.querySelector('#qPhone')?.addEventListener('change', e => upload(e.target, 'phone'));
-  view.querySelector('#qPhoneCam')?.addEventListener('change', e => upload(e.target, 'phone'));
-  view.querySelector('#qPhoneRm')?.addEventListener('click', async () => { await deleteImage(frame.phoneId); frame.phoneId = null; await flush(); route(); });
-  view.querySelector('#qPhone2')?.addEventListener('change', e => upload(e.target, 'phone2'));
-  view.querySelector('#qPhoneCam2')?.addEventListener('change', e => upload(e.target, 'phone2'));
-  view.querySelector('#qPhoneRm2')?.addEventListener('click', async () => { await deleteImage(frame.phoneId2); frame.phoneId2 = null; await flush(); route(); });
-  view.querySelectorAll('.phonethumb').forEach(img => img.addEventListener('click', e => zoom(e.target.src)));
 
   // Haken unten rechts: speichern und zurück zur Bildübersicht der Rolle
   const done = document.createElement('button');
@@ -1620,7 +1634,7 @@ async function albumData(id) {
     const date = [f.place, d ? U.fmtDate(d) : ''].filter(Boolean).join(', ');
     return { tech: bits.join(' · '), note: f.note || f.memory || '', date, gear, spec: [gear, date].filter(Boolean).join(', ') };
   };
-  return { frames, title, roll, line, fav, rolls, stocks, cams };
+  return { frames, title, roll, line, fav, rolls, stocks, cams, lenses };
 }
 
 async function viewAlbum(id) {
@@ -1685,10 +1699,32 @@ async function viewAlbum(id) {
 
 /* Aufnahmeort: freier Text, Vorschläge aus schon benutzten Orten, „Standort“ füllt den Ort über GPS
    (Ortsname per OpenStreetMap Nominatim, ohne Netz nur die Koordinaten). */
+const PHONE_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>';
+// Aufnahmezeit minutengenau: „03.11. 14:32“, aus einem anderen Jahr mit Jahr
+function fmtShot(v) {
+  const s = String(v || ''); if (!s) return '';
+  const [d, tm] = s.split('T'); const [y, m, dd] = d.split('-');
+  return `${dd}.${m}.${y !== String(new Date().getFullYear()) ? y.slice(2) : ''} ${tm ? tm.slice(0, 5) : ''}`.trim();
+}
+// Chipreihen (Blende, Zeit): eine Reihe, wenn alles passt, sonst gleichmäßig auf möglichst wenige Reihen verteilt
+function fitChipRows(root) {
+  root.querySelectorAll('.fitchips').forEach(row => {
+    const items = [...row.querySelectorAll('.chip'), row.querySelector('.chip-input')].filter(Boolean);
+    const avail = row.clientWidth; if (!avail || !items.length) return;
+    const gap = 5, longest = Math.max(3, ...items.map(x => (x.textContent || '').trim().length));
+    const w = longest * 6 + 4;   // Ziffern bei 13 px rund 6 px breit
+    const maxCols = Math.max(1, Math.floor((avail + gap) / (w + gap)));
+    const rows = Math.ceil(items.length / maxCols);
+    row.style.setProperty('--cols', Math.ceil(items.length / rows));
+    const inp = row.querySelector('.chip-input'); if (inp) { inp.setAttribute('aria-label', 'andere'); inp.placeholder = avail / Math.ceil(items.length / rows) < 56 ? '…' : 'andere'; }
+  });
+}
+const FILTER_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9.5" cy="12" r="6"/><circle cx="14.5" cy="12" r="6"/></svg>';
+const FLASH_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z"/></svg>';
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
 function placeFieldHtml(id, value, cls = 'fld', obj = null) {
-  return `<div class="${cls} placefld"><span>Ort</span><div class="placerow"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="btn ghost small placegps" id="${id}Gps" aria-label="Aktuellen Standort eintragen">${PIN_IC}<span>Standort</span></button></div><span class="placecoord" id="${id}Coord">${U.esc(fmtCoord(obj))}</span></div>`;
+  return `<div class="${cls} placefld"><span>Ort</span><div class="placefld1"><button type="button" class="placepin" id="${id}Gps" aria-label="Standort abfragen">${PIN_IC}</button><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist></div></div>`;
 }
 // Standort: genaue Koordinaten (mit Genauigkeit in Metern), Ortsname per OpenStreetMap Nominatim
 const AUTOLOC = () => { try { return localStorage.getItem('kb-autoloc') !== '0'; } catch (_) { return true; } };
@@ -1714,6 +1750,8 @@ const fmtCoord = o => o && o.placeLat != null ? `${(+o.placeLat).toFixed(5).repl
 // Beim ersten Eintrag eines Frames: Standort im Hintergrund speichern (abschaltbar in den Einstellungen)
 async function autoLocate(frame, onDone) {
   if (!AUTOLOC() || frame.placeLat != null) return;
+  // Ohne erteilte Erlaubnis fragt erst ein Tipp auf das Standortsymbol nach
+  try { if (navigator.permissions && (await navigator.permissions.query({ name: 'geolocation' })).state !== 'granted') return; } catch (_) {}
   try {
     const c = await getPosition(true);
     frame.placeLat = c.latitude; frame.placeLng = c.longitude; frame.placeAcc = c.accuracy; frame.placeAt = new Date().toISOString(); frame.placeSrc = 'gps';
@@ -1830,6 +1868,37 @@ async function wirePlace(root, id, obj, persist) {
 }
 
 // Einzelfoto: nur ansehen. Wischen hoch/runter zeigt das Handyfoto, links/rechts blättert.
+// Metadaten eines Fotos (nur in „Alle Fotos“): Zeit, Ort, Koordinaten, Sonnenstand, Wetter, Ausrüstung
+async function photoMeta(box, f, d) {
+  if (!box) return;
+  const r = d.rolls.get(f.rollId), cam = d.cams.get(r?.cameraId), lens = d.lenses.get(f.lensId), st = d.stocks.get(r?.stockId);
+  const fl = f.flash ? (await getAccessories()).find(a => a.id === f.flashId) : null;
+  const allFilters = await getFilters();
+  const fs = (f.filterIds || []).map(id => filterById(allFilters, id)).filter(Boolean);
+  const when = f.date ? new Date(f.date) : null, hasLoc = f.placeLat != null && when && !isNaN(when);
+  const rows = [
+    ['Aufgenommen', f.date ? `${U.fmtDate(String(f.date).slice(0, 10))}${String(f.date).length > 10 ? ', ' + String(f.date).slice(11, 16) + ' Uhr' : ''}` : ''],
+    ['Ort', f.place || ''],
+    ['Koordinaten', f.placeLat != null ? fmtCoord(f) + (f.placeSrc === 'exif' ? ' · aus Handyfoto' : '') : ''],
+    ['Sonne', hasLoc ? SKY.sunText(when, +f.placeLat, +f.placeLng) : ''],
+    ['Wetter', f.wx ? SKY.wxText(f.wx) : hasLoc ? '…' : ''],
+    ['Kamera', camLabel(cam) || r?.camera || ''],
+    ['Objektiv', lens ? lensLabel(lens) : ''],
+    ['Blende', f.aperture ? 'f/' + String(f.aperture).replace(/^f\//, '').replace('.', ',') : ''],
+    ['Zeit', f.shutter ? (/^\d+$/.test(f.shutter) ? f.shutter + ' s' : f.shutter) : ''],
+    ['Film', st ? U.stockLabel(st) + (r?.ei && String(r.ei) !== String(st.boxIso) ? ` · EI ${r.ei}` : '') : ''],
+    ['Filter', fs.map(x => filterShort(x)).join(', ')],
+    ['Blitz', f.flash ? ([fl?.maker, fl?.name].filter(Boolean).join(' ') || 'ja') : ''],
+    ['Doppelbelichtung', f.double ? 'ja' : '']
+  ].filter(x => x[1]);
+  box.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd${k === 'Wetter' ? ' id="phWx"' : ''}>${U.esc(v)}</dd>`).join('');
+  if (hasLoc && !f.wx && !photoMeta.busy) {
+    photoMeta.busy = true;
+    try { const w = await SKY.weather(when, +f.placeLat, +f.placeLng); const el = box.querySelector('#phWx'); if (w) { f.wx = w; await DB.put('frames', f); if (el) el.textContent = SKY.wxText(w); } else if (el) { el.previousElementSibling.remove(); el.remove(); } }
+    catch (_) { const el = box.querySelector('#phWx'); if (el) { el.previousElementSibling.remove(); el.remove(); } }
+    photoMeta.busy = false;
+  }
+}
 async function viewPhoto(albumId, frameId) {
   const d = await albumData(albumId);
   if (!d) { location.replace('#/'); return; }
@@ -1855,6 +1924,7 @@ async function viewPhoto(albumId, frameId) {
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
         ${ln.spec ? `<p class="photospec">${U.esc(ln.spec)}</p>` : ''}
         ${phones.length ? '<p class="photodate">Nach oben wischen: Handyfoto</p>' : ''}
+        ${albumId === 'alle' ? '<dl class="metabox" id="phMeta"></dl>' : ''}
       </figcaption>
     </figure>`;
   const fig = view.querySelector('.flipper');
@@ -1864,7 +1934,9 @@ async function viewPhoto(albumId, frameId) {
   tIn.addEventListener('input', () => { clearTimeout(tt); tt = setTimeout(saveTitle, 350); });
   tIn.addEventListener('keydown', e => { if (e.key === 'Enter') tIn.blur(); });
   tIn.addEventListener('blur', saveTitle);
-  wirePlace(view, 'phPlace', f, () => DB.put('frames', f));
+  wirePlace(view, 'phPlace', f, () => { DB.put('frames', f); drawMeta(); });
+  const drawMeta = () => photoMeta(view.querySelector('#phMeta'), f, d);
+  drawMeta();
   // Infos: freier Text, nur hier und in der Bildansicht sichtbar, nicht im Fotoalbum
   const infoIn = view.querySelector('#phInfo'); let it;
   const saveInfo = () => { clearTimeout(it); f.info = infoIn.value.trim(); return DB.put('frames', f); };
