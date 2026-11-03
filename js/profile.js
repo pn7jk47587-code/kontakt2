@@ -388,6 +388,9 @@ async function openSettings() {
       <div class="qlabel" id="clockLabel"></div>
       <input type="range" id="clockRange" min="0" max="23.75" step="0.25" aria-label="Uhrzeit simulieren" style="padding:0;border:0;background:none;accent-color:var(--teal)">
       <button type="button" class="btn ghost small" id="clockReal">Echte Uhrzeit</button>
+      <div class="sethead"><span>Bewertung (zum Ausprobieren)</span></div>
+      <div class="seggroup" id="rateStyle">${RATE_STYLES.map(([k, l]) => `<button type="button" class="seg${rateStyle() === k ? ' on' : ''}" data-rs="${k}">${l}</button>`).join('')}</div>
+      <div id="rateDemo" style="margin:8px 0 4px">${rateHtml(3, 'rateDemoR')}</div>
       <div class="sethead">${ART.tank}<span>Entwicklung</span></div>
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
@@ -405,6 +408,15 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  let demoV = 3;
+  const wireDemo = () => wireRate(ov, 'rateDemoR', () => demoV, v => { demoV = v; });
+  wireDemo();
+  ov.querySelector('#rateStyle').addEventListener('click', e => {
+    const b = e.target.closest('[data-rs]'); if (!b) return;
+    try { localStorage.setItem('kb-rate-style', b.dataset.rs); } catch (_) {}
+    ov.querySelectorAll('#rateStyle .seg').forEach(x => x.classList.toggle('on', x === b));
+    ov.querySelector('#rateDemo').innerHTML = rateHtml(demoV, 'rateDemoR'); wireDemo(); U.haptic && U.haptic(8);
+  });
   // Seiten aus den Einstellungen: Zurück führt wieder in die Einstellungen (Zwischenebene)
   ov.querySelectorAll('.profilelinks a').forEach(l => l.addEventListener('click', () => { try { sessionStorage.setItem('kb-from-settings', l.getAttribute('href')); } catch (_) {} }));
   ov.querySelector('#setLang').addEventListener('click', e => {
@@ -795,6 +807,7 @@ async function viewAnalytics() {
       </div>
     </section>
     ${await shotsFoldHtml()}
+    ${await rateFoldHtml()}
     ${await rollTimeFoldHtml()}
     ${await spendFoldHtml()}`;
   setupFolds(view);
@@ -997,4 +1010,58 @@ async function rollTimeFoldHtml() {
     body += `<div class="curroll"><b>${U.esc(c.r.title || 'Rolle in der Kamera')}</b><span class="sub2">seit ${days} ${days === 1 ? 'Tag' : 'Tagen'} eingelegt · ${c.n} von ${c.total} Bildern${left && eta ? ` · im gleichen Tempo voll um den ${U.fmtDate(eta.toISOString().slice(0, 10))}` : ''}</span></div>`;
   });
   return anFold('rolltime', 'rolltimefold', ART.calIc, 'Filme in der Kamera', stats.length ? `üblich ${fmtNum(median(stats.map(s => s.days)), 0)} Tage je Rolle` : 'Rolle in der Kamera', body);
+}
+
+/* ---------- Analytics: Bewertungen und Personen ---------- */
+async function rateFoldHtml() {
+  const frames = await DB.all('frames');
+  const rated = frames.filter(f => f.rate != null);
+  const tagged = frames.filter(f => (f.people || []).length);
+  if (!rated.length && !tagged.length) return anFold('rate', 'ratefold', PERSON_IC, 'Bewertungen und Personen', 'noch nichts bewertet', '<p class="hint">Bewerten (−5 bis +5) und Personen benennen geht in der Fotoansicht eines Albums.</p>');
+  const rolls = new Map((await DB.all('rolls')).map(r => [r.id, r]));
+  const lenses = new Map((await DB.all('lenses')).map(l => [l.id, l]));
+  const cams = new Map((await DB.all('cameras')).map(c => [c.id, c]));
+  const people = await getPeople(), pname = id => people.find(p => p.id === id)?.name;
+  const dayPart = f => { if (!hasTime(f)) return null; const h = new Date(f.date).getHours(); return h < 5 ? 'nachts' : h < 11 ? 'morgens' : h < 14 ? 'mittags' : h < 18 ? 'nachmittags' : h < 22 ? 'abends' : 'nachts'; };
+  const dims = [
+    ['sind mit dem Objektiv %s entstanden', f => lenses.get(f.lensId) ? lensLabel(lenses.get(f.lensId)) : null],
+    ['sind mit der Kamera %s entstanden', f => camLabel(cams.get(rolls.get(f.rollId)?.cameraId)) || null],
+    ['sind am Ort %s entstanden', f => f.place || rolls.get(f.rollId)?.place || null],
+    ['sind %s entstanden', dayPart],
+    ['zeigen %s', f => (f.people || []).map(pname).filter(Boolean)]
+  ];
+  let body = '';
+  if (rated.length) {
+    const cnt = new Map(); for (let k = -5; k <= 5; k++) cnt.set(k, 0);
+    rated.forEach(f => cnt.set(f.rate, cnt.get(f.rate) + 1));
+    const avg = rated.reduce((a, f) => a + f.rate, 0) / rated.length;
+    const top = rated.filter(f => f.rate >= 4), maxN = Math.max(1, ...cnt.values());
+    body += `<p class="spendtext"><b>${rated.length}</b> ${rated.length === 1 ? 'Foto' : 'Fotos'} bewertet, im Schnitt <b>${(avg > 0 ? '+' : '') + fmtNum(avg, 1).replace('-', '−')}</b>. <b>${cnt.get(5)}</b> mit +5, <b>${top.length}</b> mit +4 oder besser.</p>
+      <div class="ratebars" role="img" aria-label="Verteilung der Bewertungen">${[...cnt].map(([k, n]) => `<span class="rb${k > 0 ? ' pos' : k < 0 ? ' neg' : ''}" style="--v:${n / maxN};--i:${Math.abs(k)}"><i></i><b>${n || ''}</b><em>${fmtRate(k)}</em></span>`).join('')}</div>`;
+    // Auffälligkeiten nur bei deutlichem Trend: ein Wert stellt mindestens die Hälfte der +4/+5-Fotos und ist dort mindestens 1,3-mal so häufig wie unter allen bewerteten
+    const trends = [];
+    if (top.length >= 3) {
+      for (const [pre, fn] of dims) {
+        const vals = f => { const v = fn(f); return Array.isArray(v) ? v : v ? [v] : []; };
+        const c = new Map(), all = new Map();
+        top.forEach(f => vals(f).forEach(v => c.set(v, (c.get(v) || 0) + 1)));
+        rated.forEach(f => vals(f).forEach(v => all.set(v, (all.get(v) || 0) + 1)));
+        const best = [...c].sort((a, b) => b[1] - a[1])[0]; if (!best) continue;
+        const share = best[1] / top.length, base = (all.get(best[0]) || 0) / rated.length;
+        if (best[1] >= 3 && share >= 0.5 && share >= base * 1.3) trends.push(`Die meisten deiner Fotos mit +4 oder besser ${pre.replace('%s', `<b>${U.esc(best[0])}</b>`)} (${best[1]} von ${top.length}).`);
+      }
+    }
+    body += trends.length ? `<h3 class="anh">Auffällig</h3>${trends.map(t => `<p class="spendtext antrend">${t}</p>`).join('')}` : '<p class="hint">Noch kein deutlicher Zusammenhang mit Objektiv, Kamera, Ort, Tageszeit oder Personen. Er erscheint, sobald mindestens drei Fotos mit +4 oder besser überwiegend etwas gemeinsam haben.</p>';
+  }
+  if (tagged.length) {
+    const pc = new Map();
+    tagged.forEach(f => f.people.forEach(id => { const e = pc.get(id) || { n: 0, r: [], places: new Map() }; e.n++; if (f.rate != null) e.r.push(f.rate); const pl = f.place || rolls.get(f.rollId)?.place; if (pl) e.places.set(pl, (e.places.get(pl) || 0) + 1); pc.set(id, e); }));
+    const rows = [...pc].filter(([id]) => pname(id)).sort((a, b) => b[1].n - a[1].n).slice(0, 10).map(([id, e]) => {
+      const pl = [...e.places].sort((a, b) => b[1] - a[1])[0];
+      const sub = [e.r.length ? `Schnitt ${fmtNum(e.r.reduce((a, b) => a + b, 0) / e.r.length, 1).replace('-', '−')}` : '', pl ? `meist in ${pl[0]}` : ''].filter(Boolean).join(' · ');
+      return [pname(id), e.n, sub];
+    });
+    body += `<h3 class="anh">Personen</h3>${barList(rows)}`;
+  }
+  return anFold('rate', 'ratefold', PERSON_IC, 'Bewertungen und Personen', [rated.length ? `${rated.length} bewertet` : '', tagged.length ? `${tagged.length} mit Personen` : ''].filter(Boolean).join(' · '), body);
 }

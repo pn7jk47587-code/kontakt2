@@ -76,6 +76,7 @@ async function viewRolls() {
   const camMap = new Map(cams.map(c => [c.id, c]));
   const allFrames = await DB.all('frames');
   const allFilters = await getFilters();
+  const peopleAll = await getPeople();
   rolls.sort((a, b) => (b.loadedAt || b.createdAt || '').localeCompare(a.loadedAt || a.createdAt || ''));
   let html = hero + `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;
   if (rolls.length) html += U.hintOnce('home-longpress', 'Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.');
@@ -2021,7 +2022,9 @@ async function photoMeta(box, f, d) {
     ['Film', st ? U.stockLabel(st) + (r?.ei && String(r.ei) !== String(st.boxIso) ? ` · EI ${r.ei}` : '') : ''],
     ['Filter', fs.map(x => filterShort(x)).join(', ')],
     ['Blitz', f.flash ? ([fl?.maker, fl?.name].filter(Boolean).join(' ') || 'ja') : ''],
-    ['Doppelbelichtung', f.double ? 'ja' : '']
+    ['Doppelbelichtung', f.double ? 'ja' : ''],
+    ['Bewertung', f.rate != null ? fmtRate(f.rate) : ''],
+    ['Personen', (f.people || []).map(id => peopleAll.find(p => p.id === id)?.name).filter(Boolean).join(', ')]
   ].filter(x => x[1]);
   box.innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd${k === 'Wetter' ? ' id="phWx"' : ''}>${U.esc(v)}</dd>`).join('');
   if (hasLoc && !f.wx && !photoMeta.busy) {
@@ -2050,6 +2053,8 @@ async function viewPhoto(albumId, frameId) {
       ${phones.length ? `<span class="phlbl">Handy</span>` : ''}
       <figcaption>
         <label class="titlefld"><span>Titel</span><input id="phTitle" value="${U.esc(f.title || '')}" maxlength="120" enterkeyhint="done"></label>
+        <div class="titlefld raterow"><span>Bewertung</span>${rateHtml(f.rate ?? null, 'phRate')}</div>
+        <div class="titlefld peoplerow"><span>Personen</span><div class="pprow"><span class="ppchips" id="phPeople">${await peopleChips(f.people)}</span><button type="button" class="roundic" id="phPeopleBtn" aria-label="Personen benennen">${PERSON_IC}</button></div></div>
         ${placeFieldHtml('phPlace', f.place, 'titlefld', f)}
         <div class="titlefld phtime"><span>Aufgenommen</span><div class="placefld1"><label class="timeedit2"><span id="phTimeTxt">${f.date ? U.esc(fmtShotLong(f.date)) : ''}</span><input type="datetime-local" id="phTime" value="${U.esc(String(f.date || '').slice(0, 16))}" aria-label="Aufnahmedatum und Uhrzeit"></label><button type="button" class="placepin" id="phTimeNow" aria-label="Jetzige Uhrzeit eintragen">${CLOCK_IC}</button></div></div>
         <button type="button" class="btn ghost small phedit" id="phEdit">Alle Angaben bearbeiten</button>
@@ -2069,6 +2074,9 @@ async function viewPhoto(albumId, frameId) {
   tIn.addEventListener('keydown', e => { if (e.key === 'Enter') tIn.blur(); });
   tIn.addEventListener('blur', saveTitle);
   wirePlace(view, 'phPlace', f, () => { DB.put('frames', f); drawMeta(); });
+  // Bewertung −5 bis +5 und Personen
+  wireRate(view, 'phRate', () => f.rate ?? null, async v => { if (v == null) delete f.rate; else f.rate = v; await DB.put('frames', f); });
+  view.querySelector('#phPeopleBtn').addEventListener('click', () => openPeoplePicker(f.people, async ids => { f.people = ids; if (!ids.length) delete f.people; await DB.put('frames', f); view.querySelector('#phPeople').innerHTML = await peopleChips(f.people); U.haptic && U.haptic(10); drawMeta(); }));
   // Datum und Uhrzeit nachtragen
   const showPhTime = () => { view.querySelector('#phTimeTxt').textContent = f.date ? fmtShotLong(f.date) : ''; view.querySelector('#phTime').value = String(f.date || '').slice(0, 16); };
   view.querySelector('#phTime').addEventListener('change', async e => { const v = e.target.value; f.date = v ? v + ':00' : null; f.dateSet = !!v; delete f.wx; showPhTime(); await DB.put('frames', f); drawMeta(); U.haptic && U.haptic(10); });
@@ -2323,6 +2331,8 @@ function arrangeAllPhotos(d) {
   rollIds.sort((a, b) => { const x = kf(d.rolls.get(a)), y = kf(d.rolls.get(b)); const c = x < y ? -1 : x > y ? 1 : 0; return order === 'date' ? -c || String(d.rolls.get(b)?.loadedAt || '').localeCompare(String(d.rolls.get(a)?.loadedAt || '')) : c; });
   const rpos = new Map(rollIds.map((id, i) => [id, i]));
   d.frames.sort((a, b) => rpos.get(a.rollId) - rpos.get(b.rollId) || a.index - b.index);
+  // Nach Bewertung: beste zuerst, unbewertete am Ende; innerhalb einer Stufe neueste Rolle zuerst
+  if (order === 'rate') { const pos = new Map(d.frames.map((f, i) => [f.id, i])); d.frames.sort((a, b) => (b.rate ?? -99) - (a.rate ?? -99) || pos.get(a.id) - pos.get(b.id)); }
   return { order };
 }
 
@@ -2357,7 +2367,7 @@ async function viewAllPhotos() {
     ${grp('Orte', (() => { const c = new Map(); d.frames.forEach(f => { const p = effPlace(f, d.rolls.get(f.rollId)); if (p) c.set(p, (c.get(p) || 0) + 1); }); return [...c].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'de')).map(([p, n]) => opt('p:' + p, `${p} (${n})`)); })())}</select>`;
   if (item && !d.frames.some(f => apMatch(d, f, item))) { item = AP_ITEM = ''; }
   d.frames = d.frames.filter(f => apMatch(d, f, item));
-  const toolbar = sorting ? '' : `<div class="aptools"><select id="apOrder" aria-label="Rollen sortieren">${[['date', 'Neueste zuerst'], ['dateOld', 'Älteste zuerst'], ['film', 'Film'], ['name', 'Name'], ['cam', 'Kamera']].map(([v, t]) => `<option value="${v}"${order === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${itemSel}</div>`;
+  const toolbar = sorting ? '' : `<div class="aptools"><select id="apOrder" aria-label="Rollen sortieren">${[['date', 'Neueste zuerst'], ['dateOld', 'Älteste zuerst'], ['film', 'Film'], ['name', 'Name'], ['cam', 'Kamera'], ['rate', 'Bewertung']].map(([v, t]) => `<option value="${v}"${order === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${itemSel}</div>`;
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
   const pstar = f => `<button type="button" class="pfav${f.fav ? ' on' : ''}" data-pfav="${f.id}" aria-pressed="${!!f.fav}" aria-label="${f.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</button>`;
@@ -2366,12 +2376,16 @@ async function viewAllPhotos() {
   let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}">★ Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`).join('')}</div>` : '';
   let cur = null;
   d.frames.forEach((f, i) => {
-    if (f.rollId !== cur) {
+    const gk = order === 'rate' ? 'r' + (f.rate ?? 'x') : f.rollId;
+    if (gk !== cur) {
       if (cur !== null) html += '</div>';
-      cur = f.rollId;
-      const r = d.rolls.get(cur);
-      const st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
-      html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid${sorting ? ' sorting' : ''}" data-roll="${cur}">`;
+      cur = gk;
+      if (order === 'rate') html += `<div class="rollsep">${f.rate == null ? 'Nicht bewertet' : 'Bewertung ' + fmtRate(f.rate)}</div><div class="photogrid">`;
+      else {
+        const r = d.rolls.get(cur);
+        const st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
+        html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid${sorting ? ' sorting' : ''}" data-roll="${cur}">`;
+      }
     }
     html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : pstar(f)}</a>`;
   });

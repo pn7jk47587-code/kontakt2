@@ -2282,3 +2282,52 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
 .rpic { color: var(--teal); display: grid; place-items: center; width: 30px; }
 .rpic svg { width: 22px; height: 22px; }
 .placetime .placemap { display: none !important; }
+
+/* ---------- v162: Bewertung −5 bis +5 (drei Darstellungen) und Personen ---------- */
+:root { --warm: #ffb547; --warm2: #ffe28a; --cool: #6f86c9; }
+.ratewrap { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.rate { flex: 1 1 auto; display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); align-items: center; gap: 3px; }
+.rate .rc { position: relative; height: 34px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; -webkit-tap-highlight-color: transparent; }
+.ratev { flex: 0 0 2.6em; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 17px; }
+/* Lichtpunkte: Punkte wachsen nach außen, plus leuchtet warm und immer heller, minus kühl und gedämpft */
+.rate-dots .rc::before { content: ''; width: calc(7px + var(--i) * 1.6px); height: calc(7px + var(--i) * 1.6px); border-radius: 50%; background: var(--line); transition: background .2s, box-shadow .2s, transform .15s; }
+.rate-dots .rc.zero::before { width: 6px; height: 6px; }
+.rate-dots .rc.pos.on::before { background: color-mix(in srgb, var(--warm2) calc(100% - var(--i) * 12%), var(--warm)); box-shadow: 0 0 calc(var(--i) * 3px) calc(var(--i) * .8px) rgba(255, 190, 80, calc(.15 + var(--i) * .12)); }
+.rate-dots .rc.neg.on::before { background: color-mix(in srgb, var(--cool) calc(40% + var(--i) * 12%), transparent); }
+.rate-dots .rc.zero.on::before { background: var(--text); }
+.rate-dots .rc.cur::before { transform: scale(1.25); }
+/* Lichtleiste: durchgehender Balken, von der Mitte aus gefüllt */
+.rate-bar { gap: 0; height: 26px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); overflow: hidden; }
+.rate-bar .rc { height: 26px; }
+.rate-bar .rc.on.pos { background: linear-gradient(90deg, rgba(255,200,90,calc(.25 + var(--i) * .13)), rgba(255,220,130,calc(.3 + var(--i) * .13))); }
+.rate-bar .rc.on.neg { background: rgba(111,134,201,calc(.15 + var(--i) * .1)); }
+.rate-bar .rc.zero { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.rate-bar .rc.cur::after { content: ''; position: absolute; inset: 3px 2px; border-radius: 999px; background: var(--text); opacity: .9; box-shadow: 0 0 10px rgba(255,210,120,.7); }
+.rate-bar .rc.cur.neg::after { box-shadow: none; }
+/* Belichtungsmesser: Skala wie im Sucher, die gewählte Stufe leuchtet als Lichtmarke */
+.rate-meter { gap: 0; align-items: end; height: 40px; }
+.rate-meter .rc { height: 40px; align-content: end; }
+.rate-meter .rc::before { content: ''; width: 2px; height: calc(var(--i) * 1.5px + 9px); border-radius: 1px; background: var(--muted); opacity: .6; margin-bottom: 14px; }
+.rate-meter .rc.zero::before { height: 18px; opacity: 1; background: var(--text); }
+.rate-meter .rc em { position: absolute; bottom: 0; left: 50%; translate: -50% 0; font-style: normal; font-size: 10px; color: var(--muted); }
+.rate-meter .rc.cur::after { content: ''; position: absolute; top: 2px; left: 50%; translate: -50% 0; width: 10px; height: 10px; border-radius: 50%; background: var(--warm); box-shadow: 0 0 10px 3px rgba(255,180,70,.75); }
+.rate-meter .rc.cur.neg::after { background: var(--cool); box-shadow: 0 0 8px 2px rgba(111,134,201,.6); }
+.rate-meter .rc.cur.zero::after { background: #7be08a; box-shadow: 0 0 10px 3px rgba(123,224,138,.6); }
+.rate.unset .rc { opacity: .8; }
+/* Personen */
+.pprow { display: flex; align-items: center; gap: 8px; margin-top: 6px; min-height: var(--navd); }
+.ppchips { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 6px; }
+.pchip { padding: 5px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); font-size: 14px; }
+.pplist { display: flex; flex-wrap: wrap; gap: 6px; max-height: 40vh; overflow-y: auto; margin-bottom: 12px; }
+.ppnew { display: flex; align-items: flex-end; gap: 8px; }
+.ppnew .fld { flex: 1; margin: 0; }
+/* Analytics */
+section.ratefold.fold { background: linear-gradient(160deg, rgba(255,181,71,.2), var(--card) 70%) !important; border-color: rgba(255,181,71,.42) !important; }
+.ratebars { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px; align-items: end; height: 110px; margin: 6px 0 4px; }
+.ratebars .rb { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 16px; box-sizing: border-box; }
+.ratebars .rb i { display: block; width: 100%; height: calc(var(--v) * 100%); min-height: 2px; border-radius: 3px 3px 1px 1px; background: var(--line); }
+.ratebars .rb.pos i { background: color-mix(in srgb, var(--warm2) calc(100% - var(--i) * 12%), var(--warm)); }
+.ratebars .rb.neg i { background: color-mix(in srgb, var(--cool) calc(40% + var(--i) * 12%), transparent); }
+.ratebars .rb b { font-size: 10px; color: var(--muted); }
+.ratebars .rb em { position: absolute; bottom: 0; font-style: normal; font-size: 10px; color: var(--muted); }
+.antrend { font-size: 15px; margin: 0 0 8px; }
