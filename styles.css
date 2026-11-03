@@ -2035,3 +2035,25 @@ button, .btn, a.item, .crow, .rollcard, .cabtile, .chip, .seg, .tabbar, .topbar,
 /* Alle Fotos: Sortierung der Rollen und Filter nach Kameraschrank */
 .aptools { display: flex; gap: 8px; margin: 10px 14px 4px; }
 .aptools select { flex: 1 1 0; min-width: 0; height: 40px; border-radius: 999px; font-size: 15px; padding: 0 12px; }
+
+/* Ort: Koordinaten, Handyfotos zuordnen, Weltkarte (v148) */
+.placecoord { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; font-variant-numeric: tabular-nums; min-height: 0; }
+.placecoord:empty { display: none; }
+.phoneimp { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.pilist { max-height: 46vh; overflow-y: auto; margin: 10px 0 4px; display: grid; gap: 6px; }
+.pirow { display: grid; grid-template-columns: 44px 1fr 22px auto; align-items: center; gap: 10px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.pirow img { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; background: var(--line); }
+.pipin { color: var(--line); display: flex; }
+.pipin.on { color: var(--teal); }
+.pito { color: var(--muted); font-size: 13px; }
+.setcheck { display: flex; align-items: center; gap: 10px; font-size: 15px; margin: 2px 0 6px; }
+.setcheck input { width: 20px; height: 20px; accent-color: var(--teal); }
+body.mapmode { padding-bottom: 0; }
+.mapwrap { position: fixed; top: calc(56px + var(--safe-t)); left: 0; right: 0; bottom: 0; z-index: 2; }
+.photomap { position: absolute; inset: 0; background: #e8e4dc; }
+.mapempty { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1000; margin: 0; padding: 8px 14px; border-radius: 999px; background: var(--card); color: var(--muted); font-size: 14px; box-shadow: var(--shadow); white-space: nowrap; }
+.mapthumb { background: none; border: 0; }
+.mapthumb .mtimg { display: block; width: 52px; height: 52px; border-radius: 14px; background: #ccc center / cover; border: 3px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,.28); box-sizing: border-box; }
+.mapthumb .mtimg::after { content: ''; position: absolute; left: 50%; bottom: -7px; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+.mapthumb .mtn { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--teal); color: #fff; font: 600 12px/22px system-ui, sans-serif; text-align: center; box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.leaflet-container { font: 12px system-ui, sans-serif; }

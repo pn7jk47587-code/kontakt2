@@ -275,7 +275,9 @@ async function viewProfile() {
   const sorted = sortFridge(entries, stocks, sortKey);
   const cells = await Promise.all(sorted.map(e => fridgeRow(e, stocks.get(e.stockId))));
   const total = entries.reduce((n, e) => n + (e.count || 0), 0);
-  const photos = (await DB.all('frames')).filter(f => f.imgId);
+  const allFr = await DB.all('frames');
+  const photos = allFr.filter(f => f.imgId);
+  const located = allFr.filter(f => f.placeLat != null && (f.imgId || f.phoneId)).length;
   view.innerHTML = `
     <div class="profilehead">
       <button class="gearbtn" id="openSettings" aria-label="Einstellungen">${ART.menu}</button>
@@ -287,6 +289,12 @@ async function viewProfile() {
     <a class="tile photostile" href="#/alle-fotos">
       <span class="fridgeicon photoicon">${ART.album}</span>
       <div><h2>Alle Fotos</h2><span class="sub2">${photos.length} ${photos.length === 1 ? 'Foto' : 'Fotos'}</span></div>
+      <span class="chev">›</span>
+    </a>
+
+    <a class="tile photostile" href="#/karte">
+      <span class="fridgeicon photoicon">${PIN_IC}</span>
+      <div><h2>Karte</h2><span class="sub2">${located} ${located === 1 ? 'Foto' : 'Fotos'} mit Ort</span></div>
       <span class="chev">›</span>
     </a>
 
@@ -379,6 +387,8 @@ async function openSettings() {
       <div class="qlabel" id="clockLabel"></div>
       <input type="range" id="clockRange" min="0" max="23.75" step="0.25" aria-label="Uhrzeit simulieren" style="padding:0;border:0;background:none;accent-color:var(--teal)">
       <button type="button" class="btn ghost small" id="clockReal">Echte Uhrzeit</button>
+      <div class="sethead">${PIN_IC}<span>Ort</span></div>
+      <label class="setcheck"><input type="checkbox" id="setAutoLoc"${AUTOLOC() ? ' checked' : ''}><span>Ort bei jedem neuen Bild speichern</span></label>
       <div class="sethead">${ART.tank}<span>Entwicklung</span></div>
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
@@ -396,6 +406,7 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  ov.querySelector('#setAutoLoc').addEventListener('change', e => { try { localStorage.setItem('kb-autoloc', e.target.checked ? '1' : '0'); } catch (_) {} if (e.target.checked && navigator.geolocation) navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 15000 }); });
   ov.querySelector('#setLang').addEventListener('click', e => {
     const b = e.target.closest('[data-lang]'); if (!b || b.dataset.lang === I18N.get()) return;
     ov.querySelectorAll('#setLang button').forEach(x => x.classList.toggle('on', x === b));

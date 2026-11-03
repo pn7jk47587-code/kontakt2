@@ -282,7 +282,7 @@ async function goUp() {
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
   const done = document.querySelector('.donebtn.goesback');
   if (done) { done.click(); return; }
-  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', analytics: '#/profil', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];
+  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', karte: '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', analytics: '#/profil', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];
   if (parts.length) location.hash = up || '#/';
 }
 
@@ -405,7 +405,7 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
 let FRESH_ID = null;
 async function routeView() {
   if (FRESH_ID && !location.hash.endsWith('/' + FRESH_ID)) FRESH_ID = null;
-  document.body.classList.remove('albummode');
+  document.body.classList.remove('albummode', 'mapmode');
   document.querySelectorAll('.modalbg, .overlay').forEach(x => x.remove());
   document.querySelectorAll('.donebtn, .framenavbtn, .loadsheet').forEach(x => x.remove()); document.body.classList.remove('sheetopen');
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
@@ -421,6 +421,7 @@ async function routeView() {
       case 'album': return parts[2] === 'buch' ? await viewAlbumBook(parts[1]) : await viewAlbum(parts[1]);
       case 'foto': return await viewPhoto(parts[1], parts[2]);
       case 'alle-fotos': return await viewAllPhotos();
+      case 'karte': return await viewMap();
       case 'archiv': return await viewArchive();
       case 'analytics': return await viewAnalytics();
       case 'schrank': return await viewCabinetPart(parts[1]);

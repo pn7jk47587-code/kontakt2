@@ -45,7 +45,7 @@ function flashSyncText(cam) {
 
 function nowLocal() {
   const d = new Date();
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);   // mit Sekunden
 }
 function frameLabel(f) { return f.index === 0 ? '0' : String(f.index); }
 function camLabel(c) { return c ? `${c.maker} ${c.name}`.trim() : ''; }
@@ -675,12 +675,14 @@ async function rollFrames(body, roll, stock) {
       </div>
     </div>
     <div class="grid" id="frameGrid">${cells.join('')}</div>
-    ${bottom}`;
+    ${bottom}
+    <label class="btn ghost wide phoneimp">${PIN_IC}<span>Handyfotos zuordnen</span><input type="file" accept="image/*" multiple hidden id="phoneImp"></label>`;
   setupReorder(body, roll, fr);
   const slide = body.querySelector('#devSlide');
   if (slide) setupSlide(slide, () => openDevModal(roll, () => route()));
   body.querySelector('#pickupOpen')?.addEventListener('click', () => openPickupModal(roll, () => route()));
   body.querySelector('.slipthumb')?.addEventListener('click', e => zoom(e.target.src));
+  body.querySelector('#phoneImp')?.addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(roll, files); });
   body.querySelector('#bulk')?.addEventListener('change', async e => {
     const files = [...e.target.files];
     if (!files.length) return;
@@ -1239,7 +1241,7 @@ async function viewFrame(idWithQuery) {
       <input class="chip-input" id="shOther" placeholder="andere" value="${!sh || shList.includes(sh) ? '' : U.esc(sh)}"></div>
     <div id="recip" class="hint"></div>
     <label class="fld"><span>Notizen</span><textarea id="note" rows="3">${U.esc(frame.note || '')}</textarea></label>
-    ${placeFieldHtml('framePlace', frame.place)}
+    ${placeFieldHtml('framePlace', frame.place, 'fld', frame)}
     <label class="fld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="info" rows="2">${U.esc(frame.info || '')}</textarea></label>
     ${!scanUrl ? phoneBoxes(frame, phoneUrl, phoneUrl2) : ''}
     <div class="frametools">
@@ -1256,6 +1258,7 @@ async function viewFrame(idWithQuery) {
   let t;
   const flush = () => { clearTimeout(t); return DB.put('frames', frame); };
   const save = () => {
+    if (!frame.date) autoLocate(frame, () => placeRefresh && placeRefresh());
     if (!frame.date) { frame.date = nowLocal(); const di = view.querySelector('#frameDate'); if (di) { di.value = frame.date.slice(0, 10); view.querySelector('#frameDateTxt').textContent = U.fmtDate(di.value); } }
     if (!frame.lensId && lensId) frame.lensId = lensId;
     if (!frame.filterIds && filterIds.length) frame.filterIds = [...filterIds];
@@ -1405,7 +1408,7 @@ async function viewFrame(idWithQuery) {
   drawFlash();
   view.querySelector('#note').addEventListener('input', e => { frame.note = e.target.value; save(); });
   view.querySelector('#info').addEventListener('input', e => { frame.info = e.target.value; save(); });
-  wirePlace(view, 'framePlace', frame, save);
+  let placeRefresh = null; wirePlace(view, 'framePlace', frame, save).then(fn => { placeRefresh = fn; });
   view.querySelector('#lensRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-lens]'); if (!b) return;
     lensId = lensId === b.dataset.lens ? null : b.dataset.lens;
@@ -1461,6 +1464,7 @@ async function viewFrame(idWithQuery) {
     const rec = await U.storeImage(file, 'phone');
     if (kind === 'phone2') { await deleteImage(frame.phoneId2); frame.phoneId2 = rec.id; }
     else { await deleteImage(frame.phoneId); frame.phoneId = rec.id; }
+    applyPhoneExif(frame, rec.exif);
     if (!frame.date) frame.date = nowLocal();
     await flush(); route();
   };
@@ -1683,34 +1687,146 @@ async function viewAlbum(id) {
    (Ortsname per OpenStreetMap Nominatim, ohne Netz nur die Koordinaten). */
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
-function placeFieldHtml(id, value, cls = 'fld') {
-  return `<div class="${cls} placefld"><span>Ort</span><div class="placerow"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="btn ghost small placegps" id="${id}Gps" aria-label="Aktuellen Standort eintragen">${PIN_IC}<span>Standort</span></button></div></div>`;
+function placeFieldHtml(id, value, cls = 'fld', obj = null) {
+  return `<div class="${cls} placefld"><span>Ort</span><div class="placerow"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="btn ghost small placegps" id="${id}Gps" aria-label="Aktuellen Standort eintragen">${PIN_IC}<span>Standort</span></button></div><span class="placecoord" id="${id}Coord">${U.esc(fmtCoord(obj))}</span></div>`;
+}
+// Standort: genaue Koordinaten (mit Genauigkeit in Metern), Ortsname per OpenStreetMap Nominatim
+const AUTOLOC = () => { try { return localStorage.getItem('kb-autoloc') !== '0'; } catch (_) { return true; } };
+function getPosition(precise = true) {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('nogeo'));
+    navigator.geolocation.getCurrentPosition(p => res(p.coords), rej, { enableHighAccuracy: precise, timeout: 20000, maximumAge: 15000 });
+  });
+}
+let NOMI_LAST = 0;
+async function placeName(la, lo) {
+  // Nominatim erlaubt höchstens eine Anfrage pro Sekunde
+  const wait = NOMI_LAST + 1100 - Date.now(); if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  NOMI_LAST = Date.now();
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=de&lat=${la}&lon=${lo}`);
+    const a = (await r.json()).address || {};
+    const local = a.suburb || a.village || a.town || a.city_district || a.neighbourhood || '', city = a.city || a.town || a.village || a.municipality || '';
+    return [local !== city ? local : '', city].filter(Boolean).join(', ') || null;
+  } catch (_) { return null; }
+}
+const fmtCoord = o => o && o.placeLat != null ? `${(+o.placeLat).toFixed(5).replace('.', ',')}, ${(+o.placeLng).toFixed(5).replace('.', ',')}${o.placeAcc ? ` · ±${Math.round(o.placeAcc)} m` : ''}` : '';
+// Beim ersten Eintrag eines Frames: Standort im Hintergrund speichern (abschaltbar in den Einstellungen)
+async function autoLocate(frame, onDone) {
+  if (!AUTOLOC() || frame.placeLat != null) return;
+  try {
+    const c = await getPosition(true);
+    frame.placeLat = c.latitude; frame.placeLng = c.longitude; frame.placeAcc = c.accuracy; frame.placeAt = new Date().toISOString(); frame.placeSrc = 'gps';
+    await DB.put('frames', frame); onDone && onDone();
+    if (!frame.place) { const n = await placeName(c.latitude, c.longitude); if (n && !frame.place) { frame.place = n; await DB.put('frames', frame); onDone && onDone(); } }
+  } catch (_) { /* nicht freigegeben oder kein Signal: dann eben ohne Ort */ }
+}
+// Handyfoto: Aufnahmezeit und GPS aus den EXIF-Daten übernehmen, ohne Eingetragenes zu überschreiben
+function exifLocal(iso) { const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19); }
+function applyPhoneExif(frame, ex) {
+  if (!ex) return false;
+  let ch = false;
+  if (ex.taken && !frame.dateSet) { frame.date = exifLocal(ex.taken); ch = true; }
+  if (typeof ex.lat === 'number' && typeof ex.lng === 'number' && frame.placeLat == null) {
+    frame.placeLat = ex.lat; frame.placeLng = ex.lng; delete frame.placeAcc; frame.placeAt = ex.taken || null; frame.placeSrc = 'exif'; ch = true;
+  }
+  return ch;
+}
+async function readExif(file) {
+  try {
+    const e = await exifr.parse(file, { gps: true, tiff: true, exif: true });
+    return e ? { lat: typeof e.latitude === 'number' ? e.latitude : null, lng: typeof e.longitude === 'number' ? e.longitude : null, taken: e.DateTimeOriginal ? new Date(e.DateTimeOriginal).toISOString() : null } : {};
+  } catch (_) { return {}; }
+}
+// Mehrere Handyfotos auf einmal den Frames einer Rolle zuordnen
+async function openPhoneImport(roll, files) {
+  U.toast('Lese Fotos …');
+  const items = await Promise.all(files.map(async file => ({ file, ex: await readExif(file) })));
+  items.sort((a, b) => (a.ex.taken || '9').localeCompare(b.ex.taken || '9'));
+  const frames = await framesOf(roll.id);
+  const withLoc = items.filter(i => i.ex.lat != null).length;
+  const dated = frames.some(f => f.date) && items.some(i => i.ex.taken);
+  let mode = 'seq', start = (frames.find(f => !f.phoneId) || frames[0])?.id;
+  const ov = document.createElement('div');
+  ov.className = 'modalbg';
+  const urls = items.map(i => { try { return URL.createObjectURL(i.file); } catch (_) { return ''; } });
+  const plan = () => {
+    const out = new Map();
+    if (mode === 'time') {
+      const used = new Set();
+      items.forEach((it, k) => {
+        if (!it.ex.taken) return;
+        const t = new Date(it.ex.taken).getTime();
+        let best = null, bd = Infinity;
+        frames.forEach(f => { if (!f.date || used.has(f.id)) return; const d = Math.abs(new Date(f.date).getTime() - t); if (d < bd) { bd = d; best = f; } });
+        if (best) { used.add(best.id); out.set(k, best); }
+      });
+    } else {
+      let j = Math.max(0, frames.findIndex(f => f.id === start));
+      items.forEach((_, k) => { while (j < frames.length && frames[j].phoneId && frames[j].id !== start) j++; if (j < frames.length) out.set(k, frames[j++]); });
+    }
+    return out;
+  };
+  const tm = iso => iso ? new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
+  const draw = () => {
+    const p = plan();
+    ov.querySelector('#piList').innerHTML = items.map((it, k) => `<div class="pirow"><img src="${urls[k]}" alt=""><span>${tm(it.ex.taken)}</span><span class="pipin${it.ex.lat != null ? ' on' : ''}" aria-label="${it.ex.lat != null ? 'mit Ort' : 'ohne Ort'}">${PIN_IC}</span><span class="pito">${p.has(k) ? 'Bild ' + frameLabel(p.get(k)) : '–'}</span></div>`).join('');
+    ov.querySelector('#piStartRow').hidden = mode !== 'seq';
+    ov.querySelector('#piOk').disabled = !p.size;
+  };
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="piTitle">
+    <h2 id="piTitle">Handyfotos zuordnen</h2>
+    <p class="sub2">${items.length} ${items.length === 1 ? 'Foto' : 'Fotos'} · ${withLoc} mit Ort</p>
+    ${withLoc < items.length ? '<p class="hint">Fehlt der Ort, beim Auswählen auf dem iPhone oben „Optionen“ antippen und „Ort“ einschalten.</p>' : ''}
+    ${dated ? `<div class="seggroup" id="piMode"><button type="button" data-m="seq" class="seg on">Der Reihe nach</button><button type="button" data-m="time" class="seg">Nach Uhrzeit</button></div>` : ''}
+    <label class="fld" id="piStartRow"><span>Ab Bild</span><select id="piStart">${frames.map(f => `<option value="${f.id}"${f.id === start ? ' selected' : ''}>${frameLabel(f)}${f.phoneId ? ' (hat Handyfoto)' : ''}</option>`).join('')}</select></label>
+    <div class="pilist" id="piList"></div>
+    <div class="modalfoot"><button class="closex" id="piNo" aria-label="Abbrechen">${ART.x}</button><button class="btn accent" id="piOk">Zuordnen</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const close = () => { urls.forEach(u => { try { URL.revokeObjectURL(u); } catch (_) {} }); ov.remove(); };
+  ov.querySelector('#piNo').addEventListener('click', close);
+  ov.querySelector('#piMode')?.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; mode = b.dataset.m; ov.querySelectorAll('#piMode button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
+  ov.querySelector('#piStart').addEventListener('change', e => { start = e.target.value; draw(); });
+  ov.querySelector('#piOk').addEventListener('click', async () => {
+    const p = plan(); const btn = ov.querySelector('#piOk'); btn.disabled = true; btn.textContent = 'Speichere …';
+    const geo = [];
+    for (const [k, f] of p) {
+      const rec = await U.storeImage(items[k].file, 'phone');
+      await deleteImage(f.phoneId); f.phoneId = rec.id;
+      applyPhoneExif(f, rec.exif && rec.exif.taken ? rec.exif : items[k].ex);
+      if (f.placeLat != null && !f.place) geo.push(f);
+      await DB.put('frames', f);
+    }
+    close();
+    U.toast(`${p.size} ${p.size === 1 ? 'Foto' : 'Fotos'} zugeordnet`);
+    route();
+    for (const f of geo) { const n = await placeName(f.placeLat, f.placeLng); if (n) { const fresh = await DB.get('frames', f.id); if (fresh && !fresh.place) { fresh.place = n; await DB.put('frames', fresh); } } }
+  });
+  draw();
 }
 async function wirePlace(root, id, obj, persist) {
-  const inp = root.querySelector('#' + id), dl = root.querySelector('#' + id + 'List'), gps = root.querySelector('#' + id + 'Gps');
+  const inp = root.querySelector('#' + id), dl = root.querySelector('#' + id + 'List'), gps = root.querySelector('#' + id + 'Gps'), co = root.querySelector('#' + id + 'Coord');
   if (!inp) return;
   dl.innerHTML = (await placeOptions()).map(p => `<option value="${U.esc(p)}">`).join('');
   let t;
-  const save = () => { clearTimeout(t); obj.place = inp.value.trim(); if (!obj.place) { delete obj.placeLat; delete obj.placeLng; } persist(); };
+  const showCoord = () => { if (co) co.textContent = fmtCoord(obj); };
+  const save = () => { clearTimeout(t); obj.place = inp.value.trim(); if (!obj.place) { delete obj.placeLat; delete obj.placeLng; delete obj.placeAcc; } showCoord(); persist(); };
   inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(save, 400); });
   inp.addEventListener('change', save);
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
-  gps.addEventListener('click', () => {
-    if (!navigator.geolocation) { U.toast('Standort ist auf diesem Gerät nicht verfügbar'); return; }
-    gps.disabled = true; U.toast('Suche Standort …');
-    navigator.geolocation.getCurrentPosition(async pos => {
-      const { latitude: la, longitude: lo } = pos.coords;
-      let name = `${la.toFixed(4)}, ${lo.toFixed(4)}`;
-      try {
-        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=de&lat=${la}&lon=${lo}`);
-        const j = await r.json(), a = j.address || {};
-        const local = a.suburb || a.village || a.town || a.city_district || a.neighbourhood || '', city = a.city || a.town || a.village || a.municipality || '';
-        const n = [local !== city ? local : '', city].filter(Boolean).join(', ');
-        if (n) name = n;
-      } catch (_) { /* ohne Netz bleiben die Koordinaten */ }
-      inp.value = name; obj.placeLat = la; obj.placeLng = lo; save(); gps.disabled = false; U.haptic && U.haptic(10);
-    }, () => { gps.disabled = false; U.toast('Standort nicht freigegeben'); }, { enableHighAccuracy: false, timeout: 12000, maximumAge: 300000 });
+  gps.addEventListener('click', async () => {
+    gps.disabled = true;
+    try {
+      const c = await getPosition(true);
+      obj.placeLat = c.latitude; obj.placeLng = c.longitude; obj.placeAcc = c.accuracy; obj.placeAt = new Date().toISOString(); obj.placeSrc = 'gps';
+      inp.value = (await placeName(c.latitude, c.longitude)) || inp.value || `${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`;
+      save(); U.haptic && U.haptic(10);
+    } catch (_) { U.toast('Standort nicht freigegeben'); }
+    gps.disabled = false;
   });
+  // von außen (automatischer Standort) aktualisieren
+  return () => { if (document.activeElement !== inp) inp.value = obj.place || ''; showCoord(); };
 }
 
 // Einzelfoto: nur ansehen. Wischen hoch/runter zeigt das Handyfoto, links/rechts blättert.
@@ -1733,7 +1849,7 @@ async function viewPhoto(albumId, frameId) {
       ${phones.length ? `<span class="phlbl">Handy</span>` : ''}
       <figcaption>
         <label class="titlefld"><span>Titel</span><input id="phTitle" value="${U.esc(f.title || '')}" maxlength="120" enterkeyhint="done"></label>
-        ${placeFieldHtml('phPlace', f.place, 'titlefld')}
+        ${placeFieldHtml('phPlace', f.place, 'titlefld', f)}
         <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2">${U.esc(f.info || '')}</textarea></label>
         <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
