@@ -428,3 +428,6 @@ Haken: Jeder Übernehmen-Haken in Fenstern löst einen Lichtring im Prisma-Verla
 Fenster materialisieren sich: Hintergrund blendet ein, das Fenster kommt aus leichter Unschärfe und Verkleinerung mit kleinem Überschwingen. Bei „Bewegung reduzieren“ in iOS entfällt das.
 Logo: im Tagmodus bunt (Himmel, Sonne, Regenbogen-Lightleak, icon-day.png), nachts wie bisher.
 Zum Ausprobieren in den Einstellungen (werden nach der Entscheidung wieder entfernt): Nachtmodus Mitternacht (bisher), Graphit (neutral), Tanne (Dunkelgrün mit Türkis), Espresso (Erdtöne mit Bernstein); wirkt im Farbschema „Mond“. Schrift: System (SF Pro), Inter, DM Sans, Manrope, Plus Jakarta Sans, Outfit, Nunito, Sora, Space Grotesk, Fraunces; geladen von Google Fonts, gilt überall außer im Fotoalbum-Buch.
+
+## Fotoansicht: Haken bleibt beim Foto (03.11.2026)
+Der Haken unten rechts in der Fotoansicht speichert jetzt und bleibt beim Foto (mit Lichtring), statt zum Raster zurückzuspringen. Zum nächsten Foto seitlich wischen; das geht jetzt auch über dem Bereich mit Titel, Bewertung und Ort, nur nicht direkt auf Feldern, Knöpfen und den Bewertungspunkten. Zurück zum Raster mit dem Pfeil oben links.

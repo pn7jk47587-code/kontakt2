@@ -2093,7 +2093,8 @@ async function viewPhoto(albumId, frameId) {
   const go = async g => { if (g) { await saveTitle(); location.replace(`#/foto/${albumId}/${g.id}`); } };
   // Haken unten rechts: Titel speichern und zurück zum Raster
   const done = document.createElement('button');
-  done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig, zurück zum Raster'); done.innerHTML = ART.check;
+  // Haken speichert und bleibt beim Foto; weiter geht es mit Wischen, zurück zum Raster mit dem Pfeil oben links
+  done.className = 'donebtn stay'; done.setAttribute('aria-label', 'Speichern'); done.innerHTML = ART.check;
   document.body.appendChild(done);
   document.getElementById('phDel')?.addEventListener('click', async () => {
     await saveTitle();
@@ -2108,7 +2109,7 @@ async function viewPhoto(albumId, frameId) {
       cur.imgId = imgId; await DB.put('frames', cur); location.replace(`#/foto/${albumId}/${f.id}`);
     }, async () => { if (!undone) await deleteImage(imgId); });
   });
-  done.addEventListener('click', async () => { await saveTitle(); location.hash = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId; });
+  done.addEventListener('click', async () => { await saveTitle(); done.classList.remove('rewarded'); void done.offsetWidth; done.classList.add('rewarded'); setTimeout(() => done.classList.remove('rewarded'), 600); });
   // Filter nachtragen: auch bei fertigen und archivierten Rollen, damit das Foto später beim Filter als Beispiel auftaucht
   const allFilters = await getFilters();
   const drawPhFilters = () => {
@@ -2153,7 +2154,7 @@ function swipe(root, h) {
   let t0 = null;
   // Vergrößertes Foto oder zwei Finger: keine Wischgeste
   // Nicht in Eingabefeldern, Texten und Listen starten: dort wird markiert oder gescrollt
-  const s = e => { t0 = e.touches.length > 1 || root.querySelector('[data-zoomed="1"]') || e.target.closest('input, textarea, select, label, button, a, .metabox, .phfilters, .titlefld, figcaption') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  const s = e => { t0 = e.touches.length > 1 || root.querySelector('[data-zoomed="1"]') || e.target.closest('input, textarea, select, label, button, a, .rate, .placefld1') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
   const en = e => {
     if (!t0) return;
     if (e.touches.length || root.querySelector('[data-zoomed="1"]')) { t0 = null; return; }

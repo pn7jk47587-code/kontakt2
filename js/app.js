@@ -282,6 +282,7 @@ async function goUp() {
   if (sheet) { sheet.click(); return; }
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
+  if (parts[0] === 'foto' && !document.querySelector('.modalbg')) { location.hash = parts[1] === 'alle' ? '#/alle-fotos' : '#/album/' + parts[1]; return; }
   // Aus den Einstellungen geöffnete Seite: zurück in die Einstellungen
   try {
     const from = sessionStorage.getItem('kb-from-settings');
@@ -984,6 +985,7 @@ function growFrom(ov, btn) {
   document.addEventListener('click', e => {
     const d = e.target.closest('.donebtn');
     if (!d || d.dataset.go === '1' || document.body.classList.contains('leaving')) return;
+    if (d.classList.contains('stay')) { burst(d); U.haptic && U.haptic([10, 30, 14]); return; }   // speichert, ohne die Ebene zu verlassen
     e.stopImmediatePropagation(); e.preventDefault();
     burst(d); d.classList.add('rewarded'); U.haptic && U.haptic([10, 30, 14]);
     setTimeout(() => { document.body.classList.add('leaving'); d.dataset.go = '1'; d.click(); delete d.dataset.go; setTimeout(() => document.body.classList.remove('leaving'), 1200); }, 230);
