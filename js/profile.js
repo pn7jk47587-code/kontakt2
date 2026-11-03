@@ -308,17 +308,17 @@ async function viewProfile() {
 
     ${await cabinetHtml(true)}
 
-    ${await diaryFoldHtml()}
-
-    ${await ideasFoldHtml()}
-
     ${await analyticsTileHtml()}
 
     <a class="tile photostile" href="#/karte">
       <span class="fridgeicon photoicon">${PIN_IC}</span>
       <div><h2>Karte</h2><span class="sub2">${located} ${located === 1 ? 'Bild' : 'Bilder'} mit Ort</span></div>
       <span class="chev">›</span>
-    </a>`;
+    </a>
+
+    ${await ideasFoldHtml()}
+
+    ${await diaryFoldHtml()}`;
   const nameIn = view.querySelector('#pName');
   const fit = () => { nameIn.size = Math.max(2, nameIn.value.length + 1); };
   fit();
