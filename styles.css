@@ -2187,9 +2187,6 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
   border: 2px solid transparent !important; box-shadow: none !important; background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box !important; color: var(--text) !important; }
 .reorderbtn.on { background: linear-gradient(var(--teal), var(--teal)) padding-box, var(--prism) border-box !important; color: #fff !important; }
 .reorderbtn svg { display: block; }
-/* Karte (v154): OSM-Kacheln, im dunklen Modus abgedunkelt */
-:root[data-mood="moon"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.7); }
-:root[data-mood="moon"] .photomap { background: #1b1f2a; }
 
 /* ---------- Lightleak-Licht (js/beam.js) ----------
    Tag: zwei zarte Leaks über Eck. Nacht: warmes Streiflicht von links. Die Farbverläufe setzt beam.js,
@@ -2197,3 +2194,8 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
 :root .light::before, :root .light::after, :root[data-mood] .light::before, :root[data-mood] .light::after { content: none !important; background: none !important; animation: none !important; }
 .leakhost { position: relative; }
 .leakfx { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; }
+/* Einstellungen-Knopf zurückhaltender (v157): dünner, abgeschwächter Prisma-Rand, Symbol gedämpft */
+.gearbtn { border-width: 1.5px !important; color: var(--muted) !important;
+  background: linear-gradient(var(--solid), var(--solid)) padding-box,
+    linear-gradient(color-mix(in srgb, var(--solid) 55%, transparent), color-mix(in srgb, var(--solid) 55%, transparent)) border-box,
+    var(--prism) border-box !important; }

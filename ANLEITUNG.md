@@ -386,3 +386,6 @@ Analytics: Alle Karten sind einklappbar, auch „Deine Filme“ (offen beim erst
 
 ## Profil: neue Reihenfolge (03.11.2026)
 Von oben: Alle Fotos, Filmkühlschrank, Kameraschrank, Analytics, Karte, Ideen, Filmtagebuch.
+
+## Einstellungen-Knopf zurückhaltender (03.11.2026)
+Der runde Menü-Knopf oben rechts im Profil hat einen dünneren Rand (1,5 px) mit abgeschwächtem Prisma-Verlauf und ein gedämpftes Symbol. Größe (48 px) und Mittigkeit bleiben wie bei den anderen runden Knöpfen.
