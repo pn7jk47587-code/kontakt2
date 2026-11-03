@@ -53,7 +53,7 @@ async function viewMap() {
       m.on('click', () => {
         const b = L.latLngBounds(g.items.map(p => [p.f.placeLat, p.f.placeLng]));
         const same = b.getNorthEast().distanceTo(b.getSouthWest()) < 5;
-        if (g.items.length === 1 || same || map.getZoom() >= map.getMaxZoom()) location.hash = '#/foto/alle/' + first.f.id;
+        if (g.items.length === 1 || same || map.getZoom() >= map.getMaxZoom()) location.hash = (first.f.imgId ? '#/foto/alle/' : '#/bild/') + first.f.id;
         else map.fitBounds(b.pad(0.4), { maxZoom: map.getMaxZoom() });
       });
     });
