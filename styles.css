@@ -2364,17 +2364,6 @@ body.leaving #view { animation: leavelevel .24s ease-in forwards; }
 @media (prefers-reduced-motion: reduce) { .modalbg, .modalbg > .modal, body.leaving #view, #view.arrive, .burst i { animation: none !important; } }
 /* Logo im Tagmodus bunt */
 :root[data-mood="sun"] .homebtn img { content: url("icon-day.png"); }
-/* Nachtmodus-Varianten (zum Ausprobieren) */
-:root[data-mood="moon"][data-night="graphit"] { --bg: #111214; --bg2: rgba(255,255,255,.05); --card: rgba(36,37,42,.6); --line: rgba(255,255,255,.1); --text: #ececee; --muted: #9b9ca3; --teal: #c3cbe6; --solid: #1c1d21; --headbg: rgba(17,18,20,.72); --toastbg: rgba(36,37,42,.92); --albumbg: radial-gradient(120% 90% at 50% 0%, #26272c, #111214 75%); --prism: linear-gradient(90deg, #b9c2e6, #d8d2ea, #ece6f0, #cfe3ea, #b9c2e6); --glow: 0 0 0 1px rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.4); --tint: rgba(255,255,255,.06); }
-:root[data-mood="moon"][data-night="tanne"] { --bg: #07130f; --bg2: rgba(160,255,220,.05); --card: rgba(16,42,34,.58); --line: rgba(160,255,220,.13); --text: #e4f2eb; --muted: #93b3a6; --teal: #6fdcbc; --solid: #0f2620; --headbg: rgba(7,19,15,.68); --toastbg: rgba(16,42,34,.92); --albumbg: radial-gradient(120% 90% at 50% 0%, #143a30, #07130f 75%); --prism: linear-gradient(90deg, #5fdcbc, #9ff0a6, #e9f3b2, #7fd8ff, #5fdcbc); --glow: 0 0 0 1px rgba(160,255,220,.16), 0 10px 34px rgba(80,220,180,.22); --tint: rgba(111,220,188,.1); --onaccent: #06221a; }
-:root[data-mood="moon"][data-night="espresso"] { --bg: #140e0a; --bg2: rgba(255,220,190,.05); --card: rgba(52,37,28,.58); --line: rgba(255,220,190,.13); --text: #f3ebe4; --muted: #b8a596; --teal: #f0b27a; --solid: #251a14; --headbg: rgba(20,14,10,.7); --toastbg: rgba(52,37,28,.92); --albumbg: radial-gradient(120% 90% at 50% 0%, #3a2a1f, #140e0a 75%); --prism: linear-gradient(90deg, #f0b27a, #f6d38a, #e8a0a0, #c9a7e6, #f0b27a); --glow: 0 0 0 1px rgba(255,220,190,.16), 0 10px 34px rgba(240,170,110,.22); --tint: rgba(240,178,122,.1); --onaccent: #2a1a0e; }
-:root[data-mood="moon"][data-night="graphit"] body, :root[data-mood="moon"][data-night="tanne"] body, :root[data-mood="moon"][data-night="espresso"] body { background: var(--bg); }
 .nightpick { display: grid !important; grid-template-columns: 1fr 1fr; gap: 6px; }
-.nightpick .seg { display: flex; align-items: center; justify-content: center; gap: 8px; }
-.nsw { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,.25); }
-.nsw-mitternacht { background: linear-gradient(135deg, #141b38, #a3b6ff); }
-.nsw-graphit { background: linear-gradient(135deg, #1c1d21, #c3cbe6); }
-.nsw-tanne { background: linear-gradient(135deg, #0f2620, #6fdcbc); }
-.nsw-espresso { background: linear-gradient(135deg, #251a14, #f0b27a); }
 /* Schrift (zum Ausprobieren): ersetzt die Systemschrift überall außer im Fotoalbum-Buch */
 html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albtitle, .caption, svg, svg *, .wordmark) { font-family: var(--testfont) !important; }

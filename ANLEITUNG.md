@@ -431,3 +431,11 @@ Zum Ausprobieren in den Einstellungen (werden nach der Entscheidung wieder entfe
 
 ## Fotoansicht: Haken bleibt beim Foto (03.11.2026)
 Der Haken unten rechts in der Fotoansicht speichert jetzt und bleibt beim Foto (mit Lichtring), statt zum Raster zurückzuspringen. Zum nächsten Foto seitlich wischen; das geht jetzt auch über dem Bereich mit Titel, Bewertung und Ort, nur nicht direkt auf Feldern, Knöpfen und den Bewertungspunkten. Zurück zum Raster mit dem Pfeil oben links.
+
+## Licht bei Nacht zum Ausprobieren statt Farbvarianten (03.11.2026)
+Die Farbvarianten Graphit, Tanne und Espresso sind wieder entfernt. Stattdessen lassen sich unter Einstellungen › Licht bei Nacht die vier Nacht-Entwürfe aus dem Logo-Chat umschalten, alle auf dem bisherigen dunklen Grund und fest am Bildschirm, die Karten nehmen das Licht beim Durchscrollen an:
+Streiflicht (bisher): warmes Licht gleichmäßig vom linken Rand.
+Glut von unten: warmes Licht steigt vom unteren Rand auf, die Karten glühen an, je weiter unten sie sind.
+Kühler Leak: Violett und Blau aus der Ecke rechts oben mit kleinem warmem Kern.
+Diagonaler Schleier: weicher, schräger Lichtschleier in Rosa und Orange von links oben nach rechts unten.
+Wirkt nachts bzw. im Farbschema „Mond“. Nach der Entscheidung fliegt der Schalter wieder raus.

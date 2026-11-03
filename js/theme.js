@@ -44,9 +44,8 @@ const MOOD = (() => {
 
   // Zum Ausprobieren: Varianten des Nachtmodus und Schriftarten (Einstellungen)
   function testLook() {
-    let night = 'mitternacht', font = '';
-    try { night = localStorage.getItem('kb-night') || 'mitternacht'; font = localStorage.getItem('kb-font') || ''; } catch (_) {}
-    document.documentElement.dataset.night = night;
+    let font = '';
+    try { font = localStorage.getItem('kb-font') || ''; localStorage.removeItem('kb-night'); } catch (_) {}
     if (font) {
       document.documentElement.dataset.font = font;
       document.documentElement.style.setProperty('--testfont', `"${font}", -apple-system, system-ui, sans-serif`);
