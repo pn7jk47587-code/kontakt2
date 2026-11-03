@@ -389,3 +389,7 @@ Von oben: Alle Fotos, Filmkühlschrank, Kameraschrank, Analytics, Karte, Ideen, 
 
 ## Einstellungen-Knopf zurückhaltender (03.11.2026)
 Der runde Menü-Knopf oben rechts im Profil hat einen dünneren Rand (1,5 px) mit abgeschwächtem Prisma-Verlauf und ein gedämpftes Symbol. Größe (48 px) und Mittigkeit bleiben wie bei den anderen runden Knöpfen.
+
+## „Wann und wo“ je Zeitraum, Rechenwege hinter dem Infosymbol (03.11.2026)
+„Wann und wo“ ist keine eigene Karte in den Analytics mehr. Unter „Fotos gemacht“ sind die drei Felder „Diesen Monat“, „Dieses Jahr“ und „Insgesamt“ antippbar und öffnen „Wann und wo“ für genau diesen Zeitraum (Uhrzeit, Wochentage, Licht, Orte, Radius, Fotografierrate). Oben auf der Seite lässt sich zwischen Monat, Jahr und Gesamt wechseln. Bilder ohne Datum zählen nur in der Gesamtansicht.
+Rechenwege stehen nicht mehr im Text der Analytics. Ein kleines Infosymbol (i) neben der Aussage zeigt sie erst nach einem Tipp: bei „Auf 36 Bilder umgerechnet“ in „Filme in der Kamera“ (Vergleich von Mittelformat und Kleinbild), bei der Fotografierrate und bei der Bestimmung des Zuhauses.

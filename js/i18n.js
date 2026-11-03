@@ -838,6 +838,15 @@ diesen Monat {0} Foto	this month {0} photo
 Du hast diesen Monat schon {0} gemacht. Insgesamt sind es {1}.	This month you have already taken {0}. That makes {1} in total.
 Diesen Monat	This month
 Dieses Jahr	This year
+Wann und wo ›	When and where ›
+Wann und wo	When and where
+Monat	Month
+Jahr	Year
+Gesamt	All time
+So wird gerechnet	How this is calculated
+Je 36 Bilder: Tage in der Kamera geteilt durch die belichteten Bilder, mal 36. So lassen sich ein 12er-Mittelformat- und ein 36er-Kleinbildfilm vergleichen.	Per 36 frames: days in the camera divided by the exposed frames, times 36. This makes a 12-frame medium format roll comparable to a 36-frame 35 mm roll.
+Fotos pro Tag, an dem du dort fotografiert hast. Wie lange du insgesamt zu Hause oder unterwegs warst, weiß die App nicht. Sie kennt nur die Tage mit Fotos.	Photos per day on which you took photos there. The app does not know how long you were at home or away in total, only the days with photos.
+Als Zuhause gilt das Gebiet von rund einem Kilometer, in dem die meisten deiner Fotos mit Ort entstanden sind. Umkreis und Entfernungen misst die App von dort aus.	Home is the area of about one kilometre where most of your photos with a location were taken. Radius and distances are measured from there.
 Insgesamt	In total
 Noch keine Fotos mit Aufnahmetag.	No photos with a date yet.
 {0} Fotos	{0} photos

@@ -430,6 +430,7 @@ async function routeView() {
       case 'karte': return await viewMap();
       case 'archiv': return await viewArchive();
       case 'analytics': return await viewAnalytics();
+      case 'wannwo': return await viewWhenWhere(parts[1]);
       case 'schrank': return await viewCabinetPart(parts[1]);
       case 'kameras': return await viewCameras();
       case 'kamera': return await viewCamera(parts[1]);

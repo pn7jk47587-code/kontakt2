@@ -795,7 +795,6 @@ async function viewAnalytics() {
       </div>
     </section>
     ${await shotsFoldHtml()}
-    ${await whenWhereFoldHtml()}
     ${await rollTimeFoldHtml()}
     ${await spendFoldHtml()}`;
   setupFolds(view);
@@ -833,10 +832,10 @@ async function shotsFoldHtml() {
       </div>
       <div class="foldbody">
         <p class="spendtext">Du hast diesen Monat schon <b>${month} ${word(month)}</b> gemacht. Insgesamt sind es <b>${frames.length} ${word(frames.length)}</b>.</p>
-        <div class="spendsplit three">
-          <div><span class="sub2">Diesen Monat</span><b>${month}</b></div>
-          <div><span class="sub2">Dieses Jahr</span><b>${year}</b></div>
-          <div><span class="sub2">Insgesamt</span><b>${frames.length}</b></div>
+        <div class="spendsplit three whenlinks">
+          <a href="#/wannwo/monat"><span class="sub2">Diesen Monat</span><b>${month}</b><span class="whengo">Wann und wo ›</span></a>
+          <a href="#/wannwo/jahr"><span class="sub2">Dieses Jahr</span><b>${year}</b><span class="whengo">Wann und wo ›</span></a>
+          <a href="#/wannwo/gesamt"><span class="sub2">Insgesamt</span><b>${frames.length}</b><span class="whengo">Wann und wo ›</span></a>
         </div>
         <details class="txhist"><summary>Verlauf</summary>${hist}</details>
       </div>
@@ -844,6 +843,15 @@ async function shotsFoldHtml() {
 }
 
 /* ---------- Analytics: Wann und wo, Filme in der Kamera ---------- */
+// Rechenwege stehen nicht im Text. Ein kleines Infosymbol zeigt sie erst nach einem Tipp.
+const INFO_IC = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.6h.01" stroke-width="2.6"/></svg>';
+const infoBtn = text => `<button type="button" class="infobtn" aria-label="So wird gerechnet" aria-expanded="false">${INFO_IC}</button><span class="infotext" hidden>${text}</span>`;
+document.addEventListener('click', e => {
+  const b = e.target.closest('.infobtn'); if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const t = b.nextElementSibling; if (!t || !t.classList.contains('infotext')) return;
+  t.hidden = !t.hidden; b.setAttribute('aria-expanded', String(!t.hidden));
+}, true);
 function distKm(la1, lo1, la2, lo2) {
   const r = Math.PI / 180, dLa = (la2 - la1) * r, dLo = (lo2 - lo1) * r;
   const a = Math.sin(dLa / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLo / 2) ** 2;
@@ -866,11 +874,33 @@ function barList(entries, unit = '') {
   return entries.map(([k, n, sub, shown]) => `<div class="anrow"><span class="anname">${U.esc(k)}${sub ? `<span class="sub2">${U.esc(sub)}</span>` : ''}</span><span class="anbar"><i style="width:${Math.max(4, Math.round(n / max * 100))}%"></i></span><span class="ann">${shown ?? n}${unit}</span></div>`).join('');
 }
 
-async function whenWhereFoldHtml() {
-  const frames = await DB.all('frames');
+// Zeitraum aus „Fotos gemacht“: Monat, Jahr oder gesamt. Bilder ohne Datum zählen nur in der Gesamtansicht.
+function whenScope(scope) {
+  const now = new Date(), y = String(now.getFullYear()), ym = `${y}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  if (scope === 'monat') return { key: 'monat', label: `${I18N.t(MONTHS[now.getMonth()])} ${y}`, test: f => String(f.date || '').startsWith(ym) };
+  if (scope === 'jahr') return { key: 'jahr', label: y, test: f => String(f.date || '').startsWith(y) };
+  return { key: 'gesamt', label: 'Insgesamt', test: () => true };
+}
+
+async function viewWhenWhere(scope) {
+  const sc = whenScope(scope);
+  setHeader('Wann und wo');
+  const frames = (await DB.all('frames')).filter(sc.test);
+  const { body, sub } = whenWhereBody(frames);
+  view.innerHTML = `
+    <div class="whenscope">${[['monat', 'Monat'], ['jahr', 'Jahr'], ['gesamt', 'Gesamt']].map(([k, t]) => `<a class="chip${k === sc.key ? ' on' : ''}" href="#/wannwo/${k}" ${k === sc.key ? 'aria-current="page"' : ''}>${t}</a>`).join('')}</div>
+    <section class="card whencard">
+      <h2 class="whentitle">${U.esc(sc.label)}</h2>
+      <p class="sub2">${sub}</p>
+      ${body}
+    </section>`;
+  view.querySelectorAll('.whenscope a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); location.replace(a.getAttribute('href')); }));
+}
+
+function whenWhereBody(frames) {
   const timed = frames.filter(hasTime);
   const located = frames.filter(f => f.placeLat != null && f.placeLng != null);
-  if (!timed.length && !located.length) return anFold('when', 'whenfold', typeof PIN_IC !== 'undefined' ? PIN_IC : '', 'Wann und wo', 'noch keine Zeiten oder Orte', '<p class="hint">Uhrzeit und Ort kommen über das Uhr- und das Standortsymbol in der Bildansicht oder aus Handyfotos.</p>');
+  if (!timed.length && !located.length) return { sub: 'noch keine Zeiten oder Orte', body: '<p class="hint">In diesem Zeitraum hat noch kein Bild eine Uhrzeit oder einen Ort. Beides kommt über das Uhr- und das Standortsymbol in der Bildansicht oder aus Handyfotos.</p>' };
   let body = '';
   // Uhrzeit: Verteilung über den Tag, häufigste Stunde, Wochentag
   if (timed.length) {
@@ -916,14 +946,13 @@ async function whenWhereFoldHtml() {
     const catDesc = { Zuhause: 'bis 3 km', Umgebung: '3 bis 50 km', Unterwegs: 'über 50 km', Ausland: homeCC ? 'anderes Land' : '' };
     body += `<h3 class="anh">Orte</h3>${barList(topPlaces)}
       <h3 class="anh">Radius</h3>
-      <p class="spendtext">Als Zuhause gilt das Gebiet mit den meisten Fotos: <b>${U.esc(homeName)}</b>. Die Hälfte deiner Fotos entsteht im Umkreis von <b>${fmtKm(median(ds))}</b>, neun von zehn innerhalb von <b>${fmtKm(quant(ds, 0.9))}</b>. Am weitesten weg: <b>${U.esc(far.f.place || 'ohne Namen')}</b>, ${fmtKm(far.d)}.</p>
+      <p class="spendtext">Dein Zuhause ist <b>${U.esc(homeName)}</b>. Die Hälfte deiner Fotos entsteht im Umkreis von <b>${fmtKm(median(ds))}</b>, neun von zehn innerhalb von <b>${fmtKm(quant(ds, 0.9))}</b>. Am weitesten weg: <b>${U.esc(far.f.place || 'ohne Namen')}</b>, ${fmtKm(far.d)}.${infoBtn('Als Zuhause gilt das Gebiet von rund einem Kilometer, in dem die meisten deiner Fotos mit Ort entstanden sind. Umkreis und Entfernungen misst die App von dort aus.')}</p>
       <div class="spendsplit four">${Object.entries(cats).filter(([k, fs]) => fs.length || k !== 'Ausland').map(([k, fs]) => `<div><span class="sub2">${k}${catDesc[k] ? ` · ${catDesc[k]}` : ''}</span><b>${fs.length}</b><span class="sub2">${Math.round(fs.length / located.length * 100)} %</span></div>`).join('')}</div>
-      <h3 class="anh">Fotografierrate</h3>
-      <p class="hint">Fotos pro Tag, an dem du dort fotografiert hast. Wie lange du insgesamt zu Hause oder unterwegs warst, weiß die App nicht; sie kennt nur die Tage mit Fotos.</p>
+      <h3 class="anh">Fotografierrate ${infoBtn('Fotos pro Tag, an dem du dort fotografiert hast. Wie lange du insgesamt zu Hause oder unterwegs warst, weiß die App nicht. Sie kennt nur die Tage mit Fotos.')}</h3>
       ${barList(Object.entries(cats).filter(([, fs]) => rate(fs)).map(([k, fs]) => { const days = new Set(fs.filter(f => f.date).map(f => String(f.date).slice(0, 10))).size; return [k, rate(fs), `${days} ${days === 1 ? 'Tag' : 'Tage'}`, fmtNum(rate(fs))]; }))}`;
   }
   const sub = [timed.length ? `${timed.length} mit Uhrzeit` : '', located.length ? `${located.length} mit Ort` : ''].filter(Boolean).join(' · ');
-  return anFold('when', 'whenfold', typeof PIN_IC !== 'undefined' ? PIN_IC : '', 'Wann und wo', sub, body);
+  return { body, sub };
 }
 
 async function rollTimeFoldHtml() {
@@ -953,12 +982,11 @@ async function rollTimeFoldHtml() {
     const mDays = median(stats.map(s => s.days)), m36 = median(stats.map(s => s.per36));
     const fast = stats.reduce((a, b) => b.per36 < a.per36 ? b : a), slow = stats.reduce((a, b) => b.per36 > a.per36 ? b : a);
     const hrs = stats.filter(s => s.hours != null).map(s => s.hours / s.n * 36);
-    body += `<p class="spendtext">Ein Film liegt bei dir üblicherweise <b>${fmtNum(mDays, 0)} ${mDays === 1 ? 'Tag' : 'Tage'}</b> in der Kamera. Auf 36 Bilder umgerechnet brauchst du <b>${fmtNum(m36, 0)} Tage</b>${hrs.length ? `; zwischen erstem und letztem Foto mit Uhrzeit sind es <b>${fmtNum(median(hrs), 0)} Stunden</b> je 36 Bilder` : ''}.</p>
+    body += `<p class="spendtext">Ein Film liegt bei dir üblicherweise <b>${fmtNum(mDays, 0)} ${mDays === 1 ? 'Tag' : 'Tage'}</b> in der Kamera. Auf 36 Bilder umgerechnet brauchst du <b>${fmtNum(m36, 0)} Tage</b>${hrs.length ? `; zwischen erstem und letztem Foto mit Uhrzeit sind es <b>${fmtNum(median(hrs), 0)} Stunden</b> je 36 Bilder` : ''}. ${infoBtn('Je 36 Bilder: Tage in der Kamera geteilt durch die belichteten Bilder, mal 36. So lassen sich ein 12er-Mittelformat- und ein 36er-Kleinbildfilm vergleichen.')}</p>
       <div class="spendsplit">
         <div><span class="sub2">Am schnellsten</span><b>${fmtNum(fast.per36, 0)} Tage</b><span class="sub2">${U.esc(fast.name)}</span></div>
         <div><span class="sub2">Am langsamsten</span><b>${fmtNum(slow.per36, 0)} Tage</b><span class="sub2">${U.esc(slow.name)}</span></div>
       </div>
-      <p class="hint">Je 36 Bilder: Tage in der Kamera geteilt durch die belichteten Bilder, mal 36. So lassen sich ein 12er-Mittelformat- und ein 36er-Kleinbildfilm vergleichen.</p>
       <details class="txhist"><summary>Alle Rollen</summary>${stats.sort((a, b) => a.per36 - b.per36).map(s => `<div class="txrow"><span>${U.esc(s.name)}<span class="sub2">${s.n} Bilder · ${s.days} ${s.days === 1 ? 'Tag' : 'Tage'}${s.hours != null ? ` · ${fmtNum(s.hours, 0)} h zwischen erstem und letztem Foto` : ''}</span></span><span>${fmtNum(s.per36, 0)} T / 36</span></div>`).join('')}</details>`;
   }
   // Rolle gerade in der Kamera: Tempo und voraussichtlich voll
