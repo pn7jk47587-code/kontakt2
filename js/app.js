@@ -281,6 +281,11 @@ async function goUp() {
   if (sheet) { sheet.click(); return; }
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
+  // Aus den Einstellungen geöffnete Seite: zurück in die Einstellungen
+  try {
+    const from = sessionStorage.getItem('kb-from-settings');
+    if (from && location.hash === from) { sessionStorage.removeItem('kb-from-settings'); sessionStorage.setItem('kb-open-settings', '1'); location.hash = '#/profil'; return; }
+  } catch (_) {}
   const done = document.querySelector('.donebtn.goesback');
   if (done) { done.click(); return; }
   const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', karte: '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', analytics: '#/profil', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];

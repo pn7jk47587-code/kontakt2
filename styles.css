@@ -232,7 +232,6 @@ textarea { resize: vertical; }
 .overlay img { max-width: 100%; max-height: 100%; object-fit: contain; }
 .overlay .close { position: absolute; top: calc(12px + var(--safe-t)); right: 12px; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + var(--safe-b)); z-index: 1100; background: var(--toastbg); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: var(--shadow); color: var(--text); border: 1px solid var(--teal); padding: 9px 16px; border-radius: 999px; font-size: 14px; max-width: 90vw; }
-.leaflet-container { background: var(--bg2); font: inherit; }
 main > .btn.wide, #rollbody > .btn.danger { margin: 12px 16px; width: calc(100% - 32px); }
 .latbar { position: relative; height: 46px; margin: 12px 0 6px; }
 .latbar::before { content: ""; position: absolute; left: 0; right: 0; top: 10px; height: 10px; border-radius: 5px; background: var(--bg2); border: 1px solid var(--line); }
@@ -489,7 +488,6 @@ h2.sec { letter-spacing: .12em; }
 .tab.on { border-image: var(--prism) 1; }
 
 /* Karte im Mondschein abdunkeln */
-:root[data-mood="moon"] .leaflet-tile-pane { filter: invert(1) hue-rotate(195deg) brightness(.85) contrast(.92) saturate(.6); }
 
 /* Albumseite im Mondschein */
 :root[data-mood="moon"] .sheet { filter: brightness(.92) saturate(.9); }
@@ -2056,7 +2054,6 @@ body.mapmode { padding-bottom: 0; }
 .mapthumb .mtimg { display: block; width: 52px; height: 52px; border-radius: 14px; background: #ccc center / cover; border: 3px solid #fff; box-shadow: 0 3px 10px rgba(0,0,0,.28); box-sizing: border-box; }
 .mapthumb .mtimg::after { content: ''; position: absolute; left: 50%; bottom: -7px; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
 .mapthumb .mtn { position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: var(--teal); color: #fff; font: 600 12px/22px system-ui, sans-serif; text-align: center; box-sizing: border-box; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
-.leaflet-container { font: 12px system-ui, sans-serif; }
 
 /* Frame kompakt (v150): alles auf einen Blick */
 .topbar h1.soft { font-size: 15px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
@@ -2138,6 +2135,65 @@ body.mapmode { padding-bottom: 0; }
 .placetime .timefld .timeedit { display: flex !important; flex: 1 1 auto; min-width: 0; height: 100%; padding: 0 0 0 12px; overflow: hidden; white-space: nowrap; font-size: 15px; }
 .placetime .clockbtn, .placetime .placepin { flex: 0 0 auto; width: 44px; height: 44px; display: grid; place-items: center; color: var(--teal) !important; }
 .placetime .clockbtn svg, .placetime .placepin svg { width: 24px; height: 24px; display: block; }
-/* Karte (v154): OSM-Kacheln, im dunklen Modus abgedunkelt */
-:root[data-mood="moon"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.7); }
-:root[data-mood="moon"] .photomap { background: #1b1f2a; }
+
+/* Karte (v155): MapLibre mit OpenFreeMap Liberty (3D-Gebäude) */
+.mapthumb { position: relative; width: 52px; height: 52px; padding: 0; margin: 0; background: none !important; border: 0 !important; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mapthumb .mtimg { position: relative; }
+.maplibregl-ctrl-attrib { font: 11px system-ui, sans-serif; }
+.photomap.maplibregl-map { position: absolute !important; inset: 0; width: 100%; height: 100%; }
+
+/* Handyfotos zuordnen als Standortsymbol oben rechts neben „Verschieben“ (v155) */
+.tabs .phoneimpbtn { margin: 0 0 6px auto; cursor: pointer; }
+.tabs .phoneimpbtn + .reorderbtn { margin-left: 8px; }
+.phoneimpbtn svg { width: 20px; height: 20px; display: block; }
+
+/* Einheitliche Knöpfe (v155): alle Aktionsknöpfe mit Text als Pille wie „In Entwicklung geben“,
+   zwei feste Höhen: normal 50 px, klein 36 px. Auswahlkacheln (Objektive, Symbolknöpfe) behalten 14 px. */
+:root { --btn-h: 50px; --btn-h-s: 36px; }
+.btn, label.btn, .modebtn, .filmpickbtn { border-radius: 999px !important; }
+.btn:not(.small), label.btn:not(.small), .modebtn { min-height: var(--btn-h); padding-top: 0 !important; padding-bottom: 0 !important; box-sizing: border-box; }
+.btn.small, label.btn.small { min-height: var(--btn-h-s); padding: 0 14px !important; box-sizing: border-box; }
+.slidebtn { height: var(--btn-h) !important; }
+.filmpickbtn { padding-left: 14px; padding-right: 16px; }
+.slideknob { width: 41px !important; height: 41px !important; top: 3px !important; left: 3px; }
+
+/* Analytics (v155): alle Karten einklappbar, „Wann und wo“, „Filme in der Kamera“ */
+section.anfold.fold { margin: 12px 16px !important; padding: 14px; border-radius: 26px !important; background: var(--card) !important; border: 1px solid var(--line) !important; box-shadow: var(--shadow) !important; color: var(--text); }
+section.anfold .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+section.anfold .fridgeicon { background: var(--solid) !important; box-shadow: none !important; color: var(--teal) !important; }
+section.anfold .fridgeicon svg { width: 22px; height: 22px; }
+section.whenfold.fold { background: linear-gradient(160deg, rgba(64,170,255,.2), var(--card) 70%) !important; border-color: rgba(64,170,255,.42) !important; }
+section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,.2), var(--card) 70%) !important; border-color: rgba(255,170,64,.42) !important; }
+.anfold .foldbody > *:first-child { margin-top: 12px; }
+.anh { margin: 18px 0 8px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 650; }
+.anrow { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 4px 0; font-size: 14px; }
+.anname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anname .sub2 { margin-left: 6px; }
+.anbar { height: 8px; border-radius: 999px; background: var(--bg2); overflow: hidden; }
+.anbar i { display: block; height: 100%; border-radius: 999px; background: var(--prism); }
+.ann { font-variant-numeric: tabular-nums; font-weight: 650; min-width: 2.5em; text-align: right; }
+.hourbars { display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); align-items: end; gap: 2px; height: 86px; padding-bottom: 16px; position: relative; }
+.hourbars .hb { position: relative; height: 100%; display: flex; align-items: flex-end; }
+.hourbars .hb i { display: block; width: 100%; height: calc(var(--v) * 100%); min-height: 2px; border-radius: 3px 3px 1px 1px; background: var(--line); }
+.hourbars .hb.top i { background: var(--teal); }
+.hourbars .hb em { position: absolute; bottom: -16px; left: 0; font-style: normal; font-size: 10px; color: var(--muted); }
+.wdrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin-top: 10px; }
+.wdrow .wd { display: flex; flex-direction: column; align-items: center; padding: 6px 0; border-radius: 12px; background: var(--bg2); font-size: 11px; color: var(--muted); }
+.wdrow .wd b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+.wdrow .wd.top { background: var(--teal); color: #fff; }
+.wdrow .wd.top b { color: #fff; }
+.spendsplit.four { grid-template-columns: 1fr 1fr; }
+.spendsplit > div .sub2 + b + .sub2 { font-size: 12px; }
+.curroll { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; padding: 12px; border-radius: 16px; background: var(--bg2); border: 1px solid var(--line); }
+.rankfold .foldbody .rankrow:first-child { margin-top: 12px; }
+/* Einstellungen-Knopf (Menü) im Profil wie die übrigen runden Knöpfe: 48 px, gleichmäßiger Prisma-Ring, ohne Lichtkante (v155) */
+.gearbtn { width: var(--navd) !important; height: var(--navd) !important; border-radius: 50% !important; padding: 0 !important; box-sizing: border-box;
+  display: grid !important; place-items: center; line-height: 0; border: 2px solid transparent !important; box-shadow: none !important;
+  background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box !important; color: var(--text) !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.gearbtn svg { display: block; width: 22px !important; height: 22px !important; }
+/* Weitere runde Werkzeugknöpfe ebenfalls 48 px mit Prisma-Ring (v155) */
+.reorderbtn, .tabs .phoneimpbtn { width: var(--navd) !important; height: var(--navd) !important; box-sizing: border-box; display: grid !important; place-items: center; padding: 0 !important; border-radius: 50% !important;
+  border: 2px solid transparent !important; box-shadow: none !important; background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box !important; color: var(--text) !important; }
+.reorderbtn.on { background: linear-gradient(var(--teal), var(--teal)) padding-box, var(--prism) border-box !important; color: #fff !important; }
+.reorderbtn svg { display: block; }

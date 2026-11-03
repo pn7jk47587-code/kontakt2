@@ -381,7 +381,7 @@ async function openSettings() {
     <div class="modal setmodal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
       <h2 id="setTitle">Einstellungen</h2>
       <span class="appver" title="App-Version und letzte Änderung">${typeof APP_VERSION !== 'undefined' ? `Version ${APP_VERSION.replace('kb-v', '')}<br>${(() => { const [d, t] = APP_BUILT.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}, ${t}`; })()}` : ''}</span>
-      <div class="sethead"><span class="langic" aria-hidden="true">Aa</span><span>Sprache</span></div>
+      <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Farbschema</span></div>
       <div class="moodpick" id="menuMood">${[['auto', 'Automatisch'], ['sun', 'Sonne'], ['moon', 'Mond']].map(([k, l]) => `<button type="button" data-mood="${k}">${l}</button>`).join('')}</div>
@@ -405,6 +405,8 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  // Seiten aus den Einstellungen: Zurück führt wieder in die Einstellungen (Zwischenebene)
+  ov.querySelectorAll('.profilelinks a').forEach(l => l.addEventListener('click', () => { try { sessionStorage.setItem('kb-from-settings', l.getAttribute('href')); } catch (_) {} }));
   ov.querySelector('#setLang').addEventListener('click', e => {
     const b = e.target.closest('[data-lang]'); if (!b || b.dataset.lang === I18N.get()) return;
     ov.querySelectorAll('#setLang button').forEach(x => x.classList.toggle('on', x === b));
@@ -781,12 +783,20 @@ async function viewAnalytics() {
         ${quip ? `<p class="favquip">${U.esc(quip)}</p>` : ''}`
       : '<p class="favline">Noch kein Lieblingsfilm. Leg deinen ersten Film ein.</p>'}
     </section>
-    <section class="card rankcard">
-      <h2 class="ranktitle">Deine Filme</h2>
+    <section class="anfold rankfold fold${foldOpen('rank', true) ? ' open' : ''}" data-fold="rank">
+      <div class="fridgetop foldhead">
+        <span class="fridgeicon">${ART.filmIc}</span>
+        <div><h2>Deine Filme</h2><span class="sub2">${rank.length} ${rank.length === 1 ? 'Film' : 'Filme'}</span></div>
+        <span class="foldchev" aria-hidden="true"></span>
+      </div>
+      <div class="foldbody">
       ${rows.length ? rows.join('') : '<p class="hint">Noch keine Rollen.</p>'}
       ${rank.length > 10 ? `<p class="hint">und ${rank.length - 10} weitere</p>` : ''}
+      </div>
     </section>
     ${await shotsFoldHtml()}
+    ${await whenWhereFoldHtml()}
+    ${await rollTimeFoldHtml()}
     ${await spendFoldHtml()}`;
   setupFolds(view);
   setupSpend(view);
@@ -831,4 +841,132 @@ async function shotsFoldHtml() {
         <details class="txhist"><summary>Verlauf</summary>${hist}</details>
       </div>
     </section>`;
+}
+
+/* ---------- Analytics: Wann und wo, Filme in der Kamera ---------- */
+function distKm(la1, lo1, la2, lo2) {
+  const r = Math.PI / 180, dLa = (la2 - la1) * r, dLo = (lo2 - lo1) * r;
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLo / 2) ** 2;
+  return 12742 * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+const median = xs => { if (!xs.length) return null; const a = [...xs].sort((x, y) => x - y), m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+const quant = (xs, q) => { if (!xs.length) return null; const a = [...xs].sort((x, y) => x - y); return a[Math.min(a.length - 1, Math.floor(q * a.length))]; };
+const fmtKm = k => k == null ? '–' : k < 1 ? `${Math.round(k * 1000)} m` : k < 10 ? `${k.toFixed(1).replace('.', ',')} km` : `${Math.round(k).toLocaleString('de-DE')} km`;
+const fmtNum = (v, d = 1) => v == null || !isFinite(v) ? '–' : (Math.round(v * 10 ** d) / 10 ** d).toLocaleString('de-DE');
+// Bilder mit echter Uhrzeit (ein von Hand gesetzter Tag ohne Zeit steht intern auf 12:00 und zählt nicht)
+const hasTime = f => { const s = String(f.date || ''); return s.length > 10 && !/T12:00$/.test(s); };
+const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+function anFold(key, cls, icon, title, sub, body) {
+  return `<section class="anfold ${cls} fold${foldOpen(key) ? ' open' : ''}" data-fold="${key}">
+    <div class="fridgetop foldhead"><span class="fridgeicon">${icon}</span><div><h2>${title}</h2><span class="sub2">${sub}</span></div><span class="foldchev" aria-hidden="true"></span></div>
+    <div class="foldbody">${body}</div></section>`;
+}
+function barList(entries, unit = '') {
+  const max = Math.max(1, ...entries.map(e => e[1]));
+  return entries.map(([k, n, sub, shown]) => `<div class="anrow"><span class="anname">${U.esc(k)}${sub ? `<span class="sub2">${U.esc(sub)}</span>` : ''}</span><span class="anbar"><i style="width:${Math.max(4, Math.round(n / max * 100))}%"></i></span><span class="ann">${shown ?? n}${unit}</span></div>`).join('');
+}
+
+async function whenWhereFoldHtml() {
+  const frames = await DB.all('frames');
+  const timed = frames.filter(hasTime);
+  const located = frames.filter(f => f.placeLat != null && f.placeLng != null);
+  if (!timed.length && !located.length) return anFold('when', 'whenfold', typeof PIN_IC !== 'undefined' ? PIN_IC : '', 'Wann und wo', 'noch keine Zeiten oder Orte', '<p class="hint">Uhrzeit und Ort kommen über das Uhr- und das Standortsymbol in der Bildansicht oder aus Handyfotos.</p>');
+  let body = '';
+  // Uhrzeit: Verteilung über den Tag, häufigste Stunde, Wochentag
+  if (timed.length) {
+    const hours = Array(24).fill(0), wds = Array(7).fill(0);
+    timed.forEach(f => { const d = new Date(f.date); hours[d.getHours()]++; wds[d.getDay()]++; });
+    const hMax = Math.max(...hours), topH = hours.indexOf(hMax), wMax = Math.max(...wds), topW = wds.indexOf(wMax);
+    body += `<h3 class="anh">Uhrzeit</h3>
+      <p class="spendtext">Am meisten fotografierst du zwischen <b>${topH} und ${topH + 1} Uhr</b> (${hMax} von ${timed.length}), am liebsten <b>${['sonntags', 'montags', 'dienstags', 'mittwochs', 'donnerstags', 'freitags', 'samstags'][topW]}</b>.</p>
+      <div class="hourbars" role="img" aria-label="Fotos je Stunde">${hours.map((n, h) => `<span class="hb${h === topH ? ' top' : ''}" style="--v:${hMax ? n / hMax : 0}" title="${h} Uhr: ${n}"><i></i>${h % 6 === 0 ? `<em>${h}</em>` : ''}</span>`).join('')}</div>
+      <div class="wdrow">${wds.map((n, i) => ({ n, i })).slice(1).concat({ n: wds[0], i: 0 }).map(({ n, i }) => `<span class="wd${i === topW ? ' top' : ''}"><b>${n}</b>${WD[i]}</span>`).join('')}</div>`;
+    // Licht: Sonnenstand am Ort zur Aufnahmezeit
+    const lit = timed.filter(f => f.placeLat != null && typeof SKY !== 'undefined');
+    if (lit.length) {
+      const ph = { 'Tag': 0, 'goldene Stunde': 0, 'blaue Stunde': 0, 'Nacht': 0 };
+      lit.forEach(f => { const a = SKY.sun(new Date(f.date), +f.placeLat, +f.placeLng).alt; ph[a < -6 ? 'Nacht' : a < -4 ? 'blaue Stunde' : a < 6 ? 'goldene Stunde' : 'Tag']++; });
+      body += `<h3 class="anh">Licht</h3>${barList(Object.entries(ph).filter(e => e[1]).map(([k, n]) => [k, n, `${Math.round(n / lit.length * 100)} %`]))}`;
+    }
+  }
+  // Orte: genaue Orte (auf rund 100 m zusammengefasst), Zuhause, Radius, Ausland, Rate
+  if (located.length) {
+    const byCell = new Map();
+    located.forEach(f => { const k = `${(+f.placeLat).toFixed(3)},${(+f.placeLng).toFixed(3)}`; if (!byCell.has(k)) byCell.set(k, []); byCell.get(k).push(f); });
+    const mostName = fs => { const c = new Map(); fs.forEach(f => f.place && c.set(f.place, (c.get(f.place) || 0) + 1)); return [...c].sort((a, b) => b[1] - a[1])[0]?.[0] || `${(+fs[0].placeLat).toFixed(4)}, ${(+fs[0].placeLng).toFixed(4)}`; };
+    // Orte mit gleichem Namen zusammenführen
+    const byName = new Map();
+    [...byCell.values()].forEach(fs => { const n = mostName(fs); byName.set(n, (byName.get(n) || []).concat(fs)); });
+    const topPlaces = [...byName].sort((a, b) => b[1].length - a[1].length).slice(0, 8).map(([n, fs]) => [n, fs.length]);
+    // Zuhause: das Gebiet (rund 1 km) mit den meisten Fotos
+    const km1 = new Map();
+    located.forEach(f => { const k = `${(+f.placeLat).toFixed(2)},${(+f.placeLng).toFixed(2)}`; if (!km1.has(k)) km1.set(k, []); km1.get(k).push(f); });
+    const homeFs = [...km1.values()].sort((a, b) => b.length - a.length)[0];
+    const hLa = homeFs.reduce((a, f) => a + +f.placeLat, 0) / homeFs.length, hLo = homeFs.reduce((a, f) => a + +f.placeLng, 0) / homeFs.length;
+    const homeName = mostName(homeFs);
+    const ccCount = new Map(); homeFs.forEach(f => f.placeCC && ccCount.set(f.placeCC, (ccCount.get(f.placeCC) || 0) + 1));
+    const homeCC = [...ccCount].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    const dist = located.map(f => ({ f, d: distKm(hLa, hLo, +f.placeLat, +f.placeLng) }));
+    const ds = dist.map(x => x.d);
+    const cat = x => (homeCC && x.f.placeCC && x.f.placeCC !== homeCC) ? 'Ausland' : x.d <= 3 ? 'Zuhause' : x.d <= 50 ? 'Umgebung' : 'Unterwegs';
+    const cats = { Zuhause: [], Umgebung: [], Unterwegs: [], Ausland: [] };
+    dist.forEach(x => cats[cat(x)].push(x.f));
+    const far = dist.reduce((a, b) => b.d > a.d ? b : a);
+    const rate = fs => { const days = new Set(fs.filter(f => f.date).map(f => String(f.date).slice(0, 10))); return days.size ? fs.filter(f => f.date).length / days.size : null; };
+    const catDesc = { Zuhause: 'bis 3 km', Umgebung: '3 bis 50 km', Unterwegs: 'über 50 km', Ausland: homeCC ? 'anderes Land' : '' };
+    body += `<h3 class="anh">Orte</h3>${barList(topPlaces)}
+      <h3 class="anh">Radius</h3>
+      <p class="spendtext">Als Zuhause gilt das Gebiet mit den meisten Fotos: <b>${U.esc(homeName)}</b>. Die Hälfte deiner Fotos entsteht im Umkreis von <b>${fmtKm(median(ds))}</b>, neun von zehn innerhalb von <b>${fmtKm(quant(ds, 0.9))}</b>. Am weitesten weg: <b>${U.esc(far.f.place || 'ohne Namen')}</b>, ${fmtKm(far.d)}.</p>
+      <div class="spendsplit four">${Object.entries(cats).filter(([k, fs]) => fs.length || k !== 'Ausland').map(([k, fs]) => `<div><span class="sub2">${k}${catDesc[k] ? ` · ${catDesc[k]}` : ''}</span><b>${fs.length}</b><span class="sub2">${Math.round(fs.length / located.length * 100)} %</span></div>`).join('')}</div>
+      <h3 class="anh">Fotografierrate</h3>
+      <p class="hint">Fotos pro Tag, an dem du dort fotografiert hast. Wie lange du insgesamt zu Hause oder unterwegs warst, weiß die App nicht; sie kennt nur die Tage mit Fotos.</p>
+      ${barList(Object.entries(cats).filter(([, fs]) => rate(fs)).map(([k, fs]) => { const days = new Set(fs.filter(f => f.date).map(f => String(f.date).slice(0, 10))).size; return [k, rate(fs), `${days} ${days === 1 ? 'Tag' : 'Tage'}`, fmtNum(rate(fs))]; }))}`;
+  }
+  const sub = [timed.length ? `${timed.length} mit Uhrzeit` : '', located.length ? `${located.length} mit Ort` : ''].filter(Boolean).join(' · ');
+  return anFold('when', 'whenfold', typeof PIN_IC !== 'undefined' ? PIN_IC : '', 'Wann und wo', sub, body);
+}
+
+async function rollTimeFoldHtml() {
+  const rolls = await DB.all('rolls'), frames = await DB.all('frames'), stocks = await stocksMap();
+  const byRoll = new Map(); frames.forEach(f => { if (!byRoll.has(f.rollId)) byRoll.set(f.rollId, []); byRoll.get(f.rollId).push(f); });
+  const used = f => f.shot || f.imgId || f.date;
+  const day = s => s ? new Date(String(s).slice(0, 10) + 'T00:00:00') : null;
+  const stats = [];
+  let current = [];
+  for (const r of rolls) {
+    const fs = (byRoll.get(r.id) || []).filter(f => !f.bonus);
+    const n = fs.filter(used).length || 0;
+    const dates = fs.map(f => f.date).filter(Boolean).sort();
+    const start = day(r.loadedAt) || day(dates[0]);
+    if (!start || !n) continue;
+    if ((r.status || 'entwurf') === 'entwurf') { current.push({ r, n, start, total: r.exposures || fs.length }); continue; }
+    const end = day(r.finishedAt) || day(r.dev?.sentAt) || day(dates[dates.length - 1]);
+    if (!end || end < start) continue;
+    const days = Math.max(1, Math.round((end - start) / 864e5) + 1);   // Einlegetag mitgezählt
+    const timedF = fs.filter(hasTime).map(f => new Date(f.date)).sort((a, b) => a - b);
+    const hours = timedF.length > 1 ? (timedF[timedF.length - 1] - timedF[0]) / 36e5 : null;
+    stats.push({ r, n, days, per36: days / n * 36, hours, name: r.title || U.stockLabel(stocks.get(r.stockId)) });
+  }
+  if (!stats.length && !current.length) return anFold('rolltime', 'rolltimefold', ART.calIc, 'Filme in der Kamera', 'noch keine fertigen Rollen', '<p class="hint">Sobald eine Rolle entwickelt ist, steht hier, wie lange sie in der Kamera lag.</p>');
+  let body = '';
+  if (stats.length) {
+    const mDays = median(stats.map(s => s.days)), m36 = median(stats.map(s => s.per36));
+    const fast = stats.reduce((a, b) => b.per36 < a.per36 ? b : a), slow = stats.reduce((a, b) => b.per36 > a.per36 ? b : a);
+    const hrs = stats.filter(s => s.hours != null).map(s => s.hours / s.n * 36);
+    body += `<p class="spendtext">Ein Film liegt bei dir üblicherweise <b>${fmtNum(mDays, 0)} ${mDays === 1 ? 'Tag' : 'Tage'}</b> in der Kamera. Auf 36 Bilder umgerechnet brauchst du <b>${fmtNum(m36, 0)} Tage</b>${hrs.length ? `; zwischen erstem und letztem Foto mit Uhrzeit sind es <b>${fmtNum(median(hrs), 0)} Stunden</b> je 36 Bilder` : ''}.</p>
+      <div class="spendsplit">
+        <div><span class="sub2">Am schnellsten</span><b>${fmtNum(fast.per36, 0)} Tage</b><span class="sub2">${U.esc(fast.name)}</span></div>
+        <div><span class="sub2">Am langsamsten</span><b>${fmtNum(slow.per36, 0)} Tage</b><span class="sub2">${U.esc(slow.name)}</span></div>
+      </div>
+      <p class="hint">Je 36 Bilder: Tage in der Kamera geteilt durch die belichteten Bilder, mal 36. So lassen sich ein 12er-Mittelformat- und ein 36er-Kleinbildfilm vergleichen.</p>
+      <details class="txhist"><summary>Alle Rollen</summary>${stats.sort((a, b) => a.per36 - b.per36).map(s => `<div class="txrow"><span>${U.esc(s.name)}<span class="sub2">${s.n} Bilder · ${s.days} ${s.days === 1 ? 'Tag' : 'Tage'}${s.hours != null ? ` · ${fmtNum(s.hours, 0)} h zwischen erstem und letztem Foto` : ''}</span></span><span>${fmtNum(s.per36, 0)} T / 36</span></div>`).join('')}</details>`;
+  }
+  // Rolle gerade in der Kamera: Tempo und voraussichtlich voll
+  current.forEach(c => {
+    const days = Math.max(1, Math.round((day(U.today()) - c.start) / 864e5) + 1);
+    const left = Math.max(0, c.total - c.n), perDay = c.n / days;
+    const eta = perDay > 0 ? new Date(Date.now() + left / perDay * 864e5) : null;
+    body += `<div class="curroll"><b>${U.esc(c.r.title || 'Rolle in der Kamera')}</b><span class="sub2">seit ${days} ${days === 1 ? 'Tag' : 'Tagen'} eingelegt · ${c.n} von ${c.total} Bildern${left && eta ? ` · im gleichen Tempo voll um den ${U.fmtDate(eta.toISOString().slice(0, 10))}` : ''}</span></div>`;
+  });
+  return anFold('rolltime', 'rolltimefold', ART.calIc, 'Filme in der Kamera', stats.length ? `üblich ${fmtNum(median(stats.map(s => s.days)), 0)} Tage je Rolle` : 'Rolle in der Kamera', body);
 }
