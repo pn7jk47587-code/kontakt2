@@ -1239,9 +1239,10 @@ async function viewFrame(idWithQuery) {
     </div>
     ${frame.meter ? `<p class="meterlast"><span>Letzte Messung</span> <b>LW ${(Math.round(frame.meter.ev100 * 10) / 10).toLocaleString(I18N.locale())}</b> <span>bei ISO ${U.esc(String(frame.meter.iso || frame.meter.ei || ''))}</span></p>` : ''}
     <div class="placetime">
-      <div class="placefld1"><button type="button" class="placepin" id="framePlaceGps" aria-label="Standort abfragen">${PIN_IC}</button><input id="framePlace" list="framePlaceList" maxlength="80" value="${U.esc(frame.place || '')}" enterkeyhint="done" autocomplete="off" aria-label="Ort" placeholder="Ort"><datalist id="framePlaceList"></datalist></div>
-      <label class="timefld"><span id="frameTimeTxt">${frame.date ? fmtShot(frame.date) : '–'}</span><input type="datetime-local" id="frameTime" value="${U.esc(String(frame.date || '').slice(0, 16))}" aria-label="Aufnahmezeit"></label>
+      <div class="placefld1"><input id="framePlace" list="framePlaceList" maxlength="80" value="${U.esc(frame.place || '')}" enterkeyhint="done" autocomplete="off" aria-label="Ort"><datalist id="framePlaceList"></datalist><button type="button" class="placepin" id="framePlaceGps" aria-label="Standort abfragen">${PIN_IC}</button></div>
+      <div class="timefld${frame.date ? ' has' : ''}" id="timeFld"><label class="timeedit"><span id="frameTimeTxt">${frame.date ? fmtShot(frame.date) : ''}</span><input type="datetime-local" id="frameTime" value="${U.esc(String(frame.date || '').slice(0, 16))}" aria-label="Aufnahmezeit ändern"></label><button type="button" class="clockbtn" id="timeNow" aria-label="Aktuelle Uhrzeit eintragen">${CLOCK_IC}</button></div>
     </div>
+    <span class="placecoord" id="framePlaceCoord">${U.esc(fmtCoord(frame))}</span>
     <textarea id="note" class="mininote" rows="1" placeholder="Notizen" aria-label="Notizen">${U.esc(frame.note || '')}</textarea>
     <textarea id="info" class="mininote" rows="1" placeholder="Infos, nur für dich" aria-label="Infos, nur für dich, erscheinen nicht im Fotoalbum">${U.esc(frame.info || '')}</textarea>
   </div>`;
@@ -1253,8 +1254,6 @@ async function viewFrame(idWithQuery) {
   let t;
   const flush = () => { clearTimeout(t); return DB.put('frames', frame); };
   const save = () => {
-    if (!frame.date) autoLocate(frame, () => placeRefresh && placeRefresh());
-    if (!frame.date) { frame.date = nowLocal(); showTime(); }
     if (!frame.lensId && lensId) frame.lensId = lensId;
     if (!frame.filterIds && filterIds.length) frame.filterIds = [...filterIds];
     if (isIR && !frame.iso && iso) frame.iso = iso;
@@ -1279,7 +1278,13 @@ async function viewFrame(idWithQuery) {
   };
   setChip('apRow', 'apOther', 'aperture');
   // Aufnahmezeit: steht neben dem Ort, minutengenau; von Hand geändert zählt sie als gesetzt
-  const showTime = () => { view.querySelector('#frameTimeTxt').textContent = frame.date ? fmtShot(frame.date) : '–'; view.querySelector('#frameTime').value = String(frame.date || '').slice(0, 16); };
+  const showTime = () => { view.querySelector('#frameTimeTxt').textContent = frame.date ? fmtShot(frame.date) : ''; view.querySelector('#frameTime').value = String(frame.date || '').slice(0, 16); view.querySelector('#timeFld').classList.toggle('has', !!frame.date); };
+  // Uhrsymbol: trägt die aktuelle Uhrzeit minutengenau ein (erst dann, nicht automatisch)
+  view.querySelector('#timeNow').addEventListener('click', () => {
+    frame.date = nowLocal().slice(0, 16) + ':00'; frame.dateSet = true; delete frame.wx;
+    if (!frame.shot) frame.shot = true;
+    showTime(); clearTimeout(t); DB.put('frames', frame); U.haptic && U.haptic(10);
+  });
   view.querySelector('#frameTime').addEventListener('change', e => {
     const v = e.target.value;
     frame.date = v ? v + ':00' : null; frame.dateSet = !!v; delete frame.wx;
@@ -1302,11 +1307,14 @@ async function viewFrame(idWithQuery) {
   };
   const filterTog = view.querySelector('#filterTog');
   const syncUse = () => { const use = filterIds.length > 0; filterTog.classList.toggle('on', use); filterTog.setAttribute('aria-pressed', use); };
-  filterTog.addEventListener('click', () => {
-    U.haptic && U.haptic(10);
+  const openFilters = pre => {
     if (!myFilters.length) { U.toast('Noch keine Filter im Kameraschrank'); return; }
-    openFrameFilterSearch(myFilters, filterIds, roll, ids => { setFilters(ids); syncUse(); }, () => syncUse());
-  });
+    openFrameFilterSearch(myFilters, pre, roll, ids => { setFilters(ids); syncUse(); }, () => syncUse());
+  };
+  // Tippen: an (öffnet die Auswahl) oder aus. Gedrückt halten: Auswahl ändern.
+  tapToggle(filterTog, () => filterIds.length > 0,
+    () => { frame.filterIdsOff = [...filterIds]; setFilters([]); syncUse(); },
+    () => openFilters(filterIds.length ? filterIds : (frame.filterIdsOff || []).filter(id => filterById(myFilters, id))));
   if (isIR) {
     const row = view.querySelector('#isoRow'), other = view.querySelector('#isoOther');
     const setIso = v => { frame.iso = v; if (roll) { roll.lastIso = v; DB.put('rolls', roll); } drawTop(); save(); };
@@ -1383,8 +1391,7 @@ async function viewFrame(idWithQuery) {
   // Blitz: eigenes Fenster mit Blitzauswahl, Synchronzeit und Rechner
   const flashTog = view.querySelector('#flashTog');
   const syncFlash = () => { flashTog.classList.toggle('on', !!frame.flash); flashTog.setAttribute('aria-pressed', !!frame.flash); };
-  flashTog.addEventListener('click', () => {
-    U.haptic && U.haptic(10);
+  const openFlash = () => {
     if (!frame.flash) { frame.flash = true; if (!frame.flashId && roll?.lastFlashId && flashes.some(f => f.id === roll.lastFlashId)) frame.flashId = roll.lastFlashId; save(); syncFlash(); }
     const ov = document.createElement('div'); ov.className = 'modalbg';
     ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Blitz"><div class="flashbox" id="flashBox"></div>
@@ -1393,17 +1400,30 @@ async function viewFrame(idWithQuery) {
     ov.querySelector('#flOk').addEventListener('click', () => ov.remove());
     ov.querySelector('#flOff').addEventListener('click', () => { frame.flash = false; save(); syncFlash(); ov.remove(); });
     ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
-  });
+  };
+  tapToggle(flashTog, () => !!frame.flash, () => { frame.flash = false; save(); syncFlash(); }, openFlash);
+
   // Blende oder Zeit geändert: Hinweise im Blitzbereich neu rechnen
   ['apRow', 'shRow'].forEach(r => view.querySelector('#' + r).addEventListener('click', () => setTimeout(drawFlash, 0)));
   ['apOther', 'shOther'].forEach(r => view.querySelector('#' + r).addEventListener('input', () => setTimeout(drawFlash, 0)));
   view.querySelector('#lensRow')?.addEventListener('click', () => setTimeout(drawFlash, 0));
   drawFlash();
+  // Notizen füllen den freien Platz bis zum unteren Rand (Platz für den Haken bleibt)
+  let noteBase = 0;
+  const fitNote = () => {
+    const ta = view.querySelector('#note'); if (!ta) return;
+    ta.style.height = '40px';
+    const card = ta.closest('.card'); if (!card) return;
+    const free = innerHeight - card.getBoundingClientRect().bottom - 96;   // unten bleibt Platz für den Haken
+    noteBase = Math.max(40, Math.min(320, 40 + free));
+    ta.style.height = Math.max(noteBase, ta.scrollHeight + 2) + 'px';
+  };
   view.querySelectorAll('.mininote').forEach(ta => {
-    const grow = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
+    const grow = () => { if (ta.id === 'note' && noteBase) { ta.style.height = noteBase + 'px'; ta.style.height = Math.max(noteBase, ta.scrollHeight + 2) + 'px'; return; } ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 2 + 'px'; };
     grow(); ta.addEventListener('input', () => { frame[ta.id] = ta.value; grow(); save(); });
   });
   fitChipRows(view);
+  requestAnimationFrame(fitNote);
   let placeRefresh = null; wirePlace(view, 'framePlace', frame, save).then(fn => { placeRefresh = fn; });
   view.querySelector('#lensRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-lens]'); if (!b) return;
@@ -1432,7 +1452,6 @@ async function viewFrame(idWithQuery) {
         if (r.lensId) { frame.lensId = r.lensId; if (roll) { roll.lastLensId = r.lensId; DB.put('rolls', roll); } }
         frame.meter = Object.assign(r.meter, { at: nowLocal() });
         frame.shot = true;
-        if (!frame.date) frame.date = nowLocal();
         if (blob && !frame.phoneId) { try { frame.phoneId = (await U.storeImage(blob, 'phone')).id; } catch (_) {} }
         await flush(); U.toast('Messung geloggt'); route();
       }
@@ -1454,7 +1473,7 @@ async function viewFrame(idWithQuery) {
         if (kind === 'phone2') { await deleteImage(frame.phoneId2); frame.phoneId2 = rec.id; }
         else { await deleteImage(frame.phoneId); frame.phoneId = rec.id; }
         applyPhoneExif(frame, rec.exif);
-        if (!frame.date) frame.date = nowLocal();
+        if (frame.placeSrc === 'exif' && !frame.place) placeName(frame.placeLat, frame.placeLng).then(n => { if (n && !frame.place) { frame.place = n; frame.placeNameAuto = true; DB.put('frames', frame); } });
         changed = true; await flush(); draw();
       };
       const q = sel => ov.querySelector(sel);
@@ -1473,10 +1492,13 @@ async function viewFrame(idWithQuery) {
     document.body.appendChild(ov); draw();
   };
   view.querySelector('#phoneTog')?.addEventListener('click', () => openPhoneModal(false));
-  view.querySelector('#dbl')?.addEventListener('click', async () => {
-    if (!frame.double) { frame.double = true; if (!frame.date) frame.date = nowLocal(); await flush(); const b = view.querySelector('#dbl'); b.classList.add('on'); b.setAttribute('aria-pressed', true); }
-    openPhoneModal(true);
-  });
+  const dblBtn = view.querySelector('#dbl');
+  if (dblBtn) {
+    const syncDbl = () => { dblBtn.classList.toggle('on', !!frame.double); dblBtn.setAttribute('aria-pressed', !!frame.double); };
+    tapToggle(dblBtn, () => !!frame.double,
+      async () => { frame.double = false; await flush(); syncDbl(); },
+      async () => { if (!frame.double) { frame.double = true; await flush(); syncDbl(); } openPhoneModal(true); });
+  }
 
   function showRecip() {
     const el = view.querySelector('#recip');
@@ -1698,6 +1720,19 @@ async function viewAlbum(id) {
 
 /* Aufnahmeort: freier Text, Vorschläge aus schon benutzten Orten, „Standort“ füllt den Ort über GPS
    (Ortsname per OpenStreetMap Nominatim, ohne Netz nur die Koordinaten). */
+// Symbolknopf: Tippen schaltet aus, wenn an; sonst an und Fenster öffnen. Gedrückt halten öffnet das Fenster immer.
+function tapToggle(btn, isOn, off, open) {
+  let timer = null, long = false;
+  btn.addEventListener('pointerdown', () => { long = false; clearTimeout(timer); timer = setTimeout(() => { long = true; U.haptic && U.haptic(15); open(); }, 450); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => btn.addEventListener(ev, () => clearTimeout(timer)));
+  btn.addEventListener('contextmenu', e => e.preventDefault());
+  btn.addEventListener('click', () => {
+    if (long) { long = false; return; }
+    U.haptic && U.haptic(10);
+    if (isOn()) off(); else open();
+  });
+}
+const CLOCK_IC = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
 const PHONE_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>';
 // Aufnahmezeit minutengenau: „03.11. 14:32“, aus einem anderen Jahr mit Jahr
 function fmtShot(v) {
@@ -1723,10 +1758,9 @@ const FLASH_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidde
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
 function placeFieldHtml(id, value, cls = 'fld', obj = null) {
-  return `<div class="${cls} placefld"><span>Ort</span><div class="placefld1"><button type="button" class="placepin" id="${id}Gps" aria-label="Standort abfragen">${PIN_IC}</button><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist></div></div>`;
+  return `<div class="${cls} placefld"><span>Ort</span><div class="placefld1"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="placepin" id="${id}Gps" aria-label="Standort abfragen">${PIN_IC}</button></div><span class="placecoord" id="${id}Coord">${U.esc(fmtCoord(obj))}</span></div>`;
 }
 // Standort: genaue Koordinaten (mit Genauigkeit in Metern), Ortsname per OpenStreetMap Nominatim
-const AUTOLOC = () => { try { return localStorage.getItem('kb-autoloc') !== '0'; } catch (_) { return true; } };
 function getPosition(precise = true) {
   return new Promise((res, rej) => {
     if (!navigator.geolocation) return rej(new Error('nogeo'));
@@ -1746,25 +1780,17 @@ async function placeName(la, lo) {
   } catch (_) { return null; }
 }
 const fmtCoord = o => o && o.placeLat != null ? `${(+o.placeLat).toFixed(5).replace('.', ',')}, ${(+o.placeLng).toFixed(5).replace('.', ',')}${o.placeAcc ? ` · ±${Math.round(o.placeAcc)} m` : ''}` : '';
-// Beim ersten Eintrag eines Frames: Standort im Hintergrund speichern (abschaltbar in den Einstellungen)
-async function autoLocate(frame, onDone) {
-  if (!AUTOLOC() || frame.placeLat != null) return;
-  // Ohne erteilte Erlaubnis fragt erst ein Tipp auf das Standortsymbol nach
-  try { if (navigator.permissions && (await navigator.permissions.query({ name: 'geolocation' })).state !== 'granted') return; } catch (_) {}
-  try {
-    const c = await getPosition(true);
-    frame.placeLat = c.latitude; frame.placeLng = c.longitude; frame.placeAcc = c.accuracy; frame.placeAt = new Date().toISOString(); frame.placeSrc = 'gps';
-    await DB.put('frames', frame); onDone && onDone();
-    if (!frame.place) { const n = await placeName(c.latitude, c.longitude); if (n && !frame.place) { frame.place = n; await DB.put('frames', frame); onDone && onDone(); } }
-  } catch (_) { /* nicht freigegeben oder kein Signal: dann eben ohne Ort */ }
-}
 // Handyfoto: Aufnahmezeit und GPS aus den EXIF-Daten übernehmen, ohne Eingetragenes zu überschreiben
 function exifLocal(iso) { const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19); }
 function applyPhoneExif(frame, ex) {
   if (!ex) return false;
   let ch = false;
   if (ex.taken && !frame.dateSet) { frame.date = exifLocal(ex.taken); ch = true; }
-  if (typeof ex.lat === 'number' && typeof ex.lng === 'number' && frame.placeLat == null) {
+  // Der Ort aus dem Handyfoto stammt vom Moment der Aufnahme. Er ersetzt einen automatisch beim Eintragen gemessenen Ort,
+  // nicht aber einen, den man selbst per Standortsymbol abgefragt hat.
+  const replaceable = frame.placeLat == null || !frame.placeSrc || ['auto', 'gps', 'exif'].includes(frame.placeSrc);
+  if (typeof ex.lat === 'number' && typeof ex.lng === 'number' && replaceable) {
+    if (frame.placeNameAuto) frame.place = '';
     frame.placeLat = ex.lat; frame.placeLng = ex.lng; delete frame.placeAcc; frame.placeAt = ex.taken || null; frame.placeSrc = 'exif'; ch = true;
   }
   return ch;
@@ -1832,13 +1858,13 @@ async function openPhoneImport(roll, files) {
       const rec = await U.storeImage(items[k].file, 'phone');
       await deleteImage(f.phoneId); f.phoneId = rec.id;
       applyPhoneExif(f, rec.exif && rec.exif.taken ? rec.exif : items[k].ex);
-      if (f.placeLat != null && !f.place) geo.push(f);
+      if (f.placeSrc === 'exif' && !f.place) geo.push(f);
       await DB.put('frames', f);
     }
     close();
     U.toast(`${p.size} ${p.size === 1 ? 'Foto' : 'Fotos'} zugeordnet`);
     route();
-    for (const f of geo) { const n = await placeName(f.placeLat, f.placeLng); if (n) { const fresh = await DB.get('frames', f.id); if (fresh && !fresh.place) { fresh.place = n; await DB.put('frames', fresh); } } }
+    for (const f of geo) { const n = await placeName(f.placeLat, f.placeLng); if (n) { const fresh = await DB.get('frames', f.id); if (fresh && !fresh.place) { fresh.place = n; fresh.placeNameAuto = true; await DB.put('frames', fresh); } } }
   });
   draw();
 }
@@ -1848,7 +1874,7 @@ async function wirePlace(root, id, obj, persist) {
   dl.innerHTML = (await placeOptions()).map(p => `<option value="${U.esc(p)}">`).join('');
   let t;
   const showCoord = () => { if (co) co.textContent = fmtCoord(obj); };
-  const save = () => { clearTimeout(t); obj.place = inp.value.trim(); if (!obj.place) { delete obj.placeLat; delete obj.placeLng; delete obj.placeAcc; } showCoord(); persist(); };
+  const save = () => { clearTimeout(t); if (obj.place !== inp.value.trim()) delete obj.placeNameAuto; obj.place = inp.value.trim(); if (!obj.place) { delete obj.placeLat; delete obj.placeLng; delete obj.placeAcc; } showCoord(); persist(); };
   inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(save, 400); });
   inp.addEventListener('change', save);
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
@@ -1856,9 +1882,9 @@ async function wirePlace(root, id, obj, persist) {
     gps.disabled = true;
     try {
       const c = await getPosition(true);
-      obj.placeLat = c.latitude; obj.placeLng = c.longitude; obj.placeAcc = c.accuracy; obj.placeAt = new Date().toISOString(); obj.placeSrc = 'gps';
+      obj.placeLat = c.latitude; obj.placeLng = c.longitude; obj.placeAcc = c.accuracy; obj.placeAt = new Date().toISOString(); obj.placeSrc = 'pin';
       inp.value = (await placeName(c.latitude, c.longitude)) || inp.value || `${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`;
-      save(); U.haptic && U.haptic(10);
+      save(); obj.placeNameAuto = true; persist(); U.haptic && U.haptic(10);
     } catch (_) { U.toast('Standort nicht freigegeben'); }
     gps.disabled = false;
   });

@@ -388,8 +388,6 @@ async function openSettings() {
       <div class="qlabel" id="clockLabel"></div>
       <input type="range" id="clockRange" min="0" max="23.75" step="0.25" aria-label="Uhrzeit simulieren" style="padding:0;border:0;background:none;accent-color:var(--teal)">
       <button type="button" class="btn ghost small" id="clockReal">Echte Uhrzeit</button>
-      <div class="sethead">${PIN_IC}<span>Ort</span></div>
-      <label class="setcheck"><input type="checkbox" id="setAutoLoc"${AUTOLOC() ? ' checked' : ''}><span>Ort bei jedem neuen Bild speichern</span></label>
       <div class="sethead">${ART.tank}<span>Entwicklung</span></div>
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
@@ -407,7 +405,6 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
-  ov.querySelector('#setAutoLoc').addEventListener('change', e => { try { localStorage.setItem('kb-autoloc', e.target.checked ? '1' : '0'); } catch (_) {} if (e.target.checked && navigator.geolocation) navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 15000 }); });
   ov.querySelector('#setLang').addEventListener('click', e => {
     const b = e.target.closest('[data-lang]'); if (!b || b.dataset.lang === I18N.get()) return;
     ov.querySelectorAll('#setLang button').forEach(x => x.classList.toggle('on', x === b));

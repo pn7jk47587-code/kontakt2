@@ -359,3 +359,10 @@ Karte: Kachel jetzt ganz unten im Profil unter Analytics. Auch Bilder ohne Scan 
 
 ## Keine Zeitautomatik mehr (03.11.2026)
 „Auto“ ist aus der Auswahl der Belichtungszeit entfernt, für alle Kameras. Keine Kamera im Schrank belichtet automatisch. Das Häkchen „Zeitautomatik“ im Kameraformular ist ebenfalls weg. Ein früher gespeichertes „Auto“ bleibt im Bild erhalten und steht dann im Feld „andere“.
+
+## Antippen schaltet aus, Ort und Zeit nur auf Tipp, Ort aus Handyfotos (03.11.2026)
+Symbolknöpfe: Ein Tipp auf einen eingeschalteten Knopf (Blitz, Filter, Doppelbelichtung) schaltet ihn aus. Ist er aus, schaltet ein Tipp ihn ein und öffnet das Fenster. Gedrückt halten öffnet das Fenster auch bei eingeschaltetem Knopf, etwa um den Blitz oder die Filter zu ändern. Beim erneuten Einschalten der Filter sind die zuletzt benutzten vorgewählt, der gewählte Blitz bleibt gespeichert.
+Ort: Das Feld ist zunächst leer. Das Standortsymbol steht rechts und ist größer. Erst ein Tipp darauf fragt den Standort ab (beim ersten Mal mit Erlaubnis). Danach stehen die Koordinaten klein und blass unter dem Feld. Der automatische Ort beim ersten Eintrag und der Schalter dazu in den Einstellungen sind entfernt.
+Zeit: Wird nicht mehr automatisch gesetzt. Rechts neben dem Ort steht ein Uhrsymbol; ein Tipp trägt die aktuelle Uhrzeit minutengenau ein. Danach steht die Zeit neben dem Symbol und lässt sich antippen und ändern. Auch Messung, Handyfoto und Doppelbelichtung setzen keine Zeit mehr; ein Handyfoto bringt aber seine Aufnahmezeit aus den EXIF-Daten mit.
+Notizen: Das Notizfeld füllt den freien Platz bis zum unteren Rand, unten bleibt Platz für den Haken.
+Handyfotos zuordnen, Fehlerbehebung: Der Ort aus dem Handyfoto wurde nicht übernommen, wenn das Bild schon einen automatisch gemessenen Ort hatte (beim Nachtragen also meist den Ort, an dem man gerade saß). Jetzt gilt: Der Ort aus dem Handyfoto stammt vom Moment der Aufnahme und ersetzt einen automatisch gemessenen Ort samt automatisch ermitteltem Ortsnamen. Nur einen Ort, den man selbst per Standortsymbol abgefragt hat, lässt er stehen. Getestet mit echten JPEG-Dateien mit GPS-Daten.
