@@ -26,9 +26,10 @@ async function viewMap() {
   try { await loadLeaflet(); } catch (e) { view.querySelector('.mapwrap').insertAdjacentHTML('beforeend', `<p class="mapempty">${U.esc(e.message)}</p>`); return; }
   const el = view.querySelector('#photoMap'); if (!el) return;
   const map = L.map(el, { zoomControl: false, attributionControl: true, worldCopyJump: true, minZoom: 2 });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd', maxZoom: 19,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>'
+  // OpenStreetMap-Standardkarte: ohne Schlüssel, Nutzung nach der Tile Usage Policy der OSMF (Namensnennung, nur angezeigte Kacheln)
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
   map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
   if (pts.length) map.fitBounds(L.latLngBounds(pts.map(p => [p.f.placeLat, p.f.placeLng])).pad(0.2), { maxZoom: 15 });

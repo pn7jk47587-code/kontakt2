@@ -2138,3 +2138,6 @@ body.mapmode { padding-bottom: 0; }
 .placetime .timefld .timeedit { display: flex !important; flex: 1 1 auto; min-width: 0; height: 100%; padding: 0 0 0 12px; overflow: hidden; white-space: nowrap; font-size: 15px; }
 .placetime .clockbtn, .placetime .placepin { flex: 0 0 auto; width: 44px; height: 44px; display: grid; place-items: center; color: var(--teal) !important; }
 .placetime .clockbtn svg, .placetime .placepin svg { width: 24px; height: 24px; display: block; }
+/* Karte (v154): OSM-Kacheln, im dunklen Modus abgedunkelt */
+:root[data-mood="moon"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.92) contrast(.88) saturate(.7); }
+:root[data-mood="moon"] .photomap { background: #1b1f2a; }
