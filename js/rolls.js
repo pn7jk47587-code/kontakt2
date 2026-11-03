@@ -1141,6 +1141,7 @@ function rollInfo(body, roll) {
     <div id="isoBox"></div>
     ${field('Eingelegt am', 'loadedAt', { type: 'date' })}
     ${field('Voll am', 'finishedAt', { type: 'date' })}
+    <div class="fld"><span>Ort der Rolle (ungefähr)</span><button type="button" class="filmpickbtn" id="rollPlaceBtn"><span class="rpic" aria-hidden="true">${PIN_IC}</span><span class="filmpickname" id="rollPlaceName">${U.esc(roll.place || 'Stadt oder Gegend wählen')}</span>${roll.place ? '<span class="filmpickchg" id="rollPlaceClr" role="button" aria-label="Ort der Rolle entfernen">×</span>' : ''}</button></div>
     ${area('Notizen zur Rolle', 'notes', '', 4)}
     ${select('Status korrigieren', 'status', [['entwurf', 'In der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']])}
   </div>
@@ -1187,6 +1188,14 @@ function rollInfo(body, roll) {
   };
   extras();
   // Film ändern, auch bei fertigen und archivierten Alben: Suche wie beim Einlegen
+  // Grober Ort für die ganze Rolle: gilt für Bilder ohne eigenen Ort (Karte, Filter in Alle Fotos, Analytics)
+  body.querySelector('#rollPlaceBtn').addEventListener('click', async e => {
+    if (e.target.closest('#rollPlaceClr')) { delete roll.place; delete roll.placeLat; delete roll.placeLng; delete roll.placeCC; await DB.put('rolls', roll); viewRoll(roll.id, 'info'); return; }
+    openPlaceChooser(async p => {
+      roll.place = p.name || roll.place; if (p.lat != null) { roll.placeLat = p.lat; roll.placeLng = p.lng; } if (p.cc) roll.placeCC = p.cc;
+      await DB.put('rolls', roll); U.haptic && U.haptic([12, 40, 12]); viewRoll(roll.id, 'info');
+    }, { city: true });
+  });
   body.querySelector('#stockBtn').addEventListener('click', () => openStockPicker(async id => {
     roll.stockId = id; await DB.put('rolls', roll);
     U.toast('Film geändert'); U.haptic && U.haptic(10);
@@ -1265,7 +1274,7 @@ async function viewFrame(idWithQuery) {
     </div>
     ${frame.meter ? `<p class="meterlast"><span>Letzte Messung</span> <b>LW ${(Math.round(frame.meter.ev100 * 10) / 10).toLocaleString(I18N.locale())}</b> <span>bei ISO ${U.esc(String(frame.meter.iso || frame.meter.ei || ''))}</span></p>` : ''}
     <div class="placetime">
-      <div class="placefld1"><input id="framePlace" list="framePlaceList" maxlength="80" value="${U.esc(frame.place || '')}" enterkeyhint="done" autocomplete="off" aria-label="Ort"><datalist id="framePlaceList"></datalist><button type="button" class="placepin" id="framePlaceGps" aria-label="Standort abfragen">${PIN_IC}</button></div>
+      <div class="placefld1"><input id="framePlace" list="framePlaceList" maxlength="80" value="${U.esc(frame.place || '')}" enterkeyhint="done" autocomplete="off" aria-label="Ort"><datalist id="framePlaceList"></datalist><button type="button" class="placepin placemap" id="framePlaceMap" aria-label="Ort auf der Karte wählen">${MAP_PICK_IC}</button><button type="button" class="placepin" id="framePlaceGps" aria-label="Standort abfragen">${PIN_IC}</button></div>
       <div class="timefld${frame.date ? ' has' : ''}" id="timeFld"><label class="timeedit"><span id="frameTimeTxt">${frame.date ? fmtShot(frame.date) : ''}</span><input type="datetime-local" id="frameTime" value="${U.esc(String(frame.date || '').slice(0, 16))}" aria-label="Aufnahmezeit ändern"></label><button type="button" class="clockbtn" id="timeNow" aria-label="Aktuelle Uhrzeit eintragen">${CLOCK_IC}</button></div>
     </div>
     <span class="placecoord" id="framePlaceCoord">${U.esc(fmtCoord(frame))}</span>
@@ -1541,7 +1550,11 @@ async function viewFrame(idWithQuery) {
   const done = document.createElement('button');
   done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig'); done.innerHTML = ART.check;
   document.body.appendChild(done);
-  done.addEventListener('click', async () => { await flush(); location.hash = '#/rolle/' + frame.rollId; });
+  done.addEventListener('click', async () => {
+    await flush();
+    let back = null; try { back = sessionStorage.getItem('kb-frame-return'); sessionStorage.removeItem('kb-frame-return'); } catch (_) {}
+    location.hash = back || '#/rolle/' + frame.rollId;
+  });
 
   // Wischen nach links oder rechts: nächstes oder vorheriges Bild
   const goTo = async f => { if (!f) return; await flush(); location.replace('#/bild/' + f.id); };
@@ -1685,35 +1698,90 @@ async function albumData(id) {
   return { frames, title, roll, line, fav, rolls, stocks, cams, lenses };
 }
 
+// Ort auswählen: schon benutzte Orte, auf der Karte (mit Suche) oder aktueller Standort
+async function knownPlaces() {
+  const m = new Map();
+  for (const f of await DB.all('frames')) {
+    if (!f.place) continue;
+    const e = m.get(f.place) || { name: f.place, n: 0, lat: null, lng: null, cc: null };
+    e.n++; if (e.lat == null && f.placeLat != null) { e.lat = +f.placeLat; e.lng = +f.placeLng; e.cc = f.placeCC || null; }
+    m.set(f.place, e);
+  }
+  for (const r of await DB.all('rolls')) if (r.place && !m.has(r.place)) m.set(r.place, { name: r.place, n: 0, lat: r.placeLat ?? null, lng: r.placeLng ?? null, cc: r.placeCC || null });
+  return [...m.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'de'));
+}
+async function openPlaceChooser(onPick, opts = {}) {
+  const places = await knownPlaces();
+  const ov = document.createElement('div'); ov.className = 'modalbg';
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Ort wählen">
+    <div class="pcacts"><button type="button" class="btn ghost" id="pcMap">${MAP_PICK_IC}<span>${opts.city ? 'Stadt suchen' : 'Auf der Karte'}</span></button><button type="button" class="btn ghost" id="pcGps">${PIN_IC}<span>Hier</span></button></div>
+    ${places.length ? `<div class="pclist">${places.map((p, i) => `<button type="button" class="pcitem" data-i="${i}"><span>${U.esc(p.name)}</span><span class="sub2">${p.n ? p.n + (p.n === 1 ? ' Foto' : ' Fotos') : ''}</span></button>`).join('')}</div>` : ''}
+    <div class="modalfoot"><button class="closex" id="pcNo" aria-label="Abbrechen">${ART.x}</button><span></span></div></div>`;
+  document.body.appendChild(ov);
+  const done = p => { ov.remove(); onPick(p); };
+  ov.querySelector('#pcNo').onclick = () => ov.remove();
+  ov.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { const p = places[+b.dataset.i]; done({ name: p.name, lat: p.lat, lng: p.lng, cc: p.cc, src: 'list' }); });
+  ov.querySelector('#pcMap').onclick = () => { ov.remove(); openMapPicker(null, p => onPick({ ...p, src: 'map', auto: !!p.name }), opts); };
+  ov.querySelector('#pcGps').onclick = async e => {
+    e.currentTarget.disabled = true;
+    try { const c = await getPosition(true); const n = await placeName(c.latitude, c.longitude); done({ name: n, lat: c.latitude, lng: c.longitude, cc: placeName.cc, src: 'pin', auto: true }); }
+    catch (_) { U.toast('Standort nicht freigegeben'); e.currentTarget.disabled = false; }
+  };
+}
+let ALBUM_PICK = false, ALBUM_PICKED = new Set();
 async function viewAlbum(id) {
   const d = await albumData(id);
   if (!d) { location.replace('#/'); return; }
   // Kopfzeile nur mit Titel. Film, Kamera und Entwicklung erreicht man über die gut sichtbare Zeile unter dem Namen (vorher „Rolle“ klein oben rechts).
   setHeader(d.title);
   const st = d.roll ? d.stocks.get(d.roll.stockId) : null, cm = d.roll ? d.cams.get(d.roll.cameraId) : null;
-  const infoRow = d.roll ? `<a class="albuminfo" href="#/rolle/${d.roll.id}/info"><span class="aiart">${await filmArt(st, 40)}</span><span class="aitxt"><b>${U.esc(U.stockLabel(st))}</b><span class="sub2">${U.esc(camLabel(cm) || d.roll.camera || 'Kamera unbekannt')}</span></span><span class="aiedit">Bearbeiten</span><span class="chev">›</span></a>` : '';
+  // Film als kleiner Kreis: antippen öffnet Film, Kamera und Entwicklung der Rolle
+  const filmCircle = d.roll ? `<a class="albfilm" href="#/rolle/${d.roll.id}/info" aria-label="${U.esc(U.stockLabel(st))}, ${U.esc(camLabel(cm) || 'Kamera unbekannt')}: bearbeiten" title="${U.esc(U.stockLabel(st))}">${await filmArt(st, 30)}</a>` : '';
+  const infoRow = '';
   // Fotos nachtragen: füllen zuerst Bilder ohne Foto (nach Dateinamen sortiert), weitere kommen als neue Bilder hinten dran
-  const addPhotosBtn = d.roll ? `<label class="archlink">${ART.pickup}<span>Fotos nachtragen</span><input type="file" accept="image/*" multiple hidden id="albAdd"></label>` : '';
+  const addPhotosBtn = d.roll ? `<label class="roundic" aria-label="Fotos nachtragen" title="Fotos nachtragen">${ART.pickup}<input type="file" accept="image/*" multiple hidden id="albAdd"></label>` : '';
+  const phoneBtn = d.roll ? `<label class="roundic" aria-label="Handyfotos als Referenz zuordnen" title="Handyfotos zuordnen">${PHONE_TOG_IC}<input type="file" accept="image/*" multiple hidden id="albPhone"></label>` : '';
   const wireAdd = () => view.querySelector('#albAdd')?.addEventListener('change', async e => {
     const files = [...e.target.files]; if (!files.length) return;
     const n = await assignScans(d.roll, files);
     U.toast(`${n} ${n === 1 ? 'Foto' : 'Fotos'} nachgetragen`); U.haptic && U.haptic([12, 40, 12]);
     const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
   });
-  if (!d.frames.length) { view.innerHTML = infoRow + `<div class="archcorner albsort">${addPhotosBtn}</div><div class="empty">Noch keine Fotos im Album.</div>`; wireAdd(); return; }
+  if (!d.frames.length) { view.innerHTML = `<div class="albhead">${filmCircle}<span class="albname"></span><div class="albtools">${addPhotosBtn}</div></div><div class="empty">Noch keine Fotos im Album.</div>`; wireAdd(); return; }
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   const leakCam = !!(d.roll && d.cams.get(d.roll.cameraId)?.lightLeaks);
   view.innerHTML = `
-    ${d.roll ? `<label class="rollname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : ''}
-    ${infoRow}
-    <div class="archcorner albsort">${ALBUM_SORT ? '' : addPhotosBtn}${d.frames.length > 1 ? `<button type="button" class="archlink${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}">${MOVE_IC}<span>${ALBUM_SORT ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}</div>
+    <div class="albhead">${filmCircle}
+      ${d.roll ? `<label class="rollname albname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : '<span class="albname"></span>'}
+    </div>
+    <div class="albtools">${ALBUM_SORT || ALBUM_PICK ? '' : addPhotosBtn + phoneBtn}${d.roll && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort für mehrere Fotos festlegen" title="Ort für mehrere Fotos">${PIN_IC}</button>` : ''}${d.frames.length > 1 && !ALBUM_PICK ? `<button type="button" class="roundic${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}" aria-label="Reihenfolge ändern" title="Reihenfolge">${MOVE_IC}</button>` : ''}</div>
+    ${ALBUM_PICK ? '<p class="hint pad sorthint">Tippe die Fotos an, die denselben Ort bekommen sollen.</p>' : ''}
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
-    <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
+    <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
     ${d.roll ? `<div class="modewrap"><button class="btn ghost small" id="albFilters">${SEARCH_IC}Filter für alle Bilder eintragen</button></div>` : ''}
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
   view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
   wireAdd();
+  view.querySelector('#albPhone')?.addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(d.roll, files); });
+  // Ort für mehrere Fotos: Auswahlmodus, dann Ort aus der Liste, auf der Karte oder per Standort
+  view.querySelector('#albPick')?.addEventListener('click', async () => { ALBUM_PICK = !ALBUM_PICK; ALBUM_PICKED = new Set(); U.haptic && U.haptic(10); const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y); });
+  if (ALBUM_PICK) {
+    const grid = view.querySelector('.photogrid');
+    const bar = document.createElement('div'); bar.className = 'pickbar';
+    const drawBar = () => { bar.innerHTML = `<span>${ALBUM_PICKED.size} ausgewählt</span><button type="button" class="btn small" id="pbAll">${ALBUM_PICKED.size === d.frames.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn accent small" id="pbGo"${ALBUM_PICKED.size ? '' : ' disabled'}>Ort wählen</button>`;
+      bar.querySelector('#pbAll').onclick = () => { if (ALBUM_PICKED.size === d.frames.length) ALBUM_PICKED.clear(); else d.frames.forEach(f => ALBUM_PICKED.add(f.id)); grid.querySelectorAll('[data-fid]').forEach(a => a.classList.toggle('picked', ALBUM_PICKED.has(a.dataset.fid))); drawBar(); };
+      bar.querySelector('#pbGo').onclick = () => openPlaceChooser(async p => {
+        let n = 0;
+        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; fr.place = p.name || fr.place || ''; if (p.lat != null) { fr.placeLat = p.lat; fr.placeLng = p.lng; delete fr.placeAcc; fr.placeSrc = p.src || 'map'; if (p.cc) fr.placeCC = p.cc; } fr.placeNameAuto = !!p.auto; await DB.put('frames', fr); n++; }
+        ALBUM_PICK = false; ALBUM_PICKED = new Set(); bar.remove();
+        U.toast(`Ort bei ${n} ${n === 1 ? 'Foto' : 'Fotos'} eingetragen`); U.haptic && U.haptic([12, 40, 12]);
+        const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
+      }); };
+    drawBar(); document.body.appendChild(bar);
+    window.addEventListener('hashchange', () => { bar.remove(); ALBUM_PICK = false; }, { once: true });
+    grid.addEventListener('click', e => { const a = e.target.closest('[data-fid]'); if (!a) return; e.preventDefault(); const k = a.dataset.fid; ALBUM_PICKED.has(k) ? ALBUM_PICKED.delete(k) : ALBUM_PICKED.add(k); a.classList.toggle('picked', ALBUM_PICKED.has(k)); U.haptic && U.haptic(8); drawBar(); });
+  }
   // Filter nachträglich für die ganze Rolle: wird bei allen Bildern ergänzt, schon eingetragene Filter bleiben
   view.querySelector('#albFilters')?.addEventListener('click', async () => {
     const all = await getFilters();
@@ -1761,6 +1829,8 @@ function tapToggle(btn, isOn, off, open) {
 }
 const CLOCK_IC = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
 const PHONE_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>';
+// Aufnahmezeit mit Jahr: „14.08.2026, 19:52“
+function fmtShotLong(v) { const s = String(v || ''); if (!s) return ''; const [d, tm] = s.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}${tm && !/^12:00(:00)?$/.test(tm) ? ', ' + tm.slice(0, 5) : ''}`; }
 // Aufnahmezeit minutengenau: „03.11. 14:32“, aus einem anderen Jahr mit Jahr
 function fmtShot(v) {
   const s = String(v || ''); if (!s) return '';
@@ -1785,7 +1855,7 @@ const FLASH_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidde
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
 function placeFieldHtml(id, value, cls = 'fld', obj = null) {
-  return `<div class="${cls} placefld"><span>Ort</span><div class="placefld1"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="placepin" id="${id}Gps" aria-label="Standort abfragen">${PIN_IC}</button></div><span class="placecoord" id="${id}Coord">${U.esc(fmtCoord(obj))}</span></div>`;
+  return `<div class="${cls} placefld"><span>Ort</span><div class="placefld1"><input id="${id}" list="${id}List" maxlength="80" value="${U.esc(value || '')}" enterkeyhint="done" autocomplete="off"><datalist id="${id}List"></datalist><button type="button" class="placepin placemap" id="${id}Map" aria-label="Ort auf der Karte wählen">${MAP_PICK_IC}</button><button type="button" class="placepin" id="${id}Gps" aria-label="Standort abfragen">${PIN_IC}</button></div><span class="placecoord" id="${id}Coord">${U.esc(fmtCoord(obj))}</span></div>`;
 }
 // Standort: genaue Koordinaten (mit Genauigkeit in Metern), Ortsname per OpenStreetMap Nominatim
 function getPosition(precise = true) {
@@ -1917,6 +1987,14 @@ async function wirePlace(root, id, obj, persist) {
     } catch (_) { U.toast('Standort nicht freigegeben'); }
     gps.disabled = false;
   });
+  // Ort auf der Karte wählen (mit Suche), z. B. für ältere Fotos
+  root.querySelector('#' + id + 'Map')?.addEventListener('click', () => openMapPicker({ lat: obj.placeLat, lng: obj.placeLng }, p => {
+    obj.placeLat = p.lat; obj.placeLng = p.lng; delete obj.placeAcc; obj.placeAt = new Date().toISOString(); obj.placeSrc = 'map';
+    if (p.cc) obj.placeCC = p.cc;
+    inp.value = p.name || inp.value || `${p.lat.toFixed(4)}, ${p.lng.toFixed(4)}`;
+    save(); if (p.name) { obj.placeNameAuto = true; persist(); }
+    U.haptic && U.haptic(10);
+  }));
   // von außen (automatischer Standort) aktualisieren
   return () => { if (document.activeElement !== inp) inp.value = obj.place || ''; showCoord(); };
 }
@@ -1973,6 +2051,8 @@ async function viewPhoto(albumId, frameId) {
       <figcaption>
         <label class="titlefld"><span>Titel</span><input id="phTitle" value="${U.esc(f.title || '')}" maxlength="120" enterkeyhint="done"></label>
         ${placeFieldHtml('phPlace', f.place, 'titlefld', f)}
+        <div class="titlefld phtime"><span>Aufgenommen</span><div class="placefld1"><label class="timeedit2"><span id="phTimeTxt">${f.date ? U.esc(fmtShotLong(f.date)) : ''}</span><input type="datetime-local" id="phTime" value="${U.esc(String(f.date || '').slice(0, 16))}" aria-label="Aufnahmedatum und Uhrzeit"></label><button type="button" class="placepin" id="phTimeNow" aria-label="Jetzige Uhrzeit eintragen">${CLOCK_IC}</button></div></div>
+        <button type="button" class="btn ghost small phedit" id="phEdit">Alle Angaben bearbeiten</button>
         <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2">${U.esc(f.info || '')}</textarea></label>
         <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
@@ -1989,6 +2069,12 @@ async function viewPhoto(albumId, frameId) {
   tIn.addEventListener('keydown', e => { if (e.key === 'Enter') tIn.blur(); });
   tIn.addEventListener('blur', saveTitle);
   wirePlace(view, 'phPlace', f, () => { DB.put('frames', f); drawMeta(); });
+  // Datum und Uhrzeit nachtragen
+  const showPhTime = () => { view.querySelector('#phTimeTxt').textContent = f.date ? fmtShotLong(f.date) : ''; view.querySelector('#phTime').value = String(f.date || '').slice(0, 16); };
+  view.querySelector('#phTime').addEventListener('change', async e => { const v = e.target.value; f.date = v ? v + ':00' : null; f.dateSet = !!v; delete f.wx; showPhTime(); await DB.put('frames', f); drawMeta(); U.haptic && U.haptic(10); });
+  view.querySelector('#phTimeNow').addEventListener('click', async () => { f.date = nowLocal().slice(0, 16) + ':00'; f.dateSet = true; delete f.wx; showPhTime(); await DB.put('frames', f); drawMeta(); U.haptic && U.haptic(10); });
+  // Alle Angaben (Objektiv, Blende, Zeit, Blitz, Filter, Doppelbelichtung …) in der Bildansicht bearbeiten, danach zurück hierher
+  view.querySelector('#phEdit').addEventListener('click', async () => { await saveTitle(); try { sessionStorage.setItem('kb-frame-return', location.hash); } catch (_) {} location.hash = '#/bild/' + f.id; });
   const drawMeta = () => photoMeta(view.querySelector('#phMeta'), f, d);
   drawMeta();
   // Infos: freier Text, nur hier und in der Bildansicht sichtbar, nicht im Fotoalbum
@@ -2220,8 +2306,11 @@ function apMatch(d, f, item) {
   if (k === 'l') return f.lensId === id;
   if (k === 'f') return (f.filterIds || []).some(x => x === id || (!id.includes('#') && String(x).startsWith(id + '#')));
   if (k === 'a') return !!f.flash && f.flashId === id;
+  if (k === 'p') return effPlace(f, d.rolls.get(f.rollId)) === id;
   return true;
 }
+// Ort eines Bildes: eigener Ort, sonst der grobe Ort der Rolle
+const effPlace = (f, r) => f.place || r?.place || '';
 function arrangeAllPhotos(d) {
   let order = 'date';
   try { order = localStorage.getItem('kb-ap-order') || 'date'; } catch (_) {}
@@ -2264,7 +2353,8 @@ async function viewAllPhotos() {
     ${grp('Kameras', [...d.cams.values()].filter(c => usedCams.has(c.id)).map(c => opt('c:' + c.id, camLabel(c))))}
     ${grp('Objektive', allLenses.filter(l => usedLens.has(l.id)).map(l => opt('l:' + l.id, lensLabel(l))))}
     ${grp('Filter', flOpts)}
-    ${grp('Blitze', allAcc.filter(a => usedFlash.has(a.id)).map(a => opt('a:' + a.id, [a.maker, a.name].filter(Boolean).join(' ') || 'Blitz')))}</select>`;
+    ${grp('Blitze', allAcc.filter(a => usedFlash.has(a.id)).map(a => opt('a:' + a.id, [a.maker, a.name].filter(Boolean).join(' ') || 'Blitz')))}
+    ${grp('Orte', (() => { const c = new Map(); d.frames.forEach(f => { const p = effPlace(f, d.rolls.get(f.rollId)); if (p) c.set(p, (c.get(p) || 0) + 1); }); return [...c].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'de')).map(([p, n]) => opt('p:' + p, `${p} (${n})`)); })())}</select>`;
   if (item && !d.frames.some(f => apMatch(d, f, item))) { item = AP_ITEM = ''; }
   d.frames = d.frames.filter(f => apMatch(d, f, item));
   const toolbar = sorting ? '' : `<div class="aptools"><select id="apOrder" aria-label="Rollen sortieren">${[['date', 'Neueste zuerst'], ['dateOld', 'Älteste zuerst'], ['film', 'Film'], ['name', 'Name'], ['cam', 'Kamera']].map(([v, t]) => `<option value="${v}"${order === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${itemSel}</div>`;

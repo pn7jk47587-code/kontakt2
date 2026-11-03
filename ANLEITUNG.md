@@ -405,3 +405,11 @@ Objektivauswahl: Das Leuchten wurde vom Scrollbereich beschnitten und wirkte wie
 Foto groß (aus dem Album): kein Schließen-Knopf mehr. Nach unten oder oben wegwischen wie in der Fotos-App, oder antippen.
 Hochkantfotos in der Fotoansicht höchstens 62 % der Bildschirmhöhe.
 Vorschaubilder: wurden in einem Schritt von bis zu 2400 auf 480 px verkleinert und wirkten körnig. Jetzt in Halbschritten mit hoher Glättung auf 800 px. Ältere Fotos rechnet die App einmalig im Hintergrund neu.
+
+## Paket 2: Nachtragen im Album, Ort per Karte (03.11.2026)
+Ort auf der Karte: Neben dem Ort steht in der Fotoansicht ein Kartensymbol. Es öffnet eine Karte mit Suchfeld (OpenStreetMap Nominatim; gesucht wird erst auf Eingabe, keine Vorschläge beim Tippen, wie es die Nutzungsregeln verlangen). Karte verschieben, bis die Nadel in der Mitte passt, Haken übernimmt Koordinaten und Ortsnamen. In der Bildansicht eines Frames bleibt aus Platzgründen nur das Standortsymbol.
+Fotoansicht im Album: neu „Aufgenommen“ mit Datum und Uhrzeit (antippen zum Wählen, Uhrsymbol setzt die jetzige Zeit) und „Alle Angaben bearbeiten“. Das öffnet die volle Bildansicht (Objektiv, Blende, Zeit, Blitz, Filter, Doppelbelichtung, Handyfoto, Notizen); der Haken führt zurück zum Foto.
+Album: oben links der Film als kleiner Kreis (antippen: Film, Kamera, Entwicklung bearbeiten), daneben der Name der Rolle. Rechts darunter runde Symbole: Fotos nachtragen, Handyfotos zuordnen, Ort für mehrere Fotos, Reihenfolge.
+Ort für mehrere Fotos: Symbol antippen, Fotos antippen (Haken unten rechts), unten „Ort wählen“. Zur Wahl stehen schon benutzte Orte, „Auf der Karte“ und „Hier“ (aktueller Standort).
+Ort der Rolle (ungefähr): im Reiter „Rolle“ eine Stadt oder Gegend wählen (Liste, Kartensuche oder Standort). Gilt für Bilder ohne eigenen Ort: Sie erscheinen auf der Weltkarte an diesem Ort und lassen sich in „Alle Fotos“ danach filtern.
+Alle Fotos: im Auswahlfeld neue Gruppe „Orte“ (mit Anzahl), auch mit dem Ort der Rolle.
