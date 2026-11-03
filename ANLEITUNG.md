@@ -421,3 +421,10 @@ Alle Fotos: Sortierung „Bewertung“, beste zuerst, gruppiert nach Stufe, unbe
 Analytics, neue Karte „Bewertungen und Personen“: Anzahl, Durchschnitt, Zahl der +5- und +4-Fotos, Verteilung als Balken. „Auffällig“ nennt einen Zusammenhang nur bei deutlichem Trend: Ein Objektiv, eine Kamera, ein Ort, eine Tageszeit oder eine Person stellt mindestens die Hälfte der Fotos mit +4 oder besser (mindestens drei) und ist dort mindestens 1,3-mal so häufig wie unter allen bewerteten Fotos. Personen: Anzahl Fotos, Durchschnittsbewertung, häufigster Ort.
 Korrektur: Die einmalige Neuberechnung der Vorschaubilder brach wegen eines falschen Aufrufs ab (v163); jetzt läuft sie.
 Karte zum Ortwählen (v164): Ziehen auf der Karte schloss das Fenster, weil die Wischgeste „Fenster nach unten schließen“ griff. Auf der Karte ist diese Geste jetzt aus; man kann frei verschieben und zoomen.
+
+## Paket 4: Belohnung, Materialisieren, Testschalter (03.11.2026)
+Drücken: Knöpfe, Chips, Symbolknöpfe und Kreise werden beim Drücken leicht größer (7 %), heller und leuchten in der Akzentfarbe, bis man loslässt; dann federn sie zurück.
+Haken: Jeder Übernehmen-Haken in Fenstern löst einen Lichtring im Prisma-Verlauf aus, mit kurzer Vibration (wo das Gerät sie kann). Der schwebende Fertig-Haken unten rechts füllt sich, leuchtet und sendet den Ring; erst danach gleitet die Ansicht weg (nach unten, leicht verkleinert), und die vorige Ebene taucht weich auf.
+Fenster materialisieren sich: Hintergrund blendet ein, das Fenster kommt aus leichter Unschärfe und Verkleinerung mit kleinem Überschwingen. Bei „Bewegung reduzieren“ in iOS entfällt das.
+Logo: im Tagmodus bunt (Himmel, Sonne, Regenbogen-Lightleak, icon-day.png), nachts wie bisher.
+Zum Ausprobieren in den Einstellungen (werden nach der Entscheidung wieder entfernt): Nachtmodus Mitternacht (bisher), Graphit (neutral), Tanne (Dunkelgrün mit Türkis), Espresso (Erdtöne mit Bernstein); wirkt im Farbschema „Mond“. Schrift: System (SF Pro), Inter, DM Sans, Manrope, Plus Jakarta Sans, Outfit, Nunito, Sora, Space Grotesk, Fraunces; geladen von Google Fonts, gilt überall außer im Fotoalbum-Buch.

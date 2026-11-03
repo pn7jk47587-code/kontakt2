@@ -42,8 +42,21 @@ const MOOD = (() => {
 
   function set(p) { try { localStorage.setItem(KEY, p); } catch (_) {} apply(); }
 
+  // Zum Ausprobieren: Varianten des Nachtmodus und Schriftarten (Einstellungen)
+  function testLook() {
+    let night = 'mitternacht', font = '';
+    try { night = localStorage.getItem('kb-night') || 'mitternacht'; font = localStorage.getItem('kb-font') || ''; } catch (_) {}
+    document.documentElement.dataset.night = night;
+    if (font) {
+      document.documentElement.dataset.font = font;
+      document.documentElement.style.setProperty('--testfont', `"${font}", -apple-system, system-ui, sans-serif`);
+      if (!document.getElementById('testFontLink')) { const l = document.createElement('link'); l.id = 'testFontLink'; l.rel = 'stylesheet'; document.head.appendChild(l); }
+      document.getElementById('testFontLink').href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(font)}:wght@400;500;600;700;800&display=swap`;
+    } else { delete document.documentElement.dataset.font; document.getElementById('testFontLink')?.remove(); }
+  }
+  testLook();
   apply();
   setInterval(apply, 5 * 60 * 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) apply(); });
-  return { pref, set, current, sunTimes, clock, setClock };
+  return { pref, set, current, sunTimes, clock, setClock, testLook };
 })();

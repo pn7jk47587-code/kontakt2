@@ -388,6 +388,10 @@ async function openSettings() {
       <div class="qlabel" id="clockLabel"></div>
       <input type="range" id="clockRange" min="0" max="23.75" step="0.25" aria-label="Uhrzeit simulieren" style="padding:0;border:0;background:none;accent-color:var(--teal)">
       <button type="button" class="btn ghost small" id="clockReal">Echte Uhrzeit</button>
+      <div class="sethead"><span>Nachtmodus (zum Ausprobieren)</span></div>
+      <div class="seggroup nightpick" id="nightPick">${NIGHTS.map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-night') || 'mitternacht') === k ? ' on' : ''}" data-night="${k}"><i class="nsw nsw-${k}"></i>${l}</button>`).join('')}</div>
+      <div class="sethead"><span>Schrift (zum Ausprobieren)</span></div>
+      <label class="fld" style="margin:0"><select id="fontPick" aria-label="Schrift">${TEST_FONTS.map(([k, l]) => `<option value="${k}"${(localStorage.getItem('kb-font') || '') === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
       <div class="sethead"><span>Bewertung (zum Ausprobieren)</span></div>
       <div class="seggroup" id="rateStyle">${RATE_STYLES.map(([k, l]) => `<button type="button" class="seg${rateStyle() === k ? ' on' : ''}" data-rs="${k}">${l}</button>`).join('')}</div>
       <div id="rateDemo" style="margin:8px 0 4px">${rateHtml(3, 'rateDemoR')}</div>
@@ -408,6 +412,13 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  ov.querySelector('#nightPick').addEventListener('click', e => {
+    const b = e.target.closest('[data-night]'); if (!b) return;
+    try { localStorage.setItem('kb-night', b.dataset.night); } catch (_) {}
+    ov.querySelectorAll('#nightPick .seg').forEach(x => x.classList.toggle('on', x === b)); MOOD.testLook(); U.haptic && U.haptic(8);
+    if (MOOD.current() !== 'moon') U.toast('Wirkt im Mond-Modus (Farbschema „Mond“)');
+  });
+  ov.querySelector('#fontPick').addEventListener('change', e => { try { e.target.value ? localStorage.setItem('kb-font', e.target.value) : localStorage.removeItem('kb-font'); } catch (_) {} MOOD.testLook(); });
   let demoV = 3;
   const wireDemo = () => wireRate(ov, 'rateDemoR', () => demoV, v => { demoV = v; });
   wireDemo();
@@ -1065,3 +1076,7 @@ async function rateFoldHtml() {
   }
   return anFold('rate', 'ratefold', PERSON_IC, 'Bewertungen und Personen', [rated.length ? `${rated.length} bewertet` : '', tagged.length ? `${tagged.length} mit Personen` : ''].filter(Boolean).join(' · '), body);
 }
+
+// Nur zum Ausprobieren in den Einstellungen; wird nach der Entscheidung wieder entfernt
+const NIGHTS = [['mitternacht', 'Mitternacht'], ['graphit', 'Graphit'], ['tanne', 'Tanne'], ['espresso', 'Espresso']];
+const TEST_FONTS = [['', 'System (SF Pro)'], ['Inter', 'Inter'], ['DM Sans', 'DM Sans'], ['Manrope', 'Manrope'], ['Plus Jakarta Sans', 'Plus Jakarta Sans'], ['Outfit', 'Outfit'], ['Nunito', 'Nunito'], ['Sora', 'Sora'], ['Space Grotesk', 'Space Grotesk'], ['Fraunces', 'Fraunces (Serif)']];

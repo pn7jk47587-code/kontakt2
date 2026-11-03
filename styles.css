@@ -2332,3 +2332,49 @@ section.ratefold.fold { background: linear-gradient(160deg, rgba(255,181,71,.2),
 .ratebars .rb em { position: absolute; bottom: 0; font-style: normal; font-size: 10px; color: var(--muted); }
 .antrend { font-size: 15px; margin: 0 0 8px; }
 .mpmapwrap, .mpmapwrap * { touch-action: none; }
+
+/* ---------- v165: Belohnung, Materialisieren, Testschalter ---------- */
+/* Drücken: leicht größer, heller, leuchtend; Loslassen federt zurück */
+:is(.btn, .roundic, .okbtn, .donebtn, #backBtn, .togbtn, .fridgeplus, .chip, .seg, .lensbtn, .gearbtn, .modebtn, .pcitem, .mpitem, .framenavbtn, .placepin, .reorderbtn, .closex, .albfilm, .rate .rc) {
+  transition: transform .28s cubic-bezier(.2,.9,.3,1.35), box-shadow .28s, filter .28s; }
+:is(.btn, .roundic, .okbtn, .donebtn, #backBtn, .togbtn, .fridgeplus, .chip, .seg, .lensbtn, .gearbtn, .modebtn, .pcitem, .mpitem, .framenavbtn, .reorderbtn, .closex, .albfilm):active:not(:disabled) {
+  transform: scale(1.07) !important; filter: brightness(1.15) saturate(1.25);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--teal) 55%, transparent), 0 0 24px 5px color-mix(in srgb, var(--teal) 40%, transparent) !important;
+  transition: transform .1s ease-out, box-shadow .1s, filter .1s; }
+.placepin:active, .rate .rc:active { transform: scale(1.18); filter: brightness(1.3); transition: transform .1s; }
+/* Lichtring beim Haken */
+.burst { position: fixed; z-index: 2000; width: 0; height: 0; pointer-events: none; }
+.burst i { position: absolute; left: 0; top: 0; width: var(--d); height: var(--d); margin: calc(var(--d) / -2) 0 0 calc(var(--d) / -2); border-radius: 50%; border: 2px solid transparent;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--prism) border-box; -webkit-mask: radial-gradient(circle, transparent 62%, #000 64%); mask: radial-gradient(circle, transparent 62%, #000 64%);
+  animation: burstring .7s cubic-bezier(.15,.8,.3,1) forwards; }
+.burst i + i { border: 0; background: radial-gradient(circle, color-mix(in srgb, var(--teal) 55%, transparent), transparent 65%); -webkit-mask: none; mask: none; animation: burstglow .6s ease-out forwards; }
+@keyframes burstring { from { transform: scale(1); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+@keyframes burstglow { from { transform: scale(.8); opacity: .9; } to { transform: scale(2); opacity: 0; } }
+.donebtn.rewarded { transform: scale(1.12) !important; background: linear-gradient(var(--teal), var(--teal)) padding-box, var(--prism) border-box !important; color: var(--onaccent, #fff) !important; box-shadow: 0 0 30px 8px color-mix(in srgb, var(--teal) 45%, transparent) !important; transition: transform .2s cubic-bezier(.2,.9,.3,1.5), background .15s; }
+/* Ebene schließen: Ansicht gleitet weg, die vorige taucht auf */
+body.leaving #view { animation: leavelevel .24s ease-in forwards; }
+#view.arrive { animation: arrivelevel .4s cubic-bezier(.2,.8,.2,1); }
+@keyframes leavelevel { to { opacity: 0; transform: translateY(18px) scale(.97); filter: blur(2px); } }
+@keyframes arrivelevel { from { opacity: 0; transform: translateY(-8px) scale(1.015); filter: blur(3px); } }
+/* Fenster materialisieren sich */
+.modalbg { animation: scrimin .25s ease-out; }
+.modalbg > .modal { animation: materialize .38s cubic-bezier(.2,.9,.25,1.12); }
+@keyframes scrimin { from { background-color: transparent; backdrop-filter: blur(0); -webkit-backdrop-filter: blur(0); } }
+@keyframes materialize { 0% { opacity: 0; transform: translateY(16px) scale(.94); filter: blur(8px) saturate(.6); } 60% { opacity: 1; filter: blur(0) saturate(1.1); } 100% { transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .modalbg, .modalbg > .modal, body.leaving #view, #view.arrive, .burst i { animation: none !important; } }
+/* Logo im Tagmodus bunt */
+:root[data-mood="sun"] .homebtn img { content: url("icon-day.png"); }
+/* Nachtmodus-Varianten (zum Ausprobieren) */
+:root[data-mood="moon"][data-night="graphit"] { --bg: #111214; --bg2: rgba(255,255,255,.05); --card: rgba(36,37,42,.6); --line: rgba(255,255,255,.1); --text: #ececee; --muted: #9b9ca3; --teal: #c3cbe6; --solid: #1c1d21; --headbg: rgba(17,18,20,.72); --toastbg: rgba(36,37,42,.92); --albumbg: radial-gradient(120% 90% at 50% 0%, #26272c, #111214 75%); --prism: linear-gradient(90deg, #b9c2e6, #d8d2ea, #ece6f0, #cfe3ea, #b9c2e6); --glow: 0 0 0 1px rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.4); --tint: rgba(255,255,255,.06); }
+:root[data-mood="moon"][data-night="tanne"] { --bg: #07130f; --bg2: rgba(160,255,220,.05); --card: rgba(16,42,34,.58); --line: rgba(160,255,220,.13); --text: #e4f2eb; --muted: #93b3a6; --teal: #6fdcbc; --solid: #0f2620; --headbg: rgba(7,19,15,.68); --toastbg: rgba(16,42,34,.92); --albumbg: radial-gradient(120% 90% at 50% 0%, #143a30, #07130f 75%); --prism: linear-gradient(90deg, #5fdcbc, #9ff0a6, #e9f3b2, #7fd8ff, #5fdcbc); --glow: 0 0 0 1px rgba(160,255,220,.16), 0 10px 34px rgba(80,220,180,.22); --tint: rgba(111,220,188,.1); --onaccent: #06221a; }
+:root[data-mood="moon"][data-night="espresso"] { --bg: #140e0a; --bg2: rgba(255,220,190,.05); --card: rgba(52,37,28,.58); --line: rgba(255,220,190,.13); --text: #f3ebe4; --muted: #b8a596; --teal: #f0b27a; --solid: #251a14; --headbg: rgba(20,14,10,.7); --toastbg: rgba(52,37,28,.92); --albumbg: radial-gradient(120% 90% at 50% 0%, #3a2a1f, #140e0a 75%); --prism: linear-gradient(90deg, #f0b27a, #f6d38a, #e8a0a0, #c9a7e6, #f0b27a); --glow: 0 0 0 1px rgba(255,220,190,.16), 0 10px 34px rgba(240,170,110,.22); --tint: rgba(240,178,122,.1); --onaccent: #2a1a0e; }
+:root[data-mood="moon"][data-night="graphit"] body, :root[data-mood="moon"][data-night="tanne"] body, :root[data-mood="moon"][data-night="espresso"] body { background: var(--bg); }
+.nightpick { display: grid !important; grid-template-columns: 1fr 1fr; gap: 6px; }
+.nightpick .seg { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.nsw { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,.25); }
+.nsw-mitternacht { background: linear-gradient(135deg, #141b38, #a3b6ff); }
+.nsw-graphit { background: linear-gradient(135deg, #1c1d21, #c3cbe6); }
+.nsw-tanne { background: linear-gradient(135deg, #0f2620, #6fdcbc); }
+.nsw-espresso { background: linear-gradient(135deg, #251a14, #f0b27a); }
+/* Schrift (zum Ausprobieren): ersetzt die Systemschrift überall außer im Fotoalbum-Buch */
+html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albtitle, .caption, svg, svg *, .wordmark) { font-family: var(--testfont) !important; }

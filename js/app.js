@@ -414,6 +414,8 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
 // Gerade neu angelegte Kamera, Objektiv oder Film: dort gibt es noch keinen Löschen-Knopf
 let FRESH_ID = null;
 async function routeView() {
+  // Nach dem Haken: die vorige Ebene erscheint sanft statt abrupt
+  if (document.body.classList.contains('leaving')) { document.body.classList.remove('leaving'); view.classList.remove('arrive'); void view.offsetWidth; view.classList.add('arrive'); setTimeout(() => view.classList.remove('arrive'), 420); }
   if (FRESH_ID && !location.hash.endsWith('/' + FRESH_ID)) FRESH_ID = null;
   document.body.classList.remove('albummode', 'mapmode');
   document.querySelectorAll('.modalbg, .overlay').forEach(x => x.remove());
@@ -961,4 +963,29 @@ function growFrom(ov, btn) {
   });
   // Seitenhöhe beim Seitenwechsel wieder freigeben
   window.addEventListener('hashchange', () => { const v = document.getElementById('view'); if (v) v.style.minHeight = ''; });
+})();
+
+/* ---------- Belohnung beim Eintragen ----------
+   Knöpfe wachsen beim Drücken leicht und leuchten (CSS :active). Haken lösen einen Lichtring aus;
+   der schwebende Fertig-Haken schließt die Ebene erst nach dem Ring, die Ansicht gleitet weg und die vorige taucht auf. */
+(() => {
+  const burst = el => {
+    const r = el.getBoundingClientRect(); if (!r.width) return;
+    const b = document.createElement('div'); b.className = 'burst'; b.setAttribute('aria-hidden', 'true');
+    b.style.left = (r.left + r.width / 2) + 'px'; b.style.top = (r.top + r.height / 2) + 'px'; b.style.setProperty('--d', Math.max(r.width, r.height) + 'px');
+    b.innerHTML = '<i></i><i></i>';
+    document.body.appendChild(b); setTimeout(() => b.remove(), 800);
+  };
+  window.FEEL = { burst };
+  document.addEventListener('click', e => {
+    const ok = e.target.closest('.okbtn:not(:disabled)');
+    if (ok) { burst(ok); U.haptic && U.haptic([10, 30, 14]); }
+  }, true);
+  document.addEventListener('click', e => {
+    const d = e.target.closest('.donebtn');
+    if (!d || d.dataset.go === '1' || document.body.classList.contains('leaving')) return;
+    e.stopImmediatePropagation(); e.preventDefault();
+    burst(d); d.classList.add('rewarded'); U.haptic && U.haptic([10, 30, 14]);
+    setTimeout(() => { document.body.classList.add('leaving'); d.dataset.go = '1'; d.click(); delete d.dataset.go; setTimeout(() => document.body.classList.remove('leaving'), 1200); }, 230);
+  }, true);
 })();
