@@ -638,7 +638,8 @@ async function rollFrames(body, roll, stock) {
   const fr = await framesOf(roll.id);
   const st = roll.status || 'entwurf';
   const rcam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
-  const leaks = rcam?.lightLeaks && !roll.leaksMarked ? leakMap(roll, fr) : new Map();
+  // Simulierte Lightleaks nur, solange die Rolle in der Kamera ist; danach zeigen die Scans, ob es welche gibt
+  const leaks = rcam?.lightLeaks && !roll.leaksMarked && (roll.status || 'entwurf') === 'entwurf' ? leakMap(roll, fr) : new Map();
   const cells = await Promise.all(fr.map(f => frameCell(f, leaks.get(f.id) || 0)));
   const hasImgs = fr.some(f => f.imgId);
   let top = '', bottom = '';
@@ -974,12 +975,31 @@ async function assignScans(roll, files) {
   return files.length;
 }
 
+// Foto groß: wie in der Fotos-App nach unten (oder oben) wegwischen oder antippen schließt; zwei Finger zoomen
 function zoom(src) {
   const ov = document.createElement('div');
-  ov.className = 'overlay';
-  ov.innerHTML = `<img src="${src}" alt=""><button class="btn small close">Schließen</button>`;
-  const pz = U.pinch(ov.querySelector('img'));
-  ov.addEventListener('click', ev => { if (ev.target.classList.contains('close') || (ev.target === ov && !pz.zoomed)) ov.remove(); });
+  ov.className = 'overlay zoomov';
+  ov.innerHTML = `<img src="${src}" alt="">`;
+  const img = ov.querySelector('img');
+  const pz = U.pinch(img);
+  const close = () => { ov.classList.add('out'); setTimeout(() => ov.remove(), 220); };
+  ov.addEventListener('click', ev => { if (!pz.zoomed && !ov.dataset.dragged) close(); delete ov.dataset.dragged; });
+  let st = null;
+  ov.addEventListener('touchstart', e => { st = e.touches.length === 1 && !pz.zoomed ? { y: e.touches[0].clientY, x: e.touches[0].clientX } : null; }, { passive: true });
+  ov.addEventListener('touchmove', e => {
+    if (!st || pz.zoomed) return;
+    const dy = e.touches[0].clientY - st.y, dx = e.touches[0].clientX - st.x;
+    if (Math.abs(dy) < Math.abs(dx)) return;
+    st.dy = dy; ov.dataset.dragged = '1';
+    img.style.transition = 'none'; img.style.translate = `0 ${dy}px`; img.style.scale = String(Math.max(.8, 1 - Math.abs(dy) / 1200));
+    ov.style.backgroundColor = `rgba(0,0,0,${Math.max(0, .92 - Math.abs(dy) / 500)})`;
+  }, { passive: true });
+  ov.addEventListener('touchend', () => {
+    if (!st) return;
+    const dy = st.dy || 0; st = null;
+    if (Math.abs(dy) > 90) { img.style.transition = 'translate .22s ease-in, opacity .22s'; img.style.translate = `0 ${dy > 0 ? innerHeight : -innerHeight}px`; img.style.opacity = '0'; ov.style.transition = 'background-color .22s'; ov.style.backgroundColor = 'rgba(0,0,0,0)'; setTimeout(() => ov.remove(), 230); }
+    else { img.style.transition = ''; img.style.translate = ''; img.style.scale = ''; ov.style.backgroundColor = ''; setTimeout(() => { delete ov.dataset.dragged; }, 50); }
+  });
   document.body.appendChild(ov);
 }
 
@@ -1254,7 +1274,7 @@ async function viewFrame(idWithQuery) {
   </div>`;
 
   renderMedia(view.querySelector('#media'), scanUrl, [phoneUrl, phoneUrl2].filter(Boolean), frame);
-  if (cam?.lightLeaks && roll && !roll.leaksMarked) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
+  if (cam?.lightLeaks && roll && !roll.leaksMarked && (roll.status || 'entwurf') === 'entwurf' && !frame.imgId) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
 
   // Speichern; beim ersten Eintrag wird der heutige Tag als Aufnahmetag gesetzt
   let t;
@@ -1557,14 +1577,15 @@ async function viewFrame(idWithQuery) {
   });
   let t0 = null;
   const onStart = e => {
-    if (e.target.closest('.slides, input, textarea, .cmprange, .framestrip, .lensrow, .chipwrap, .ffsel, .seggroup')) { t0 = null; return; }
+    if (e.target.closest('.slides, input, textarea, select, label, .cmprange, .framestrip, .lensrow, .chipwrap, .ffsel, .seggroup, .placetime, .togrow')) { t0 = null; return; }
     t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
   const onEnd = e => {
     if (!t0) return;
     const dx = e.changedTouches[0].clientX - t0.x, dy = e.changedTouches[0].clientY - t0.y;
     t0 = null;
-    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) goTo(dx < 0 ? next : prev);
+    if (String(window.getSelection?.() || '')) return;   // Text markiert: kein Blättern
+    if (Math.abs(dx) > 100 && Math.abs(dx) > Math.abs(dy) * 2) goTo(dx < 0 ? next : prev);
   };
   const onKey = e => { if (e.target.closest('input, textarea')) return; if (e.key === 'ArrowRight') goTo(next); if (e.key === 'ArrowLeft') goTo(prev); };
   view.addEventListener('touchstart', onStart, { passive: true });
@@ -2037,13 +2058,15 @@ function flipPhone(el, n, d) {
 function swipe(root, h) {
   let t0 = null;
   // Vergrößertes Foto oder zwei Finger: keine Wischgeste
-  const s = e => { t0 = e.touches.length > 1 || root.querySelector('[data-zoomed="1"]') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+  // Nicht in Eingabefeldern, Texten und Listen starten: dort wird markiert oder gescrollt
+  const s = e => { t0 = e.touches.length > 1 || root.querySelector('[data-zoomed="1"]') || e.target.closest('input, textarea, select, label, button, a, .metabox, .phfilters, .titlefld, figcaption') ? null : { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
   const en = e => {
     if (!t0) return;
     if (e.touches.length || root.querySelector('[data-zoomed="1"]')) { t0 = null; return; }
     const dx = e.changedTouches[0].clientX - t0.x, dy = e.changedTouches[0].clientY - t0.y; t0 = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) (dx < 0 ? h.left : h.right)?.();
-    else if (Math.abs(dy) > 40 && Math.abs(dy) > Math.abs(dx) * 1.3) (dy < 0 ? h.up : h.down)?.();
+    if (String(window.getSelection?.() || '')) return;
+    if (Math.abs(dx) > 80 && Math.abs(dx) > Math.abs(dy) * 1.8) (dx < 0 ? h.left : h.right)?.();
+    else if (Math.abs(dy) > 70 && Math.abs(dy) > Math.abs(dx) * 1.8) (dy < 0 ? h.up : h.down)?.();
   };
   const k = e => {
     if (e.target.closest && e.target.closest('input, textarea')) return;
@@ -2218,8 +2241,9 @@ async function viewAllPhotos() {
   // Archivieren oben rechts in der Kopfzeile, nur in dieser Ansicht
   setHeader('Alle Fotos');
   const d = await albumData('alle');
-  const sorting = ALLPHOTOS_SORT;
-  const arBtn = `<div class="archcorner">${d.frames.length > 1 ? `<button type="button" class="archlink${sorting ? ' on' : ''}" id="apSort" aria-pressed="${sorting}">${MOVE_IC}<span>${sorting ? 'Fertig' : 'Reihenfolge'}</span></button>` : ''}<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`
+  // Reihenfolge ändert man nur noch im einzelnen Album, nicht in „Alle Fotos“
+  const sorting = ALLPHOTOS_SORT = false;
+  const arBtn = `<div class="archcorner"><a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a></div>`
     + (sorting ? '<p class="hint pad sorthint">Ziehe ein Foto innerhalb seiner Rolle an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : '');
   if (!d.frames.length) { view.innerHTML = arBtn + '<div class="empty">Noch keine Fotos hochgeladen. Früher entwickelte Rollen trägst du oben rechts mit „Archivieren“ nach.</div>'; return; }
   // Rollen sortieren (Datum, Film, Name, Kamera) und Fotos nach einem Teil aus dem Kameraschrank filtern

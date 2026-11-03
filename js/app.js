@@ -126,6 +126,7 @@ async function boot() {
   // Fehler sichtbar machen statt still zu scheitern, z. B. wenn ein Bild nicht gespeichert werden kann
   window.addEventListener('unhandledrejection', e => U.toast('Fehler: ' + (e.reason?.message || e.reason)));
   route();
+  setTimeout(() => U.rethumbAll(), 4000);   // schärfere Vorschaubilder für ältere Fotos
 }
 
 // Beispielausrüstung (die Kameras und Objektive der Entwicklerin) für Tests laden. Vorhandene Einträge bleiben unverändert.
@@ -297,12 +298,14 @@ async function goUp() {
 // Funktioniert mit dem Finger und am Computer mit gedrückter Maustaste.
 (() => {
   let s = null;
-  const begin = (x, y, t) => { s = x <= 90 && y <= 240 && !t?.closest?.('.photogrid.sorting, .grid.reorder') ? { x, y, fired: false } : null; };   // nicht beim Sortieren per Ziehen
+  // nur vom Rand aus und nie in Text- oder Eingabefeldern (dort markiert man Text)
+  const begin = (x, y, t) => { s = x <= 28 && y <= 240 && !t?.closest?.('.photogrid.sorting, .grid.reorder, input, textarea, select, [contenteditable], .maplibregl-map') ? { x, y, fired: false } : null; };   // nicht beim Sortieren per Ziehen
   const move = (x, y, e) => {
     if (!s || s.fired) return;
     const dx = x - s.x, dy = y - s.y;
     if (dx > 10 && dy > 0 && e && e.cancelable) e.preventDefault();   // Seite nicht mitscrollen
-    if (dx > 55 && dy > 45 && dy < dx * 2.5) { s.fired = true; goUp(); }
+    if (String(window.getSelection?.() || '')) { s = null; return; }
+    if (dx > 90 && dy > 60 && dy < dx * 2.5) { s.fired = true; goUp(); }
   };
   document.addEventListener('touchstart', e => begin(e.touches[0].clientX, e.touches[0].clientY, e.target), { passive: true, capture: true });
   document.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY, e), { passive: false, capture: true });

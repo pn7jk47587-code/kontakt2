@@ -393,3 +393,15 @@ Der runde Menü-Knopf oben rechts im Profil hat einen dünneren Rand (1,5 px) mi
 ## „Wann und wo“ je Zeitraum, Rechenwege hinter dem Infosymbol (03.11.2026)
 „Wann und wo“ ist keine eigene Karte in den Analytics mehr. Unter „Fotos gemacht“ sind die drei Felder „Diesen Monat“, „Dieses Jahr“ und „Insgesamt“ antippbar und öffnen „Wann und wo“ für genau diesen Zeitraum (Uhrzeit, Wochentage, Licht, Orte, Radius, Fotografierrate). Oben auf der Seite lässt sich zwischen Monat, Jahr und Gesamt wechseln. Bilder ohne Datum zählen nur in der Gesamtansicht.
 Rechenwege stehen nicht mehr im Text der Analytics. Ein kleines Infosymbol (i) neben der Aussage zeigt sie erst nach einem Tipp: bei „Auf 36 Bilder umgerechnet“ in „Filme in der Kamera“ (Vergleich von Mittelformat und Kleinbild), bei der Fotografierrate und bei der Bestimmung des Zuhauses.
+
+## Paket 1: Korrekturen (03.11.2026)
+Filmtagebuch: Ein ganzer Eintrag (Notizen und Fotos) lässt sich über den Mülleimer oben rechts löschen, mit Rückgängig.
+Wischen unempfindlicher: Zurück-Geste nur noch ganz vom linken Rand (28 px) und mit längerem Weg (90 × 60 px), nie in Text- oder Eingabefeldern, nicht bei markiertem Text. Blättern in der Bildansicht erst ab 100 px waagerecht, nicht aus Feldern, Knöpfen und Zeilen heraus. In der Fotoansicht ab 80 px, nicht aus Titel, Ort, Infos, Filtern oder Metadaten heraus.
+Alle Fotos: kein „Reihenfolge“ mehr; die Reihenfolge ändert man im einzelnen Album.
+Lightleaks: Die simulierten Leaks erscheinen nur noch, solange die Rolle in der Kamera ist, nicht mehr bei entwickelten Rollen und Fotos mit Scan.
+Plus-Knöpfe (Kühlschrank, Kameraschrank, Tagebuch, Film hinzufügen): gleiche Gestaltung wie der Einstellungen-Knopf, 48 px, zurückhaltender Ring.
+Bildwechsel oben in der Bildansicht: 48 px hoch, Pfeil und Nummer mittig, gleicher Ring.
+Objektivauswahl: Das Leuchten wurde vom Scrollbereich beschnitten und wirkte wie ein Kasten; jetzt mehr Rand und ein engerer Schein.
+Foto groß (aus dem Album): kein Schließen-Knopf mehr. Nach unten oder oben wegwischen wie in der Fotos-App, oder antippen.
+Hochkantfotos in der Fotoansicht höchstens 62 % der Bildschirmhöhe.
+Vorschaubilder: wurden in einem Schritt von bis zu 2400 auf 480 px verkleinert und wirkten körnig. Jetzt in Halbschritten mit hoher Glättung auf 800 px. Ältere Fotos rechnet die App einmalig im Hintergrund neu.

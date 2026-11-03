@@ -2216,3 +2216,28 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
 .infobtn[aria-expanded="true"] { color: var(--teal); }
 .infotext { display: block; margin-top: 8px; padding: 10px 12px; border-radius: 14px; background: var(--bg2); border: 1px solid var(--line); font-size: 13px; font-weight: 500; line-height: 1.45; color: var(--muted); letter-spacing: normal; text-transform: none; }
 .infotext[hidden] { display: none; }
+
+/* ---------- v160: Korrekturen ---------- */
+/* Gemeinsamer zurückhaltender Ring (wie Einstellungen-Knopf) für Plus-Knöpfe und Bildwechsel */
+:root { --softring: linear-gradient(var(--solid), var(--solid)) padding-box, linear-gradient(color-mix(in srgb, var(--solid) 55%, transparent), color-mix(in srgb, var(--solid) 55%, transparent)) border-box, var(--prism) border-box; }
+.fridgeplus { width: var(--navd) !important; height: var(--navd) !important; border-radius: 50% !important; box-sizing: border-box; flex: 0 0 auto;
+  border: 1.5px solid transparent !important; background: var(--softring) !important; box-shadow: none !important; color: var(--text) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.diarytags .dthead .fridgeplus, .cabhead .fridgeplus { width: var(--navd) !important; height: var(--navd) !important; }
+.fridgeplus::before, .fridgeplus::after { width: 34%; height: 2px; }
+.plusbox { border-radius: 50% !important; border: 1.5px solid transparent !important; background: var(--softring) !important; color: var(--text) !important; box-sizing: border-box; }
+.newfilm.small .plusbox { border-radius: 50% !important; }
+/* Bildwechsel in der Bildansicht: 48 px hoch, Pfeil und Nummer mittig */
+.framenavbtn { height: var(--navd) !important; min-width: 64px; padding: 0 14px !important; gap: 4px !important; box-sizing: border-box; display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  border: 1.5px solid transparent !important; background: var(--softring) !important; box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; line-height: 1; }
+.framenavbtn svg { width: 18px !important; height: 18px !important; display: block; }
+.framenavbtn span { font-size: 15px !important; line-height: 1; color: var(--text) !important; }
+/* Objektivauswahl: das Leuchten nicht vom Scrollbereich beschneiden lassen (sonst ein Kasten um den Schein) */
+.quick .lensrow { padding: 10px 10px 12px !important; margin: -10px -10px -8px !important; }
+/* Hochkantfotos in der Fotoansicht kleiner, damit man leicht zu den Eingaben scrollt */
+.photoview .flipimgs img.ana { max-height: 62vh; max-height: 62dvh; width: auto; max-width: 100%; margin: 0 auto; }
+.photoview .flipimgs { width: fit-content; max-width: 100%; margin: 0 auto; }
+/* Foto groß: ohne Schließen-Knopf, wegwischen wie in der Fotos-App */
+.zoomov { transition: background-color .2s, opacity .2s; touch-action: none; }
+.zoomov.out { opacity: 0; }
+.zoomov img { transition: translate .2s, scale .2s; }
+.lensrow .lensbtn.on { box-shadow: 0 0 8px 1px rgba(170,180,255,.35) !important; }

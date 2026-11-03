@@ -47,9 +47,17 @@ const U = {
     const d = decoded || await U.decode(file);
     const scale = Math.min(1, maxSide / Math.max(d.w, d.h));
     const w = Math.round(d.w * scale), h = Math.round(d.h * scale);
+    // In Halbschritten verkleinern: ein großer Sprung in einem Schritt lässt Vorschaubilder körnig wirken
+    let src = d.src, sw = d.w, sh = d.h;
+    while (sw / 2 >= w * 1.05 && sh / 2 >= h * 1.05) {
+      const t = document.createElement('canvas'); t.width = Math.round(sw / 2); t.height = Math.round(sh / 2);
+      const tx = t.getContext('2d'); tx.imageSmoothingEnabled = true; tx.imageSmoothingQuality = 'high';
+      tx.drawImage(src, 0, 0, t.width, t.height); src = t; sw = t.width; sh = t.height;
+    }
     const c = document.createElement('canvas');
     c.width = w; c.height = h;
-    c.getContext('2d').drawImage(d.src, 0, 0, w, h);
+    const cx = c.getContext('2d'); cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+    cx.drawImage(src, 0, 0, w, h);
     const blob = await new Promise(res => c.toBlob(res, 'image/jpeg', quality));
     return { blob, w, h };
   },
@@ -58,7 +66,7 @@ const U = {
   async storeImage(file, kind) {
     const decoded = await U.decode(file);
     const full = await U.resize(file, 2400, 0.86, decoded);
-    const thumb = await U.resize(file, 480, 0.78, decoded);
+    const thumb = await U.resize(file, U.THUMB, 0.84, decoded);
     if (decoded.src.close) decoded.src.close();
     let exif = {};
     try {
@@ -73,7 +81,7 @@ const U = {
       }
     } catch (_) { /* kein EXIF, z. B. bei Scans */ }
     const rec = {
-      id: U.uid(), kind, data: await full.blob.arrayBuffer(), tdata: await thumb.blob.arrayBuffer(), type: 'image/jpeg', w: full.w, h: full.h,
+      id: U.uid(), kind, data: await full.blob.arrayBuffer(), tdata: await thumb.blob.arrayBuffer(), tw: Math.max(thumb.w, thumb.h), type: 'image/jpeg', w: full.w, h: full.h,
       name: file.name || '', exif, addedAt: new Date().toISOString()
     };
     await DB.put('images', rec);
@@ -98,6 +106,25 @@ const U = {
       }, 'image/png');
     });
     return U._blobOk;
+  },
+  THUMB: 800,
+  // Ältere Vorschaubilder (480 px, in einem Schritt verkleinert) einmalig im Hintergrund aus dem Original neu rechnen
+  async rethumbAll() {
+    try { if (localStorage.getItem('kb-rethumb') === '1') return; } catch (_) {}
+    const ids = (await DB.all('images')).filter(r => (r.data || r.blob) && !(r.tw >= U.THUMB)).map(r => r.id);
+    for (const id of ids) {
+      await new Promise(r => (window.requestIdleCallback || setTimeout)(r, 30));
+      try {
+        const rec = await DB.get('images', id); if (!rec) continue;
+        const blob = U.recBlob(rec, false); if (!blob) continue;
+        const dec = await U.decode(blob);
+        const t = await U.resize(blob, U.THUMB, 0.84, dec);
+        if (dec.src.close) dec.src.close();
+        rec.tdata = await t.blob.arrayBuffer(); delete rec.thumb; rec.tw = Math.max(t.w, t.h);
+        await DB.put('images', rec); U.forgetImg && U.forgetImg(id);
+      } catch (_) {}
+    }
+    try { localStorage.setItem('kb-rethumb', '1'); } catch (_) {}
   },
   async imgUrl(id, thumb = false) {
     if (!id) return null;

@@ -39,8 +39,14 @@ async function viewDiary(stockId) {
   if (!stock) { location.replace('#/tagebuch'); return; }
   const d = await getDiary(stockId);
   d.photos = d.photos || [];
-  setHeader(U.stockLabel(stock), {});
+  setHeader(U.stockLabel(stock), { action: diaryHas(d) ? `<button class="trashbtn" id="dDel" aria-label="Tagebucheintrag löschen" title="Tagebucheintrag löschen">${TRASH_BTN('').match(/<svg[\s\S]*<\/svg>/)[0]}</button>` : '' });
   const save = () => DB.put('meta', d);
+  // Ganzen Eintrag löschen (Notizen und Fotos), mit Rückgängig
+  document.getElementById('dDel')?.addEventListener('click', async () => {
+    const before = JSON.parse(JSON.stringify(d));
+    await DB.del('meta', d.id); location.hash = '#/tagebuch';
+    U.undo('Tagebucheintrag gelöscht', async () => { await DB.put('meta', before); location.hash = '#/tagebuch/' + stockId; }, async () => { for (const p of before.photos || []) await deleteImage(p.imgId); });
+  });
   const thumbs = {};
   for (const p of d.photos) thumbs[p.imgId] = await U.imgUrl(p.imgId, true);
   const card = ([k, label]) => {
