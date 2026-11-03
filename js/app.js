@@ -331,6 +331,7 @@ const innerScroller = (target, stop) => {
   document.addEventListener('touchstart', e => {
     const m = e.target.closest('.modal, .loadsheet');
     if (!m) return;
+    if (e.target.closest('.maplibregl-map, .mpmapwrap, input[type=range]')) return;   // Karte: verschieben, nicht Fenster schließen
     // In einer inneren Liste scrollt nur die Liste, das Fenster lässt sich dort nicht wegziehen
     const inner = innerScroller(e.target, m);
     if (inner && !inner.classList.contains('lsbody')) return;
@@ -386,7 +387,7 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
   }, { passive: true });
   document.addEventListener('touchmove', e => {
     if (!lock || !t) return;
-    if (e.target.closest('.mtr, .overlay')) return;        // Belichtungsmesser und Fotoansicht regeln ihre Gesten selbst
+    if (e.target.closest('.mtr, .overlay, .maplibregl-map, .mpmapwrap')) return;        // Belichtungsmesser, Fotoansicht und Karte regeln ihre Gesten selbst
     if (!t.m) { e.preventDefault(); return; }               // Hintergrund: nichts bewegt sich
     if (e.target.closest('input[type=range]')) return;
     const dy = e.touches[0].clientY - t.y, sc = t.sc;

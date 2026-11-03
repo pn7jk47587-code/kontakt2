@@ -2331,3 +2331,4 @@ section.ratefold.fold { background: linear-gradient(160deg, rgba(255,181,71,.2),
 .ratebars .rb b { font-size: 10px; color: var(--muted); }
 .ratebars .rb em { position: absolute; bottom: 0; font-style: normal; font-size: 10px; color: var(--muted); }
 .antrend { font-size: 15px; margin: 0 0 8px; }
+.mpmapwrap, .mpmapwrap * { touch-action: none; }

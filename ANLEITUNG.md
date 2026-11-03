@@ -420,3 +420,4 @@ Personen: In der Fotoansicht unter der Bewertung das Personensymbol. Es zeigt al
 Alle Fotos: Sortierung „Bewertung“, beste zuerst, gruppiert nach Stufe, unbewertete am Ende.
 Analytics, neue Karte „Bewertungen und Personen“: Anzahl, Durchschnitt, Zahl der +5- und +4-Fotos, Verteilung als Balken. „Auffällig“ nennt einen Zusammenhang nur bei deutlichem Trend: Ein Objektiv, eine Kamera, ein Ort, eine Tageszeit oder eine Person stellt mindestens die Hälfte der Fotos mit +4 oder besser (mindestens drei) und ist dort mindestens 1,3-mal so häufig wie unter allen bewerteten Fotos. Personen: Anzahl Fotos, Durchschnittsbewertung, häufigster Ort.
 Korrektur: Die einmalige Neuberechnung der Vorschaubilder brach wegen eines falschen Aufrufs ab (v163); jetzt läuft sie.
+Karte zum Ortwählen (v164): Ziehen auf der Karte schloss das Fenster, weil die Wischgeste „Fenster nach unten schließen“ griff. Auf der Karte ist diese Geste jetzt aus; man kann frei verschieben und zoomen.
