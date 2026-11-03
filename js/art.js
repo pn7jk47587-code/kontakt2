@@ -85,8 +85,8 @@ const ART = (() => {
   // Doppelbelichtung wie auf Kameras: zwei versetzt übereinanderliegende Rechtecke
   const double = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="3" y="3" width="12.5" height="12.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="8.5" y="8.5" width="12.5" height="12.5" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>`;
   const up = `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 19V6M6 11.5 12 5.5l6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const check = `<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M5 12.5 10 17.5 19.5 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const x = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const check = `<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M4.75 12.25 9.75 17.25 19.25 6.75" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;   // geometrisch auf 12/12 zentriert
+  const x = `<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
   // Glitzersterne für Favoriten
   const sparkle = `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path class="s1" d="M10 2 L11.6 8.4 L18 10 L11.6 11.6 L10 18 L8.4 11.6 L2 10 L8.4 8.4 Z"/><path class="s2" d="M18.5 13 L19.3 16.2 L22.5 17 L19.3 17.8 L18.5 21 L17.7 17.8 L14.5 17 L17.7 16.2 Z"/><path class="s3" d="M19 1.5 L19.5 3.5 L21.5 4 L19.5 4.5 L19 6.5 L18.5 4.5 L16.5 4 L18.5 3.5 Z"/></svg>`;
 

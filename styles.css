@@ -2112,3 +2112,29 @@ body.mapmode { padding-bottom: 0; }
 .clockbtn { width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; color: var(--teal); cursor: pointer; padding: 0; }
 .timefld.has .clockbtn { width: 36px; color: var(--muted); }
 .clockbtn svg { width: 24px; height: 24px; }
+
+/* Navigationsknöpfe, Entwurf B „Prisma-Ring“ (v153): Zurück, Abbrechen (X), Übernehmen und Fertig (Haken)
+   alle gleich groß (--navd), Symbol exakt mittig (Raster statt Flex, Pfade auf 12/12 zentriert) */
+:root { --navd: 48px; }
+#backBtn, .closex, .okbtn, .donebtn {
+  width: var(--navd) !important; height: var(--navd) !important; min-width: var(--navd); flex: 0 0 auto;
+  border-radius: 50% !important; padding: 0 !important; margin: 0; box-sizing: border-box;
+  display: grid !important; place-items: center; line-height: 0;
+  border: 2px solid transparent !important;
+  background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box !important;
+  color: var(--text) !important; backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+#backBtn svg, .closex svg, .okbtn svg, .donebtn svg { display: block; margin: 0; }
+#backBtn { box-shadow: none !important; }
+.closex { border-width: 1.5px !important; background: linear-gradient(var(--solid), var(--solid)) padding-box, linear-gradient(var(--glassline), var(--glassline)) border-box !important; color: var(--muted) !important; }
+.okbtn { box-shadow: var(--glow) !important; }
+.donebtn { box-shadow: var(--glow), 0 10px 30px rgba(0,0,0,.35) !important; }
+.okbtn:disabled { opacity: .35; box-shadow: none !important; background: linear-gradient(var(--solid), var(--solid)) padding-box, linear-gradient(var(--glassline), var(--glassline)) border-box !important; }
+#backBtn[hidden] { display: none !important; }
+/* Ort und Zeit gleich breit, beide mit Auslöser-Symbol rechts (v153) */
+.placetime { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+.placetime .placefld1, .placetime .timefld { min-width: 0; height: 46px; min-height: 46px; box-sizing: border-box; border-radius: 12px; }
+.placetime .timefld { display: flex; align-items: center; justify-content: space-between; padding: 0 !important; background: var(--bg2); border: 1px solid var(--line); }
+.placetime .timefld .timeedit { display: flex !important; flex: 1 1 auto; min-width: 0; height: 100%; padding: 0 0 0 12px; overflow: hidden; white-space: nowrap; font-size: 15px; }
+.placetime .clockbtn, .placetime .placepin { flex: 0 0 auto; width: 44px; height: 44px; display: grid; place-items: center; color: var(--teal) !important; }
+.placetime .clockbtn svg, .placetime .placepin svg { width: 24px; height: 24px; display: block; }
