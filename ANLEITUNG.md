@@ -454,3 +454,9 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - A5 quer: höchstens 3 Streifen mit je 6 Bildern pro Seite, der Reihe nach gefüllt. 37 Bilder ergeben 3 Seiten (18, 18, 1), 36 Bilder 2 Seiten. Jedes Bild steht damit auf jeder Seite an derselben Stelle.
 - Ein angefangener letzter Streifen ist kürzer, wie ein abgeschnittenes Reststück.
 - Randschrift: statt Courier eine schmale fette Grotesk (Barlow Condensed Bold, OFL, lokal in `vendor/fonts/`). Unten am Rand stehen Bildnummer und Halbbildnummer mit Pfeil, also „12 ▸12A“.
+
+## v170 Randschrift dezenter und je Marke
+
+- Die Randschrift ist kleiner (Versalhöhe etwa 1,2 mm) und dezenter.
+- Bei Schwarzweiß- und Infrarotfilmen ist sie hellgrau, bei Farbfilmen gedämpftes Bernstein.
+- Die Schriftart hängt von der Marke ab (`edgeStyle` in `js/sheet.js`). CineStill bekommt eine Punktmatrix wie die LED- bzw. Laserbelichtung auf Kodak-Vision3-Kinofilm. Alle anderen Marken nutzen eine schmale fette Grotesk (Barlow Condensed). Eine weitere Marke wird auf Punktmatrix umgestellt, indem man sie in `EDGE_DOT_MAKERS` ergänzt.

@@ -34,6 +34,24 @@ function loadEdgeFont() {
   })();
   return EDGE_P;
 }
+// Punktmatrix 5×7 wie bei LED-belichteter Randschrift (Spalten, Bit 0 = oben)
+const DOT5x7 = {
+  A:[0x7C,0x12,0x11,0x12,0x7C],B:[0x7F,0x49,0x49,0x49,0x36],C:[0x3E,0x41,0x41,0x41,0x22],D:[0x7F,0x41,0x41,0x22,0x1C],E:[0x7F,0x49,0x49,0x49,0x41],
+  F:[0x7F,0x09,0x09,0x09,0x01],G:[0x3E,0x41,0x49,0x49,0x7A],H:[0x7F,0x08,0x08,0x08,0x7F],I:[0x00,0x41,0x7F,0x41,0x00],J:[0x20,0x40,0x41,0x3F,0x01],
+  K:[0x7F,0x08,0x14,0x22,0x41],L:[0x7F,0x40,0x40,0x40,0x40],M:[0x7F,0x02,0x0C,0x02,0x7F],N:[0x7F,0x04,0x08,0x10,0x7F],O:[0x3E,0x41,0x41,0x41,0x3E],
+  P:[0x7F,0x09,0x09,0x09,0x06],Q:[0x3E,0x41,0x51,0x21,0x5E],R:[0x7F,0x09,0x19,0x29,0x46],S:[0x46,0x49,0x49,0x49,0x31],T:[0x01,0x01,0x7F,0x01,0x01],
+  U:[0x3F,0x40,0x40,0x40,0x3F],V:[0x1F,0x20,0x40,0x20,0x1F],W:[0x3F,0x40,0x38,0x40,0x3F],X:[0x63,0x14,0x08,0x14,0x63],Y:[0x07,0x08,0x70,0x08,0x07],
+  Z:[0x61,0x51,0x49,0x45,0x43],0:[0x3E,0x51,0x49,0x45,0x3E],1:[0x00,0x42,0x7F,0x40,0x00],2:[0x42,0x61,0x51,0x49,0x46],3:[0x21,0x41,0x45,0x4B,0x31],
+  4:[0x18,0x14,0x12,0x7F,0x10],5:[0x27,0x45,0x45,0x45,0x39],6:[0x3C,0x4A,0x49,0x49,0x30],7:[0x01,0x71,0x09,0x05,0x03],8:[0x36,0x49,0x49,0x49,0x36],
+  9:[0x06,0x49,0x49,0x29,0x1E],'-':[0x08,0x08,0x08,0x08,0x08],'.':[0x00,0x60,0x60,0x00,0x00],'/':[0x20,0x10,0x08,0x04,0x02],' ':[0,0,0,0,0]
+};
+// Randschrift je Marke. dot: Punktmatrix, block: schmale fette Grotesk.
+// Farbe: Schwarzweiß hellgrau, Farbe gedämpftes Bernstein.
+const EDGE_DOT_MAKERS = /cinestill/i;   // Kodak Vision3, Kinofilm-Basis von CineStill
+function edgeStyle(st) {
+  const bw = /^(sw|ir)/.test(String(st?.type || ''));
+  return { kind: EDGE_DOT_MAKERS.test(String(st?.maker || '')) ? 'dot' : 'block', color: bw ? '#cfcfcc' : '#9a7444' };
+}
 const SHEET_THEME = {
   dark: { paper: '#0d0d0f', text: '#d9d5cc', dim: '#8f8a80', line: '#3a3833' },
   light: { paper: '#f7f5f0', text: '#1b1b1b', dim: '#6b675f', line: '#c9c4b8' }
@@ -60,15 +78,28 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
   T(info.sub, m, m + 6.5, 6.5, th.text);
   T(info.pages > 1 ? `${info.count} · ${page + 1}/${info.pages}` : info.count, W - m, m + 6.5, 6.5, th.dim, sans, '400', 'right');
   ctx.fillStyle = th.line; ctx.fillRect(m * s, (m + 10) * s, (W - 2 * m) * s, 0.5 * s);
-  const { pad, gap, edge, fw, fh, sh } = L, sgap = info.sgap, amber = '#e9a24a';
-  const tri = (x, y, h) => { ctx.fillStyle = amber; ctx.beginPath(); ctx.moveTo(x * s, (y - h) * s); ctx.lineTo((x + h * 0.9) * s, (y - h / 2) * s); ctx.lineTo(x * s, y * s); ctx.closePath(); ctx.fill(); };
+  const { pad, gap, edge, fw, fh, sh } = L, sgap = info.sgap, ink = info.edge.color;
+  const deaccent = t => t.toUpperCase().replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  // Randtext in der Schrift der Marke; size = Versalhöhe in Punkt
+  const E = (txt, x, y, size, align = 'left') => {
+    if (info.edge.kind !== 'dot') { T(txt, x, y, size * 1.4, ink, edgeF, '700', align, 0.35); return; }
+    const t = deaccent(txt), c = size / 7, w = t.length * 6 * c - c;
+    let x0 = align === 'center' ? x - w / 2 : align === 'right' ? x - w : x;
+    ctx.fillStyle = ink;
+    for (const ch of t) {
+      const g = DOT5x7[ch] || DOT5x7[' '];
+      g.forEach((col, ci) => { for (let r = 0; r < 7; r++) if (col >> r & 1) { ctx.beginPath(); ctx.arc((x0 + ci * c + c / 2) * s, (y - size + r * c + c / 2) * s, c * 0.42 * s, 0, 7); ctx.fill(); } });
+      x0 += 6 * c;
+    }
+  };
+  const tri = (x, y, h) => { ctx.fillStyle = ink; ctx.beginPath(); ctx.moveTo(x * s, (y - h) * s); ctx.lineTo((x + h * 0.9) * s, (y - h / 2) * s); ctx.lineTo(x * s, y * s); ctx.closePath(); ctx.fill(); };
   strips.forEach((strip, k) => {
     const y = L.topY + k * (sh + sgap);
     const sw = strip.length < info.per ? 2 * pad + strip.length * fw + (strip.length - 1) * gap + 6 : W - 2 * m;   // Reststück kürzer, wie abgeschnitten
     ctx.fillStyle = '#060606'; ctx.fillRect(m * s, y * s, sw * s, sh * s);
     // oberer Rand: Filmname in Abständen wiederholt
-    const name = info.film.toUpperCase(), ty = y + edge - 3.4;
-    for (let i = 0; i < strip.length; i += 2) T(name, m + pad + i * (fw + gap) + fw * 0.25, ty, 6.2, amber, edgeF, '700', 'left', 0.5);
+    const name = info.film.toUpperCase(), ty = y + edge - 4.2;
+    for (let i = 0; i < strip.length; i += 2) E(name, m + pad + i * (fw + gap) + fw * 0.25, ty, 3.4);
     strip.forEach((it, i) => {
       const x = m + pad + i * (fw + gap), fy = y + edge;
       ctx.fillStyle = '#16140f'; ctx.fillRect(x * s, fy * s, fw * s, fh * s);
@@ -85,11 +116,11 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
         ctx.restore();
       }
       // unterer Rand: Bildnummer mittig, dazwischen Pfeil und Halbbildnummer wie „▸12A“
-      const by = y + edge + fh + 8.6, n = String(it.n);
-      T(n, x + fw / 2, by, 7, amber, edgeF, '700', 'center', 0.3);
+      const by = y + edge + fh + 7.6, n = String(it.n);
+      E(n, x + fw / 2, by, 3.6, 'center');
       if (/^\d+$/.test(n)) {
         const ax = x + fw * 0.82;
-        tri(ax, by - 0.6, 4.4); T(n + 'A', ax + 5.4, by, 7, amber, edgeF, '700', 'left', 0.3);
+        tri(ax, by - 0.2, 3.2); E(n + 'A', ax + 4.2, by, 3.6);
       }
     });
   });
@@ -117,7 +148,7 @@ async function makeContactSheet(rollId, paper, theme = 'dark') {
   const dates = d.frames.map(f => f.date).filter(Boolean).sort();
   const range = (r?.loadedAt || dates[0]) ? [U.fmtDate(String(r?.loadedAt || dates[0]).slice(0, 10)), U.fmtDate(String(r?.finishedAt || dates[dates.length - 1] || '').slice(0, 10))].filter(Boolean).join('–') : '';
   const info = {
-    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), square, per, sgap, pages, theme,
+    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap, pages, theme,
     sub: [U.stockLabel(st), r?.ei ? 'EI ' + r.ei : '', camLabel(cam) || r?.camera || '', range].filter(Boolean).join(' · '),
     count: `${d.frames.length} Bilder`
   };
