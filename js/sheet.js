@@ -1,5 +1,5 @@
 /* Contact Sheet als PDF, hell oder dunkel: Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
-   A4 hoch: alle Bilder auf einer Seite. A5 quer: höchstens 3 Streifen zu je 6 Bildern pro Seite.
+   A4 hoch: alle Bilder auf einer Seite. Streifen lückenlos untereinander, so viele wie passen, 6 oder 4 Bilder je Reihe.
    Jede Seite wird in hoher Auflösung auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT). */
 const SHEET_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.6"/><path d="M7 7h4v3H7zM13 7h4v3h-4zM7 12.5h4v3H7zM13 12.5h4v3h-4z"/></svg>';
 let JSPDF_P = null;
@@ -126,25 +126,23 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
   });
 }
 
-async function makeContactSheet(rollId, paper, theme = 'dark') {
+async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6) {
   await loadJsPdf();
   const d = await albumData(rollId);
   if (!d.frames.length) throw new Error('Keine Fotos im Album');
   const r = d.roll, st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
   const square = r?.format === '120' || /6x6|120/.test(String(st?.format || r?.format || ''));
-  const per = square ? 4 : 6;
+  const per = square ? (perRow === 4 ? 3 : 4) : (perRow === 4 ? 4 : 6);
   const imgs = await sheetImages(d.frames);
   const items = imgs.map(x => ({ ...x, n: frameLabel(x.f) }));
   const strips = []; for (let i = 0; i < items.length; i += per) strips.push(items.slice(i, i + per));
   const P = SHEET_PAPER[paper], L = sheetLayout(P, square, per);
   const avail = P.h - L.topY - L.m;
-  // A4: alles auf eine Seite. A5: höchstens 3 Streifen je Seite, der Reihe nach gefüllt (36 Bilder auf 2, 37 auf 3 Seiten)
-  const fit = Math.max(1, Math.floor((avail + 8) / (L.sh + 8)));
-  const perPage = paper === 'a5' ? Math.min(3, fit) : fit;
+  // so viele Streifen wie passen, lückenlos untereinander, der Reihe nach gefüllt. Rest bleibt unten frei.
+  const perPage = Math.max(1, Math.floor(avail / L.sh));
   const pages = Math.ceil(strips.length / perPage);
   const slices = []; for (let p = 0; p < pages; p++) slices.push(strips.slice(p * perPage, (p + 1) * perPage));
-  const rows = Math.min(perPage, strips.length);
-  const sgap = Math.min(paper === 'a5' ? 14 : 18, Math.max(6, (avail - rows * L.sh) / Math.max(1, rows - 1)));
+  const sgap = 0;
   const dates = d.frames.map(f => f.date).filter(Boolean).sort();
   const range = (r?.loadedAt || dates[0]) ? [U.fmtDate(String(r?.loadedAt || dates[0]).slice(0, 10)), U.fmtDate(String(r?.finishedAt || dates[dates.length - 1] || '').slice(0, 10))].filter(Boolean).join('–') : '';
   const info = {
@@ -173,9 +171,10 @@ function openContactSheet(rollId) {
   const ov = document.createElement('div'); ov.className = 'modalbg';
   ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Contact Sheet als PDF">
     <div class="csopts">
-      <button type="button" class="csopt" data-p="a4"><span class="cspage a4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>A4 hoch</b><span class="sub2">alle Bilder auf einer Seite</span></button>
-      <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b><span class="sub2">3 Streifen je Seite</span></button>
+      <button type="button" class="csopt" data-p="a4"><span class="cspage a4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>A4 hoch</b></button>
+      <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b></button>
     </div>
+    <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
     <p class="sub2 csstate" id="csState"></p>
     <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><span></span></div></div>`;
@@ -184,11 +183,14 @@ function openContactSheet(rollId) {
   let theme = 'dark'; try { theme = localStorage.getItem('kb-cs-theme') || 'dark'; } catch (_) {}
   const setTheme = t => { theme = t; ov.querySelector('.csopts').dataset.t = t; ov.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === t)); try { localStorage.setItem('kb-cs-theme', t); } catch (_) {} };
   ov.querySelectorAll('[data-t]').forEach(x => x.onclick = () => setTheme(x.dataset.t)); setTheme(theme);
+  let perRow = 6; try { perRow = +localStorage.getItem('kb-cs-per') || 6; } catch (_) {}
+  const setPer = n => { perRow = n; ov.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r === n)); try { localStorage.setItem('kb-cs-per', String(n)); } catch (_) {} };
+  ov.querySelectorAll('[data-r]').forEach(x => x.onclick = () => setPer(+x.dataset.r)); setPer(perRow);
   ov.querySelectorAll('[data-p]').forEach(b => b.onclick = async () => {
     ov.querySelectorAll('[data-p]').forEach(x => x.disabled = true);
     const stEl = ov.querySelector('#csState'); stEl.textContent = 'PDF wird erstellt …';
     try {
-      const { blob, name, pages } = await makeContactSheet(rollId, b.dataset.p, theme);
+      const { blob, name, pages } = await makeContactSheet(rollId, b.dataset.p, theme, perRow);
       const file = new File([blob], name, { type: 'application/pdf' });
       ov.remove();
       FEEL && FEEL.burst && FEEL.burst(b);

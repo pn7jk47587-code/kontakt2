@@ -460,3 +460,14 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Die Randschrift ist kleiner (Versalhöhe etwa 1,2 mm) und dezenter.
 - Bei Schwarzweiß- und Infrarotfilmen ist sie hellgrau, bei Farbfilmen gedämpftes Bernstein.
 - Die Schriftart hängt von der Marke ab (`edgeStyle` in `js/sheet.js`). CineStill bekommt eine Punktmatrix wie die LED- bzw. Laserbelichtung auf Kodak-Vision3-Kinofilm. Alle anderen Marken nutzen eine schmale fette Grotesk (Barlow Condensed). Eine weitere Marke wird auf Punktmatrix umgestellt, indem man sie in `EDGE_DOT_MAKERS` ergänzt.
+
+## v171 Contact Sheet lückenlos, 6 oder 4 Bilder je Reihe
+
+- Die Streifen liegen ohne Abstand untereinander. Auf jede Seite kommen so viele wie passen, der Reihe nach. Was übrig ist, bleibt unten frei.
+- Im Auswahlfenster gibt es „6 je Reihe“ und „4 je Reihe“ (gespeichert in `kb-cs-per`). Bei 120er Film sind es 4 bzw. 3 Quadrate.
+- 37 Kleinbildaufnahmen:
+  - A5 quer, 6 je Reihe: 4 Streifen, also 24 Bilder pro Seite, 2 Seiten. Bild etwa 31 × 21 mm.
+  - A5 quer, 4 je Reihe: 3 Streifen, also 12 Bilder pro Seite, 4 Seiten. Bild etwa 48 × 32 mm.
+  - A4 hoch, 6 je Reihe: 9 Streifen, also alle 37 auf einer Seite.
+  - A4 hoch, 4 je Reihe: 6 Streifen, also 24 Bilder pro Seite, 2 Seiten.
+- Die Untertitel unter A4 und A5 sind entfallen.
