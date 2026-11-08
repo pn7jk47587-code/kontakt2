@@ -471,3 +471,10 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
   - A4 hoch, 6 je Reihe: 9 Streifen, also alle 37 auf einer Seite.
   - A4 hoch, 4 je Reihe: 6 Streifen, also 24 Bilder pro Seite, 2 Seiten.
 - Die Untertitel unter A4 und A5 sind entfallen.
+
+## v172 Contact Sheet: erst auswählen, dann bestätigen, dann Vorschau
+
+- Im Auswahlfenster werden Format (A4/A5), Bilder je Reihe (6/4) und Papier (Hell/Dunkel) nur noch angetippt. Erstellt wird das Sheet erst mit dem Haken unten rechts. Solange nicht alle drei gewählt sind, ist der Haken ausgegraut.
+- Beim ersten Mal ist nichts vorausgewählt. Danach merkt sich die App die letzte Wahl (`kb-cs-paper`, `kb-cs-per`, `kb-cs-theme`).
+- Nach dem Erstellen erscheint eine Vorschau aller Seiten. Das X führt zurück zur Auswahl, dort lässt sich etwas ändern und neu erstellen. Der Teilen-Knopf öffnet das Teilen-Menü, z. B. „In Dateien sichern“, oder lädt ohne Teilen-Menü direkt herunter.
+- Weil das Teilen erst auf diesen Tipp hin startet, gilt er unter iOS sicher als Nutzergeste. Bisher kam das Teilen-Menü erst nach dem Rechnen und konnte deshalb ausbleiben.

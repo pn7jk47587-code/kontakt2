@@ -2382,3 +2382,13 @@ html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albti
 .csopts[data-t="light"] .cspage { background: #f7f5f0; }
 .cspage i { background: repeating-linear-gradient(90deg, #8a7a62 0 6px, #060606 6px 7px); }
 .cstheme { margin-top: 12px; }
+
+/* v172 Vorschau des Contact Sheets vor dem Teilen */
+.cspv { position: fixed; inset: 0; z-index: 1300; background: var(--bg); display: flex; flex-direction: column; animation: scrimin .25s ease-out; }
+.cspvpages { flex: 1; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.cspvpages img { width: 100%; max-width: 720px; height: auto; display: block; border-radius: 2px; box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(0,0,0,.28); }
+.cspvfoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px max(18px, env(safe-area-inset-right, 0px)) calc(14px + var(--safe-b)) max(18px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); background: var(--card); }
+.cspvshare { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; color: var(--teal); background: var(--glasson); border: 1px solid var(--glassline); box-shadow: var(--glow), 0 10px 30px rgba(0,0,0,.3); }
+.cspvshare:active { transform: scale(.94); }
+.csopt.on { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal), var(--glow); }
+.csgo:disabled { opacity: .35; box-shadow: none; cursor: default; }

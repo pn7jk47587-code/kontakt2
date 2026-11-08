@@ -156,17 +156,23 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6) {
   const c = document.createElement('canvas'); c.width = Math.round(P.w * s); c.height = Math.round(P.h * s);
   const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
   await loadEdgeFont();
+  // kleine Vorschaubilder der Seiten für die Ansicht vor dem Teilen
+  const pv = document.createElement('canvas'); pv.width = 1100; pv.height = Math.round(1100 * P.h / P.w);
+  const pctx = pv.getContext('2d'); pctx.imageSmoothingQuality = 'high';
+  const previews = [];
   for (let p = 0; p < pages; p++) {
     drawSheetPage(ctx, P, s, info, slices[p], p);
+    pctx.drawImage(c, 0, 0, pv.width, pv.height); previews.push(pv.toDataURL('image/jpeg', 0.82));
     if (p) doc.addPage(paper === 'a4' ? 'a4' : [P.w, P.h], paper === 'a4' ? 'portrait' : 'landscape');
     doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, P.w, P.h, undefined, 'FAST');
   }
   imgs.forEach(x => x.src && x.src.close && x.src.close());
   const name = `Contact Sheet ${(info.title || 'Rolle').replace(/[\\/:*?"<>|]+/g, ' ').trim()} ${paper.toUpperCase()}.pdf`;
-  return { blob: doc.output('blob'), name, pages };
+  return { blob: doc.output('blob'), name, pages, previews, ratio: P.w / P.h };
 }
 
-// Auswahl A4 oder A5 quer, dann PDF teilen oder herunterladen
+// Auswahl: Format, Hell/Dunkel und Bilder je Reihe antippen, erst der Haken erstellt das Sheet.
+// Die letzte Wahl wird vorausgewählt, beim ersten Mal ist nichts gewählt.
 function openContactSheet(rollId) {
   const ov = document.createElement('div'); ov.className = 'modalbg';
   ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Contact Sheet als PDF">
@@ -177,27 +183,56 @@ function openContactSheet(rollId) {
     <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
     <p class="sub2 csstate" id="csState"></p>
-    <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><span></span></div></div>`;
+    <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><button class="cspvshare csgo" id="csGo" aria-label="Contact Sheet erstellen" disabled>${ART.check}</button></div></div>`;
   document.body.appendChild(ov);
   ov.querySelector('#csNo').onclick = () => ov.remove();
-  let theme = 'dark'; try { theme = localStorage.getItem('kb-cs-theme') || 'dark'; } catch (_) {}
-  const setTheme = t => { theme = t; ov.querySelector('.csopts').dataset.t = t; ov.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === t)); try { localStorage.setItem('kb-cs-theme', t); } catch (_) {} };
-  ov.querySelectorAll('[data-t]').forEach(x => x.onclick = () => setTheme(x.dataset.t)); setTheme(theme);
-  let perRow = 6; try { perRow = +localStorage.getItem('kb-cs-per') || 6; } catch (_) {}
-  const setPer = n => { perRow = n; ov.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', +x.dataset.r === n)); try { localStorage.setItem('kb-cs-per', String(n)); } catch (_) {} };
-  ov.querySelectorAll('[data-r]').forEach(x => x.onclick = () => setPer(+x.dataset.r)); setPer(perRow);
-  ov.querySelectorAll('[data-p]').forEach(b => b.onclick = async () => {
-    ov.querySelectorAll('[data-p]').forEach(x => x.disabled = true);
-    const stEl = ov.querySelector('#csState'); stEl.textContent = 'PDF wird erstellt …';
+  const get = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
+  const put = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
+  const sel = { p: get('kb-cs-paper'), t: get('kb-cs-theme'), r: get('kb-cs-per') };
+  const go = ov.querySelector('#csGo'), stEl = ov.querySelector('#csState');
+  const paint = () => {
+    ov.querySelectorAll('[data-p]').forEach(x => x.classList.toggle('on', x.dataset.p === sel.p));
+    ov.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === sel.t));
+    ov.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', x.dataset.r === sel.r));
+    ov.querySelector('.csopts').dataset.t = sel.t || 'dark';
+    go.disabled = !(sel.p && sel.t && sel.r);
+  };
+  [['p', 'kb-cs-paper'], ['t', 'kb-cs-theme'], ['r', 'kb-cs-per']].forEach(([k, key]) =>
+    ov.querySelectorAll(`[data-${k}]`).forEach(x => x.onclick = () => { sel[k] = x.dataset[k]; put(key, sel[k]); stEl.textContent = ''; paint(); }));
+  paint();
+  go.onclick = async () => {
+    const all = ov.querySelectorAll('button'); all.forEach(x => x.disabled = true);
+    stEl.textContent = 'PDF wird erstellt …';
     try {
-      const { blob, name, pages } = await makeContactSheet(rollId, b.dataset.p, theme, perRow);
-      const file = new File([blob], name, { type: 'application/pdf' });
-      ov.remove();
-      FEEL && FEEL.burst && FEEL.burst(b);
-      if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: name }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 30000);
-      U.toast(`Contact Sheet fertig (${pages} ${pages === 1 ? 'Seite' : 'Seiten'})`);
-    } catch (e) { stEl.textContent = e.message || 'PDF konnte nicht erstellt werden'; ov.querySelectorAll('[data-p]').forEach(x => x.disabled = false); }
-  });
+      const res = await makeContactSheet(rollId, sel.p, sel.t, +sel.r);
+      stEl.textContent = '';
+      openSheetPreview(res, () => ov.remove());
+    } catch (e) { stEl.textContent = e.message || 'PDF konnte nicht erstellt werden'; }
+    all.forEach(x => x.disabled = false); paint();
+  };
+}
+
+const SHARE_IC = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v7A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5H16"/></svg>';
+// Vorschau aller Seiten. X führt zurück zur Auswahl, der Teilen-Knopf öffnet Teilen bzw. Sichern.
+// Das Teilen startet erst auf diesen Tipp hin, so bleibt die Nutzergeste für navigator.share frisch.
+function openSheetPreview(res, onDone) {
+  const { blob, name, pages, previews, ratio } = res;
+  const ov = document.createElement('div'); ov.className = 'cspv';
+  ov.innerHTML = `<div class="cspvpages">${previews.map((u, i) => `<img src="${u}" alt="Seite ${i + 1} von ${pages}" style="aspect-ratio:${ratio}">`).join('')}</div>
+    <div class="cspvfoot"><button class="closex" id="pvBack" aria-label="Zurück">${ART.x}</button>
+    <span class="sub2">${pages} ${pages === 1 ? 'Seite' : 'Seiten'}</span>
+    <button class="cspvshare" id="pvShare" aria-label="Teilen oder sichern">${SHARE_IC}</button></div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#pvBack').onclick = () => ov.remove();
+  ov.querySelector('#pvShare').onclick = async e => {
+    const btn = e.currentTarget; FEEL && FEEL.burst && FEEL.burst(btn);
+    const file = new File([blob], name, { type: 'application/pdf' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: name }); ov.remove(); onDone && onDone(); return; }
+      catch (err) { if (err && err.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    ov.remove(); onDone && onDone();
+  };
 }
