@@ -388,7 +388,7 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
   }, { passive: true });
   document.addEventListener('touchmove', e => {
     if (!lock || !t) return;
-    if (e.target.closest('.mtr, .overlay, .maplibregl-map, .mpmapwrap')) return;        // Belichtungsmesser, Fotoansicht und Karte regeln ihre Gesten selbst
+    if (e.target.closest('.mtr, .overlay, .maplibregl-map, .mpmapwrap, .cspv')) return;        // Belichtungsmesser, Fotoansicht, Karte und Contact-Sheet-Vorschau regeln ihre Gesten selbst
     if (!t.m) { e.preventDefault(); return; }               // Hintergrund: nichts bewegt sich
     if (e.target.closest('input[type=range]')) return;
     const dy = e.touches[0].clientY - t.y, sc = t.sc;

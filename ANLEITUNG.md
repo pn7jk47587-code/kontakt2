@@ -478,3 +478,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Beim ersten Mal ist nichts vorausgewählt. Danach merkt sich die App die letzte Wahl (`kb-cs-paper`, `kb-cs-per`, `kb-cs-theme`).
 - Nach dem Erstellen erscheint eine Vorschau aller Seiten. Das X führt zurück zur Auswahl, dort lässt sich etwas ändern und neu erstellen. Der Teilen-Knopf öffnet das Teilen-Menü, z. B. „In Dateien sichern“, oder lädt ohne Teilen-Menü direkt herunter.
 - Weil das Teilen erst auf diesen Tipp hin startet, gilt er unter iOS sicher als Nutzergeste. Bisher kam das Teilen-Menü erst nach dem Rechnen und konnte deshalb ausbleiben.
+
+## v173 Vorschau des Contact Sheets scrollt
+
+- In der Vorschau lassen sich mehrere Seiten jetzt nach oben und unten durchscrollen. Vorher hat die Sperre für offene Fenster das Wischen dort abgefangen, weil das Auswahlfenster dahinter noch offen ist.
