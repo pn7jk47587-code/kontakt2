@@ -439,3 +439,10 @@ Glut von unten: warmes Licht steigt vom unteren Rand auf, die Karten glühen an,
 Kühler Leak: Violett und Blau aus der Ecke rechts oben mit kleinem warmem Kern.
 Diagonaler Schleier: weicher, schräger Lichtschleier in Rosa und Orange von links oben nach rechts unten.
 Wirkt nachts bzw. im Farbschema „Mond“. Nach der Entscheidung fliegt der Schalter wieder raus.
+
+## Contact Sheet als PDF (08.11.2026)
+Im fertigen Album oben rechts das Blatt-Symbol (vor „Fotos nachtragen“). Es öffnet die Wahl A4 hoch oder A5 quer; danach entsteht das PDF direkt in der App und lässt sich teilen (iPhone: Teilen-Blatt, z. B. „In Dateien sichern“) oder wird heruntergeladen.
+Gestaltung nach Entwurf A in dunkel: dunkles Papier, schwarze Filmstreifen, am oberen Rand jedes Streifens dreimal der echte Filmname in Versalien (z. B. KODAK PORTRA 400), unter jedem Bild die Bildnummer in Bernstein. Kopf mit Name der Rolle (Logo-Schrift), Film, EI, Kamera und Zeitraum, rechts Bildzahl und „lightleak“.
+Kleinbild: 6 Bilder je Streifen im Seitenverhältnis 3:2; Hochkantbilder liegen wie auf dem Negativ quer im Streifen. Mittelformat (120): 4 quadratische Bilder je Streifen.
+A4 hoch: alle Streifen auf einer Seite (36 oder 37 Bilder = 7 Streifen). A5 quer (210 × 148 mm): so viele Streifen je Seite, wie passen (bei Kleinbild 4), gleichmäßig verteilt; 37 Bilder ergeben 2 Seiten mit 4 und 3 Streifen, mit „Seite 1 von 2“.
+Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT-Lizenz, liegt in vendor/jspdf, wird erst beim ersten Contact Sheet geladen). Ein A4-Blatt mit 37 Bildern hat rund 0,5 MB.

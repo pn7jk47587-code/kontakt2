@@ -2367,3 +2367,13 @@ body.leaving #view { animation: leavelevel .24s ease-in forwards; }
 .nightpick { display: grid !important; grid-template-columns: 1fr 1fr; gap: 6px; }
 /* Schrift (zum Ausprobieren): ersetzt die Systemschrift überall außer im Fotoalbum-Buch */
 html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albtitle, .caption, svg, svg *, .wordmark) { font-family: var(--testfont) !important; }
+
+/* Contact Sheet (v168) */
+.csopts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.csopt { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px; border-radius: 18px; border: 1px solid var(--line); background: var(--bg2); color: var(--text); font: inherit; cursor: pointer; }
+.csopt:disabled { opacity: .5; }
+.cspage { display: flex; flex-direction: column; gap: 3px; padding: 6px; background: #0d0d0f; border-radius: 3px; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.cspage.a4 { width: 52px; height: 74px; }
+.cspage.a5 { width: 74px; height: 52px; }
+.cspage i { display: block; height: 6px; border-radius: 1px; background: repeating-linear-gradient(90deg, #8a7a62 0 6px, #040404 6px 7px); }
+.csstate { min-height: 1.2em; margin: 10px 2px 0; text-align: center; }

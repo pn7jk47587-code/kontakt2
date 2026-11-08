@@ -1742,6 +1742,7 @@ async function viewAlbum(id) {
   // Fotos nachtragen: füllen zuerst Bilder ohne Foto (nach Dateinamen sortiert), weitere kommen als neue Bilder hinten dran
   const addPhotosBtn = d.roll ? `<label class="roundic" aria-label="Fotos nachtragen" title="Fotos nachtragen">${ART.pickup}<input type="file" accept="image/*" multiple hidden id="albAdd"></label>` : '';
   const phoneBtn = d.roll ? `<label class="roundic" aria-label="Handyfotos als Referenz zuordnen" title="Handyfotos zuordnen">${PHONE_TOG_IC}<input type="file" accept="image/*" multiple hidden id="albPhone"></label>` : '';
+  const sheetBtn = d.roll && d.frames.length ? `<button type="button" class="roundic" id="albSheet" aria-label="Contact Sheet als PDF" title="Contact Sheet">${SHEET_IC}</button>` : '';
   const wireAdd = () => view.querySelector('#albAdd')?.addEventListener('change', async e => {
     const files = [...e.target.files]; if (!files.length) return;
     const n = await assignScans(d.roll, files);
@@ -1755,7 +1756,7 @@ async function viewAlbum(id) {
     <div class="albhead">${filmCircle}
       ${d.roll ? `<label class="rollname albname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : '<span class="albname"></span>'}
     </div>
-    <div class="albtools">${ALBUM_SORT || ALBUM_PICK ? '' : addPhotosBtn + phoneBtn}${d.roll && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort für mehrere Fotos festlegen" title="Ort für mehrere Fotos">${PIN_IC}</button>` : ''}${d.frames.length > 1 && !ALBUM_PICK ? `<button type="button" class="roundic${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}" aria-label="Reihenfolge ändern" title="Reihenfolge">${MOVE_IC}</button>` : ''}</div>
+    <div class="albtools">${ALBUM_SORT || ALBUM_PICK ? '' : sheetBtn + addPhotosBtn + phoneBtn}${d.roll && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort für mehrere Fotos festlegen" title="Ort für mehrere Fotos">${PIN_IC}</button>` : ''}${d.frames.length > 1 && !ALBUM_PICK ? `<button type="button" class="roundic${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}" aria-label="Reihenfolge ändern" title="Reihenfolge">${MOVE_IC}</button>` : ''}</div>
     ${ALBUM_PICK ? '<p class="hint pad sorthint">Tippe die Fotos an, die denselben Ort bekommen sollen.</p>' : ''}
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
     <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
@@ -1764,6 +1765,7 @@ async function viewAlbum(id) {
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
   view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
   wireAdd();
+  view.querySelector('#albSheet')?.addEventListener('click', () => openContactSheet(id));
   view.querySelector('#albPhone')?.addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(d.roll, files); });
   // Ort für mehrere Fotos: Auswahlmodus, dann Ort aus der Liste, auf der Karte oder per Standort
   view.querySelector('#albPick')?.addEventListener('click', async () => { ALBUM_PICK = !ALBUM_PICK; ALBUM_PICKED = new Set(); U.haptic && U.haptic(10); const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y); });
