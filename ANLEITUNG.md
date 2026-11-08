@@ -446,3 +446,11 @@ Gestaltung nach Entwurf A in dunkel: dunkles Papier, schwarze Filmstreifen, am o
 Kleinbild: 6 Bilder je Streifen im Seitenverhältnis 3:2; Hochkantbilder liegen wie auf dem Negativ quer im Streifen. Mittelformat (120): 4 quadratische Bilder je Streifen.
 A4 hoch: alle Streifen auf einer Seite (36 oder 37 Bilder = 7 Streifen). A5 quer (210 × 148 mm): so viele Streifen je Seite, wie passen (bei Kleinbild 4), gleichmäßig verteilt; 37 Bilder ergeben 2 Seiten mit 4 und 3 Streifen, mit „Seite 1 von 2“.
 Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT-Lizenz, liegt in vendor/jspdf, wird erst beim ersten Contact Sheet geladen). Ein A4-Blatt mit 37 Bildern hat rund 0,5 MB.
+
+## v169 Contact Sheet hell oder dunkel, kleinere Kopfzeile, neue Randschrift
+
+- Im Auswahlfenster des Contact Sheets gibt es jetzt **Hell** und **Dunkel**. Hell: helles Papier, nur die Filmstreifen schwarz, gedacht zum Ausdrucken. Die Wahl bleibt gespeichert.
+- Kein großer Titel mehr. Oben steht eine kleine Zeile mit Film, EI, Kamera und Zeitraum, rechts Anzahl und Seitenzahl. Der Rollenname steht nur noch im Dateinamen.
+- A5 quer: höchstens 3 Streifen mit je 6 Bildern pro Seite, der Reihe nach gefüllt. 37 Bilder ergeben 3 Seiten (18, 18, 1), 36 Bilder 2 Seiten. Jedes Bild steht damit auf jeder Seite an derselben Stelle.
+- Ein angefangener letzter Streifen ist kürzer, wie ein abgeschnittenes Reststück.
+- Randschrift: statt Courier eine schmale fette Grotesk (Barlow Condensed Bold, OFL, lokal in `vendor/fonts/`). Unten am Rand stehen Bildnummer und Halbbildnummer mit Pfeil, also „12 ▸12A“.

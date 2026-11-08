@@ -1,5 +1,5 @@
-/* Contact Sheet als PDF (Entwurf A, dunkel): Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
-   A4 hoch: alle Bilder auf einer Seite. A5 quer: dieselben Streifen auf mehrere Seiten verteilt.
+/* Contact Sheet als PDF, hell oder dunkel: Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
+   A4 hoch: alle Bilder auf einer Seite. A5 quer: höchstens 3 Streifen zu je 6 Bildern pro Seite.
    Jede Seite wird in hoher Auflösung auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT). */
 const SHEET_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.6"/><path d="M7 7h4v3H7zM13 7h4v3h-4zM7 12.5h4v3H7zM13 12.5h4v3h-4z"/></svg>';
 let JSPDF_P = null;
@@ -24,34 +24,51 @@ async function sheetImages(frames) {
   return out;
 }
 
+// Randschrift: schmale fette Grotesk wie die Kodak-Randbelichtung (Barlow Condensed, OFL)
+let EDGE_P = null;
+function loadEdgeFont() {
+  if (EDGE_P) return EDGE_P;
+  EDGE_P = (async () => {
+    try { const f = new FontFace('LLEdge', 'url(vendor/fonts/barlow-condensed-latin-700-normal.woff2)', { weight: '700' }); await f.load(); document.fonts.add(f); return true; }
+    catch (_) { EDGE_P = null; return false; }
+  })();
+  return EDGE_P;
+}
+const SHEET_THEME = {
+  dark: { paper: '#0d0d0f', text: '#d9d5cc', dim: '#8f8a80', line: '#3a3833' },
+  light: { paper: '#f7f5f0', text: '#1b1b1b', dim: '#6b675f', line: '#c9c4b8' }
+};
+// Maße einer Seite: schmaler Rand, eine kleine Kopfzeile, Streifen über die volle Breite
+function sheetLayout(P, square, per) {
+  const m = 16, pad = 5, gap = square ? 6 : 4, edge = 12;
+  const fw = (P.w - 2 * m - 2 * pad - (per - 1) * gap) / per, fh = square ? fw : fw * 2 / 3;
+  return { m, pad, gap, edge, fw, fh, sh: fh + 2 * edge, topY: m + 15 };
+}
+
 // Ein Blatt zeichnen. s = Skalierung Punkt → Pixel
 function drawSheetPage(ctx, P, s, info, strips, page) {
-  const W = P.w, H = P.h, m = 22;
-  ctx.fillStyle = '#0d0d0f'; ctx.fillRect(0, 0, W * s, H * s);
-  const sans = '-apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', mono = '"Courier New", Courier, monospace';
-  const T = (txt, x, y, size, color, font = sans, weight = '400', align = 'left') => { ctx.font = `${weight} ${size * s}px ${font}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic'; ctx.fillText(txt, x * s, y * s); };
-  // Kopf
-  const big = P.h > P.w ? 19 : 15;
-  T(info.title, m, m + big, big, '#f1eee8', '"Unbounded", ' + sans, '600');
-  T(info.sub, m, m + big + 13, 7.5, '#a8a39a');
-  T(info.count, W - m, m + big - 6, 7.5, '#a8a39a', mono, '400', 'right');
-  T('lightleak', W - m, m + big + 6, 7.5, '#e9a24a', mono, '700', 'right');
-  if (info.pages > 1) T(`Seite ${page + 1} von ${info.pages}`, W - m, m + big + 13 + 1, 6.5, '#a8a39a', mono, '400', 'right');
-  const topY = m + big + 24;
-  ctx.fillStyle = '#3a3833'; ctx.fillRect(m * s, (topY - 6) * s, (W - 2 * m) * s, 0.6 * s);
-  // Streifen
-  const per = info.per, gap = info.square ? 6 : 4, edge = 12, pad = 6;
-  const fw = (W - 2 * m - 2 * pad - (per - 1) * gap) / per, fh = info.square ? fw : fw * 2 / 3;
-  const sh = fh + 2 * edge, sgap = info.sgap;
+  const W = P.w, H = P.h, th = SHEET_THEME[info.theme] || SHEET_THEME.dark;
+  const L = sheetLayout(P, info.square, info.per), m = L.m;
+  ctx.fillStyle = th.paper; ctx.fillRect(0, 0, W * s, H * s);
+  const sans = '-apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', edgeF = 'LLEdge, "Arial Narrow", ' + sans;
+  const T = (txt, x, y, size, color, font = sans, weight = '400', align = 'left', track = 0) => {
+    ctx.font = `${weight} ${size * s}px ${font}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic';
+    if ('letterSpacing' in ctx) ctx.letterSpacing = track ? `${track * s}px` : '0px';
+    ctx.fillText(txt, x * s, y * s);
+  };
+  // Kopfzeile: eine kleine Zeile, kein großer Titel
+  T(info.sub, m, m + 6.5, 6.5, th.text);
+  T(info.pages > 1 ? `${info.count} · ${page + 1}/${info.pages}` : info.count, W - m, m + 6.5, 6.5, th.dim, sans, '400', 'right');
+  ctx.fillStyle = th.line; ctx.fillRect(m * s, (m + 10) * s, (W - 2 * m) * s, 0.5 * s);
+  const { pad, gap, edge, fw, fh, sh } = L, sgap = info.sgap, amber = '#e9a24a';
+  const tri = (x, y, h) => { ctx.fillStyle = amber; ctx.beginPath(); ctx.moveTo(x * s, (y - h) * s); ctx.lineTo((x + h * 0.9) * s, (y - h / 2) * s); ctx.lineTo(x * s, y * s); ctx.closePath(); ctx.fill(); };
   strips.forEach((strip, k) => {
-    const y = topY + k * (sh + sgap);
-    ctx.fillStyle = '#040404'; ctx.fillRect(m * s, y * s, (W - 2 * m) * s, sh * s);
-    ctx.strokeStyle = '#26241f'; ctx.lineWidth = 0.6 * s; ctx.strokeRect(m * s, y * s, (W - 2 * m) * s, sh * s);
-    // Randbeschriftung oben: echter Filmname
-    const name = info.film.toUpperCase();
-    T(name, m + pad, y + edge - 3.6, 5.6, '#e9a24a', mono, '700');
-    T(name, W / 2, y + edge - 3.6, 5.6, '#e9a24a', mono, '700', 'center');
-    T(name, W - m - pad, y + edge - 3.6, 5.6, '#e9a24a', mono, '700', 'right');
+    const y = L.topY + k * (sh + sgap);
+    const sw = strip.length < info.per ? 2 * pad + strip.length * fw + (strip.length - 1) * gap + 6 : W - 2 * m;   // Reststück kürzer, wie abgeschnitten
+    ctx.fillStyle = '#060606'; ctx.fillRect(m * s, y * s, sw * s, sh * s);
+    // oberer Rand: Filmname in Abständen wiederholt
+    const name = info.film.toUpperCase(), ty = y + edge - 3.4;
+    for (let i = 0; i < strip.length; i += 2) T(name, m + pad + i * (fw + gap) + fw * 0.25, ty, 6.2, amber, edgeF, '700', 'left', 0.5);
     strip.forEach((it, i) => {
       const x = m + pad + i * (fw + gap), fy = y + edge;
       ctx.fillStyle = '#16140f'; ctx.fillRect(x * s, fy * s, fw * s, fh * s);
@@ -67,13 +84,18 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
         ctx.drawImage(it.src, -iw * sc / 2, -ih * sc / 2, iw * sc, ih * sc);
         ctx.restore();
       }
-      // Bildnummer unten am Rand
-      T(String(it.n), x + 1, y + edge + fh + 8.2, 6, '#e9a24a', mono, '700');
+      // unterer Rand: Bildnummer mittig, dazwischen Pfeil und Halbbildnummer wie „▸12A“
+      const by = y + edge + fh + 8.6, n = String(it.n);
+      T(n, x + fw / 2, by, 7, amber, edgeF, '700', 'center', 0.3);
+      if (/^\d+$/.test(n)) {
+        const ax = x + fw * 0.82;
+        tri(ax, by - 0.6, 4.4); T(n + 'A', ax + 5.4, by, 7, amber, edgeF, '700', 'left', 0.3);
+      }
     });
   });
 }
 
-async function makeContactSheet(rollId, paper) {
+async function makeContactSheet(rollId, paper, theme = 'dark') {
   await loadJsPdf();
   const d = await albumData(rollId);
   if (!d.frames.length) throw new Error('Keine Fotos im Album');
@@ -83,22 +105,19 @@ async function makeContactSheet(rollId, paper) {
   const imgs = await sheetImages(d.frames);
   const items = imgs.map(x => ({ ...x, n: frameLabel(x.f) }));
   const strips = []; for (let i = 0; i < items.length; i += per) strips.push(items.slice(i, i + per));
-  const P = SHEET_PAPER[paper];
-  // Wie viele Streifen passen auf eine Seite?
-  const m = 22, big = P.h > P.w ? 19 : 15, topY = m + big + 24, gap = square ? 6 : 4, pad = 6;
-  const fw = (P.w - 2 * m - 2 * pad - (per - 1) * gap) / per, sh = (square ? fw : fw * 2 / 3) + 24;
-  const avail = P.h - topY - 10;
-  let perPage = Math.max(1, Math.floor((avail + 6) / (sh + 6)));
+  const P = SHEET_PAPER[paper], L = sheetLayout(P, square, per);
+  const avail = P.h - L.topY - L.m;
+  // A4: alles auf eine Seite. A5: höchstens 3 Streifen je Seite, der Reihe nach gefüllt (36 Bilder auf 2, 37 auf 3 Seiten)
+  const fit = Math.max(1, Math.floor((avail + 8) / (L.sh + 8)));
+  const perPage = paper === 'a5' ? Math.min(3, fit) : fit;
   const pages = Math.ceil(strips.length / perPage);
-  // gleichmäßig verteilen: z. B. 7 Streifen auf 3 Seiten als 3, 2, 2
-  const base = Math.floor(strips.length / pages), extra = strips.length % pages;
-  const slices = []; let at = 0; for (let p = 0; p < pages; p++) { const n = base + (p < extra ? 1 : 0); slices.push(strips.slice(at, at + n)); at += n; }
-  perPage = Math.max(...slices.map(x => x.length));
-  const sgap = Math.min(26, Math.max(4, (avail - perPage * sh) / Math.max(1, perPage - 1)));
+  const slices = []; for (let p = 0; p < pages; p++) slices.push(strips.slice(p * perPage, (p + 1) * perPage));
+  const rows = Math.min(perPage, strips.length);
+  const sgap = Math.min(paper === 'a5' ? 14 : 18, Math.max(6, (avail - rows * L.sh) / Math.max(1, rows - 1)));
   const dates = d.frames.map(f => f.date).filter(Boolean).sort();
   const range = (r?.loadedAt || dates[0]) ? [U.fmtDate(String(r?.loadedAt || dates[0]).slice(0, 10)), U.fmtDate(String(r?.finishedAt || dates[dates.length - 1] || '').slice(0, 10))].filter(Boolean).join('–') : '';
   const info = {
-    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), square, per, sgap, pages,
+    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), square, per, sgap, pages, theme,
     sub: [U.stockLabel(st), r?.ei ? 'EI ' + r.ei : '', camLabel(cam) || r?.camera || '', range].filter(Boolean).join(' · '),
     count: `${d.frames.length} Bilder`
   };
@@ -107,7 +126,7 @@ async function makeContactSheet(rollId, paper) {
   const s = 300 / 72;   // 300 dpi
   const c = document.createElement('canvas'); c.width = Math.round(P.w * s); c.height = Math.round(P.h * s);
   const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
-  try { await document.fonts.load(`600 ${19 * s}px Unbounded`); } catch (_) {}
+  await loadEdgeFont();
   for (let p = 0; p < pages; p++) {
     drawSheetPage(ctx, P, s, info, slices[p], p);
     if (p) doc.addPage(paper === 'a4' ? 'a4' : [P.w, P.h], paper === 'a4' ? 'portrait' : 'landscape');
@@ -124,17 +143,21 @@ function openContactSheet(rollId) {
   ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Contact Sheet als PDF">
     <div class="csopts">
       <button type="button" class="csopt" data-p="a4"><span class="cspage a4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>A4 hoch</b><span class="sub2">alle Bilder auf einer Seite</span></button>
-      <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b><span class="sub2">auf mehrere Seiten verteilt</span></button>
+      <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b><span class="sub2">3 Streifen je Seite</span></button>
     </div>
+    <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
     <p class="sub2 csstate" id="csState"></p>
     <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><span></span></div></div>`;
   document.body.appendChild(ov);
   ov.querySelector('#csNo').onclick = () => ov.remove();
+  let theme = 'dark'; try { theme = localStorage.getItem('kb-cs-theme') || 'dark'; } catch (_) {}
+  const setTheme = t => { theme = t; ov.querySelector('.csopts').dataset.t = t; ov.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === t)); try { localStorage.setItem('kb-cs-theme', t); } catch (_) {} };
+  ov.querySelectorAll('[data-t]').forEach(x => x.onclick = () => setTheme(x.dataset.t)); setTheme(theme);
   ov.querySelectorAll('[data-p]').forEach(b => b.onclick = async () => {
     ov.querySelectorAll('[data-p]').forEach(x => x.disabled = true);
     const stEl = ov.querySelector('#csState'); stEl.textContent = 'PDF wird erstellt …';
     try {
-      const { blob, name, pages } = await makeContactSheet(rollId, b.dataset.p);
+      const { blob, name, pages } = await makeContactSheet(rollId, b.dataset.p, theme);
       const file = new File([blob], name, { type: 'application/pdf' });
       ov.remove();
       FEEL && FEEL.burst && FEEL.burst(b);

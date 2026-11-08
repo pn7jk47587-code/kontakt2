@@ -2377,3 +2377,8 @@ html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albti
 .cspage.a5 { width: 74px; height: 52px; }
 .cspage i { display: block; height: 6px; border-radius: 1px; background: repeating-linear-gradient(90deg, #8a7a62 0 6px, #040404 6px 7px); }
 .csstate { min-height: 1.2em; margin: 10px 2px 0; text-align: center; }
+
+/* v169 Contact Sheet hell oder dunkel */
+.csopts[data-t="light"] .cspage { background: #f7f5f0; }
+.cspage i { background: repeating-linear-gradient(90deg, #8a7a62 0 6px, #060606 6px 7px); }
+.cstheme { margin-top: 12px; }
