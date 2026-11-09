@@ -666,3 +666,8 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v201 Farbige Pfeile
 
 - Die Pfeile sind nicht mehr weiß. Auf den Karten im Profil tragen sie die Farbe des Symbols ihrer Karte (Alle Fotos bernstein, Filmkühlschrank orange, Kameraschrank rot, Analytics violett, Abzeichen gold, Ideen und Filmtagebuch pink). In Listen wie dem Kameraschrank haben sie das gedämpfte Lila der Nebentexte, voll deckend.
+
+## v202 Pfeile an den Alben auf der Startseite
+
+- Der Knopf zum Auf- und Zuklappen eines Albums war ein weißer Kreis mit grauem Pfeil und stach auf dem dunklen Filmstreifen heraus. Er ist jetzt dunkel und halb durchsichtig, mit feinem violettem Rand und violettem Pfeil in der Farbe des Fotoalbums.
+- Die Pfeile neben den Abschnittsüberschriften (In der Kamera, In Entwicklung, Fotoalbum) tragen die Farbe ihres Abschnitts.
