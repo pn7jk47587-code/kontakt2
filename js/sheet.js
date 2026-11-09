@@ -333,16 +333,18 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
   // kleine Vorschaubilder der Seiten für die Ansicht vor dem Teilen
   const pv = document.createElement('canvas'); pv.width = 1100; pv.height = Math.round(1100 * P.h / P.w);
   const pctx = pv.getContext('2d'); pctx.imageSmoothingQuality = 'high';
-  const previews = [];
+  const previews = [], pngs = [];
   for (let p = 0; p < pages; p++) {
     drawSheetPage(ctx, P, s, info, slices[p], p);
     pctx.drawImage(c, 0, 0, pv.width, pv.height); previews.push(pv.toDataURL('image/jpeg', 0.82));
+    // v217: jede Seite zusätzlich als PNG in 300 dpi, schon jetzt erzeugt, damit das Teilen sofort startet
+    pngs.push(await new Promise(r => c.toBlob(r, 'image/png')));
     if (p) doc.addPage(paper === 'a4' ? 'a4' : [P.w, P.h], paper === 'a4' ? 'portrait' : 'landscape');
     doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, P.w, P.h, undefined, 'FAST');
   }
   imgs.forEach(x => x.src && x.src.close && x.src.close());
   const name = `Contact Sheet ${(info.title || 'Rolle').replace(/[\\/:*?"<>|]+/g, ' ').trim()} ${paper.toUpperCase()}.pdf`;
-  return { blob: doc.output('blob'), name, pages, previews, ratio: P.w / P.h };
+  return { blob: doc.output('blob'), name, pages, previews, pngs, ratio: P.w / P.h };
 }
 
 // Auswahl: Format, Hell/Dunkel und Bilder je Reihe antippen, erst der Haken erstellt das Sheet.
@@ -402,23 +404,33 @@ const SHARE_IC = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="t
 // Vorschau aller Seiten. X führt zurück zur Auswahl, der Teilen-Knopf öffnet Teilen bzw. Sichern.
 // Das Teilen startet erst auf diesen Tipp hin, so bleibt die Nutzergeste für navigator.share frisch.
 function openSheetPreview(res, onDone) {
-  const { blob, name, pages, previews, ratio } = res;
+  const { blob, name, pages, previews, pngs, ratio } = res;
+  let fmt = 'pdf';
+  try { if (localStorage.getItem('kb-cs-fmt') === 'png') fmt = 'png'; } catch (_) {}
   const ov = document.createElement('div'); ov.className = 'cspv';
   ov.innerHTML = `<div class="cspvpages">${previews.map((u, i) => `<img src="${u}" alt="Seite ${i + 1} von ${pages}" style="aspect-ratio:${ratio}">`).join('')}</div>
     <div class="cspvfoot"><button class="closex" id="pvBack" aria-label="Zurück">${ART.x}</button>
-    <span class="sub2">${pages} ${pages === 1 ? 'Seite' : 'Seiten'}</span>
+    <div class="seggroup cspvfmt" role="group" aria-label="Dateiformat"><button type="button" class="seg" data-x="pdf">PDF</button><button type="button" class="seg" data-x="png">PNG</button></div>
     <button class="cspvshare" id="pvShare" aria-label="Teilen oder sichern">${SHARE_IC}</button></div>`;
   document.body.appendChild(ov);
+  const paint = () => ov.querySelectorAll('[data-x]').forEach(x => x.classList.toggle('on', x.dataset.x === fmt));
+  ov.querySelectorAll('[data-x]').forEach(x => x.onclick = () => { fmt = x.dataset.x; try { localStorage.setItem('kb-cs-fmt', fmt); } catch (_) {} paint(); });
+  paint();
   ov.querySelector('#pvBack').onclick = () => ov.remove();
   ov.querySelector('#pvShare').onclick = async e => {
     const btn = e.currentTarget; FEEL && FEEL.burst && FEEL.burst(btn);
-    const file = new File([blob], name, { type: 'application/pdf' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: name }); ov.remove(); onDone && onDone(); return; }
+    const base = name.replace(/\.pdf$/, '');
+    const files = fmt === 'png' && pngs && pngs.every(Boolean)
+      ? pngs.map((b, i) => new File([b], pages > 1 ? `${base} ${i + 1}.png` : base + '.png', { type: 'image/png' }))
+      : [new File([blob], name, { type: 'application/pdf' })];
+    if (navigator.canShare && navigator.canShare({ files })) {
+      try { await navigator.share({ files, title: base }); ov.remove(); onDone && onDone(); return; }
       catch (err) { if (err && err.name === 'AbortError') return; }
     }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    files.forEach((f, i) => setTimeout(() => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+    }, i * 400));
     ov.remove(); onDone && onDone();
   };
 }

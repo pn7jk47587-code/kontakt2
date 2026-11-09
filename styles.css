@@ -2317,6 +2317,8 @@ html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albti
 .cspvpages img { width: 100%; max-width: 720px; height: auto; display: block; border-radius: 2px; box-shadow: 0 0 0 1px var(--line), 0 8px 24px rgba(0,0,0,.28); }
 .cspvfoot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px max(18px, env(safe-area-inset-right, 0px)) calc(14px + var(--safe-b)) max(18px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); background: var(--card); }
 .cspvshare { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; color: var(--teal); background: var(--glasson); border: 1px solid var(--glassline); box-shadow: var(--glow), 0 10px 30px rgba(0,0,0,.3); }
+.cspvfoot .cspvfmt { margin: 0; flex: 0 1 180px; }
+.cspvfoot .cspvfmt .seg { flex: 1; }
 .cspvshare:active { transform: scale(.94); }
 .csopt.on { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal), var(--glow); }
 .csgo:disabled { opacity: .35; box-shadow: none; cursor: default; }

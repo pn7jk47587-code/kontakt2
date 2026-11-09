@@ -740,3 +740,7 @@ Für 12 Bilder 6×6 ist „3 je Reihe“ die bessere Wahl:
 ## v216: „Unbekannter Film“ nicht mehr in der Filmliste
 
 Der Eintrag „Unbekannter Film · ISO ?“ entsteht, wenn du alte Rollen ohne Filmangabe nachträgst. Er erscheint nicht mehr in „Alle Filme“, im Filmkühlschrank, beim Film einlegen und im Belichtungsrechner. Die nachgetragenen Rollen behalten ihn.
+
+## v217: Contact Sheet auch als PNG
+
+In der Vorschau des Contact Sheets wählst du unten zwischen PDF und PNG. Danach tippst du auf Teilen. PNG liefert jede Seite als eigenes Bild in 300 dpi, auf dem iPhone mit „Bild sichern“ direkt in die Fotos. Die letzte Wahl merkt sich die App.
