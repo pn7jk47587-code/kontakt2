@@ -680,3 +680,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## Version 204: Namen unter den Abzeichen
 
 Unter jedem Abzeichensymbol im Profil steht jetzt sein Name. Verdiente Abzeichen zeigen den Namen hell, noch offene grau. Die Namen folgen der gewählten Anrede (zum Beispiel Milliardärin).
+
+## Version 205: Spruch zum Geld zurück
+
+In Analytics steht in der Karte „Geld“ wieder der Satz „Du hast diesen Monat schon … für Film ausgegeben. Insgesamt hast du schon … in das bodenlose Loch geworfen.“ Darunter folgen wie bisher die beiden Kästen für Monat und Gesamt.

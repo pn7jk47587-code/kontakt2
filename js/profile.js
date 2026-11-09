@@ -803,6 +803,7 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
+      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear || spend.own ? ' und Ausrüstung' : ''} ausgegeben. Insgesamt hast du schon <b>${euro(spend.total)}</b> in das bodenlose Loch geworfen.</p>
       <div class="spendsplit spendmain">
         <div><span class="sub2">Diesen Monat</span><b>${euro(spend.month)}</b><span class="sub2">${I18N.t(MONTHS[new Date().getMonth()])}</span></div>
         <div><span class="sub2">Gesamt</span><b>${euro(spend.total)}</b><span class="sub2">im bodenlosen Loch</span></div>
