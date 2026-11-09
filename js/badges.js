@@ -1,6 +1,6 @@
 /* Abzeichen (v191): aus den gespeicherten Daten berechnet, verdiente Stufen mit Datum in meta 'badges'.
    Im Profil: Anstecker am Profilbild (selbst gewählt) und eine Kachel mit allen verdienten Abzeichen.
-   Noch nicht verdiente erscheinen an ihrem Platz mit grauem Symbol, ihre Regeln zeigt die App nicht. */
+   Noch nicht verdiente erscheinen an ihrem Platz mit grauem Symbol. Antippen zeigt Voraussetzungen und Fortschritt (v212). */
 const BADGES = (() => {
   // cls: Farbe der Kategorie. lv: Schwellen der Stufen 1 bis 3 (ein Wert: nur eine Stufe). txt: wofür, mit {n} für den Schwellenwert
   const DEF = [
@@ -103,9 +103,11 @@ const BADGES = (() => {
     v.zebra = sts.length >= 10 && bw / sts.length >= 0.8 ? 1 : 0;
     const makers = sts.map(st => String(st.maker || ''));
     v.biene = BIG_MAKERS.every(re => makers.some(m => re.test(m))) ? 1 : 0;
+    v.__part = { biene: [BIG_MAKERS.filter(re => makers.some(m => re.test(m))).length, BIG_MAKERS.length] };
     v.chamaeleon = new Set(used.map(r => r.stockId).filter(id => id && id !== 'film-unbekannt')).size;
     const fmts = new Set(used.map(r => r.format));
     v.matroschka = ['half', '135', '120', 'gross'].every(f => fmts.has(f)) ? 1 : 0;
+    v.__part.matroschka = [['half', '135', '120', 'gross'].filter(f => fmts.has(f)).length, 4];
     v.alchemist = rolls.filter(r => r.dev?.mode === 'selbst' && (r.status || 'entwurf') !== 'entwurf').length;
     v.doppel = frames.filter(f => f.double).length;
     // Tempo
@@ -174,24 +176,40 @@ const BADGES = (() => {
     // Jedes Abzeichen hat seinen festen Platz; verdiente in Farbe, die übrigen grau
     const cells = DEF.map(d => st.earned[d.id]
       ? `<button type="button" class="bcell" data-badge="${d.id}" aria-label="${U.esc(d.name)}">${med(d)}${dots(d, st.earned[d.id].lv)}<span class="bname">${U.esc(d.name)}</span></button>`
-      : `<span class="bcell locked">${lockMed(d)}<span class="bname">${U.esc(d.name)}</span></span>`).join('');
+      : `<button type="button" class="bcell locked" data-badge="${d.id}" aria-label="${U.esc(d.name)}, noch offen">${lockMed(d)}<span class="bname">${U.esc(d.name)}</span></button>`).join('');
     return `<section class="badgefold fold${foldOpen('badges') ? ' open' : ''}" data-fold="badges">
       <div class="fridgetop foldhead"><span class="fridgeicon">${svg('pokal')}</span><div><h2>Abzeichen</h2><span class="sub2">${got.length ? `${got.length} verdient` : 'noch keins verdient'}</span></div><span class="foldchev" aria-hidden="true"></span></div>
       <div class="foldbody"><div class="bgrid">${cells}</div></div></section>`;
   }
+  // v212: Antippen zeigt die Voraussetzungen jeder Stufe und wie weit man ist, auch bei noch offenen Abzeichen
+  const BINARY = ['kueken', 'gas', 'milliardaer', 'zebra', 'biene', 'matroschka', 'maulwurf'];
+  function reqHtml(d, e, v) {
+    const cur = v[d.id] || 0, have = e?.lv || 0, part = v.__part?.[d.id];
+    return `<ul class="breq">${d.lv.map((t, i) => {
+      const lv = i + 1, done = lv <= have || cur >= t, next = !done && lv === have + 1;
+      let prog = '';
+      if (next) {
+        const [n, of] = part || (BINARY.includes(d.id) ? [0, 0] : [Math.min(Math.floor(cur), t), t]);
+        prog = of ? `<span class="bprog"><i style="width:${Math.round(100 * n / of)}%"></i></span><span class="bnum">${nfmt(n)} von ${nfmt(of)}</span>` : '<span class="bnum">noch nicht erfüllt</span>';
+      }
+      return `<li class="${done ? 'done' : next ? 'next' : ''}">${d.lv.length > 1 ? `<b>Stufe ${lv}</b>` : ''}<span>${U.esc(text(d, lv))}</span>${done ? '<span class="bok" aria-label="erfüllt">✓</span>' : ''}${prog}</li>`;
+    }).join('')}</ul>`;
+  }
   async function open(id) {
-    const st = await state(), d = DEF.find(x => x.id === id), e = st.earned[id]; if (!d || !e) return;
+    const [st, v] = await Promise.all([state(), values()]), d = DEF.find(x => x.id === id), e = st.earned[id]; if (!d) return;
     const ov = document.createElement('div'); ov.className = 'modalbg';
     const pinned = st.pin === id;
     ov.innerHTML = `<div class="modal badgemodal" role="dialog" aria-modal="true" aria-label="${U.esc(d.name)}">
-      <div class="bbig">${med(d, ' lg')}${dots(d, e.lv)}</div>
+      <div class="bbig">${e ? med(d, ' lg') : lockMed(d, ' lg')}${e ? dots(d, e.lv) : ''}</div>
       <h2>${U.esc(d.name)}</h2>
-      <p class="sub2">${d.lv.length > 1 ? `Stufe ${e.lv} · ` : ''}verdient am ${U.fmtDate(e.at)}</p>
-      <p>${U.esc(text(d, e.lv))}</p>
-      <div class="modalfoot"><button class="closex" id="bNo" aria-label="Schließen">${ART.x}</button><button type="button" class="btn small" id="bPin">${pinned ? 'Anstecker abnehmen' : 'Als Anstecker tragen'}</button></div></div>`;
+      ${e ? `<p class="sub2">${d.lv.length > 1 ? `Stufe ${e.lv} · ` : ''}verdient am ${U.fmtDate(e.at)}</p>` : ''}
+      ${reqHtml(d, e, v)}
+      <div class="modalfoot"><button class="closex" id="bNo" aria-label="Schließen">${ART.x}</button>${e ? `<button type="button" class="btn small" id="bPin">${pinned ? 'Anstecker abnehmen' : 'Als Anstecker tragen'}</button>` : ''}</div></div>`;
     document.body.appendChild(ov);
     ov.querySelector('#bNo').onclick = () => ov.remove();
-    ov.querySelector('#bPin').onclick = async () => { st.pin = pinned ? null : id; await DB.put('meta', st); ov.remove(); U.toast(pinned ? 'Anstecker abgenommen' : `${d.name} am Profil`); U.haptic && U.haptic([12, 40, 12]); route(); };
+    ov.addEventListener('click', ev => { if (ev.target === ov) ov.remove(); });
+    const pb = ov.querySelector('#bPin');
+    if (pb) pb.onclick = async () => { st.pin = pinned ? null : id; await DB.put('meta', st); ov.remove(); U.toast(pinned ? 'Anstecker abgenommen' : `${d.name} am Profil`); U.haptic && U.haptic([12, 40, 12]); route(); };
   }
   document.addEventListener('click', e => { const b = e.target.closest('[data-badge]'); if (b) { e.preventDefault(); open(b.dataset.badge); } });
 

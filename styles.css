@@ -2602,3 +2602,17 @@ figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; wi
 .bcell .bname { font-size: 10.5px; line-height: 1.25; letter-spacing: -.01em; text-align: center; color: var(--text); width: 100%; hyphens: auto; -webkit-hyphens: auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bcell.locked .bname { color: var(--muted); opacity: .8; }
 
+
+/* v212: Voraussetzungen und Fortschritt im Abzeichen-Fenster */
+.badgemodal .breq { list-style: none; margin: 12px 0 4px; padding: 0; text-align: left; display: grid; gap: 8px; }
+.badgemodal .breq li { display: grid; grid-template-columns: auto 1fr auto; column-gap: 10px; row-gap: 6px; align-items: center; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--line) 45%, transparent); color: var(--muted); font-size: 14px; }
+.badgemodal .breq li > span:first-of-type { grid-column: 2; }
+.badgemodal .breq li:not(:has(b)) > span:first-of-type { grid-column: 1 / 3; }
+.badgemodal .breq b { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.badgemodal .breq li.done { color: var(--text); }
+.badgemodal .breq li.next { color: var(--text); background: color-mix(in srgb, #ffc56b 12%, transparent); }
+.badgemodal .bok { grid-column: 3; color: #ffc56b; font-weight: 700; }
+.badgemodal .bprog { grid-column: 1 / 3; height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--line) 160%, transparent); overflow: hidden; }
+.badgemodal .bprog i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, #ff9a5a, #ffc56b); box-shadow: 0 0 8px rgba(255,190,80,.6); }
+.badgemodal .bnum { grid-column: 3; font-size: 12px; white-space: nowrap; color: var(--muted); }
+.badgemodal .breq li.next:not(:has(.bprog)) .bnum { grid-column: 1 / -1; }

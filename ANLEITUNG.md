@@ -711,3 +711,7 @@ Beim Contact Sheet heißt die Auswahl jetzt „Markieren“ oder „Ohne“. Mit
 ## Version 211: Kreis entfernt
 
 Die Markierungen auf dem Contact Sheet mischen jetzt nur noch Kasten, fein und wild. Der Kreis kommt nicht mehr vor.
+
+## Version 212: Voraussetzungen der Abzeichen
+
+Jedes Abzeichen im Profil lässt sich antippen, auch die noch grauen. Das Fenster zeigt die Voraussetzung jeder Stufe. Erfüllte Stufen tragen einen Haken. Bei der nächsten offenen Stufe steht ein Balken mit dem Stand, zum Beispiel „9 von 50“. Bei Biene und Matroschka zählt der Balken Hersteller beziehungsweise Formate. Bei Abzeichen, die nur ganz oder gar nicht erfüllt sein können (etwa Zebra oder Maulwurf), steht „noch nicht erfüllt“. Den Anstecker gibt es weiter nur für verdiente Abzeichen.
