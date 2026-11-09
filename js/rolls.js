@@ -1864,7 +1864,6 @@ async function viewAlbum(id) {
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
     <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
-    ${d.roll ? `<div class="modewrap"><button class="btn ghost small" id="albFilters">${SEARCH_IC}Filter für alle Bilder eintragen</button></div>` : ''}
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
   view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
   wireAdd();
@@ -1888,17 +1887,6 @@ async function viewAlbum(id) {
     window.addEventListener('hashchange', () => { bar.remove(); ALBUM_PICK = false; }, { once: true });
     grid.addEventListener('click', e => { const a = e.target.closest('[data-fid]'); if (!a) return; e.preventDefault(); const k = a.dataset.fid; ALBUM_PICKED.has(k) ? ALBUM_PICKED.delete(k) : ALBUM_PICKED.add(k); a.classList.toggle('picked', ALBUM_PICKED.has(k)); U.haptic && U.haptic(8); drawBar(); });
   }
-  // Filter nachträglich für die ganze Rolle: wird bei allen Bildern ergänzt, schon eingetragene Filter bleiben
-  view.querySelector('#albFilters')?.addEventListener('click', async () => {
-    const all = await getFilters();
-    openFrameFilterSearch(all, [], d.roll, async ids => {
-      if (!ids.length) return;
-      const frs = await framesOf(d.roll.id); let n = 0;
-      for (const fr of frs) { const had = fr.filterIds || []; const next = [...new Set([...had, ...ids])]; if (next.length !== had.length) { fr.filterIds = next; await DB.put('frames', fr); n++; } }
-      d.roll.lastFilterIds = [...ids]; await DB.put('rolls', d.roll);
-      U.toast(n ? `Filter bei ${n} ${n === 1 ? 'Bild' : 'Bildern'} eingetragen` : 'War schon überall eingetragen'); U.haptic && U.haptic([12, 40, 12]);
-    });
-  });
   // Reihenfolge der Fotos per Ziehen ändern (wie in „Alle Fotos“)
   view.querySelector('#albSort')?.addEventListener('click', async () => {
     ALBUM_SORT = !ALBUM_SORT; U.haptic && U.haptic(10);

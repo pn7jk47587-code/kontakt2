@@ -719,3 +719,7 @@ Jedes Abzeichen im Profil lässt sich antippen, auch die noch grauen. Das Fenste
 ## v213: Selbst entwickelt, nur „Scans hochladen“
 
 Bei einem Film, den du selbst entwickelst, heißt der Knopf unter den Bildern jetzt „Scans hochladen“. Das gilt auch für den Knopf auf der Filmkarte in der Übersicht. Bei Filmen im Labor bleibt es bei „Abgeholt: Fotos hochladen“.
+
+## v214: Album ohne Sammel-Filterknopf
+
+Unter dem Fotoraster der Albenansicht gibt es den Knopf „Filter für alle Bilder eintragen“ nicht mehr. Filter trägst du beim einzelnen Bild ein.
