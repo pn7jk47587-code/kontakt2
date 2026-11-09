@@ -137,6 +137,9 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
       // v207: Mittelformat etwas weiter außen umkreisen, Strichstärke wächst mit der Bildgröße
       const grow = info.square ? 1.1 : 1, kk = Math.min(2, Math.max(1, fw / 85)), seed = (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i;
       if (info.favMark === 'box') { drawFavBox(ctx, s, x - gap * 0.35, y + edge - gap * 0.35, fw + gap * 0.7, fh + gap * 0.7, seed, kk); return; }
+      if (info.favMark === 'fine') { drawFavFine(ctx, s, x - gap * 0.3, y + edge - gap * 0.3, fw + gap * 0.6, fh + gap * 0.6, seed, kk); return; }
+      if (info.favMark === 'wild') { drawFavWild(ctx, s, x, y + edge, fw, fh, seed, kk, gap, edge); return; }
+      if (info.favMark === 'chalk') { drawFavChalk(ctx, s, cx, cy, fw / 2 + gap * 2.2 * grow, fh / 2 + edge * 1.25, seed, kk); return; }
       drawFavMark(ctx, s, cx, cy, (fw / 2 + gap * 0.9) * grow, (fh / 2 + edge * 0.55) * grow, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme, Math.min(2, Math.max(1, fw / 85)));
     });
   });
@@ -212,6 +215,75 @@ function drawFavBox(ctx, s, x, y, w, h, seed, k = 1) {
   ctx.restore();
 }
 
+// v209 Entwürfe nach Magnum-Kontaktbögen.
+// Strich aus Wachs oder Kreide entlang einer Punktfolge: deckender Grundstrich, darüber unregelmäßige Längsstreifen
+function waxLine(ctx, s, pts, W, R, base, streak, n = 8, k = 1) {
+  const path = (dx = 0, dy = 0) => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo((x + dx) * s, (y + dy) * s) : ctx.moveTo((x + dx) * s, (y + dy) * s)); };
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  path(); ctx.strokeStyle = base; ctx.lineWidth = W * s; ctx.stroke();
+  for (let i = 0; i < n; i++) {
+    const o = (R() - 0.5) * W * 0.8;
+    ctx.setLineDash([(5 + R() * 20) * k * s, (0.8 + R() * 4) * k * s, (3 + R() * 10) * k * s, (0.6 + R() * 3) * k * s]);
+    ctx.lineDashOffset = R() * 40 * k * s;
+    path(o * 0.7, o * 0.7); ctx.strokeStyle = streak(R); ctx.lineWidth = W * (0.12 + R() * 0.22) * s; ctx.stroke();
+  }
+  ctx.restore();
+}
+// gerundetes Rechteck als Punktfolge, mit Zittern, Start an zufälliger Stelle, etwas mehr als eine Runde
+function looseRect(cx, cy, rx, ry, R, turns = 1.1, wob = 0.05, sharp = 0.5) {
+  const pts = [], a0 = R() * Math.PI * 2, N = 120, p1 = R() * 6, p2 = R() * 6, tilt = (R() - 0.5) * 0.12;
+  for (let i = 0; i <= N * turns; i++) {
+    const t = a0 + i / N * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t), w = 1 + wob * Math.sin(t * 2 + p1) + wob * 0.6 * Math.sin(t * 5 + p2);
+    const x = Math.sign(c) * Math.pow(Math.abs(c), sharp) * rx * w, y = Math.sign(sn) * Math.pow(Math.abs(sn), sharp) * ry * w;
+    pts.push([cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
+  }
+  return pts;
+}
+const RED_STREAK = R => R() < 0.6 ? `rgba(255,${55 + R() * 40 | 0},${35 + R() * 25 | 0},${.55 + R() * .4})` : `rgba(${130 + R() * 50 | 0},40,32,${.4 + R() * .4})`;
+
+// „Fein“: dünner roter Stift wie bei René Burri, Che Guevara 1963. Kasten zweimal gezogen, oben ein schneller Zickzack
+function drawFavFine(ctx, s, x, y, w, h, seed, k = 1) {
+  const R = rnd(seed + 23), j = () => (R() - 0.5) * 1.4 * k;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(226,38,36,.95)';
+  for (let pass = 0; pass < 2; pass++) {
+    ctx.lineWidth = (pass ? 0.9 : 1.3) * k * s;
+    [[x, y, x + w, y], [x + w, y, x + w, y + h], [x + w, y + h, x, y + h], [x, y + h, x, y]].forEach(([x1, y1, x2, y2]) => {
+      const ox = Math.sign(x2 - x1) * (0.5 + R() * 2.5) * k, oy = Math.sign(y2 - y1) * (0.5 + R() * 2.5) * k;
+      ctx.beginPath(); ctx.moveTo((x1 - ox * 0.4 + j()) * s, (y1 - oy * 0.4 + j()) * s); ctx.lineTo((x2 + ox + j()) * s, (y2 + oy + j()) * s); ctx.stroke();
+    });
+  }
+  // Zickzack an der oberen Kante, wie nachgekritzelt
+  const zx = x + w * (0.45 + R() * 0.3), zw = w * 0.22, zh = h * 0.12;
+  ctx.lineWidth = 1.1 * k * s; ctx.beginPath(); ctx.moveTo(zx * s, (y + 1) * s);
+  for (let i = 1; i <= 4; i++) ctx.lineTo((zx + zw * i / 4) * s, (y + (i % 2 ? zh : 1 + R() * 2)) * s);
+  ctx.stroke(); ctx.restore();
+}
+
+// „Wild“: mehrere lose rote Runden übereinander, dazu ein langer Strich quer, wie Paris 1968
+function drawFavWild(ctx, s, x, y, w, h, seed, k = 1, gap = 4, edge = 12) {
+  const R = rnd(seed + 41), cx = x + w / 2, cy = y + h / 2, W = 4.6 * k;
+  const loops = 2 + Math.floor(R() * 2);
+  for (let i = 0; i < loops; i++) {
+    const sc = 1 + i * 0.07 + R() * 0.06;
+    waxLine(ctx, s, looseRect(cx + (R() - 0.5) * 3 * k, cy + (R() - 0.5) * 3 * k, (w / 2 + gap) * sc, (h / 2 + edge * 0.4) * sc, R, 1.02 + R() * 0.15, 0.04, 0.35), W * (i ? 0.7 : 1), R, 'rgba(214,52,40,.85)', RED_STREAK, 7, k);
+  }
+  // langer Strich von unten links nach oben rechts, über den Rand hinaus
+  const a = [x - w * (0.2 + R() * 0.15), y + h + edge * (0.6 + R() * 0.6)], b = [x + w * (0.55 + R() * 0.25), y - edge * (0.8 + R() * 0.8)];
+  const pts = []; for (let i = 0; i <= 20; i++) { const t = i / 20; pts.push([a[0] + (b[0] - a[0]) * t + Math.sin(t * 3 + R()) * 1.5 * k, a[1] + (b[1] - a[1]) * t]); }
+  waxLine(ctx, s, pts, W * 0.65, R, 'rgba(214,52,40,.8)', RED_STREAK, 4, k);
+}
+
+// „Kreide“: hellblaue, fast weiße Schlinge, weit um das Bild, mit Auslauf nach außen
+function drawFavChalk(ctx, s, cx, cy, rx, ry, seed, k = 1) {
+  const R = rnd(seed + 59), pts = [], a0 = Math.PI * (0.95 + R() * 0.2), tilt = (R() - 0.5) * 0.15;
+  const tail = 0.25 + R() * 0.15;
+  // Auslauf von außen herein, dann gut eine Runde
+  for (let i = 0; i <= 14; i++) { const t = a0 - (14 - i) * 0.035, g = 1 + (14 - i) * 0.05; pts.push([Math.cos(t) * rx * g, Math.sin(t) * ry * g - (14 - i) * tail * k]); }
+  for (let i = 1; i <= 130; i++) { const t = a0 + i / 120 * Math.PI * 2, w = 1 + 0.05 * Math.sin(t * 2 + 1) + 0.04 * Math.sin(t * 3); pts.push([Math.cos(t) * rx * w * (1 - i / 1300), Math.sin(t) * ry * w * (1 - i / 1300)]); }
+  const P = pts.map(([x, y]) => [cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
+  waxLine(ctx, s, P, 4.4 * k, R, 'rgba(196,216,228,.92)', R2 => R2() < 0.5 ? `rgba(245,250,252,${.5 + R2() * .4})` : `rgba(120,150,170,${.3 + R2() * .35})`, 9, k);
+}
+
 async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMark = '') {
   await loadJsPdf();
   const d = await albumData(rollId);
@@ -269,7 +341,7 @@ function openContactSheet(rollId) {
     </div>
     <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
-    <div class="seggroup cstheme csfav" role="group" aria-label="Favoriten" hidden><button type="button" class="seg" data-fm="wax"><span class="favdot" aria-hidden="true"></span>Kreis</button><button type="button" class="seg" data-fm="box">Kasten</button><button type="button" class="seg" data-fm="">Ohne</button></div>
+    <div class="seggroup cstheme csfav" role="group" aria-label="Favoriten" hidden><button type="button" class="seg" data-fm="wax"><span class="favdot" aria-hidden="true"></span>Kreis</button><button type="button" class="seg" data-fm="box">Kasten</button><button type="button" class="seg" data-fm="fine">Fein</button><button type="button" class="seg" data-fm="wild">Wild</button><button type="button" class="seg" data-fm="chalk">Kreide</button><button type="button" class="seg" data-fm="">Ohne</button></div>
     <p class="sub2 csstate" id="csState"></p>
     <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><button class="cspvshare csgo" id="csGo" aria-label="Contact Sheet erstellen" disabled>${ART.check}</button></div></div>`;
   document.body.appendChild(ov);

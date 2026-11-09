@@ -696,3 +696,10 @@ Auf dem Contact Sheet umkreist die App Favoriten (+5) jetzt immer mit einem dick
 ## Version 208: Entwurf Kasten für Favoriten
 
 Beim Contact Sheet gibt es für Favoriten (+5) jetzt drei Möglichkeiten: Kreis, Kasten und Ohne. Der Kasten ist ein Entwurf nach dem Vorbild alter Magnum-Kontaktbögen. Vier einzelne, leicht schiefe Fettstiftstriche liegen eng um das Bild und stehen an den Ecken über. Eine Seite ist ein zweites Mal kurz nachgezogen. Die Farbe ist ein Ziegelrot mit hellroten und braunroten Längsstreifen, wie Pastell auf glattem Papier.
+
+## Version 209: drei weitere Entwürfe für Favoriten
+
+Nach zwei Magnum-Kontaktbögen gibt es für Favoriten (+5) drei weitere Markierungen. Die Auswahl steht jetzt in zwei Reihen: Kreis, Kasten, Fein, Wild, Kreide, Ohne.
+- Fein: dünner roter Stift wie auf René Burris Bogen von 1963. Der Kasten ist zweimal gezogen, an der oberen Kante sitzt ein schneller Zickzack.
+- Wild: zwei bis drei lose rote Wachsrunden übereinander und ein langer Strich quer über das Bild bis über den Rand, wie auf dem Bogen vom Mai 1968.
+- Kreide: hellblaue, fast weiße Schlinge weit um das Bild, mit einem Auslauf, der von außen hereinkommt.
