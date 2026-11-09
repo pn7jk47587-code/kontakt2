@@ -599,3 +599,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 
 - Analytics › Geld zeigt oben nur zwei Kacheln: „Diesen Monat“ (mit Monatsname) und „Gesamt“ (im bodenlosen Loch). Der Satz ist entfallen.
 - Darunter klappt „Aufteilung“ die Kacheln Filme, Entwicklung, Scans, Ausrüstung, eigene Kategorien sowie „pro Bild“ und „pro gutem Bild“ auf. „Verlauf“ mit dem Plus bleibt darunter.
+
+## v190 Filme in der Kamera ohne Umrechnung
+
+- Analytics › Filme in der Kamera: die Umrechnung auf 36 Bilder und die Stunden zwischen erstem und letztem Foto sind entfernt. Es bleiben drei Kacheln in einfachen Tagen (Üblich, Schnellste, Langsamste), „Alle Rollen“ mit Bildern und Tagen je Rolle und die Prognose für die eingelegte Rolle.

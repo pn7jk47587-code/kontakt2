@@ -1115,15 +1115,16 @@ async function rollTimeFoldHtml() {
   if (!stats.length && !current.length) return anFold('rolltime', 'rolltimefold', ART.calIc, 'Filme in der Kamera', 'noch keine fertigen Rollen', '<p class="hint">Sobald eine Rolle entwickelt ist, steht hier, wie lange sie in der Kamera lag.</p>');
   let body = '';
   if (stats.length) {
-    const mDays = median(stats.map(s => s.days)), m36 = median(stats.map(s => s.per36));
-    const fast = stats.reduce((a, b) => b.per36 < a.per36 ? b : a), slow = stats.reduce((a, b) => b.per36 > a.per36 ? b : a);
-    const hrs = stats.filter(s => s.hours != null).map(s => s.hours / s.n * 36);
-    body += `<p class="spendtext">Ein Film liegt bei dir üblicherweise <b>${fmtNum(mDays, 0)} ${mDays === 1 ? 'Tag' : 'Tage'}</b> in der Kamera. Auf 36 Bilder umgerechnet brauchst du <b>${fmtNum(m36, 0)} Tage</b>${hrs.length ? `; zwischen erstem und letztem Foto mit Uhrzeit sind es <b>${fmtNum(median(hrs), 0)} Stunden</b> je 36 Bilder` : ''}. ${infoBtn('Je 36 Bilder: Tage in der Kamera geteilt durch die belichteten Bilder, mal 36. So lassen sich ein 12er-Mittelformat- und ein 36er-Kleinbildfilm vergleichen.')}</p>
-      <div class="spendsplit">
-        <div><span class="sub2">Am schnellsten</span><b>${fmtNum(fast.per36, 0)} Tage</b><span class="sub2">${U.esc(fast.name)}</span></div>
-        <div><span class="sub2">Am langsamsten</span><b>${fmtNum(slow.per36, 0)} Tage</b><span class="sub2">${U.esc(slow.name)}</span></div>
+    // Einfach in Tagen in der Kamera, ohne Umrechnung auf 36 Bilder
+    const mDays = median(stats.map(s => s.days));
+    const fast = stats.reduce((a, b) => b.days < a.days ? b : a), slow = stats.reduce((a, b) => b.days > a.days ? b : a);
+    const dd = n => `${fmtNum(n, 0)} ${n === 1 ? 'Tag' : 'Tage'}`;
+    body += `<div class="spendsplit three">
+        <div><span class="sub2">Üblich</span><b>${dd(mDays)}</b><span class="sub2">je Rolle</span></div>
+        <div><span class="sub2">Schnellste</span><b>${dd(fast.days)}</b><span class="sub2">${U.esc(fast.name)}</span></div>
+        <div><span class="sub2">Langsamste</span><b>${dd(slow.days)}</b><span class="sub2">${U.esc(slow.name)}</span></div>
       </div>
-      <details class="txhist"><summary>Alle Rollen</summary>${stats.sort((a, b) => a.per36 - b.per36).map(s => `<div class="txrow"><span>${U.esc(s.name)}<span class="sub2">${s.n} Bilder · ${s.days} ${s.days === 1 ? 'Tag' : 'Tage'}${s.hours != null ? ` · ${fmtNum(s.hours, 0)} h zwischen erstem und letztem Foto` : ''}</span></span><span>${fmtNum(s.per36, 0)} T / 36</span></div>`).join('')}</details>`;
+      <details class="txhist"><summary>Alle Rollen</summary>${stats.sort((a, b) => a.days - b.days).map(s => `<div class="txrow"><span>${U.esc(s.name)}<span class="sub2">${s.n} Bilder</span></span><span>${dd(s.days)}</span></div>`).join('')}</details>`;
   }
   // Rolle gerade in der Kamera: Tempo und voraussichtlich voll
   current.forEach(c => {
