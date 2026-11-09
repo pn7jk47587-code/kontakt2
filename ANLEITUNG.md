@@ -498,3 +498,10 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Analytics, Abschnitt „Geld“: Unter den Kacheln steht „+ Ausgabe“. Dort trägt man ein, wofür (z. B. Entwicklerkit C-41), Betrag, Datum und Kategorie ein. Zur Wahl stehen Chemie, Laborbedarf, Druck und Abzüge, Versand und Sonstiges. Über „andere“ lässt sich eine eigene Kategorie tippen. Der Haken bleibt grau, bis Betrag und Kategorie da sind.
 - Jede genutzte Kategorie bekommt eine eigene Kachel mit ihrer Summe. Die Ausgaben zählen im Monat und im Filmgeldberg mit und stehen im Verlauf mit Kategorie. Antippen im Verlauf öffnet sie zum Ändern oder Löschen.
 - Gespeichert in `meta` unter `expenses`. „Ausgaben zurücksetzen“ setzt auch sie auf 0.
+
+## v176 Einstellungen eines Frames übertragen
+
+- Rasteransicht einer Rolle (Reiter „Bilder“): Langes Drücken auf einen Frame öffnet „Frame n übertragen“. Normales Antippen öffnet den Frame wie bisher.
+- Oben stehen die Einstellungen dieses Frames: Blende, Zeit, Objektiv, Filter, Blitz, ISO und Ort. Bis auf den Ort sind alle vorausgewählt. Antippen wählt ab oder wieder an.
+- Darunter die anderen Frames der Rolle. Antippen wählt die Ziele, der Haken überträgt. Er bleibt grau, bis mindestens eine Einstellung und ein Frame gewählt sind.
+- Ohne eingetragene Einstellungen erscheint nur ein Hinweis.

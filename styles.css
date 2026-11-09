@@ -2423,3 +2423,10 @@ body { overflow-x: clip; }
 .expadd { display: block; margin: 10px 0 0 auto; }
 .txrow.txown { width: 100%; font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; text-align: left; cursor: pointer; }
 .txrow.txown em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 6px; }
+
+/* ---------- v176: Einstellungen eines Frames übertragen ---------- */
+.grid .cell { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.cpgrid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; max-height: 40vh; overflow-y: auto; margin-bottom: 4px; }
+.cpfr { height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); color: var(--muted); font: inherit; font-variant-numeric: tabular-nums; cursor: pointer; }
+.cpfr.used { color: var(--text); }
+.cpfr.on { background: var(--teal); border-color: var(--teal); color: var(--onaccent, #fff); }

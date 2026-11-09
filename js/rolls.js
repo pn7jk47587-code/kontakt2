@@ -716,6 +716,17 @@ async function rollFrames(body, roll, stock) {
     bar = document.createElement('div'); bar.className = 'pickbar'; document.body.appendChild(bar); drawBar();
     window.addEventListener('hashchange', endPick, { once: true });
   });
+  // Langes Drücken auf einen Frame: dessen Einstellungen auf andere Frames übertragen
+  let lp = null, lpFired = false;
+  grid.addEventListener('pointerdown', e => {
+    const c = e.target.closest('.cell'); if (!c || picked || grid.classList.contains('reorder')) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    lp = { t: setTimeout(() => { lp = null; lpFired = true; U.haptic && U.haptic(15); const f = fr[[...grid.querySelectorAll('.cell')].indexOf(c)]; if (f) openCopySettings(roll, f, fr); }, 520), x0, y0 };
+  });
+  const lpCancel = e => { if (!lp) return; if (e.type === 'pointermove' && Math.hypot(e.clientX - lp.x0, e.clientY - lp.y0) < 9) return; clearTimeout(lp.t); lp = null; };
+  ['pointermove', 'pointerup', 'pointercancel'].forEach(ev => grid.addEventListener(ev, lpCancel));
+  grid.addEventListener('contextmenu', e => { if (e.target.closest('.cell')) e.preventDefault(); });
+  grid.addEventListener('click', e => { if (lpFired) { lpFired = false; e.preventDefault(); e.stopPropagation(); } }, true);
   grid.addEventListener('click', e => {
     if (!picked) return;
     const c = e.target.closest('.cell'); if (!c) return; e.preventDefault(); e.stopPropagation();
@@ -736,6 +747,50 @@ async function rollFrames(body, roll, stock) {
     if (await queueLeakPick(roll)) { location.hash = '#/album/' + roll.id; return; }
     route();
   });
+}
+
+// Einstellungen eines Frames auf andere übertragen: Was übernommen wird, ist vorausgewählt und abwählbar; Ziel-Frames antippen, Haken
+async function openCopySettings(roll, src, fr) {
+  const lens = src.lensId ? await DB.get('lenses', src.lensId) : null;
+  const filters = src.filterIds?.length ? (await getFilters()).filter(f => src.filterIds.includes(f.id)) : [];
+  const fields = [
+    ['aperture', src.aperture ? 'f/' + String(src.aperture).replace(/^f\//, '').replace('.', ',') : '', true],
+    ['shutter', src.shutter ? (/^\d+$/.test(src.shutter) ? src.shutter + ' s' : src.shutter) : '', true],
+    ['lensId', lens ? lensLabel(lens) : '', true],
+    ['filterIds', filters.length ? filters.map(filterShort).join(', ') : '', true],
+    ['flash', src.flash ? 'Blitz' : '', true],
+    ['iso', src.iso ? 'ISO ' + src.iso : '', true],
+    ['place', src.place || '', false]
+  ].filter(x => x[1]);
+  const ov = document.createElement('div'); ov.className = 'modalbg';
+  if (!fields.length) { U.toast(`Frame ${frameLabel(src)} hat noch keine Einstellungen`); return; }
+  const on = new Set(fields.filter(x => x[2]).map(x => x[0])), to = new Set();
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="cpTitle">
+    <h2 id="cpTitle">Frame ${U.esc(frameLabel(src))} übertragen</h2>
+    <div class="chipwrap" id="cpF">${fields.map(([k, t]) => `<button type="button" class="chip${on.has(k) ? ' on' : ''}" data-k="${k}" aria-pressed="${on.has(k)}">${U.esc(t)}</button>`).join('')}</div>
+    <div class="qlabel">auf</div>
+    <div class="cpgrid" id="cpT">${fr.filter(f => f.id !== src.id).map(f => `<button type="button" class="cpfr${f.shot || f.aperture || f.shutter ? ' used' : ''}" data-id="${f.id}" aria-pressed="false">${U.esc(frameLabel(f))}</button>`).join('')}</div>
+    <div class="modalfoot"><button class="closex" id="cpNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="cpOk" aria-label="Übertragen" disabled>${ART.check}</button></div></div>`;
+  document.body.appendChild(ov);
+  const ok = ov.querySelector('#cpOk'), check = () => { ok.disabled = !on.size || !to.size; };
+  ov.querySelector('#cpF').addEventListener('click', e => { const b = e.target.closest('[data-k]'); if (!b) return; on.has(b.dataset.k) ? on.delete(b.dataset.k) : on.add(b.dataset.k); b.classList.toggle('on', on.has(b.dataset.k)); b.setAttribute('aria-pressed', on.has(b.dataset.k)); check(); });
+  ov.querySelector('#cpT').addEventListener('click', e => { const b = e.target.closest('[data-id]'); if (!b) return; to.has(b.dataset.id) ? to.delete(b.dataset.id) : to.add(b.dataset.id); b.classList.toggle('on', to.has(b.dataset.id)); b.setAttribute('aria-pressed', to.has(b.dataset.id)); U.haptic && U.haptic(8); check(); });
+  ov.querySelector('#cpNo').onclick = () => ov.remove();
+  ok.onclick = async () => {
+    for (const id of to) {
+      const f = await DB.get('frames', id); if (!f) continue;
+      if (on.has('aperture')) f.aperture = src.aperture;
+      if (on.has('shutter')) f.shutter = src.shutter;
+      if (on.has('lensId')) f.lensId = src.lensId;
+      if (on.has('filterIds')) f.filterIds = [...src.filterIds];
+      if (on.has('flash')) { f.flash = src.flash; if (src.flashId) f.flashId = src.flashId; else delete f.flashId; }
+      if (on.has('iso')) f.iso = src.iso;
+      if (on.has('place')) for (const k of ['place', 'placeLat', 'placeLng', 'placeCC', 'placeSrc', 'placeNameAuto']) { if (src[k] != null) f[k] = src[k]; else delete f[k]; }
+      await DB.put('frames', f);
+    }
+    ov.remove(); U.toast(`Auf ${to.size} ${to.size === 1 ? 'Frame' : 'Frames'} übertragen`); U.haptic && U.haptic([12, 40, 12]);
+    const y = window.scrollY; await route(); window.scrollTo(0, y);
+  };
 }
 
 // Lightleak-Kamera: nach dem Hochladen öffnet das Album die Auswahl der Bilder mit Lightleaks
