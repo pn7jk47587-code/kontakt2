@@ -173,8 +173,8 @@ const BADGES = (() => {
     const st = await state(), got = DEF.filter(d => st.earned[d.id]), rest = DEF.length - got.length;
     // Jedes Abzeichen hat seinen festen Platz; verdiente in Farbe, die übrigen grau
     const cells = DEF.map(d => st.earned[d.id]
-      ? `<button type="button" class="bcell" data-badge="${d.id}" aria-label="${U.esc(d.name)}">${med(d)}${dots(d, st.earned[d.id].lv)}</button>`
-      : `<span class="bcell" aria-hidden="true">${lockMed(d)}</span>`).join('');
+      ? `<button type="button" class="bcell" data-badge="${d.id}" aria-label="${U.esc(d.name)}">${med(d)}${dots(d, st.earned[d.id].lv)}<span class="bname">${U.esc(d.name)}</span></button>`
+      : `<span class="bcell locked">${lockMed(d)}<span class="bname">${U.esc(d.name)}</span></span>`).join('');
     return `<section class="badgefold fold${foldOpen('badges') ? ' open' : ''}" data-fold="badges">
       <div class="fridgetop foldhead"><span class="fridgeicon">${svg('pokal')}</span><div><h2>Abzeichen</h2><span class="sub2">${got.length ? `${got.length} verdient` : 'noch keins verdient'}</span></div><span class="foldchev" aria-hidden="true"></span></div>
       <div class="foldbody"><div class="bgrid">${cells}</div></div></section>`;

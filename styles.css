@@ -2547,7 +2547,7 @@ html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { top: 21px !imp
 .bmed.wetter { --c: #7fd8e6; } .bmed.licht { --c: #ffc56b; } .bmed.kuehl { --c: #9fd0ff; } .bmed.gear { --c: #ff9a7a; }
 .bmed.film { --c: #c7a6ff; } .bmed.geld { --c: #ffd27a; } .bmed.ort { --c: #86d8bb; } .bmed.tempo { --c: #f0a6ff; }
 .bmed.gold { --c: #ffd27a; background: linear-gradient(135deg, #fff2c4, #e8b04b 40%, #fff0b8 60%, #c8892a); box-shadow: 0 0 22px rgba(255,200,90,.55); }
-.bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 14px 8px; justify-items: center; padding-top: 4px; }
+.bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); gap: 16px 6px; justify-items: center; padding-top: 4px; }
 .bcell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; }
 span.bcell { cursor: default; }
 .bdots { display: flex; gap: 3px; }
@@ -2596,3 +2596,8 @@ figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; wi
 .rcfold { background: rgba(10, 12, 28, .62) !important; border: 1px solid color-mix(in srgb, var(--st3) 55%, transparent) !important; box-shadow: 0 1px 6px rgba(0,0,0,.35) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .rcfold .foldchev { --chev: color-mix(in srgb, var(--st3) 70%, #fff); }
 .sec-entwurf .foldchev { --chev: var(--st1); } .sec-belichtet .foldchev { --chev: var(--st2); } .sec-entwickelt .foldchev { --chev: var(--st3); }
+
+/* v204: Name unter dem Abzeichen */
+.bcell { width: 100%; }
+.bcell .bname { font-size: 10.5px; line-height: 1.25; letter-spacing: -.01em; text-align: center; color: var(--text); width: 100%; hyphens: auto; -webkit-hyphens: auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.bcell.locked .bname { color: var(--muted); opacity: .8; }

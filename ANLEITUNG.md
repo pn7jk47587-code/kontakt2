@@ -676,3 +676,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 
 - Der Knopf zum Auf- und Zuklappen der Alben hat jetzt einen festen dunklen, halb durchsichtigen Grund statt der Kartenfarbe. Er bleibt damit auch bei hellem Licht dunkel. Der Pfeil ist hellviolett.
 - Wer noch den weißen Kreis sieht, hat eine ältere Version im Zwischenspeicher. Die App einmal ganz schließen und neu öffnen, unten in den Einstellungen muss Version 203 stehen.
+
+## Version 204: Namen unter den Abzeichen
+
+Unter jedem Abzeichensymbol im Profil steht jetzt sein Name. Verdiente Abzeichen zeigen den Namen hell, noch offene grau. Die Namen folgen der gewählten Anrede (zum Beispiel Milliardärin).
