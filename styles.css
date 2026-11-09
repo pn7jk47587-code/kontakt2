@@ -2584,3 +2584,6 @@ section.badgefold .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-ro
 figcaption .titlefld input, figcaption .titlefld textarea, figcaption .titlefld .pchip, figcaption #phTimeTxt { font-family: inherit !important; font-size: 16px !important; color: var(--text) !important; font-weight: 400; }
 figcaption .titlefld .pchip { padding: 6px 12px; }
 .phedit.wide { margin: 14px 0 10px; }
+/* v200: mehrere Personen stehen kompakt nebeneinander und brechen nur bei Bedarf um */
+figcaption .pprow .ppchips { display: flex !important; flex-wrap: wrap; gap: 6px; margin: 0; font-size: inherit; }
+figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; width: auto; margin: 0; }
