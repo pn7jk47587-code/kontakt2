@@ -308,6 +308,7 @@ Handy	Phone
 In Entwicklung geben (zum Bestätigen nach rechts schieben)	Send for development (slide right to confirm)
 In Entwicklung geben	Send for development
 Abgeholt: Fotos hochladen	Picked up: upload photos
+Scans hochladen	Upload scans
 Fotoalbum ansehen	View photo album
 Weitere Fotos hinzufügen	Add more photos
 Speichere {0}/{1} …	Saving {0}/{1} …

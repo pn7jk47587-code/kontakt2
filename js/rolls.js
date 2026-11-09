@@ -100,7 +100,7 @@ async function viewRolls() {
       const devInfo = g === 'belichtet'
         ? `<div class="devline">${r.dev?.mode === 'selbst' ? 'Selbst entwickeln' : U.esc(r.dev?.lab || 'Labor')}${r.dev?.sentAt ? ' · seit ' + U.fmtDate(r.dev.sentAt) : ''}</div>` : '';
       const act = g === 'entwurf' ? `<button class="cardact to-dev" data-dev="${r.id}" aria-label="Film in Entwicklung geben">${ART.arrow}<span>Entwickeln</span></button>`
-        : g === 'belichtet' ? `<button class="cardact to-album" data-pickup="${r.id}" aria-label="Film abgeholt, Fotos hochladen">${ART.up}<span>Fotos hochladen</span></button>`
+        : g === 'belichtet' ? `<button class="cardact to-album" data-pickup="${r.id}" aria-label="${r.dev?.mode === 'selbst' ? 'Scans hochladen' : 'Film abgeholt, Fotos hochladen'}">${ART.up}<span>${r.dev?.mode === 'selbst' ? 'Scans hochladen' : 'Fotos hochladen'}</span></button>`
         : `<a class="cardact open-album" href="#/album/${r.id}" aria-label="Fotoalbum öffnen">${ART.album}<span>Ansehen</span></a>`;
       const small = g === 'entwickelt' && (() => { try { return localStorage.getItem('kb-albumfold-' + r.id) === '1'; } catch (_) { return false; } })();
       html += `<div class="rollcard st-${g}${small ? ' small' : ''}" data-rc="${r.id}">${g === 'entwickelt' ? `<button type="button" class="rcfold" data-rcfold="${r.id}" aria-expanded="${!small}" aria-label="${small ? 'Album aufklappen' : 'Album einklappen'}"><span class="foldchev" aria-hidden="true"></span></button>` : ''}
@@ -662,7 +662,7 @@ async function rollFrames(body, roll, stock) {
       <div><b>In Entwicklung</b><br><span class="sub2">${roll.dev?.mode === 'selbst' ? 'Selbst entwickeln' : U.esc(roll.dev?.lab || 'Labor')}${roll.dev?.sentAt ? ' · abgegeben ' + U.fmtDate(roll.dev.sentAt) : ''}</span></div>
       ${slip ? `<img src="${slip}" class="slipthumb zoomable" alt="Abholschein">` : ''}
     </div>`;
-    bottom = modeBtn('pickupOpen', ART.up, 'Abgeholt: Fotos hochladen', '', 'to-album');
+    bottom = modeBtn('pickupOpen', ART.up, roll.dev?.mode === 'selbst' ? 'Scans hochladen' : 'Abgeholt: Fotos hochladen', '', 'to-album');
   } else {
     if (hasImgs) top = `<div class="modewrap"><a class="modebtn open-album" href="#/album/${roll.id}"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>`;
     bottom = `<label class="btn ghost wide">Weitere Fotos hinzufügen<input type="file" accept="image/*" multiple hidden id="bulk"></label>`;
