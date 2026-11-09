@@ -339,7 +339,7 @@ const NEXT_BTN = (id, label, disabled) => `<button class="nextarrow" id="${id}" 
 
 async function wizardStep1(wiz, root = view) {
   if (root === view) setHeader('Film einlegen');
-  const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
+  const stocks = (await DB.all('stocks')).filter(s => s.id !== 'film-unbekannt').sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
   const cams = gearSort((await DB.all('cameras')).filter(c => !c.broken && !c.inactive), camSortFb);
   if (wiz.cameraId && !cams.some(c => c.id === wiz.cameraId)) wiz.cameraId = null;
   wiz.format = wiz.format || '135';

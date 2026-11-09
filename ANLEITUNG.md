@@ -736,3 +736,7 @@ Für 12 Bilder 6×6 ist „3 je Reihe“ die bessere Wahl:
 |---|---|---|
 | A4 hoch | 4 Streifen, ca. 62 mm je Bild, Seite voll | 3 Streifen, ca. 47 mm je Bild, untere Hälfte leer |
 | A5 quer | 2 Seiten mit je 6 Bildern, ca. 57 mm je Bild | 2 Seiten mit 8 und 4 Bildern, ca. 47 mm je Bild |
+
+## v216: „Unbekannter Film“ nicht mehr in der Filmliste
+
+Der Eintrag „Unbekannter Film · ISO ?“ entsteht, wenn du alte Rollen ohne Filmangabe nachträgst. Er erscheint nicht mehr in „Alle Filme“, im Filmkühlschrank, beim Film einlegen und im Belichtungsrechner. Die nachgetragenen Rollen behalten ihn.

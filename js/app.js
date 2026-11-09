@@ -593,7 +593,7 @@ async function deleteImage(id) {
 /* ---------- Filme ---------- */
 async function viewStocks() {
   setHeader('Alle Filme', { back: true, action: `<a class="btn small" href="#/film/neu">+ Film</a>` });
-  const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
+  const stocks = (await DB.all('stocks')).filter(s => s.id !== 'film-unbekannt').sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
   const rolls = await DB.all('rolls');
   const count = id => rolls.filter(r => r.stockId === id).length;
   const items = await Promise.all(stocks.map(async s => `
@@ -628,7 +628,7 @@ function ruleText(st) {
 }
 async function viewCalc() {
   setHeader('Belichtungsrechner');
-  const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
+  const stocks = (await DB.all('stocks')).filter(s => s.id !== 'film-unbekannt').sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
   let last = null;
   try { last = localStorage.getItem('kb-night-stock'); } catch (_) {}
   view.innerHTML = `

@@ -149,7 +149,7 @@ async function fridgeRow(e, st, { pick = false, on = false } = {}) {
 
 // Auswahl aus allen Filmen (für einen Film, der nicht im Kühlschrank liegt)
 async function openStockPicker(onPick, format, title) {
-  const stocks = (await DB.all('stocks')).filter(s => !format || !s.formats || s.formats.includes(format)).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
+  const stocks = (await DB.all('stocks')).filter(s => s.id !== 'film-unbekannt').filter(s => !format || !s.formats || s.formats.includes(format)).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
   const ov = document.createElement('div');
   ov.className = 'modalbg';
   ov.innerHTML = `
@@ -524,7 +524,7 @@ function setupLightSettings(root) {
 async function openFridgeModal(entry, fromBtn) {
   const isNew = !entry;
   entry = entry || { id: U.uid(), count: 1, format: '135', boughtAt: U.today() };
-  const stocks = (await DB.all('stocks')).sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
+  const stocks = (await DB.all('stocks')).filter(s => s.id !== 'film-unbekannt').sort((a, b) => U.stockLabel(a).localeCompare(U.stockLabel(b)));
   const current = stocks.find(s => s.id === entry.stockId);
   const ov = document.createElement('div');
   ov.className = 'modalbg';
