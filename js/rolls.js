@@ -2113,6 +2113,7 @@ async function photoMeta(box, f, d) {
   const fl = f.flash ? (await getAccessories()).find(a => a.id === f.flashId) : null;
   const allFilters = await getFilters();
   const fs = (f.filterIds || []).map(id => filterById(allFilters, id)).filter(Boolean);
+  const peopleAll = await getPeople();   // v197: fehlte hier, „Personen“ in den Metadaten warf deshalb einen Fehler
   const when = f.date ? new Date(f.date) : null, hasLoc = f.placeLat != null && when && !isNaN(when);
   const rows = [
     ['Aufgenommen', f.date ? `${U.fmtDate(String(f.date).slice(0, 10))}${String(f.date).length > 10 ? ', ' + String(f.date).slice(11, 16) + ' Uhr' : ''}` : ''],

@@ -648,3 +648,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Der Bereich „Inaktiv“ im Kameraschrank hat keine eigene Lichtfläche mehr, die als zweiter Rahmen bündig um die Karten lag. Er ist durch Trennlinie, Überschrift und gestrichelte Karten abgegrenzt.
 - Alle Pfeile haben dieselbe Form, Größe und Helligkeit. Nach rechts führt weiter, nach unten klappt auf.
 - Ortswahl auf der Karte: Der Fertig-Knopf schwebt immer unten rechts.
+
+## v198 Fehler beim Hinzufügen einer Person behoben
+
+- Nach „Personen benennen“ in „Alle Fotos“ kam die Meldung „Can't find variable: peopleAll“. Die Metadaten des Fotos lasen die Personenliste aus einer Variable, die es nur auf der Startseite gab. Die Liste wird jetzt dort geladen, wo sie gebraucht wird. Die Person war trotz Meldung gespeichert.
