@@ -627,3 +627,8 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Neue Formate: Halbformat (`half`, 135er Film, 48 oder 72 Bilder) und Großformat (`gross`, Planfilm, 1 · 2 · 4 · 10 Blatt). Wählbar im Kameraschrank, im Filmkühlschrank (Planfilm), im Archiv und im Kontaktbogen (Großformat wie 120 gesetzt).
 - Beim Filmeinlegen erscheinen Halbformat und Großformat nur, wenn im Kameraschrank eine Kamera mit diesem Format steht.
 - Kameraschrank: Haken „Kamera ist ausgeliehen“. Ausgeliehene Kameras zählen nicht für Milliardär, Krake, GAS-Opfer und Schnorrer. Diese vier werden bei jedem Prüfen neu berechnet und können dadurch auch wegfallen.
+
+## v194 Glühwürmchen und neues Chamäleon
+
+- Adlerauge heißt jetzt Glühwürmchen (gleiche Regel: Fotos mit fünf Leuchtpunkten, 25 · 100 · 250). Das Symbol ist ein Glühwürmchen mit leuchtendem Hinterleib. Die interne Kennung `adler` bleibt, verdiente Stufen gehen nicht verloren.
+- Chamäleon neu gezeichnet: Seitenansicht auf einem Ast, mit Helm, Kegelauge und eingerolltem Schwanz.

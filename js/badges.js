@@ -32,7 +32,7 @@ const BADGES = (() => {
     { id: 'zugvogel', name: 'Zugvogel', cls: 'ort', lv: [7, 15, 30], txt: 'Fotos in {n} Ländern' },
     { id: 'maulwurf', name: 'Maulwurf', cls: 'ort', lv: [1], txt: 'Vier von fünf Fotos im Umkreis von 3 km um Zuhause' },
     { id: 'loch', name: 'Bodenloses Loch', cls: 'geld', lv: [1000, 5000, 10000], txt: '{n} € ausgegeben' },
-    { id: 'adler', name: 'Adlerauge', cls: 'geld', lv: [25, 100, 250], txt: '{n} Fotos mit fünf Leuchtpunkten' },
+    { id: 'adler', name: 'Glühwürmchen', cls: 'geld', lv: [25, 100, 250], txt: '{n} Fotos mit fünf Leuchtpunkten' },
     { id: 'pech', name: 'Pechvogel', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit −3 oder schlechter' },
     { id: 'waage', name: 'Waage', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit 0 bewertet' },
     { id: 'archiv', name: 'Archivarin', cls: 'kuehl', lv: [100, 500, 1000], txt: '{n} Fotos ins Archiv nachgetragen' }
