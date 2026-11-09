@@ -135,7 +135,8 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
       if (it.f?.rate !== 5) return;
       const x = L.x0 + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
       // v207: Mittelformat etwas weiter außen umkreisen, Strichstärke wächst mit der Bildgröße
-      const grow = info.square ? 1.1 : 1;
+      const grow = info.square ? 1.1 : 1, kk = Math.min(2, Math.max(1, fw / 85)), seed = (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i;
+      if (info.favMark === 'box') { drawFavBox(ctx, s, x - gap * 0.35, y + edge - gap * 0.35, fw + gap * 0.7, fh + gap * 0.7, seed, kk); return; }
       drawFavMark(ctx, s, cx, cy, (fw / 2 + gap * 0.9) * grow, (fh / 2 + edge * 0.55) * grow, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme, Math.min(2, Math.max(1, fw / 85)));
     });
   });
@@ -178,6 +179,36 @@ function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme, k = 1) {
   path(); ctx.strokeStyle = `rgba(${col},.88)`; ctx.lineWidth = 6.2 * k * s; ctx.stroke();
   path(); ctx.setLineDash([0.8 * k * s, 1.6 * k * s, 2.2 * k * s, 1.1 * k * s]); ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = 4.4 * k * s; ctx.stroke();
   path(); ctx.setLineDash([0.5 * k * s, 2.8 * k * s]); ctx.strokeStyle = light ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.25)'; ctx.lineWidth = 6.6 * k * s; ctx.stroke();
+  ctx.restore();
+}
+
+// v208 Entwurf: Kasten mit dem Fettstift wie auf alten Magnum-Kontaktbögen. Vier einzelne, leicht schiefe Striche,
+// die an den Ecken überstehen. Auf Schwarz wirkt das Rot ziegelbraun, wo der Stift fester aufsetzt, leuchtet es.
+function drawFavBox(ctx, s, x, y, w, h, seed, k = 1) {
+  const R = rnd(seed + 11), j = () => (R() - 0.5) * 1.6 * k, over = () => (0.6 + R() * 2.2) * k;
+  const sides = [[x, y, x + w, y, 'h'], [x + w, y, x + w, y + h, 'v'], [x + w, y + h, x, y + h, 'h'], [x, y + h, x, y, 'v']];
+  ctx.save(); ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+  const line = (x1, y1, x2, y2, d) => {
+    const o1 = over(), o2 = over(), L = Math.hypot(x2 - x1, y2 - y1), ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+    const a = [x1 - ux * o1 + j(), y1 - uy * o1 + j()], b = [x2 + ux * o2 + j(), y2 + uy * o2 + j()];
+    const mid = [(a[0] + b[0]) / 2 + j() * 0.6, (a[1] + b[1]) / 2 + j() * 0.6];
+    const W = 5.6 * k, nx = -uy, ny = ux;
+    const path = (off = 0) => { ctx.beginPath(); ctx.moveTo((a[0] + nx * off) * s, (a[1] + ny * off) * s); ctx.quadraticCurveTo((mid[0] + nx * off) * s, (mid[1] + ny * off) * s, (b[0] + nx * off) * s, (b[1] + ny * off) * s); };
+    // Grundstrich ziegelrot, darüber trockene Längsstreifen in Hellrot und Braunrot wie Pastell auf glattem Papier
+    ctx.setLineDash([]); path(); ctx.strokeStyle = 'rgba(168,66,52,.9)'; ctx.lineWidth = W * s; ctx.stroke();
+    for (let n = 0; n < 9; n++) {
+      const off = (R() - 0.5) * W * 0.9, bright = R() < 0.55;
+      ctx.setLineDash([(6 + R() * 22) * k * s, (0.8 + R() * 4) * k * s, (3 + R() * 12) * k * s, (0.5 + R() * 2.5) * k * s]);
+      ctx.lineDashOffset = R() * 30 * k * s;
+      path(off); ctx.strokeStyle = bright ? `rgba(255,${60 + R() * 30 | 0},${40 + R() * 20 | 0},${.55 + R() * .4})` : `rgba(${120 + R() * 40 | 0},48,38,${.4 + R() * .4})`;
+      ctx.lineWidth = W * (0.12 + R() * 0.2) * s; ctx.stroke();
+    }
+    ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  };
+  sides.forEach(([x1, y1, x2, y2, d]) => line(x1, y1, x2, y2, d));
+  // ein zweiter, kürzerer Strich an einer Seite, wie nachgezogen
+  const t = sides[Math.floor(R() * 4)], f = 0.25 + R() * 0.3;
+  line(t[0], t[1], t[0] + (t[2] - t[0]) * (f + 0.4), t[1] + (t[3] - t[1]) * (f + 0.4), t[4]);
   ctx.restore();
 }
 
@@ -238,7 +269,7 @@ function openContactSheet(rollId) {
     </div>
     <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
-    <div class="seggroup cstheme csfav" role="group" aria-label="Favoriten" hidden><button type="button" class="seg" data-fm="wax"><span class="favdot" aria-hidden="true"></span>Favoriten umkreisen</button><button type="button" class="seg" data-fm="">Ohne</button></div>
+    <div class="seggroup cstheme csfav" role="group" aria-label="Favoriten" hidden><button type="button" class="seg" data-fm="wax"><span class="favdot" aria-hidden="true"></span>Kreis</button><button type="button" class="seg" data-fm="box">Kasten</button><button type="button" class="seg" data-fm="">Ohne</button></div>
     <p class="sub2 csstate" id="csState"></p>
     <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><button class="cspvshare csgo" id="csGo" aria-label="Contact Sheet erstellen" disabled>${ART.check}</button></div></div>`;
   document.body.appendChild(ov);

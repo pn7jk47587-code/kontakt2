@@ -692,3 +692,7 @@ Beim Contact Sheet in A4 passen jetzt immer alle Bilder auf ein Blatt. Bisher li
 ## Version 207: Favoriten-Kreis dicker und rot
 
 Auf dem Contact Sheet umkreist die App Favoriten (+5) jetzt immer mit einem dicken roten Wachsstift, auf hellem und auf dunklem Papier. Die Strichstärke wächst mit der Bildgröße. Bei Mittelformat ist der Kreis zusätzlich etwas größer und reicht weiter über den Bildrand.
+
+## Version 208: Entwurf Kasten für Favoriten
+
+Beim Contact Sheet gibt es für Favoriten (+5) jetzt drei Möglichkeiten: Kreis, Kasten und Ohne. Der Kasten ist ein Entwurf nach dem Vorbild alter Magnum-Kontaktbögen. Vier einzelne, leicht schiefe Fettstiftstriche liegen eng um das Bild und stehen an den Ecken über. Eine Seite ist ein zweites Mal kurz nachgezogen. Die Farbe ist ein Ziegelrot mit hellroten und braunroten Längsstreifen, wie Pastell auf glattem Papier.
