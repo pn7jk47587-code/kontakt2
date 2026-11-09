@@ -686,8 +686,8 @@ async function rollFrames(body, roll, stock) {
   const tabsRow = document.querySelector('.tabs');
   tabsRow?.querySelector('#phoneImpBtn')?.remove();
   const imp = document.createElement('label');
-  imp.id = 'phoneImpBtn'; imp.className = 'reorderbtn phoneimpbtn'; imp.setAttribute('aria-label', 'Handyfotos zuordnen'); imp.title = 'Handyfotos zuordnen';
-  imp.innerHTML = PIN_IC + '<input type="file" accept="image/*" multiple hidden id="phoneImp">';
+  imp.id = 'phoneImpBtn'; imp.className = 'reorderbtn phoneimpbtn'; imp.setAttribute("aria-label", "Referenzfotos hochladen: Ort und Zeit übernehmen"); imp.title = "Referenzfotos hochladen: Ort und Zeit übernehmen";
+  imp.innerHTML = REF_IMP_IC + '<input type="file" accept="image/*" multiple hidden id="phoneImp">';
   if (tabsRow) { const ro = tabsRow.querySelector('#reorderOn'); ro ? tabsRow.insertBefore(imp, ro) : tabsRow.appendChild(imp); }
   imp.querySelector('#phoneImp').addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(roll, files); });
   const grid = body.querySelector('#frameGrid');
@@ -886,6 +886,8 @@ function openFrameFilterSearch(filters, chosen, roll, onDone, onCancel) {
 /* ---------- Einträge der Bilder verschieben ----------
    Die Plätze (Bild 1, 2, 3 …) bleiben, verschoben wird alles, was zu einem Bild eingetragen ist:
    Blende, Zeit, Objektiv, Filter, Notiz, Datum, Handyfotos, Scans. */
+// Referenzfotos hochladen, Ort und Zeit übernehmen: Foto, Pfeil nach oben, Ortsnadel
+const REF_IMP_IC = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="9.5" width="12" height="11" rx="2"/><path d="M4.5 18.2l2.8-3 2.2 2.2 1.4-1.4 2.1 2.2"/><path d="M8.5 7V2.8M6.7 4.6l1.8-1.8 1.8 1.8"/><path d="M18.5 8.5a3 3 0 0 0-3 3c0 2.2 3 5 3 5s3-2.8 3-5a3 3 0 0 0-3-3z"/><circle cx="18.5" cy="11.5" r="1"/></svg>';
 const COPY_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6c0 .9.8 1.7 1.7 1.7h2.3"/></svg>';
 const MOVE_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3.5 7.5 7 11M3.5 7.5H15M17 13l3.5 3.5L17 20M20.5 16.5H9"/></svg>';
 const FRAME_FIXED = ['id', 'rollId', 'index', 'bonus'];
@@ -1836,7 +1838,7 @@ async function viewAlbum(id) {
   const infoRow = '';
   // Fotos nachtragen: füllen zuerst Bilder ohne Foto (nach Dateinamen sortiert), weitere kommen als neue Bilder hinten dran
   const addPhotosBtn = d.roll ? `<label class="roundic" aria-label="Fotos nachtragen" title="Fotos nachtragen">${ART.pickup}<input type="file" accept="image/*" multiple hidden id="albAdd"></label>` : '';
-  const phoneBtn = d.roll ? `<label class="roundic" aria-label="Handyfotos als Referenz zuordnen" title="Handyfotos zuordnen">${PHONE_TOG_IC}<input type="file" accept="image/*" multiple hidden id="albPhone"></label>` : '';
+  const phoneBtn = d.roll ? `<label class="roundic" aria-label="Handyfotos als Referenz zuordnen" title="Handyfotos zuordnen">${REF_IMP_IC}<input type="file" accept="image/*" multiple hidden id="albPhone"></label>` : '';
   const sheetBtn = d.roll && d.frames.length ? `<button type="button" class="roundic" id="albSheet" aria-label="Contact Sheet als PDF" title="Contact Sheet">${SHEET_IC}</button>` : '';
   const wireAdd = () => view.querySelector('#albAdd')?.addEventListener('change', async e => {
     const files = [...e.target.files]; if (!files.length) return;

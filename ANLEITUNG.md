@@ -545,3 +545,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 
 - Schriftzug „lightleak“: Die Laufweite war auf −0,03 em gesetzt. Dadurch lief das „a“ in das „k“. Jetzt normale Laufweite. Die Kerben in „a“ und „k“ gehören zur Schrift Unbounded selbst (geprüft gegen @fontsource/unbounded 5.1.0, gleiche Glyphen).
 - Kopfzeile: kein heller Trennstrich und keine eigene Fläche mehr. Ein weicher Verlauf in der Hintergrundfarbe läuft 18 px unter die Kopfzeile aus, damit gescrollte Inhalte darunter lesbar verschwinden.
+
+## v182 Neues Symbol für Referenzfotos
+
+- Der Knopf, der Handyfotos als Referenz hochlädt und daraus Ort und Zeit übernimmt, hat ein eigenes Symbol: Foto mit Pfeil nach oben und Ortsnadel (`REF_IMP_IC`). Vorher war es nur die Ortsnadel, im Album ein Handy. Es gilt in der Reiterzeile der Rolle und im Album. Beschriftung für Bildschirmleser: „Referenzfotos hochladen: Ort und Zeit übernehmen“.
