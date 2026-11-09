@@ -2517,3 +2517,11 @@ html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { top: 21px !imp
 .homerow b { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .homerow .placepin { width: 40px; height: 40px; display: grid; place-items: center; color: var(--teal); background: none; border: 0; cursor: pointer; }
 .homerow .homeclr { color: var(--muted); }
+/* v186: neue Analytics */
+.labrow { align-items: center; padding: 8px 0; border-top: 1px solid var(--line); }
+.labrow > span:first-child { display: flex; flex-direction: column; min-width: 0; }
+.labvals { display: flex; gap: 14px; text-align: right; }
+.labvals > span { display: flex; flex-direction: column; align-items: flex-end; }
+.labvals b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.txrow .expd { color: var(--danger); }
+.spend .spendsplit + .spendtext { margin-top: 12px; }

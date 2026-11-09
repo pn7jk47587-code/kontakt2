@@ -573,3 +573,12 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 
 - Analytics › „Wann und wo“ › Radius: Über der Radius-Zeile steht „Zuhause“ mit dem Ort. Die Ortsnadel daneben legt das Zuhause selbst fest (Liste der benutzten Orte, Karte oder aktueller Standort). Das X hebt die Festlegung auf.
 - Ohne Festlegung gilt weiter das Gebiet von rund 1 km mit den meisten Fotos, gekennzeichnet mit „(aus deinen Fotos)“. Gespeichert in `meta` unter `home` (Name, Koordinaten, Land). Radius, Zuhause/Umgebung/Unterwegs/Ausland und Fotografierrate rechnen von dort.
+
+## v186 Nützliche Analytics ergänzt, Fotografierrate entfernt
+
+- Geld: zwei Kacheln oben, „pro Bild“ (Film, Entwicklung und Scan geteilt durch alle Bilder mit Scan) und „pro gutem Bild“ (geteilt durch die Bilder mit +4 oder +5). Ausrüstung und eigene Ausgaben zählen dabei nicht mit.
+- Film nach Bewertung: Schnitt der Bewertung je Film, ab drei bewerteten Fotos, bester zuerst.
+- Blende und Zeit: Kacheln Offenblende (Blende gleich Lichtstärke des Objektivs) und Verwacklungsgefahr (Zeit länger als 1/Brennweite, bei Zooms das lange Ende). Darunter die häufigsten Blenden und Zeiten mit dem Schnitt der Bewertung.
+- Labore: je Labor Anzahl Rollen, Preis je Rolle (Entwicklung plus Scan), Tage vom Abgeben bis zum Abholen und Schnitt der Bewertung.
+- Zuerst verbrauchen: Kühlschrank mit Kacheln abgelaufen, in 3 Monaten fällig, ohne Datum, darunter die Reihenfolge nach Ablaufdatum.
+- „Wann und wo“: die Fotografierrate zu Hause und unterwegs ist entfernt.

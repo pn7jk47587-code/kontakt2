@@ -776,6 +776,14 @@ async function spendFoldHtml() {
     .map(t => ({ ...t, amount: Math.round((t.amount - (cleared[t.key] || 0)) * 100) / 100 }))
     .filter(t => t.amount > 0.004);
   const spend = spending(tx);
+  // Kosten pro Bild: Film, Entwicklung und Scan geteilt durch alle Bilder mit Scan bzw. durch die mit +4 oder besser
+  const allFr = await DB.all('frames');
+  const pics = allFr.filter(f => f.imgId).length, good = allFr.filter(f => f.imgId && f.rate >= 4).length;
+  const filmCost = spend.film + spend.dev + spend.scan;
+  const perPic = pics ? `<div class="spendsplit">
+        <div><span class="sub2">pro Bild</span><b>${euro(filmCost / pics)}</b><span class="sub2">${pics} Bilder</span></div>
+        <div><span class="sub2">pro gutem Bild ${infoBtn('Film, Entwicklung und Scan geteilt durch die Bilder mit +4 oder besser. Ausrüstung und eigene Ausgaben zählen nicht mit.')}</span><b>${good ? euro(filmCost / good) : '–'}</b><span class="sub2">${good} mit +4 oder +5</span></div>
+      </div>` : '';
   return `
     <section class="spend fold${foldOpen('spend') ? ' open' : ''}" data-fold="spend">
       <div class="fridgetop foldhead">
@@ -784,6 +792,7 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
+      ${perPic}
       <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> ausgegeben. Insgesamt hast du schon <b>${euro(spend.total)}</b> in das bodenlose Loch geworfen.</p>
       <div class="spendsplit four">
         <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
@@ -849,9 +858,13 @@ async function viewAnalytics() {
       </div>
     </section>
     ${await spendFoldHtml()}
+    ${await filmRateFoldHtml()}
+    ${await exposureFoldHtml()}
     ${await shotsFoldHtml()}
     ${await rateFoldHtml()}
-    ${await rollTimeFoldHtml()}`;
+    ${await rollTimeFoldHtml()}
+    ${await labFoldHtml()}
+    ${await fridgeUseFoldHtml()}`;
   setupFolds(view);
   setupSpend(view);
 }
@@ -1012,14 +1025,81 @@ function whenWhereBody(frames, home = null) {
       <h3 class="anh">Radius</h3>
       <div class="homerow"><span class="sub2">Zuhause${own ? '' : ' (aus deinen Fotos)'}</span><b>${U.esc(homeName)}</b><button type="button" class="placepin homeset" id="homeSet" aria-label="Zuhause festlegen">${PIN_IC}</button>${own ? `<button type="button" class="placepin homeclr" id="homeClr" aria-label="Festlegung aufheben">${ART.x}</button>` : ''}</div>
       <p class="spendtext">Die Hälfte deiner Fotos entsteht im Umkreis von <b>${fmtKm(median(ds))}</b>, neun von zehn innerhalb von <b>${fmtKm(quant(ds, 0.9))}</b>. Am weitesten weg: <b>${U.esc(far.f.place || 'ohne Namen')}</b>, ${fmtKm(far.d)}.${infoBtn('Als Zuhause gilt der Ort, den du mit der Ortsnadel festlegst. Ohne Festlegung ist es das Gebiet von rund einem Kilometer, in dem die meisten deiner Fotos mit Ort entstanden sind. Umkreis und Entfernungen misst die App von dort aus.')}</p>
-      <div class="spendsplit four">${Object.entries(cats).filter(([k, fs]) => fs.length || k !== 'Ausland').map(([k, fs]) => `<div><span class="sub2">${k}${catDesc[k] ? ` · ${catDesc[k]}` : ''}</span><b>${fs.length}</b><span class="sub2">${Math.round(fs.length / located.length * 100)} %</span></div>`).join('')}</div>
-      <h3 class="anh">Fotografierrate ${infoBtn('Fotos pro Tag, an dem du dort fotografiert hast. Wie lange du insgesamt zu Hause oder unterwegs warst, weiß die App nicht. Sie kennt nur die Tage mit Fotos.')}</h3>
-      ${barList(Object.entries(cats).filter(([, fs]) => rate(fs)).map(([k, fs]) => { const days = new Set(fs.filter(f => f.date).map(f => String(f.date).slice(0, 10))).size; return [k, rate(fs), `${days} ${days === 1 ? 'Tag' : 'Tage'}`, fmtNum(rate(fs))]; }))}`;
+      <div class="spendsplit four">${Object.entries(cats).filter(([k, fs]) => fs.length || k !== 'Ausland').map(([k, fs]) => `<div><span class="sub2">${k}${catDesc[k] ? ` · ${catDesc[k]}` : ''}</span><b>${fs.length}</b><span class="sub2">${Math.round(fs.length / located.length * 100)} %</span></div>`).join('')}</div>`;
   }
   const sub = [timed.length ? `${timed.length} mit Uhrzeit` : '', located.length ? `${located.length} mit Ort` : ''].filter(Boolean).join(' · ');
   return { body, sub };
 }
 
+/* ---------- v186: nützliche Analytics, knapp als Zeilen und Kacheln ---------- */
+const AN_FILM_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 8h16M4 16h16M8 4v4M12 4v4M16 4v4M8 16v4M12 16v4M16 16v4"/></svg>';
+const AN_AP_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5 15 12M20.5 12l-8.5 3M12 20.5 9 12M3.5 12l8.5-3"/></svg>';
+const AN_LAB_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 10a1.6 1.6 0 0 0 1.4 2.3h11.2A1.6 1.6 0 0 0 19 19l-5-10V3"/><path d="M7.5 15h9"/></svg>';
+const AN_FRIDGE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 10h12M9 6v2M9 13v3"/></svg>';
+const num1 = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isNaN(n) ? null : n; };
+const fmtRateAvg = v => (v > 0 ? '+' : '') + fmtNum(v, 1).replace('-', '−');
+// Belichtungszeit in Sekunden: „1/125“, „2 s“, „2“; B, T, X zählen nicht
+const anShutterSec = v => { const t = String(v || '').trim(); let m = t.match(/^1\/(\d+(?:[.,]\d+)?)$/); if (m) return 1 / num1(m[1]); m = t.match(/^(\d+(?:[.,]\d+)?)\s*s?$/); return m ? num1(m[1]) : null; };
+// Film nach Bewertung: Schnitt der bewerteten Fotos je Film, ab 3 bewerteten Fotos
+async function filmRateFoldHtml() {
+  const frames = (await DB.all('frames')).filter(f => f.rate != null);
+  const rolls = new Map((await DB.all('rolls')).map(r => [r.id, r])), stocks = await stocksMap();
+  const m = new Map();
+  frames.forEach(f => { const st = rolls.get(f.rollId)?.stockId; if (!st) return; const e = m.get(st) || []; e.push(f.rate); m.set(st, e); });
+  const rows = [...m].filter(([, r]) => r.length >= 3).map(([id, r]) => ({ st: stocks.get(id), avg: r.reduce((a, b) => a + b, 0) / r.length, n: r.length })).filter(x => x.st).sort((a, b) => b.avg - a.avg);
+  if (!rows.length) return anFold('filmrate', 'filmratefold', AN_FILM_IC, 'Film nach Bewertung', 'ab 3 bewerteten Fotos je Film', '<p class="hint">Noch kein Film mit mindestens drei bewerteten Fotos.</p>');
+  return anFold('filmrate', 'filmratefold', AN_FILM_IC, 'Film nach Bewertung', `am besten: ${U.esc(U.stockLabel(rows[0].st))}`,
+    barList(rows.slice(0, 10).map(x => [U.stockLabel(x.st), x.avg + 5.01, `${x.n} bewertet`, fmtRateAvg(x.avg)])));
+}
+// Blende und Zeit: häufigste Werte mit Schnitt der Bewertung, Anteil Offenblende, Verwacklungsgefahr
+async function exposureFoldHtml() {
+  const frames = (await DB.all('frames')).filter(f => f.aperture || f.shutter);
+  if (!frames.length) return anFold('exposure', 'exposurefold', AN_AP_IC, 'Blende und Zeit', 'noch nichts eingetragen', '<p class="hint">Noch keine Blende oder Zeit eingetragen.</p>');
+  const lenses = new Map((await DB.all('lenses')).map(l => [l.id, l]));
+  const count = key => { const c = new Map(); frames.forEach(f => { const v = String(f[key] || '').trim(); if (!v || /^(auto|B|T|X)$/i.test(v)) return; const e = c.get(v) || { n: 0, r: [] }; e.n++; if (f.rate != null) e.r.push(f.rate); c.set(v, e); }); return [...c].sort((a, b) => b[1].n - a[1].n).slice(0, 8); };
+  const row = (label, e) => [label, e.n, e.r.length ? `Schnitt ${fmtRateAvg(e.r.reduce((a, b) => a + b, 0) / e.r.length)}` : ''];
+  const aps = count('aperture').map(([v, e]) => row('f/' + v.replace(/^f\//, '').replace('.', ','), e));
+  const shs = count('shutter').map(([v, e]) => row(/^\d+$/.test(v) ? v + ' s' : v, e));
+  // Offenblende: Blende gleich der Lichtstärke des Objektivs
+  const withLens = frames.filter(f => f.aperture && num1(lenses.get(f.lensId)?.maxAp));
+  const open = withLens.filter(f => Math.abs(num1(f.aperture) - num1(lenses.get(f.lensId).maxAp)) < 0.06).length;
+  // Verwacklungsgefahr: Zeit länger als 1/Brennweite (bei Zooms das lange Ende), Faustregel für Kleinbild aus der Hand
+  const withFocal = frames.filter(f => anShutterSec(f.shutter) && lenses.get(f.lensId)?.focal);
+  const shaky = withFocal.filter(f => { const fl = Math.max(...String(lenses.get(f.lensId).focal).split(/[^\d.,]+/).map(num1).filter(Boolean)); return fl > 0 && anShutterSec(f.shutter) > 1 / fl; }).length;
+  const tiles = `<div class="spendsplit">
+      <div><span class="sub2">Offenblende</span><b>${withLens.length ? Math.round(open / withLens.length * 100) + ' %' : '–'}</b><span class="sub2">${open} von ${withLens.length}</span></div>
+      <div><span class="sub2">Verwacklungsgefahr ${infoBtn('Belichtungszeit länger als 1 durch Brennweite, also z. B. länger als 1/50 s bei 50 mm. Faustregel für Kleinbild aus der Hand, ein Stativ kennt die App nicht.')}</span><b>${withFocal.length ? Math.round(shaky / withFocal.length * 100) + ' %' : '–'}</b><span class="sub2">${shaky} von ${withFocal.length}</span></div>
+    </div>`;
+  return anFold('exposure', 'exposurefold', AN_AP_IC, 'Blende und Zeit', aps[0] ? `meist ${aps[0][0]}${shs[0] ? ', ' + shs[0][0] : ''}` : `${frames.length} Bilder`,
+    tiles + (aps.length ? `<h3 class="anh">Blende</h3>${barList(aps)}` : '') + (shs.length ? `<h3 class="anh">Zeit</h3>${barList(shs)}` : ''));
+}
+// Labore im Vergleich: Rollen, Preis je Rolle, Tage bis zum Abholen, Schnitt der Bewertung
+async function labFoldHtml() {
+  const rolls = (await DB.all('rolls')).filter(r => r.dev?.mode === 'labor' && (r.status || 'entwurf') !== 'entwurf');
+  if (!rolls.length) return anFold('labs', 'labfold', AN_LAB_IC, 'Labore', 'noch keine Rolle im Labor', '<p class="hint">Sobald eine Rolle im Labor war, steht hier der Vergleich.</p>');
+  const frames = await DB.all('frames');
+  const m = new Map();
+  rolls.forEach(r => { const k = r.dev.lab || 'Labor'; const e = m.get(k) || { n: 0, cost: [], days: [], rate: [] }; e.n++;
+    const c = (Number(r.dev.cost) || 0) + (Number(r.dev.scanCost) || 0); if (c) e.cost.push(c);
+    if (r.dev.sentAt && r.dev.backAt) { const d = Math.round((new Date(r.dev.backAt) - new Date(r.dev.sentAt)) / 864e5); if (d >= 0) e.days.push(d); }
+    frames.filter(f => f.rollId === r.id && f.rate != null).forEach(f => e.rate.push(f.rate)); m.set(k, e); });
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const rows = [...m].sort((a, b) => b[1].n - a[1].n).map(([k, e]) => `<div class="txrow labrow"><span>${U.esc(k)}<span class="sub2">${e.n} ${e.n === 1 ? 'Rolle' : 'Rollen'}</span></span>
+      <span class="labvals"><span><b>${avg(e.cost) != null ? euro(avg(e.cost)) : '–'}</b><span class="sub2">je Rolle</span></span><span><b>${avg(e.days) != null ? fmtNum(avg(e.days), 0) + ' T' : '–'}</b><span class="sub2">bis zurück</span></span><span><b>${avg(e.rate) != null ? fmtRateAvg(avg(e.rate)) : '–'}</b><span class="sub2">Schnitt</span></span></span></div>`).join('');
+  return anFold('labs', 'labfold', AN_LAB_IC, 'Labore', `${m.size} ${m.size === 1 ? 'Labor' : 'Labore'} · ${rolls.length} ${rolls.length === 1 ? 'Rolle' : 'Rollen'}`, rows);
+}
+// Kühlschrank nach Ablaufdatum: abgelaufen, bald, dann die Reihenfolge zum Verbrauchen
+async function fridgeUseFoldHtml() {
+  const entries = (await DB.all('fridge')).filter(e => (e.count || 0) > 0);
+  const stocks = await stocksMap();
+  const dated = entries.filter(e => e.expiresAt).sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
+  if (!entries.length) return anFold('fridgeuse', 'fridgeusefold', AN_FRIDGE_IC, 'Zuerst verbrauchen', 'Kühlschrank leer', '<p class="hint">Der Kühlschrank ist leer.</p>');
+  const st = e => fridgeExpiry(e).state;
+  const exp = dated.filter(e => st(e) === 'expired').reduce((n, e) => n + e.count, 0), soon = dated.filter(e => st(e) === 'soon').reduce((n, e) => n + e.count, 0);
+  const tiles = `<div class="spendsplit three"><div><span class="sub2">abgelaufen</span><b>${exp}</b></div><div><span class="sub2">in 3 Monaten</span><b>${soon}</b></div><div><span class="sub2">ohne Datum</span><b>${entries.filter(e => !e.expiresAt).reduce((n, e) => n + e.count, 0)}</b></div></div>`;
+  const list = dated.slice(0, 6).map(e => `<div class="txrow"><span>${U.esc(U.stockLabel(stocks.get(e.stockId)))}<span class="sub2">${e.count} ${e.count === 1 ? 'Rolle' : 'Rollen'}</span></span><span${st(e) === 'expired' ? ' class="expd"' : ''}>${fmtMonth(e.expiresAt)}</span></div>`).join('');
+  return anFold('fridgeuse', 'fridgeusefold', AN_FRIDGE_IC, 'Zuerst verbrauchen', dated[0] ? `als Nächstes: ${U.esc(U.stockLabel(stocks.get(dated[0].stockId)))}` : 'kein Ablaufdatum eingetragen', tiles + (list ? `<h3 class="anh">Reihenfolge</h3>${list}` : ''));
+}
 async function rollTimeFoldHtml() {
   const rolls = await DB.all('rolls'), frames = await DB.all('frames'), stocks = await stocksMap();
   const byRoll = new Map(); frames.forEach(f => { if (!byRoll.has(f.rollId)) byRoll.set(f.rollId, []); byRoll.get(f.rollId).push(f); });
