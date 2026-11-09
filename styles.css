@@ -1,4 +1,5 @@
 @font-face { font-family: "Unbounded"; src: url("fonts/unbounded-600.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Barlow Condensed"; src: url("vendor/fonts/barlow-condensed-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
 [hidden] { display: none !important; }
 /* Lichtthema: tagsüber Sonne und Prisma, abends Mondschein.
    Layout: einspaltige App mit Glas-Karten über einer Lichtschicht aus Strahlen. */
@@ -2440,3 +2441,24 @@ html[data-sky] body { transition: background-color .8s; }
 .profilehead { gap: 0 !important; }
 .profilehead .pname { margin-top: 4px; padding: 0 10px !important; }
 .setname { margin: 0 0 4px; }
+/* v179: Favoriten (+5) als leuchtender Punkt wie der fünfte Lichtpunkt der Bewertung */
+.favdot { display: inline-block; width: 15px; height: 15px; border-radius: 50%; flex: 0 0 auto; vertical-align: -2px;
+  background: color-mix(in srgb, var(--warm2) 40%, var(--warm)); box-shadow: 0 0 15px 4px rgba(255,190,80,.75); }
+.favtoggle .favdot { margin-right: 2px; width: 12px; height: 12px; box-shadow: 0 0 12px 3px rgba(255,190,80,.7); }
+.photogrid > a { position: relative; }
+.photogrid > a .favdot { position: absolute; right: 7px; bottom: 7px; width: 11px; height: 11px; box-shadow: 0 0 10px 3px rgba(255,190,80,.8), 0 0 0 1.5px rgba(0,0,0,.35); }
+/* v179 Entwurf: „Alle Fotos“ als Contact Sheet. Jede Rolle ein Filmstreifen, drei Bilder je Reihe, Perforation oben und unten, Randschrift und Bildnummern */
+.apnum { display: none; }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) { gap: 0; margin: 0 10px; background: #060606; border-radius: 2px; }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a { aspect-ratio: auto; padding: 15px 3px 17px; overflow: visible; background-color: #060606;
+  background-image: linear-gradient(90deg, var(--bg) 0 5px, transparent 5px 11px), linear-gradient(90deg, var(--bg) 0 5px, transparent 5px 11px);
+  background-size: 11px 4px, 11px 4px; background-repeat: repeat-x; background-position: 3px 3px, 3px calc(100% - 3px); }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a img { aspect-ratio: 3 / 2; height: auto; border-radius: 1px; }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .apnum { display: block; position: absolute; left: 50%; bottom: 6px; translate: -50% 0; font: 700 8px/1 "Barlow Condensed", "Arial Narrow", sans-serif; letter-spacing: .04em; color: #b8854a; }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a:nth-child(3n+1)::before { content: attr(data-film); position: absolute; left: 10px; top: 7.5px; font: 700 6.5px/1 "Barlow Condensed", "Arial Narrow", sans-serif; letter-spacing: .08em; color: #b8854a; white-space: nowrap; z-index: 1; }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { bottom: 23px; right: 9px; }
+html[data-aplook^="sheet"] .rollsep { padding-left: 12px; }
+/* Variante mit Fettstift: Favoriten von Hand rot umkreist statt Punkt */
+html[data-aplook="sheet-ring"] .photogrid:not(.favgrid) > a .favdot { display: none; }
+html[data-aplook="sheet-ring"] .photogrid:not(.favgrid) > a.isfav::after { content: ''; position: absolute; inset: 7px -2px 9px; border: 2px solid rgba(236,58,48,.92); border-radius: 50% 46% 52% 48% / 52% 50% 46% 50%; rotate: -3deg; z-index: 2; pointer-events: none;
+  box-shadow: 1px 1px 0 -0.5px rgba(236,58,48,.5); }

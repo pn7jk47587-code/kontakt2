@@ -525,3 +525,10 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Kameraschrank › Zubehör: neue Art „Laborequipment“ (Kolbensymbol), z. B. Tank, Spiralen, Thermometer. Ohne Zuordnung zu Kameras. Der Kaufpreis zählt unter „Ausrüstung“ im Abschnitt Geld.
 - Geld: Der Satz lautet „Du hast diesen Monat schon … ausgegeben.“ Unten links steht „Verlauf“, rechts daneben nur ein runder Plus-Knopf für eine eigene Ausgabe.
 - Nutzername: Auf Startseite und Profil nur noch Anzeige, etwas näher am Profilbild. Ändern lässt er sich im Menü (Hamburger) unter „Profil“.
+
+## v179 Favoriten als Leuchtpunkt, Entwürfe für Favoriten im Contact Sheet und für „Alle Fotos“ als Contact Sheet, Geld weiter oben
+
+- „Alle Fotos“: Vor „Favoriten · n“ steht ein warm leuchtender Punkt wie der fünfte Lichtpunkt der Bewertung. Im Raster tragen Fotos mit +5 denselben Punkt unten rechts.
+- Contact Sheet, Entwurf: `makeContactSheet(rollId, paper, theme, perRow, favMark)` kann Fotos mit +5 markieren. `favMark` ist `pencil` (roter Fettstift von Hand umkreist, zwei Striche, leicht schief), `wax` (heller Wachsstift für dunkles Papier), `glow` (sauberer, warm leuchtender Ring) oder `dot` (leuchtender Punkt neben der Bildnummer). Im Auswahlfenster gibt es dafür noch keinen Knopf, bis ein Entwurf gewählt ist.
+- „Alle Fotos“ als Contact Sheet, Entwurf: Einstellungen › „Alle Fotos (Entwurf)“ mit Raster, Contact Sheet und Sheet mit Fettstift (`kb-ap-look`). Jede Rolle wird ein schwarzer Filmstreifen mit Perforation, Filmname in der Randschrift und orangen Bildnummern, drei Bilder je Reihe im Querformat 3:2. Favoriten zeigen den Leuchtpunkt oder einen roten Fettstiftkreis.
+- Analytics: „Geld“ steht direkt unter „Deine Filme“.

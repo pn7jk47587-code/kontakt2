@@ -411,6 +411,8 @@ async function openSettings() {
       <label class="atname setname"><span class="at" aria-hidden="true">@</span><input id="setName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false" enterkeyhint="done"></label>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
+      <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>
+      <div class="seggroup" id="apLook">${[['', 'Raster'], ['sheet', 'Contact Sheet'], ['sheet-ring', 'Sheet mit Fettstift']].map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-ap-look') || '') === k ? ' on' : ''}" data-apl="${k}">${l}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Goldene und blaue Stunde (Entwürfe)</span></div>
       <div class="seggroup" id="skyTest">${[['', 'Echt'], ['golden', 'Golden'], ['blue', 'Blau']].map(([k, l]) => `<button type="button" class="seg" data-skyt="${k}">${l}</button>`).join('')}</div>
       <div class="qlabel">Goldene Stunde</div>
@@ -441,6 +443,7 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  ov.querySelector('#apLook').addEventListener('click', e => { const b = e.target.closest('[data-apl]'); if (!b) return; try { b.dataset.apl ? localStorage.setItem('kb-ap-look', b.dataset.apl) : localStorage.removeItem('kb-ap-look'); } catch (_) {} MOOD.apply(); ov.querySelectorAll('#apLook .seg').forEach(x => x.classList.toggle('on', x === b)); });
   // Nutzername nur noch hier änderbar (nicht mehr auf Startseite und Profil)
   { const inp = ov.querySelector('#setName'); let tn;
     inp.addEventListener('input', () => { stripAt(inp); clearTimeout(tn); tn = setTimeout(async () => { const v = inp.value.trim(); if (!v) return; PROFILE.name = v; await DB.put('meta', PROFILE); document.querySelectorAll('#pNameTxt, .homehead .pname').forEach(el => el.textContent = atName(v)); }, 400); });
@@ -847,10 +850,10 @@ async function viewAnalytics() {
       ${rank.length > 10 ? `<p class="hint">und ${rank.length - 10} weitere</p>` : ''}
       </div>
     </section>
+    ${await spendFoldHtml()}
     ${await shotsFoldHtml()}
     ${await rateFoldHtml()}
-    ${await rollTimeFoldHtml()}
-    ${await spendFoldHtml()}`;
+    ${await rollTimeFoldHtml()}`;
   setupFolds(view);
   setupSpend(view);
 }

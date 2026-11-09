@@ -59,6 +59,8 @@ const MOOD = (() => {
   function apply() {
     const m = current();
     document.documentElement.dataset.mood = m;
+    // Entwurf: „Alle Fotos“ als Contact Sheet (Einstellungen), Favoriten als Punkt oder Fettstiftkreis
+    try { const l = localStorage.getItem('kb-ap-look') || ''; if (l) document.documentElement.dataset.aplook = l; else delete document.documentElement.dataset.aplook; } catch (_) {}
     const ph = sky();
     if (ph) document.documentElement.dataset.sky = ph + '-' + skyVar(ph); else delete document.documentElement.dataset.sky;
     const meta = document.querySelector('meta[name="theme-color"]');

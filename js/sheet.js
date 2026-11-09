@@ -124,9 +124,55 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
       }
     });
   });
+  // Favoriten markieren, nach allen Streifen, damit Kreise über Nachbarstreifen reichen dürfen
+  if (info.favMark) strips.forEach((strip, k) => {
+    const y = L.topY + k * (sh + sgap);
+    strip.forEach((it, i) => {
+      if (it.f?.rate !== 5) return;
+      const x = m + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
+      if (info.favMark === 'dot') drawFavMark(ctx, s, 'dot', x + fw / 2 - 7, y + edge + fh + 6.3, 0, 0, 0, info.theme);
+      else drawFavMark(ctx, s, info.favMark, cx, cy, fw / 2 + gap * 0.9, fh / 2 + edge * 0.55, (page + 1) * 100 + k * 10 + i, info.theme);
+    });
+  });
 }
 
-async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6) {
+// Favoriten (+5) auf dem Sheet markieren. Entwürfe:
+// pencil: roter Fettstift von Hand umkreist (wie beim Auswählen am Leuchttisch)
+// wax: heller Wachsstift, auf dunklem Papier besser sichtbar
+// glow: sauberer, warm leuchtender Ring wie der fünfte Lichtpunkt der App
+// dot: nur ein leuchtender Punkt neben der Bildnummer
+function rnd(seed) { let x = seed * 9301 + 49297; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
+function drawFavMark(ctx, s, kind, cx, cy, rx, ry, seed, theme) {
+  ctx.save();
+  if (kind === 'pencil' || kind === 'wax') {
+    const R = rnd(seed), turns = 1.12 + R() * 0.08, a0 = R() * Math.PI * 2, tilt = (R() - 0.5) * 0.18;
+    const col = kind === 'pencil' ? (theme === 'light' ? 'rgba(206,32,28,.9)' : 'rgba(236,58,48,.92)') : 'rgba(255,236,170,.9)';
+    for (let pass = 0; pass < 2; pass++) {
+      ctx.beginPath();
+      const N = 90, wob = [R() * 0.06, R() * 0.05, R() * 6, R() * 6];
+      for (let i = 0; i <= N; i++) {
+        const t = a0 + (i / N) * turns * Math.PI * 2;
+        const grow = 1 + (i / N) * 0.07 + pass * 0.025;
+        const w = 1 + wob[0] * Math.sin(t * 2 + wob[2]) + wob[1] * Math.sin(t * 3 + wob[3]);
+        const x = Math.cos(t) * rx * grow * w, y = Math.sin(t) * ry * grow * w;
+        const xr = x * Math.cos(tilt) - y * Math.sin(tilt), yr = x * Math.sin(tilt) + y * Math.cos(tilt);
+        i ? ctx.lineTo((cx + xr) * s, (cy + yr) * s) : ctx.moveTo((cx + xr) * s, (cy + yr) * s);
+      }
+      ctx.strokeStyle = col; ctx.globalAlpha = pass ? 0.55 : 1; ctx.lineWidth = (pass ? 1.0 : 1.6) * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+  } else if (kind === 'glow') {
+    ctx.beginPath(); ctx.ellipse(cx * s, cy * s, rx * s, ry * s, 0, 0, Math.PI * 2);
+    ctx.shadowColor = 'rgba(255,190,80,.95)'; ctx.shadowBlur = 6 * s; ctx.strokeStyle = 'rgba(255,214,120,.95)'; ctx.lineWidth = 1.3 * s; ctx.stroke();
+    ctx.shadowBlur = 2 * s; ctx.stroke();
+  } else if (kind === 'dot') {
+    const g = ctx.createRadialGradient(cx * s, cy * s, 0, cx * s, cy * s, 5 * s);
+    g.addColorStop(0, 'rgba(255,240,180,1)'); g.addColorStop(.35, 'rgba(255,190,80,.95)'); g.addColorStop(1, 'rgba(255,170,60,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx * s, cy * s, 5 * s, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMark = '') {
   await loadJsPdf();
   const d = await albumData(rollId);
   if (!d.frames.length) throw new Error('Keine Fotos im Album');
@@ -147,6 +193,7 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6) {
   const range = (r?.loadedAt || dates[0]) ? [U.fmtDate(String(r?.loadedAt || dates[0]).slice(0, 10)), U.fmtDate(String(r?.finishedAt || dates[dates.length - 1] || '').slice(0, 10))].filter(Boolean).join('–') : '';
   const info = {
     title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap, pages, theme,
+    favMark,
     sub: [U.stockLabel(st), r?.ei ? 'EI ' + r.ei : '', camLabel(cam) || r?.camera || '', range].filter(Boolean).join(' · '),
     count: `${d.frames.length} Bilder`
   };

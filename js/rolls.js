@@ -2484,7 +2484,7 @@ async function viewAllPhotos() {
   // Favoriten sind die Fotos mit +5 (fünf Leuchtpunkte). Sie stehen zusätzlich oben in einer eigenen Reihe.
   const favs = item ? [] : d.frames.map((f, i) => [f, i]).filter(([f]) => f.rate === 5);
   // Favoriten-Reihe klappt auf und zu; beim Hineinnavigieren ist sie zugeklappt
-  let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}">Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
+  let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}"><span class="favdot" aria-hidden="true"></span>Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
   let cur = null;
   d.frames.forEach((f, i) => {
     const gk = order === 'rate' ? 'r' + (f.rate ?? 'x') : f.rollId;
@@ -2498,7 +2498,7 @@ async function viewAllPhotos() {
         html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid${sorting ? ' sorting' : ''}" data-roll="${cur}">`;
       }
     }
-    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : ''}</a>`;
+    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}"${f.rate === 5 ? ' class="isfav"' : ''} data-film="${U.esc(U.stockLabel(d.stocks.get(d.rolls.get(f.rollId)?.stockId)).toUpperCase())}" aria-label="Bild ${frameLabel(f)}"><span class="apnum" aria-hidden="true">${frameLabel(f)}</span><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : f.rate === 5 ? '<span class="favdot" aria-label="Favorit"></span>' : ''}</a>`;
   });
   view.innerHTML = arBtn + toolbar + html + '</div>' + (sorting || item ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
   view.querySelector('#apOrder')?.addEventListener('change', async e => { try { localStorage.setItem('kb-ap-order', e.target.value); } catch (_) {} await viewAllPhotos(); });
