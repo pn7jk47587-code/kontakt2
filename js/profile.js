@@ -230,12 +230,49 @@ async function gearTx() {
   for (const a of await getAccessories()) if (num(a.price)) out.push({ key: 'ga:' + a.id, date: a.boughtAt || '', kind: 'gear', amount: num(a.price), label: [a.maker, a.name].filter(Boolean).join(' ') || 'Zubehör' });
   return out;
 }
+// Eigene Ausgaben, z. B. ein Entwicklerkit: Betrag, Datum, Bezeichnung und Kategorie (gespeichert in meta 'expenses')
+const EXP_CATS = ['Chemie', 'Laborbedarf', 'Druck und Abzüge', 'Versand', 'Sonstiges'];
+async function ownExpenses() { return (await DB.get('meta', 'expenses'))?.list || []; }
+async function saveOwnExpenses(list) { await DB.put('meta', { id: 'expenses', list }); }
+async function ownTx() {
+  return (await ownExpenses()).filter(x => Number(x.amount) > 0).map(x => ({ key: 'o:' + x.id, date: x.date || '', kind: 'own', cat: x.cat || 'Sonstiges', amount: Number(x.amount), label: x.label || x.cat || 'Ausgabe', oid: x.id }));
+}
+async function allGearTx() { return [...await gearTx(), ...await ownTx()]; }
+function openExpenseEditor(item, done) {
+  const x = item ? { ...item } : { id: U.uid(), date: U.today(), amount: null, label: '', cat: '' };
+  const ov = document.createElement('div'); ov.className = 'modalbg';
+  const known = [...new Set([...EXP_CATS])];
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${item ? 'Ausgabe bearbeiten' : 'Ausgabe hinzufügen'}">
+    <label class="fld"><span>Wofür</span><input id="exLabel" maxlength="80" value="${U.esc(x.label || '')}" placeholder="z. B. Entwicklerkit C-41" enterkeyhint="next"></label>
+    <div class="two"><label class="fld"><span>Betrag (€)</span><input id="exAmt" inputmode="decimal" value="${x.amount != null ? String(x.amount).replace('.', ',') : ''}"></label>
+    <label class="fld"><span>Datum</span><input id="exDate" type="date" value="${U.esc(x.date || '')}"></label></div>
+    <div class="qlabel">Kategorie</div>
+    <div class="chipwrap" id="exCats">${known.map(c => `<button type="button" class="chip${x.cat === c ? ' on' : ''}" data-c="${U.esc(c)}">${U.esc(c)}</button>`).join('')}<input class="chip-input" id="exCatOther" placeholder="andere" value="${x.cat && !known.includes(x.cat) ? U.esc(x.cat) : ''}"></div>
+    <div class="modalfoot"><button class="closex" id="exNo" aria-label="Abbrechen">${ART.x}</button>${item ? `<button type="button" class="btn danger small" id="exDel">Löschen</button>` : '<span></span>'}<button class="okbtn" id="exOk" aria-label="Speichern" disabled>${ART.check}</button></div></div>`;
+  document.body.appendChild(ov);
+  const $ = id => ov.querySelector('#' + id);
+  let cat = x.cat || '';
+  const amt = () => { const n = parseFloat($('exAmt').value.replace(',', '.')); return isNaN(n) || n <= 0 ? null : Math.round(n * 100) / 100; };
+  const check = () => { $('exOk').disabled = !(amt() && cat); };
+  $('exCats').addEventListener('click', e => { const b = e.target.closest('[data-c]'); if (!b) return; cat = b.dataset.c; $('exCatOther').value = ''; ov.querySelectorAll('#exCats .chip').forEach(c => c.classList.toggle('on', c === b)); check(); });
+  $('exCatOther').addEventListener('input', e => { const v = e.target.value.trim(); if (v) { cat = v; ov.querySelectorAll('#exCats .chip').forEach(c => c.classList.remove('on')); } else cat = ''; check(); });
+  $('exAmt').addEventListener('input', check); check();
+  $('exNo').onclick = () => ov.remove();
+  $('exDel')?.addEventListener('click', async () => { await saveOwnExpenses((await ownExpenses()).filter(e => e.id !== x.id)); ov.remove(); U.toast('Ausgabe gelöscht'); done && done(); });
+  $('exOk').onclick = async () => {
+    x.amount = amt(); x.cat = cat; x.label = $('exLabel').value.trim(); x.date = $('exDate').value || U.today();
+    const list = (await ownExpenses()).filter(e => e.id !== x.id); list.push(x); await saveOwnExpenses(list);
+    ov.remove(); U.toast(item ? 'Ausgabe geändert' : 'Ausgabe verbucht'); U.haptic && U.haptic([12, 40, 12]); done && done();
+  };
+  setTimeout(() => { if (!item) $('exLabel').focus(); }, 60);
+}
 function spending(tx) {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const r = { total: 0, month: 0, film: 0, dev: 0, scan: 0, gear: 0 };
+  const r = { total: 0, month: 0, film: 0, dev: 0, scan: 0, gear: 0, own: 0, cats: {} };
   for (const t of tx) {
     r.total += t.amount; r[t.kind] += t.amount;
+    if (t.kind === 'own') r.cats[t.cat] = (r.cats[t.cat] || 0) + t.amount;
     if (t.date.slice(0, 7) === ym) r.month += t.amount;
   }
   return r;
@@ -246,13 +283,14 @@ function historyHtml(tx) {
   const groups = new Map();
   for (const t of tx) { const k = t.date.slice(0, 7) || 'ohne Datum'; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(t); }
   const KIND = { film: 'Film', dev: 'Entwicklung', scan: 'Scan', gear: 'Ausrüstung' };
+  const own = list => [...new Set(list.filter(t => t.kind === 'own').map(t => t.cat))];
   return [...groups].map(([k, list]) => {
     const [y, m] = k.split('-');
     const sum = kind => list.filter(t => t.kind === kind).reduce((n, t) => n + t.amount, 0);
     return `<div class="txmonth">
       <div class="txhead"><b>${m ? I18N.t(MONTHS[Number(m) - 1]) + ' ' + y : I18N.t(k)}</b><span>${euro(list.reduce((n, t) => n + t.amount, 0))}</span></div>
-      <div class="txsplit">${['film', 'dev', 'scan', 'gear'].filter(kd => kd !== 'gear' || sum(kd)).map(kd => `<span>${KIND[kd]} ${euro(sum(kd))}</span>`).join('')}</div>
-      ${list.map(t => `<div class="txrow"><span>${U.esc(t.label)}</span><span>${euro(t.amount)}</span></div>`).join('')}
+      <div class="txsplit">${['film', 'dev', 'scan', 'gear'].filter(kd => kd !== 'gear' || sum(kd)).map(kd => `<span>${KIND[kd]} ${euro(sum(kd))}</span>`).join('')}${own(list).map(c => `<span>${U.esc(c)} ${euro(list.filter(t => t.kind === 'own' && t.cat === c).reduce((n, t) => n + t.amount, 0))}</span>`).join('')}</div>
+      ${list.map(t => t.oid ? `<button type="button" class="txrow txown" data-exp="${t.oid}"><span>${U.esc(t.label)}<em>${U.esc(t.cat)}</em></span><span>${euro(t.amount)}</span></button>` : `<div class="txrow"><span>${U.esc(t.label)}</span><span>${euro(t.amount)}</span></div>`).join('')}
     </div>`;
   }).join('');
 }
@@ -745,7 +783,7 @@ async function spendFoldHtml() {
   const allEntries = await DB.all('fridge');
   const [stocks, rolls] = [await stocksMap(), await DB.all('rolls')];
   const cleared = (await DB.get('meta', 'spendReset'))?.cleared || {};
-  const tx = transactions(allEntries, rolls, stocks, await gearTx())
+  const tx = transactions(allEntries, rolls, stocks, await allGearTx())
     .map(t => ({ ...t, amount: Math.round((t.amount - (cleared[t.key] || 0)) * 100) / 100 }))
     .filter(t => t.amount > 0.004);
   const spend = spending(tx);
@@ -757,19 +795,24 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
-      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear ? ' und Ausrüstung' : ''} ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
+      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear || spend.own ? ' und Ausrüstung' : ''} ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
       <div class="spendsplit four">
         <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
         <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
         <div><span class="sub2">Scans</span><b>${euro(spend.scan)}</b></div>
         <div><span class="sub2">Ausrüstung</span><b>${euro(spend.gear)}</b></div>
+        ${Object.entries(spend.cats).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<div><span class="sub2">${U.esc(c)}</span><b>${euro(v)}</b></div>`).join('')}
       </div>
+      <button type="button" class="btn ghost small expadd" id="expAdd">+ Ausgabe</button>
       <details class="txhist"><summary>Verlauf</summary>${historyHtml(tx)}
         ${tx.length ? '<button class="btn danger small" id="spendReset">Ausgaben zurücksetzen</button>' : ''}</details>
       </div>
     </section>`;
 }
 function setupSpend(root) {
+  const redraw = () => { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); };
+  root.querySelector('#expAdd')?.addEventListener('click', () => openExpenseEditor(null, redraw));
+  root.querySelectorAll('[data-exp]').forEach(b => b.addEventListener('click', async () => { const it = (await ownExpenses()).find(e => e.id === b.dataset.exp); if (it) openExpenseEditor(it, redraw); }));
   root.querySelector('#spendReset')?.addEventListener('click', () => {
     const ov = document.createElement('div');
     ov.className = 'modalbg';
@@ -782,7 +825,7 @@ function setupSpend(root) {
     ov.querySelector('#rsNo').addEventListener('click', () => ov.remove());
     ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
     ov.querySelector('#rsYes').addEventListener('click', async () => {
-      const all = transactions(await DB.all('fridge'), await DB.all('rolls'), await stocksMap(), await gearTx());
+      const all = transactions(await DB.all('fridge'), await DB.all('rolls'), await stocksMap(), await allGearTx());
       const map = {};
       all.forEach(t => { map[t.key] = (map[t.key] || 0) + t.amount; });
       await DB.put('meta', { id: 'spendReset', at: new Date().toISOString(), cleared: map });

@@ -2418,3 +2418,8 @@ body.leaving[data-dir="l"] #view { animation: leaveleft .22s ease-in forwards; }
 @keyframes arriveright { from { opacity: 0; transform: translateX(26px); } }
 @media (prefers-reduced-motion: reduce) { body.leaving #view, #view.arrive-l, #view.arrive-r { animation: none !important; } }
 body { overflow-x: clip; }
+
+/* ---------- v175: eigene Ausgaben ---------- */
+.expadd { display: block; margin: 10px 0 0 auto; }
+.txrow.txown { width: 100%; font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; text-align: left; cursor: pointer; }
+.txrow.txown em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 6px; }

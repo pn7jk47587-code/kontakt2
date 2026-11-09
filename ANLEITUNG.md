@@ -492,3 +492,9 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Zurück aus einem Album oder einer Rolle: Die Startseite steht auf der Höhe der Karte dieser Rolle, nicht mehr ganz oben. Gemerkt wird das in `kb-anchor` (sessionStorage).
 - Zurück-Pfeil oben links: Wie beim Haken leuchtet ein Lichtring auf, dann gleitet die Ansicht weg. Ein offenes Fenster schließt der Pfeil weiterhin ohne Übergang.
 - Räumliche Ordnung: Die Startseite liegt links, die Unterseiten in der Mitte, das Profil rechts. Geht man zur Startseite, gleitet die Ansicht leicht nach rechts weg und die Startseite kommt von links. Geht man zum Profil, ist es umgekehrt. Das gilt für den Zurück-Pfeil, den Haken und die Knöpfe für Startseite und Profil. Innerhalb der Unterseiten bleibt der bisherige Übergang.
+
+## v175 Eigene Ausgaben mit Kategorien
+
+- Analytics, Abschnitt „Geld“: Unter den Kacheln steht „+ Ausgabe“. Dort trägt man ein, wofür (z. B. Entwicklerkit C-41), Betrag, Datum und Kategorie ein. Zur Wahl stehen Chemie, Laborbedarf, Druck und Abzüge, Versand und Sonstiges. Über „andere“ lässt sich eine eigene Kategorie tippen. Der Haken bleibt grau, bis Betrag und Kategorie da sind.
+- Jede genutzte Kategorie bekommt eine eigene Kachel mit ihrer Summe. Die Ausgaben zählen im Monat und im Filmgeldberg mit und stehen im Verlauf mit Kategorie. Antippen im Verlauf öffnet sie zum Ändern oder Löschen.
+- Gespeichert in `meta` unter `expenses`. „Ausgaben zurücksetzen“ setzt auch sie auf 0.
