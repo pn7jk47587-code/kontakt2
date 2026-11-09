@@ -628,7 +628,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Beim Filmeinlegen erscheinen Halbformat und Großformat nur, wenn im Kameraschrank eine Kamera mit diesem Format steht.
 - Kameraschrank: Haken „Kamera ist ausgeliehen“. Ausgeliehene Kameras zählen nicht für Milliardär, Krake, GAS-Opfer und Schnorrer. Diese vier werden bei jedem Prüfen neu berechnet und können dadurch auch wegfallen.
 
-## v194 Glühwürmchen und neues Chamäleon
+## v194 Pfau und neues Chamäleon
 
-- Adlerauge heißt jetzt Glühwürmchen (gleiche Regel: Fotos mit fünf Leuchtpunkten, 25 · 100 · 250). Das Symbol ist ein Glühwürmchen mit leuchtendem Hinterleib. Die interne Kennung `adler` bleibt, verdiente Stufen gehen nicht verloren.
+- Adlerauge heißt jetzt Pfau (gleiche Regel: Fotos mit fünf Leuchtpunkten, 25 · 100 · 250). Das Symbol ist ein Pfau, dessen fünf Augenfedern die fünf Leuchtpunkte zeigen. Die interne Kennung `adler` bleibt, verdiente Stufen gehen nicht verloren. (v195 korrigiert v194, wo der Name versehentlich mit dem Glühwürmchen der blauen Stunde zusammenfiel.)
 - Chamäleon neu gezeichnet: Seitenansicht auf einem Ast, mit Helm, Kegelauge und eingerolltem Schwanz.
