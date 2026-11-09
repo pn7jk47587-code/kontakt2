@@ -621,3 +621,9 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Abzeichen zählen nur Rollen und Fotos, die in der App eingelegt, entwickelt und hochgeladen wurden. Archivierte Rollen (`archived: true`, über „Archivieren“ nachgetragen) zählen nicht mit.
 - Neues Abzeichen Archivarin: Fotos ins Archiv nachgetragen, Stufen 100 · 500 · 1.000.
 - Einmalig beim ersten Prüfen nach dem Update: Stufen, die in v191 aus archivierten Fotos verdient wurden, werden auf den heutigen Stand zurückgesetzt. Ein Anstecker, dessen Abzeichen dabei wegfällt, wird abgenommen.
+
+## v193 Halbformat, Großformat, ausgeliehene Kameras
+
+- Neue Formate: Halbformat (`half`, 135er Film, 48 oder 72 Bilder) und Großformat (`gross`, Planfilm, 1 · 2 · 4 · 10 Blatt). Wählbar im Kameraschrank, im Filmkühlschrank (Planfilm), im Archiv und im Kontaktbogen (Großformat wie 120 gesetzt).
+- Beim Filmeinlegen erscheinen Halbformat und Großformat nur, wenn im Kameraschrank eine Kamera mit diesem Format steht.
+- Kameraschrank: Haken „Kamera ist ausgeliehen“. Ausgeliehene Kameras zählen nicht für Milliardär, Krake, GAS-Opfer und Schnorrer. Diese vier werden bei jedem Prüfen neu berechnet und können dadurch auch wegfallen.

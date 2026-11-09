@@ -52,6 +52,7 @@ const BADGES = (() => {
     const archivedIds = new Set(allRolls.filter(r => r.archived).map(r => r.id));
     const rolls = allRolls.filter(r => !r.archived), frames = allFrames.filter(f => !archivedIds.has(f.rollId));
     const filters = await getFilters(), acc = await getAccessories(), lensM = new Map(lenses.map(l => [l.id, l]));
+    const own = cams.filter(c => !c.borrowed);   // ausgeliehene Kameras zählen nicht als eigener Besitz
     const rollM = new Map(rolls.map(r => [r.id, r]));
     const used = rolls.filter(r => (r.status || 'entwurf') !== 'entwurf' || frames.some(f => f.rollId === r.id && f.shot));
     const v = {};
@@ -74,14 +75,14 @@ const BADGES = (() => {
     // Ausrüstung
     const rated = frames.filter(f => f.rate != null);
     const avg = rated.length ? rated.reduce((a, f) => a + f.rate, 0) / rated.length : null;
-    v.gas = cams.length + lenses.length > 8 && rated.length >= 30 && avg < 2.5 ? 1 : 0;
+    v.gas = own.length + lenses.length > 8 && rated.length >= 30 && avg < 2.5 ? 1 : 0;
     const byLoad = [...used].filter(r => r.cameraId).sort((a, b) => String(a.loadedAt || '').localeCompare(String(b.loadedAt || '')));
     let run = 0, best = 0, prev = null; byLoad.forEach(r => { run = r.cameraId === prev ? run + 1 : 1; prev = r.cameraId; best = Math.max(best, run); }); v.treue = best;
-    v.krake = new Set(cams.map(c => String(c.maker || '').trim().toLowerCase()).filter(Boolean)).size;
-    v.milliardaer = cams.some(c => /hasselblad/i.test(c.maker || '')) ? 1 : 0;
+    v.krake = new Set(own.map(c => String(c.maker || '').trim().toLowerCase()).filter(Boolean)).size;
+    v.milliardaer = own.some(c => /hasselblad/i.test(c.maker || '')) ? 1 : 0;
     const longEnd = l => Math.max(0, ...String(l?.focal || '').split(/[^\d.,]+/).map(num).filter(Boolean));
     v.sniper = frames.filter(f => f.lensId && longEnd(lensM.get(f.lensId)) >= 85).length;
-    v.schnorrer = [...cams, ...lenses, ...filters, ...acc].filter(x => gift(x.price)).length;
+    v.schnorrer = [...own, ...lenses, ...filters, ...acc].filter(x => gift(x.price)).length;
     v.leck = frames.filter(f => f.leak).length;
     // Filme und Entwicklung
     const sts = used.map(r => stocksM.get(r.stockId)).filter(Boolean);
@@ -116,7 +117,7 @@ const BADGES = (() => {
     return v;
   }
 
-  async function state() { return (await DB.get('meta', 'badges')) || { id: 'badges', earned: {}, pin: null, v: 2 }; }
+  async function state() { return (await DB.get('meta', 'badges')) || { id: 'badges', earned: {}, pin: null, v: 3 }; }
   // Neu berechnen, neue Stufen mit heutigem Datum festhalten. Eine einmal verdiente Stufe bleibt.
   let running = null;
   async function check(quiet) {
@@ -124,11 +125,16 @@ const BADGES = (() => {
     running = (async () => {
       const v = await values(), st = await state(), fresh = [];
       // Einmalig (v192): Stufen, die in v191 aus archivierten Fotos verdient wurden, auf den heutigen Stand zurücksetzen
-      if ((st.v || 1) < 2) { for (const d of DEF) { const e = st.earned[d.id]; if (!e) continue; const lv = level(d, v[d.id] || 0); if (lv < e.lv) { if (lv) e.lv = lv; else delete st.earned[d.id]; } } if (st.pin && !st.earned[st.pin]) st.pin = null; st.v = 2; await DB.put('meta', st); }
+      if ((st.v || 1) < 3) { for (const d of DEF) { const e = st.earned[d.id]; if (!e) continue; const lv = level(d, v[d.id] || 0); if (lv < e.lv) { if (lv) e.lv = lv; else delete st.earned[d.id]; } } if (st.pin && !st.earned[st.pin]) st.pin = null; st.v = 3; await DB.put('meta', st); }
+      // Besitz-Abzeichen folgen dem Kameraschrank: wird eine Kamera als ausgeliehen markiert oder verkauft, fällt die Stufe wieder weg
+      const LIVE = ['milliardaer', 'krake', 'gas', 'schnorrer'];
+      let changed = false;
       for (const d of DEF) {
         const lv = level(d, v[d.id] || 0), had = st.earned[d.id]?.lv || 0;
         if (lv > had) { st.earned[d.id] = { lv, at: U.today() }; fresh.push([d, lv]); }
+        else if (LIVE.includes(d.id) && lv < had) { if (lv) st.earned[d.id].lv = lv; else delete st.earned[d.id]; if (st.pin === d.id && !lv) st.pin = null; changed = true; }
       }
+      if (changed && !fresh.length) await DB.put('meta', st);
       if (fresh.length) {
         await DB.put('meta', st);
         if (!quiet) { const [d, lv] = fresh[0]; U.toast(fresh.length > 1 ? `${fresh.length} neue Abzeichen` : `Neues Abzeichen: ${d.name}${d.lv.length > 1 ? ` · Stufe ${lv}` : ''}`); U.haptic && U.haptic([20, 60, 20]); }

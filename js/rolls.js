@@ -28,7 +28,9 @@ function camShutters(c) {
   return [...SPEEDS.slice(a, b + 1), ...(c.shutterX ? ['X'] : []), ...(c.shutterB ? ['B'] : []), ...(c.shutterT ? ['T'] : [])];
 }
 const chipHtml = (list, cur, sec) => list.map(v => `<button type="button" class="chip${cur === v ? ' on' : ''}" data-v="${v}">${v.replace('.', ',')}${sec && /^\d+$/.test(v) ? ' s' : ''}</button>`).join('');
-const FORMAT_LABEL = { '135': 'Kleinbild', '120': 'Mittelformat' };
+const FORMAT_LABEL = { '135': 'Kleinbild', '120': 'Mittelformat', half: 'Halbformat', gross: 'Großformat' };
+// Film zum Aufnahmeformat: Halbformat belichtet Kleinbildfilm, Großformat Planfilm (im Kühlschrank als „gross“)
+const filmFmt = f => f === 'half' ? '135' : f;
 // Blitzsynchronzeit: kürzeste Zeit, bei der der Verschluss beim Zünden ganz offen ist
 const FLASH_SYNC_OPTS = [['', 'keine Angabe'], ['alle', 'Alle Zeiten (Zentralverschluss)'], ['eingebaut', 'Eingebauter Blitz (Automatik)'], ...['1/250', '1/125', '1/100', '1/90', '1/80', '1/60', '1/50', '1/40', '1/30'].map(v => [v, v + ' s'])];
 // „X“ am Zeitenrad steht für die Synchronzeit der Kamera
@@ -341,6 +343,7 @@ async function wizardStep1(wiz, root = view) {
   const cams = gearSort((await DB.all('cameras')).filter(c => !c.broken && !c.inactive), camSortFb);
   if (wiz.cameraId && !cams.some(c => c.id === wiz.cameraId)) wiz.cameraId = null;
   wiz.format = wiz.format || '135';
+  if ((wiz.format === 'half' || wiz.format === 'gross') && !cams.some(c => c.format === wiz.format)) wiz.format = '135';
   const camCards = await Promise.all(cams.map(async c => `
     <button type="button" class="pick cam${wiz.cameraId === c.id ? ' on' : ''}" data-cam="${c.id}" data-format="${c.format}">
       <span class="pickart">${await camArt(c, 104)}</span>
@@ -349,7 +352,7 @@ async function wizardStep1(wiz, root = view) {
   const fridge = sortFridge((await DB.all('fridge')).filter(e => (e.count || 0) > 0), new Map(stocks.map(x => [x.id, x])), 'expiry');
   const rows = await Promise.all(fridge.map(e => fridgeRow(e, stocks.find(x => x.id === e.stockId), { pick: true, on: wiz.fridgeId === e.id })));
   let chosenOther = wiz.stockId && !wiz.fridgeId ? stocks.find(x => x.id === wiz.stockId) : null;
-  if (chosenOther && chosenOther.formats && !chosenOther.formats.includes(wiz.format)) { chosenOther = null; wiz.stockId = null; }
+  if (chosenOther && chosenOther.formats && wiz.format !== 'gross' && !chosenOther.formats.includes(filmFmt(wiz.format))) { chosenOther = null; wiz.stockId = null; }
   root.innerHTML = `
     ${steps(1)}
     <section class="wizsec">
@@ -357,6 +360,8 @@ async function wizardStep1(wiz, root = view) {
       <div class="seggroup fmtpick" id="fmt">
         <button type="button" class="seg${wiz.format === '135' ? ' on' : ''}" data-fmt="135" aria-label="Kleinbild">${ART.fmt135}<span>135</span></button>
         <button type="button" class="seg${wiz.format === '120' ? ' on' : ''}" data-fmt="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
+        ${cams.some(c => c.format === 'half') ? `<button type="button" class="seg${wiz.format === 'half' ? ' on' : ''}" data-fmt="half" aria-label="Halbformat">${ART.fmtHalf}<span>Halb</span></button>` : ''}
+        ${cams.some(c => c.format === 'gross') ? `<button type="button" class="seg${wiz.format === 'gross' ? ' on' : ''}" data-fmt="gross" aria-label="Großformat">${ART.fmtGross}<span>Groß</span></button>` : ''}
       </div>
       <div class="picks" id="cams">${camCards.join('')}</div>
     </section>
@@ -413,13 +418,14 @@ async function wizardStep1(wiz, root = view) {
   const filter = (box, q, extra) => box && box.querySelectorAll('[data-q]').forEach(el => {
     el.hidden = !(el.dataset.q.includes(q.toLowerCase().trim()) && (!extra || extra(el)));
   });
-  const fmtOk = el => el.dataset.format === wiz.format;
+  const fmtOk = el => el.dataset.format === wiz.format;   // Kameras: genau das Aufnahmeformat
+  const filmOk = el => el.dataset.format === filmFmt(wiz.format);   // Filme im Kühlschrank: passender Film
   const refresh = () => {
-    filter(root.querySelector('#fridgeList'), root.querySelector('#qFridge')?.value || '', fmtOk);
+    filter(root.querySelector('#fridgeList'), root.querySelector('#qFridge')?.value || '', filmOk);
     const fl = root.querySelector('#fridgeList');
     if (fl) {
       const any = [...fl.children].some(x => !x.hidden), q = (root.querySelector('#qFridge')?.value || '').trim();
-      const forFmt = [...fl.children].some(x => x.dataset.format === wiz.format);
+      const forFmt = [...fl.children].some(x => x.dataset.format === filmFmt(wiz.format));
       const none = root.querySelector('#fridgeNone');
       root.querySelector('#qFridge').hidden = !forFmt;
       fl.hidden = !forFmt;
@@ -436,7 +442,7 @@ async function wizardStep1(wiz, root = view) {
   const toNext = () => root.querySelector('#expSec').scrollIntoView({ behavior: 'smooth', block: 'center' });
   const toFilm = () => root.querySelector('#filmSec').scrollIntoView({ behavior: 'smooth', block: 'start' });
   const dropMismatch = () => {
-    if (wiz.fridgeId) { const fe = root.querySelector(`[data-fridge="${wiz.fridgeId}"]`); if (fe && fe.dataset.format !== wiz.format) { wiz.fridgeId = null; wiz.stockId = null; fe.classList.remove('on'); } }
+    if (wiz.fridgeId) { const fe = root.querySelector(`[data-fridge="${wiz.fridgeId}"]`); if (fe && fe.dataset.format !== filmFmt(wiz.format)) { wiz.fridgeId = null; wiz.stockId = null; fe.classList.remove('on'); } }
   };
   root.querySelector('#qFridge')?.addEventListener('input', refresh);
   root.querySelector('#fmt').addEventListener('click', e => {
@@ -461,7 +467,7 @@ async function wizardStep1(wiz, root = view) {
     wiz.stockId = stockId; wiz.fridgeId = null; wizSave(wiz);
     await wizardStep1(wiz, root);
     setTimeout(() => root.querySelector('#filmSec').scrollIntoView({ block: 'start' }), 50);
-  }, wiz.format));
+  }, wiz.format === 'gross' ? null : filmFmt(wiz.format)));
   root.querySelector('#cams').addEventListener('click', e => {
     const b = e.target.closest('[data-cam]'); if (!b) return;
     const on = wiz.cameraId === b.dataset.cam ? null : b.dataset.cam;
@@ -488,10 +494,11 @@ function framesFor120(cam) {
 function expOptions(wiz, cam) {
   const is120 = wiz.format === '120';
   const n120 = is120 ? framesFor120(cam) : 0;
-  const options = is120 ? (n120 ? [String(n120)] : []) : ['24', '36', '36+1'];
+  // Halbformat: doppelt so viele Bilder wie die Kleinbildrolle. Großformat: Planfilmblätter.
+  const options = is120 ? (n120 ? [String(n120)] : []) : wiz.format === 'half' ? ['48', '72'] : wiz.format === 'gross' ? ['1', '2', '4', '10'] : ['24', '36', '36+1'];
   const key = wiz.format + (wiz.cameraId || '');
   if (is120) { wiz.expChoice = n120 ? String(n120) : ''; wiz.expFor = key; }
-  else if (!wiz.expChoice || wiz.expFor !== key) { wiz.expChoice = '36'; wiz.expFor = key; }
+  else if (!wiz.expChoice || wiz.expFor !== key) { wiz.expChoice = wiz.format === 'half' ? '72' : wiz.format === 'gross' ? '2' : '36'; wiz.expFor = key; }
   return options;
 }
 
@@ -3042,7 +3049,7 @@ async function viewCamera(id) {
   <div class="card" id="cf">
     ${field('Hersteller', 'maker')}
     ${field('Modell', 'name')}
-    ${select('Format', 'format', [['135', 'Kleinbild (135)'], ['120', 'Mittelformat (120)']])}
+    ${select('Format', 'format', [['135', 'Kleinbild (135)'], ['half', 'Halbformat (135, 18 × 24 mm)'], ['120', 'Mittelformat (120)'], ['gross', 'Großformat (Planfilm)']])}
     <label class="fld"><span>Bajonett</span><select data-f="mount">${MOUNTS.map(m => `<option>${U.esc(m)}</option>`).join('')}</select></label>
     <div class="two">
       ${select('Kürzeste Zeit', 'shutterFast', [['', 'keine Angabe'], ...SPEEDS.map(v => [v, v + (/^\d+$/.test(v) ? ' s' : ' s')])])}
@@ -3059,6 +3066,7 @@ async function viewCamera(id) {
     <label class="check"><input type="checkbox" data-f="multiExp"> Doppelbelichtung möglich</label>
     <label class="check"><input type="checkbox" data-f="lightLeaks"> Kamera hat Lightleaks</label>
     ${cam.lightLeaks ? `<p class="leakstat">${U.esc(leakSentence(await leakStats(cam.id)))}</p>` : ''}
+    <label class="check"><input type="checkbox" data-f="borrowed"> Kamera ist ausgeliehen</label>
     <label class="check"><input type="checkbox" data-f="inactive"> Kamera ist inaktiv</label>
     <label class="check"><input type="checkbox" data-f="broken"> Kamera ist kaputt</label>
     <div id="brokenBox">${area('Was ist kaputt?', 'brokenNotes', '', 3)}<p class="hint">Kaputte Kameras erscheinen nicht bei „Film einlegen“.</p></div>

@@ -179,7 +179,7 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
   const d = await albumData(rollId);
   if (!d.frames.length) throw new Error('Keine Fotos im Album');
   const r = d.roll, st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
-  const square = r?.format === '120' || /6x6|120/.test(String(st?.format || r?.format || ''));
+  const square = r?.format === '120' || r?.format === 'gross' || /6x6|120/.test(String(st?.format || r?.format || ''));
   const per = square ? (perRow === 4 ? 3 : 4) : (perRow === 4 ? 4 : 6);
   const imgs = await sheetImages(d.frames);
   const items = imgs.map(x => ({ ...x, n: frameLabel(x.f) }));

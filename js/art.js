@@ -147,5 +147,7 @@ const ART = (() => {
   // Filmformate: Kleinbild als schmaler Streifen mit Perforation und 3:2-Bild, Mittelformat als breiter Streifen ohne Perforation mit quadratischem Bild
   const fmt135 = ic('<rect x="2" y="6" width="20" height="12" rx="1.2"/><rect x="7" y="9.2" width="10" height="5.6" rx=".6"/><path d="M4 7.6h.01M8 7.6h.01M12 7.6h.01M16 7.6h.01M20 7.6h.01M4 16.4h.01M8 16.4h.01M12 16.4h.01M16 16.4h.01M20 16.4h.01" stroke-width="1.8"/>');
   const fmt120 = ic('<rect x="2" y="3" width="20" height="18" rx="1.2"/><rect x="6" y="6" width="12" height="12" rx=".6"/>');
-  return { fmt135, fmt120, film, camera, double, sparkle, arrow, pickup, album, lens, cabinet, up, check, x, menu, sun, tank, filmIc, meter, save, moon, diary, camIc, calIc };
+  const fmtHalf = ic('<rect x="2" y="6" width="20" height="12" rx="1.2"/><rect x="5" y="9" width="6" height="6" rx=".6"/><rect x="13" y="9" width="6" height="6" rx=".6"/>');
+  const fmtGross = ic('<rect x="4" y="2.5" width="16" height="19" rx="1"/><path d="M4 6.5h16"/><path d="M15.5 2.5v4"/>');
+  return { fmt135, fmt120, fmtHalf, fmtGross, film, camera, double, sparkle, arrow, pickup, album, lens, cabinet, up, check, x, menu, sun, tank, filmIc, meter, save, moon, diary, camIc, calIc };
 })();

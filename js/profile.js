@@ -529,6 +529,7 @@ async function openFridgeModal(entry, fromBtn) {
       <div class="seggroup fmtpick" id="frFmt">
         <button type="button" class="seg${entry.format === '135' ? ' on' : ''}" data-f="135" aria-label="Kleinbild">${ART.fmt135}<span>135</span></button>
         <button type="button" class="seg${entry.format === '120' ? ' on' : ''}" data-f="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
+        <button type="button" class="seg${entry.format === 'gross' ? ' on' : ''}" data-f="gross" aria-label="Planfilm für Großformat">${ART.fmtGross}<span>Planfilm</span></button>
       </div>
       ${isNew ? `
         <div class="frslot empty" id="frSlot" aria-live="polite" hidden></div>
@@ -556,7 +557,7 @@ async function openFridgeModal(entry, fromBtn) {
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   const filter = () => {
     const q = ($('frQ')?.value || '').toLowerCase().trim();
-    ov.querySelectorAll('.fropt').forEach(b => { b.hidden = !b.dataset.q.includes(q) || !b.dataset.fmts.split(' ').includes(entry.format); });
+    ov.querySelectorAll('.fropt').forEach(b => { b.hidden = !b.dataset.q.includes(q) || (entry.format !== 'gross' && !b.dataset.fmts.split(' ').includes(entry.format)); });
     const list = $('frList');
     if (list) U.emptyHint(list, q && ![...list.children].some(b => !b.hidden), UPS_FILM);
   };
