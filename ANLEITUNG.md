@@ -482,6 +482,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v173 Vorschau des Contact Sheets scrollt
 
 - In der Vorschau lassen sich mehrere Seiten jetzt nach oben und unten durchscrollen. Vorher hat die Sperre für offene Fenster das Wischen dort abgefangen, weil das Auswahlfenster dahinter noch offen ist.
+
 ## v174 Ort für mehrere Frames, Kartensuche, Zurückgehen an die richtige Stelle, Übergänge
 
 - Kartensuche: Das Suchfeld hat nur noch einen Rand. Er leuchtet im Regenbogenverlauf wie die Knöpfe. Das Eingabefeld zeichnet keinen eigenen Fokusrahmen mehr darüber.
