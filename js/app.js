@@ -549,6 +549,25 @@ function bind(root, obj, store, after) {
   });
 }
 
+// v197: Verliehen. Das Textfeld erscheint erst, wenn der Haken gesetzt ist.
+function lentFields(word) {
+  return `<label class="check"><input type="checkbox" data-f="lent"> ${word} ist verliehen</label>
+    <label class="fld lentbox" hidden><span>An wen und seit wann</span><input type="text" data-f="lentNote" maxlength="80" placeholder="z. B. Lena, seit Oktober"></label>`;
+}
+// Werte setzen (für Formulare ohne bind) und das Textfeld mit dem Haken ein- und ausblenden
+function lentWire(root, obj) {
+  const cb = root.querySelector('[data-f="lent"]'), box = root.querySelector('.lentbox'), inp = box?.querySelector('input');
+  if (!cb || !box) return;
+  cb.checked = !!obj.lent; inp.value = obj.lentNote || '';
+  const show = () => { box.hidden = !cb.checked; };
+  cb.addEventListener('change', () => { show(); if (cb.checked) inp.focus(); });
+  show();
+}
+function lentRead(root, obj) {
+  const cb = root.querySelector('[data-f="lent"]'); if (!cb) return;
+  obj.lent = cb.checked; obj.lentNote = cb.checked ? root.querySelector('[data-f="lentNote"]').value.trim() : '';
+}
+function lentChip(x) { return x.lent ? `<span class="lenttag">verliehen${x.lentNote ? ' · ' + U.esc(x.lentNote.slice(0, 30)) : ''}</span>` : ''; }
 function field(label, f, { type = 'text', ph = '', num = false, attrs = '' } = {}) {
   return `<label class="fld"><span>${label}</span><input type="${type}" data-f="${f}" ${num ? 'data-num inputmode="decimal"' : ''} ${attrs}></label>`;
 }

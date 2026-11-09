@@ -2768,7 +2768,7 @@ async function cabinetHtml(fold = false, only = null) {
       <span class="crowart">${await camArt(c, 76)}${favStar('cameras', c)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(camLabel(c))}</span>
-        <span class="frowchips">${c.mount ? `<span>${U.esc(c.mount)}</span>` : ''}${c.broken ? '<span class="brokentag">kaputt</span>' : ''}${lk && lk.since ? `<span class="leaktag">${lk.n} ${lk.n === 1 ? 'Lightleak' : 'Lightleaks'}</span>` : ''}</span>
+        <span class="frowchips">${c.mount ? `<span>${U.esc(c.mount)}</span>` : ''}${c.broken ? '<span class="brokentag">kaputt</span>' : ''}${lentChip(c)}${lk && lk.since ? `<span class="leaktag">${lk.n} ${lk.n === 1 ? 'Lightleak' : 'Lightleaks'}</span>` : ''}</span>
         ${c.broken && c.brokenNotes ? `<span class="frowsub">${U.esc(c.brokenNotes.slice(0, 80))}</span>` : ''}
         ${own.length ? `<span class="minilenses">${own.map(l => ART.lens(l, 34)).join('')}</span>` : ''}
       </span>
@@ -2785,7 +2785,7 @@ async function cabinetHtml(fold = false, only = null) {
       <span class="crowart lensart">${ART.lens(l, 60)}${favStar('lenses', l)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc(lensLabel(l))}</span>
-        <span class="frowchips"><span>${U.esc(l.mount || 'Bajonett offen')}</span>${l.filterThread ? `<span class="threadtag">⌀ ${U.esc(String(l.filterThread).replace('.', ','))} mm</span>` : ''}${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
+        <span class="frowchips">${lentChip(l)}<span>${U.esc(l.mount || 'Bajonett offen')}</span>${l.filterThread ? `<span class="threadtag">⌀ ${U.esc(String(l.filterThread).replace('.', ','))} mm</span>` : ''}${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
       </span>
       <span class="chev">›</span>
     </a>`;
@@ -2856,17 +2856,10 @@ async function viewCabinetPart(k) {
   setHeader(part[1]);
   const sortable = k === 'kameras' || k === 'objektive';
   view.innerHTML = `<div class="cabnav">${CAB_PARTS.map(([key, label]) => `<a class="seg${key === k ? ' on' : ''}" href="#/schrank/${key}">${label}</a>`).join('')}</div>`
-    + (sortable ? `<div class="archcorner"><button type="button" class="archlink" id="cabSort" aria-pressed="false">${MOVE_IC}<span>Reihenfolge</span></button></div>` : '')
-    + U.hintOnce('cab-gestures', sortable ? 'Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.' : 'Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben.')
+    + U.hintOnce('cab-gestures2', sortable ? 'Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit langem Drücken ziehst du Einträge an eine andere Stelle.' : 'Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben.')
     + await cabinetHtml(false, k);
   setupFolds(view);
   setupCabinet(view);
-  view.querySelector('#cabSort')?.addEventListener('click', e => {
-    const on = view.querySelector('.cabpage').classList.toggle('cabsorting');
-    e.currentTarget.classList.toggle('on', on); e.currentTarget.setAttribute('aria-pressed', on);
-    e.currentTarget.querySelector('span').textContent = on ? 'Fertig' : 'Reihenfolge';
-    U.haptic && U.haptic(10);
-  });
 }
 
 // Plus im Kameraschrank: kurzes Vibrieren, danach leuchtet der neue Eintrag beim Zurückkommen auf
@@ -2991,6 +2984,7 @@ async function viewLens(id) {
       <label class="fld"><span>Bajonett</span><select data-f="mount"><option value="">Bitte wählen</option>${MOUNTS.map(m => `<option>${U.esc(m)}</option>`).join('')}</select></label>
       <div class="qlabel">Passt an</div>
       <div class="camchecks" id="camChecks">${cams.map(c => `<label class="camcheck${lens.mount && c.mount && c.mount !== lens.mount ? ' other' : ''}"><input type="checkbox" value="${c.id}" ${lens.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}<br><span class="sub2">${U.esc(c.mount || 'Bajonett offen')}</span></span></label>`).join('')}</div>
+      ${lentFields('Objektiv')}
       <label class="check"><input type="checkbox" data-f="inactive"> Objektiv ist inaktiv</label>
       <p class="hint" style="margin:-4px 0 10px">Inaktive Objektive stehen im Schrank unter „Inaktiv“ und erscheinen nicht mehr in der Bildansicht.</p>
       <div class="two">
@@ -3000,6 +2994,7 @@ async function viewLens(id) {
       ${area('Notizen', 'notes', '')}
     </div>
     ${used || FRESH_ID === lens.id ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
+    lentWire(view.querySelector('#lf'), lens);
     bind(view.querySelector('#lf'), lens, 'lenses', () => {
       view.querySelector('.lensstage').innerHTML = ART.lens(lens, 150);
       setHeader(lensLabel(lens) || 'Objektiv', {});
@@ -3068,6 +3063,7 @@ async function viewCamera(id) {
     <label class="check"><input type="checkbox" data-f="lightLeaks"> Kamera hat Lightleaks</label>
     ${cam.lightLeaks ? `<p class="leakstat">${U.esc(leakSentence(await leakStats(cam.id)))}</p>` : ''}
     <label class="check"><input type="checkbox" data-f="borrowed"> Kamera ist ausgeliehen</label>
+    ${lentFields('Kamera')}
     <label class="check"><input type="checkbox" data-f="inactive"> Kamera ist inaktiv</label>
     <label class="check"><input type="checkbox" data-f="broken"> Kamera ist kaputt</label>
     <div id="brokenBox">${area('Was ist kaputt?', 'brokenNotes', '', 3)}<p class="hint">Kaputte Kameras erscheinen nicht bei „Film einlegen“.</p></div>
@@ -3095,6 +3091,7 @@ async function viewCamera(id) {
     setHeader(camLabel(cam), {});
   };
   bind(view.querySelector('#cf'), cam, 'cameras', sync);
+  lentWire(view.querySelector('#cf'), cam);
   view.querySelector('#cf').addEventListener('input', () => setTimeout(sync, 400));
   sync();
   view.querySelector('#camPhoto').addEventListener('change', async e => {

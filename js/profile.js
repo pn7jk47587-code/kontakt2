@@ -412,6 +412,7 @@ async function openSettings() {
       <span class="appver" title="App-Version und letzte Änderung">${typeof APP_VERSION !== 'undefined' ? `Version ${APP_VERSION.replace('kb-v', '')}<br>${(() => { const [d, t] = APP_BUILT.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}, ${t}`; })()}` : ''}</span>
       <div class="sethead"><span>Profil</span></div>
       <label class="atname setname"><span class="at" aria-hidden="true">@</span><input id="setName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false" enterkeyhint="done"></label>
+      <div class="seggroup genderpick" id="genderPick" role="group" aria-label="Anrede">${[['f', 'Weiblich'], ['m', 'Männlich'], ['n', 'Neutral']].map(([k, l]) => `<button type="button" class="seg${(PROFILE?.gender || 'n') === k ? ' on' : ''}" data-gender="${k}" aria-pressed="${(PROFILE?.gender || 'n') === k}">${l}</button>`).join('')}</div>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>
@@ -449,6 +450,12 @@ async function openSettings() {
   { const inp = ov.querySelector('#setName'); let tn;
     inp.addEventListener('input', () => { stripAt(inp); clearTimeout(tn); tn = setTimeout(async () => { const v = inp.value.trim(); if (!v) return; PROFILE.name = v; await DB.put('meta', PROFILE); document.querySelectorAll('#pNameTxt, .homehead .pname').forEach(el => el.textContent = atName(v)); }, 400); });
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); }); }
+  // Anrede: bestimmt die Bezeichnungen der Abzeichen (Milliardärin, Milliardär, Milliardär*in)
+  ov.querySelector('#genderPick').addEventListener('click', async e => {
+    const b = e.target.closest('[data-gender]'); if (!b) return;
+    PROFILE.gender = b.dataset.gender; await DB.put('meta', PROFILE);
+    ov.querySelectorAll('#genderPick .seg').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', x === b); }); U.haptic && U.haptic(8);
+  });
   ov.querySelector('#nightPick').addEventListener('click', e => {
     const b = e.target.closest('[data-nl]'); if (!b) return;
     try { localStorage.setItem('kb-nightlight', b.dataset.nl); } catch (_) {}

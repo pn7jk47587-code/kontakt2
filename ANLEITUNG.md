@@ -638,3 +638,13 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Im Kameraschrank (Kameras, Objektive, Filter, Zubehör) ist der Favorit kein Stern mehr. Es ist derselbe leuchtende Punkt wie bei den Favoriten in „Alle Fotos“. Ist der Eintrag kein Favorit, bleibt der Punkt grau, so wie noch nicht verdiente Abzeichen grau bleiben.
 - Der Hinweis im Kameraschrank spricht jetzt vom Leuchtpunkt.
 - Der Lichtschein über dem Bereich „Inaktiv“ hatte eckige Kanten. Er hat jetzt runde Ecken wie die Karten.
+
+## v197 Anrede, Verliehen, graue Abzeichen, einheitliche Pfeile
+
+- Einstellungen › Profil: unter dem Nutzernamen lässt sich „Weiblich“, „Männlich“ oder „Neutral“ wählen. Danach richten sich die Namen der Abzeichen, etwa Milliardärin, Milliardär oder Milliardär*in. Betroffen sind Prepper, Archäologin, Milliardär, Sniper, Schnorrer, Lightleaker, Alchemist, Doppelgänger und Archivar. Ohne Auswahl gilt „Neutral“.
+- Kameras, Objektive, Filter und Zubehör haben den Haken „… ist verliehen“. Erst wenn er gesetzt ist, erscheint das Feld „An wen und seit wann“. Im Kameraschrank steht dann „verliehen“ mit diesem Text am Eintrag.
+- Der Knopf „Reihenfolge“ im Kameraschrank ist entfernt. Einträge lassen sich mit langem Drücken verschieben.
+- Abzeichen: Jedes Abzeichen hat seinen festen Platz. Noch nicht verdiente zeigen ihr eigenes Symbol in Grau statt eines Fragezeichens. Die Kachel „Abzeichen“ trägt einen Pokal.
+- Der Bereich „Inaktiv“ im Kameraschrank hat keine eigene Lichtfläche mehr, die als zweiter Rahmen bündig um die Karten lag. Er ist durch Trennlinie, Überschrift und gestrichelte Karten abgegrenzt.
+- Alle Pfeile haben dieselbe Form, Größe und Helligkeit. Nach rechts führt weiter, nach unten klappt auf.
+- Ortswahl auf der Karte: Der Fertig-Knopf schwebt immer unten rechts.

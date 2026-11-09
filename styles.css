@@ -2133,8 +2133,9 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
    weil sie von der Bildschirmgröße abhängen. Sterne, Mondstrahlen und Prismastrahlen entfallen. */
 :root .light::before, :root .light::after, :root[data-mood] .light::before, :root[data-mood] .light::after { content: none !important; background: none !important; animation: none !important; }
 .leakhost { position: relative; }
-/* v196: Lichtschein im Bereich „Inaktiv“ mit runden Ecken wie die Karten */
-.cabsub.leakhost { border-radius: 16px; }
+/* v197: Bereich „Inaktiv“ ohne eigene Fläche. Der Lichtschein lag sonst als zweiter Rahmen bündig um die Karten.
+   Abgegrenzt wird er durch die Trennlinie, die Überschrift und die gestrichelten Karten. */
+.inactivesub > .leakfx { display: none; }
 .leakfx { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; }
 /* Einstellungen-Knopf zurückhaltender (v157): dünner, abgeschwächter Prisma-Rand, Symbol gedämpft */
 .gearbtn { border-width: 1.5px !important; color: var(--muted) !important;
@@ -2562,3 +2563,17 @@ section.badgefold.fold { margin: 12px 16px !important; padding: 14px; border-rad
 section.badgefold .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .badgefold .fridgeicon { color: #ffc56b !important; background: var(--solid) !important; box-shadow: none !important; }
 .badgefold .bgrid { margin-top: 12px; }
+
+/* v197: Anrede unter dem Nutzernamen */
+.genderpick { margin: 8px 0 0; }
+.lenttag { color: var(--teal) !important; border: 1px solid color-mix(in srgb, var(--teal) 45%, transparent); }
+/* v197: ein Pfeil für alles. Weiterführende Pfeile (›) und Aufklapp-Pfeile haben dieselbe Form, Größe, Strichstärke und Helligkeit.
+   Nach rechts heißt weiter, nach unten heißt aufklappen, nach oben heißt zuklappen. */
+.chev, .albuminfo .chev { flex: 0 0 auto; display: inline-block; width: 10px; height: 10px; margin: 0 6px 0 4px; font-size: 0 !important; line-height: 0; overflow: hidden;
+  color: var(--text); border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; opacity: .5; transform: rotate(-45deg) translate(-1px, -1px); }
+.favchev { width: 10px; height: 10px; opacity: .5; transform: rotate(45deg) translate(-2px, -2px); margin-left: 6px; }
+.favtoggle.open .favchev { transform: translateY(3px) rotate(225deg); }
+.foldchev { color: var(--text); }
+/* v197: Ortswahl auf der Karte. Der Fertig-Knopf schwebt immer unten rechts, auch wenn die Liste der letzten Orte lang ist */
+.mappick .modalfoot { position: sticky; bottom: 0; z-index: 6; pointer-events: none; }
+.mappick .modalfoot > * { pointer-events: auto; }

@@ -83,7 +83,7 @@ async function filtersSubHtml(lenses, open) {
       ${f.code ? `<span class="filterbadge">${U.esc(filterCode(f))}</span>` : ''}
       <span class="frowmain">
         <span class="frowname">${U.esc(filterName(f))}</span>
-        <span class="frowchips">${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${(f.colors || []).length ? `<span class="gelstrip" title="${U.esc(f.colors.map(c => c.name).join(', '))}" style="background:linear-gradient(90deg,${f.colors.map((c, i, a) => `${c.hex} ${i / a.length * 100}% ${(i + 1) / a.length * 100}%`).join(',')})"></span><span>${f.colors.length} Farben</span>` : ''}${f.notes ? `<span class="chipnote">${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
+        <span class="frowchips">${lentChip(f)}${s ? `<span>${s[1]} · ${s[2]}</span>` : `<span>${filterKind(f) === 'screw' ? 'Schraubfilter' : 'Schiebefilter'}</span>`}${filterKind(f) === 'screw' && f.thread ? `<span class="threadtag">⌀ ${mm(f.thread)}</span>` : ''}${(f.colors || []).length ? `<span class="gelstrip" title="${U.esc(f.colors.map(c => c.name).join(', '))}" style="background:linear-gradient(90deg,${f.colors.map((c, i, a) => `${c.hex} ${i / a.length * 100}% ${(i + 1) / a.length * 100}%`).join(',')})"></span><span>${f.colors.length} Farben</span>` : ''}${f.notes ? `<span class="chipnote">${U.esc(f.notes.slice(0, 30))}</span>` : ''}</span>
       </span>
       <span class="frowcount">×${f.count || 1}</span>
     </button>`;
@@ -241,6 +241,7 @@ function openFilterEditor(f) {
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="feMinus" aria-label="weniger">−</button><span id="feCount">${f.count || 1}</span><button type="button" id="fePlus" aria-label="mehr">+</button></div></div>
       <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="fePrice" inputmode="decimal" value="${U.esc(f.price != null ? String(f.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="feBought" value="${U.esc(f.boughtAt || '')}"></label></div>
+      ${lentFields('Filter')}
       <label class="fld"><span>Notizen</span><textarea id="feNotes" rows="3">${U.esc(f.notes || '')}</textarea></label>
       <button class="btn danger small" id="feDel">Filter entfernen</button>
       <div class="modalfoot"><button class="closex" id="feNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="feOk" aria-label="Speichern">${ART.check}</button></div>
@@ -248,6 +249,7 @@ function openFilterEditor(f) {
   document.body.appendChild(ov);
   const $ = id => ov.querySelector('#' + id);
   const ed = { ...f, count: f.count || 1 };
+  lentWire(ov, ed);
   $('feSeries')?.addEventListener('click', e => {
     const b = e.target.closest('[data-s]'); if (!b) return;
     ed.series = b.dataset.s; ov.querySelectorAll('#feSeries .seg').forEach(x => x.classList.toggle('on', x === b));
@@ -287,6 +289,7 @@ function openFilterEditor(f) {
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   $('feOk').addEventListener('click', async () => {
     ed.notes = $('feNotes').value.trim();
+    lentRead(ov, ed);
     { const p = parseFloat($('fePrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('feBought').value || null; }
     if ($('feName')) ed.name = $('feName').value.trim() || f.name;
     if ($('feThread')) { const t = $('feThread').value.replace(',', '.').replace(/[^\d.]/g, ''); ed.thread = filterKind(ed) === 'screw' && t ? t : null; }
@@ -328,7 +331,7 @@ async function accessoriesSubHtml(cams, open) {
       <span class="crowart accart"><span class="accicon">${accIcon(a.kind, 26)}</span>${favStar('accessories', a)}</span>
       <span class="frowmain">
         <span class="frowname">${U.esc([a.maker, a.name].filter(Boolean).join(' ') || accKind(a.kind)[1])}</span>
-        <span class="frowchips"><span>${U.esc(accKind(a.kind)[1])}</span>${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
+        <span class="frowchips">${lentChip(a)}<span>${U.esc(accKind(a.kind)[1])}</span>${names.map(n => `<span>${U.esc(n)}</span>`).join('')}</span>
         ${a.notes ? `<span class="frowsub">${U.esc(a.notes.slice(0, 80))}</span>` : ''}
       </span>
       ${(a.count || 1) > 1 ? `<span class="frowcount">×${a.count}</span>` : ''}
@@ -368,12 +371,14 @@ async function openAccEditor(a) {
       <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="acPrice" inputmode="decimal" value="${U.esc(ed.price != null ? String(ed.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="acBought" value="${U.esc(ed.boughtAt || '')}"></label></div>
       <label class="fld" id="acGnBox"${ed.kind === 'blitz' ? '' : ' hidden'}><span>Leitzahl (ISO 100, Meter)</span><input id="acGn" inputmode="decimal" value="${U.esc(ed.gn != null ? String(ed.gn).replace('.', ',') : '')}"></label>
+      ${lentFields('Zubehör')}
       <label class="fld"><span>Notizen</span><textarea id="acNotes" rows="3">${U.esc(ed.notes || '')}</textarea></label>
       ${isNew ? '' : '<button class="btn danger small" id="acDel">Zubehör entfernen</button>'}
       <div class="modalfoot"><button class="closex" id="acNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="acOk" aria-label="Speichern">${ART.check}</button></div>
     </div>`;
   document.body.appendChild(ov);
   const $ = id => ov.querySelector('#' + id);
+  lentWire(ov, ed);
   $('acKinds').addEventListener('click', e => {
     const b = e.target.closest('[data-k]'); if (!b) return;
     ed.kind = b.dataset.k; ov.querySelectorAll('.acckind').forEach(x => x.classList.toggle('on', x === b));
@@ -388,6 +393,7 @@ async function openAccEditor(a) {
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   $('acOk').addEventListener('click', async () => {
     ed.maker = $('acMaker').value.trim(); ed.name = $('acName').value.trim(); ed.notes = $('acNotes').value.trim();
+    lentRead(ov, ed);
     { const p = parseFloat($('acPrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('acBought').value || null; }
     { const g = parseFloat($('acGn').value.replace(',', '.')); ed.gn = ed.kind === 'blitz' && g > 0 ? g : null; }
     ed.cameraIds = ed.kind === 'labor' ? [] : [...ov.querySelectorAll('#acCams input:checked')].map(i => i.value);

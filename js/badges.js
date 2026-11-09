@@ -1,6 +1,6 @@
 /* Abzeichen (v191): aus den gespeicherten Daten berechnet, verdiente Stufen mit Datum in meta 'badges'.
    Im Profil: Anstecker am Profilbild (selbst gewählt) und eine Kachel mit allen verdienten Abzeichen.
-   Noch nicht verdiente erscheinen nur als Platzhalter, ihre Regeln zeigt die App nicht. */
+   Noch nicht verdiente erscheinen an ihrem Platz mit grauem Symbol, ihre Regeln zeigt die App nicht. */
 const BADGES = (() => {
   // cls: Farbe der Kategorie. lv: Schwellen der Stufen 1 bis 3 (ein Wert: nur eine Stufe). txt: wofür, mit {n} für den Schwellenwert
   const DEF = [
@@ -37,6 +37,19 @@ const BADGES = (() => {
     { id: 'waage', name: 'Waage', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit 0 bewertet' },
     { id: 'archiv', name: 'Archivarin', cls: 'kuehl', lv: [100, 500, 1000], txt: '{n} Fotos ins Archiv nachgetragen' }
   ];
+  // v197: Bezeichnungen für Personen nach der gewählten Anrede (Profil › Einstellungen). f: weiblich, m: männlich, n: neutral (Standard)
+  const FORMS = {
+    prepper: ['Prepperin', 'Prepper', 'Prepper*in'],
+    archaeo: ['Archäologin', 'Archäologe', 'Archäolog*in'],
+    milliardaer: ['Milliardärin', 'Milliardär', 'Milliardär*in'],
+    sniper: ['Sniperin', 'Sniper', 'Sniper*in'],
+    schnorrer: ['Schnorrerin', 'Schnorrer', 'Schnorrer*in'],
+    leck: ['Lightleakerin', 'Lightleaker', 'Lightleaker*in'],
+    alchemist: ['Alchemistin', 'Alchemist', 'Alchemist*in'],
+    doppel: ['Doppelgängerin', 'Doppelgänger', 'Doppelgänger*in'],
+    archiv: ['Archivarin', 'Archivar', 'Archivar*in']
+  };
+  for (const d of DEF) if (FORMS[d.id]) Object.defineProperty(d, 'name', { get: () => FORMS[d.id][{ f: 0, m: 1 }[typeof PROFILE !== 'undefined' && PROFILE?.gender] ?? 2] });
   const BIG_MAKERS = [/kodak/i, /fuji/i, /ilford|harman|kentmere/i, /foma/i, /agfa/i, /cinestill/i, /orwo|wolfen/i];
   const nfmt = n => Number(n).toLocaleString('de-DE');
   const text = (d, lv) => { const n = d.lv[Math.max(0, lv - 1)]; return d.txt.replace('{n}', nfmt(n)).replace('{J}', n === 1 ? 'Jahr' : 'Jahren').replace('{R}', n === 1 ? 'Rolle' : 'Rollen').replace('{GR}', n === 1 ? 'ganze Rolle' : 'ganze Rollen'); };
@@ -147,7 +160,8 @@ const BADGES = (() => {
   const svg = id => `<svg viewBox="0 0 48 48" aria-hidden="true">${BADGE_IC[id] || BADGE_IC.frage}</svg>`;
   const dots = (d, lv) => d.lv.length > 1 ? `<span class="bdots">${[1, 2, 3].map(i => `<i${i <= lv ? ' class="on"' : ''}></i>`).join('')}</span>` : '';
   const med = (d, size = '') => `<span class="bmed ${d.cls}${size}"><span>${svg(d.id)}</span></span>`;
-  const lockMed = (size = '') => `<span class="bmed lock${size}"><span>${svg('frage')}</span></span>`;
+  // v197: noch nicht verdiente Abzeichen zeigen ihr eigenes Symbol in Grau
+  const lockMed = (d, size = '') => `<span class="bmed lock${size}"><span>${svg(d.id)}</span></span>`;
 
   // Anstecker am Profilbild
   async function pinHtml() {
@@ -157,10 +171,12 @@ const BADGES = (() => {
   // Kachel im Profil: verdiente Abzeichen, dann Platzhalter für die übrigen
   async function foldHtml() {
     const st = await state(), got = DEF.filter(d => st.earned[d.id]), rest = DEF.length - got.length;
-    const cells = got.map(d => `<button type="button" class="bcell" data-badge="${d.id}" aria-label="${U.esc(d.name)}">${med(d)}${dots(d, st.earned[d.id].lv)}</button>`).join('')
-      + Array.from({ length: rest }, () => `<span class="bcell" aria-hidden="true">${lockMed()}</span>`).join('');
+    // Jedes Abzeichen hat seinen festen Platz; verdiente in Farbe, die übrigen grau
+    const cells = DEF.map(d => st.earned[d.id]
+      ? `<button type="button" class="bcell" data-badge="${d.id}" aria-label="${U.esc(d.name)}">${med(d)}${dots(d, st.earned[d.id].lv)}</button>`
+      : `<span class="bcell" aria-hidden="true">${lockMed(d)}</span>`).join('');
     return `<section class="badgefold fold${foldOpen('badges') ? ' open' : ''}" data-fold="badges">
-      <div class="fridgetop foldhead"><span class="fridgeicon">${svg('frage')}</span><div><h2>Abzeichen</h2><span class="sub2">${got.length ? `${got.length} verdient` : 'noch keins verdient'}</span></div><span class="foldchev" aria-hidden="true"></span></div>
+      <div class="fridgetop foldhead"><span class="fridgeicon">${svg('pokal')}</span><div><h2>Abzeichen</h2><span class="sub2">${got.length ? `${got.length} verdient` : 'noch keins verdient'}</span></div><span class="foldchev" aria-hidden="true"></span></div>
       <div class="foldbody"><div class="bgrid">${cells}</div></div></section>`;
   }
   async function open(id) {

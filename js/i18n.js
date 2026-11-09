@@ -191,6 +191,10 @@ Ausgaben zurücksetzen	Reset spending
 Einstellungen	Settings
 Profilbild ändern	Change profile picture
 Nutzername	User name
+Anrede	Form of address
+Weiblich	Female
+Männlich	Male
+Neutral	Neutral
 Film in den Kühlschrank legen	Put film in the fridge
 Bild ändern	Change picture
 Alle Fotos	All photos
