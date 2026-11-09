@@ -134,7 +134,9 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
     strip.forEach((it, i) => {
       if (it.f?.rate !== 5) return;
       const x = L.x0 + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
-      drawFavMark(ctx, s, cx, cy, fw / 2 + gap * 0.9, fh / 2 + edge * 0.55, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme);
+      // v207: Mittelformat etwas weiter außen umkreisen, Strichstärke wächst mit der Bildgröße
+      const grow = info.square ? 1.1 : 1;
+      drawFavMark(ctx, s, cx, cy, (fw / 2 + gap * 0.9) * grow, (fh / 2 + edge * 0.55) * grow, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme, Math.min(2, Math.max(1, fw / 85)));
     });
   });
 }
@@ -142,9 +144,9 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
 // Favoriten (+5) auf dem Sheet markieren: dicker Wachsstift, von Hand umkreist.
 // Jede Markierung bekommt eine eigene Form (Oval, eckige Schleife, doppelte Runde, Lasso mit Auslauf),
 // Neigung, Größe und Zittern hängen vom Bild ab, damit keine zwei gleich aussehen.
-// Dunkles Papier: heller Wachsstift. Helles Papier: roter Wachsstift.
+// Roter Wachsstift auf hellem und dunklem Papier (v207).
 function rnd(seed) { let x = (seed * 9301 + 49297) % 233280; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
-function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme) {
+function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme, k = 1) {
   const R = rnd(seed + 7), shape = Math.floor(R() * 4), tilt = (R() - 0.5) * 0.3, size = 0.96 + R() * 0.12;
   const a0 = R() * Math.PI * 2, wob = [R() * 0.07, R() * 0.05, R() * 6, R() * 6];
   rx *= size; ry *= size;
@@ -167,14 +169,15 @@ function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme) {
     const turns = 1.12 + R() * 0.12;
     for (let i = 0; i <= N; i++) { const t = a0 + i / N * turns * Math.PI * 2, g = 1 + i / N * 0.08, w = 1 + wob[0] * Math.sin(t * 2 + wob[2]) + wob[1] * Math.sin(t * 3 + wob[3]); add(Math.cos(t) * rx * g * w, Math.sin(t) * ry * g * w); }
   }
+  // v207: immer roter Wachsstift, dick und deckend, auch auf dunklem Papier
   const light = theme === 'light';
-  const col = light ? [208, 52, 38] : [255, 238, 182];
+  const col = light ? [206, 40, 30] : [232, 52, 40];
   const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x * s, y * s) : ctx.moveTo(x * s, y * s)); };
   ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  // Wachs: breiter, deckender Strich, dazu ein körniger Strich, der das Wachs auf dem Film ungleichmäßig wirken lässt
-  path(); ctx.strokeStyle = `rgba(${col},${light ? .82 : .78})`; ctx.lineWidth = 3.2 * s; ctx.stroke();
-  path(); ctx.setLineDash([0.5 * s, 1.3 * s, 1.6 * s, 0.9 * s]); ctx.strokeStyle = `rgba(${col},.95)`; ctx.lineWidth = 2.1 * s; ctx.stroke();
-  path(); ctx.setLineDash([0.4 * s, 2.6 * s]); ctx.strokeStyle = light ? 'rgba(255,255,255,.18)' : 'rgba(0,0,0,.22)'; ctx.lineWidth = 3.4 * s; ctx.stroke();
+  // Wachs: breiter, deckender Strich, darüber ein körniger Strich, dann helle Lücken, die das Wachs auf dem Film ungleichmäßig wirken lassen
+  path(); ctx.strokeStyle = `rgba(${col},.88)`; ctx.lineWidth = 6.2 * k * s; ctx.stroke();
+  path(); ctx.setLineDash([0.8 * k * s, 1.6 * k * s, 2.2 * k * s, 1.1 * k * s]); ctx.strokeStyle = `rgba(${col},1)`; ctx.lineWidth = 4.4 * k * s; ctx.stroke();
+  path(); ctx.setLineDash([0.5 * k * s, 2.8 * k * s]); ctx.strokeStyle = light ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.25)'; ctx.lineWidth = 6.6 * k * s; ctx.stroke();
   ctx.restore();
 }
 

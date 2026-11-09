@@ -688,3 +688,7 @@ In Analytics steht in der Karte „Geld“ wieder der Satz „Du hast diesen Mon
 ## Version 206: Contact Sheet A4 immer auf einer Seite
 
 Beim Contact Sheet in A4 passen jetzt immer alle Bilder auf ein Blatt. Bisher lief Mittelformat mit drei Bildern pro Reihe auf eine zweite Seite über. Reichen die Streifen in voller Breite nicht, werden die Bilder so weit verkleinert, dass alles auf die Seite passt, und der Block steht mittig. A5 bleibt unverändert.
+
+## Version 207: Favoriten-Kreis dicker und rot
+
+Auf dem Contact Sheet umkreist die App Favoriten (+5) jetzt immer mit einem dicken roten Wachsstift, auf hellem und auf dunklem Papier. Die Strichstärke wächst mit der Bildgröße. Bei Mittelformat ist der Kreis zusätzlich etwas größer und reicht weiter über den Bildrand.
