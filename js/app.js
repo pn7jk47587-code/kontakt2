@@ -231,8 +231,15 @@ function setHeader(title, { action = '', soft = false } = {}) {
 
 function setTab() {}
 
+let ARRIVE = '';
+function arriveView() {
+  const arr = ARRIVE; ARRIVE = '';
+  if (arr) { view.classList.remove('arrive', 'arrive-l', 'arrive-r'); void view.offsetWidth; view.classList.add(arr); setTimeout(() => view.classList.remove(arr), 460); }
+  document.body.classList.remove('leaving');
+}
 async function route() {
   await routeView();
+  arriveView();
   if (typeof TOUR !== 'undefined') TOUR.after();
   restoreAnchor();
   // Nach „Haken“ aus Kamera oder Objektiv: an dieselbe Stelle zurückscrollen
@@ -281,7 +288,9 @@ backBtn.addEventListener('click', () => {
   if (document.querySelector('.modalbg, .loadsheet #lsClose') || document.body.classList.contains('leaving')) { U.haptic && U.haptic(8); goUp(); return; }
   if (window.FEEL) FEEL.burst(backBtn);
   backBtn.classList.add('rewarded'); U.haptic && U.haptic([10, 30, 14]);
-  setTimeout(() => { startLeave(parentHash() || '#/'); goUp(); setTimeout(() => backBtn.classList.remove('rewarded'), 1200); }, 230);
+  // Lichtring und Wegfliegen gleichzeitig; gewechselt wird erst, wenn die Ansicht weg ist
+  startLeave(parentHash() || '#/');
+  setTimeout(() => { goUp(); setTimeout(() => backBtn.classList.remove('rewarded'), 900); }, 210);
 });
 // Beim Zurückgehen merkt sich die App, wo man herkommt: die Startseite zeigt danach die Karte dieser Rolle,
 // „Alle Fotos“ und das Album das zuletzt angesehene Foto (statt wieder ganz oben anzufangen).
@@ -331,12 +340,12 @@ function parentHash(hash = location.hash) {
 function levelOf(hash) { const h = hash || '#/'; return h === '#/' || h === '#' ? 0 : /^#\/profil\/?$/.test(h) ? 2 : 1; }
 let LAST_HASH = location.hash || '#/';
 function leaveDir(target) { const d = levelOf(target) - levelOf(location.hash); return d < 0 ? 'r' : d > 0 ? 'l' : ''; }
-function startLeave(target) { document.body.dataset.dir = leaveDir(target); document.body.classList.add('leaving'); setTimeout(() => document.body.classList.remove('leaving'), 1200); }
+function startLeave(target) { document.body.dataset.dir = leaveDir(target); document.body.classList.add('leaving'); clearTimeout(startLeave.t); startLeave.t = setTimeout(() => { document.body.classList.remove('leaving'); }, 1500); }
 // Startseiten- und Profilknopf oben: dieselbe Bewegung
 document.addEventListener('click', e => {
   const a = e.target.closest('#homeBtn, #profBtn'); if (!a || document.body.classList.contains('leaving')) return;
   const target = a.getAttribute('href'); if ((location.hash || '#/') === target) return;
-  e.preventDefault(); markAnchor(target); startLeave(target); setTimeout(() => { location.hash = target; }, 170);
+  e.preventDefault(); markAnchor(target); startLeave(target); setTimeout(() => { location.hash = target; }, 210);
 }, true);
 
 // Aus der oberen linken Ecke bewusst nach unten rechts wischen: eine Ebene zurück (ohne Anzeige).
@@ -462,9 +471,8 @@ let FRESH_ID = null;
 async function routeView() {
   // Nach dem Haken: die vorige Ebene erscheint sanft statt abrupt
   const lv = levelOf(location.hash) - levelOf(LAST_HASH); LAST_HASH = location.hash || '#/';
-  const arr = lv < 0 ? 'arrive-l' : lv > 0 ? 'arrive-r' : document.body.classList.contains('leaving') ? 'arrive' : '';
-  document.body.classList.remove('leaving');
-  if (arr) { view.classList.remove('arrive', 'arrive-l', 'arrive-r'); void view.offsetWidth; view.classList.add(arr); setTimeout(() => view.classList.remove(arr), 420); }
+  // Die alte Ansicht bleibt ausgeblendet, bis die neue gezeichnet ist (route() ruft danach arriveView auf)
+  ARRIVE = lv < 0 ? 'arrive-l' : lv > 0 ? 'arrive-r' : document.body.classList.contains('leaving') ? 'arrive' : '';
   if (FRESH_ID && !location.hash.endsWith('/' + FRESH_ID)) FRESH_ID = null;
   document.body.classList.remove('albummode', 'mapmode');
   document.querySelectorAll('.modalbg, .overlay').forEach(x => x.remove());
@@ -1022,6 +1030,7 @@ function growFrom(ov, btn) {
     if (d.classList.contains('stay')) { burst(d); U.haptic && U.haptic([10, 30, 14]); return; }   // speichert, ohne die Ebene zu verlassen
     e.stopImmediatePropagation(); e.preventDefault();
     burst(d); d.classList.add('rewarded'); U.haptic && U.haptic([10, 30, 14]);
-    setTimeout(() => { startLeave(parentHash() || '#/'); d.dataset.go = '1'; d.click(); delete d.dataset.go; }, 230);
+    startLeave(parentHash() || '#/');
+    setTimeout(() => { d.dataset.go = '1'; d.click(); delete d.dataset.go; }, 210);
   }, true);
 })();

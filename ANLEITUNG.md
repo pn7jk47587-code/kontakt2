@@ -532,3 +532,11 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Contact Sheet, Entwurf: `makeContactSheet(rollId, paper, theme, perRow, favMark)` kann Fotos mit +5 markieren. `favMark` ist `pencil` (roter Fettstift von Hand umkreist, zwei Striche, leicht schief), `wax` (heller Wachsstift für dunkles Papier), `glow` (sauberer, warm leuchtender Ring) oder `dot` (leuchtender Punkt neben der Bildnummer). Im Auswahlfenster gibt es dafür noch keinen Knopf, bis ein Entwurf gewählt ist.
 - „Alle Fotos“ als Contact Sheet, Entwurf: Einstellungen › „Alle Fotos (Entwurf)“ mit Raster, Contact Sheet und Sheet mit Fettstift (`kb-ap-look`). Jede Rolle wird ein schwarzer Filmstreifen mit Perforation, Filmname in der Randschrift und orangen Bildnummern, drei Bilder je Reihe im Querformat 3:2. Favoriten zeigen den Leuchtpunkt oder einen roten Fettstiftkreis.
 - Analytics: „Geld“ steht direkt unter „Deine Filme“.
+
+## v180 Langes Drücken mit zwei Symbolen, Reiterzeile aufgeräumt, flüssige Übergänge, Orts-Historie in der Karte
+
+- Rasteransicht einer Rolle: Langes Drücken auf einen Frame lässt zwei runde Symbole mittig auf dem Frame aufploppen: Verschieben (Reihenfolge ändern) und Einstellungen übertragen. Tippen daneben, Scrollen oder Seitenwechsel schließt sie.
+- Das Verschieben-Symbol in der Reiterzeile startet das Verschieben nicht mehr. Im Verschiebemodus beendet es ihn, sonst zeigt es den Hinweis „Zum Verschieben einen Frame lange drücken“.
+- Der Karten-Knopf für „Ort für mehrere Frames“ (v174) ist entfernt. Den Ort eines Frames überträgt man jetzt über „Einstellungen übertragen“, dort die Option Ort anwählen. Standort- und Verschieben-Symbol stehen mit 10 px Abstand nebeneinander.
+- Übergänge: Lichtring und Wegfliegen starten gleichzeitig. Die Seite wechselt erst, wenn die alte Ansicht ausgeblendet ist (210 ms). Die alte Ansicht bleibt unsichtbar, bis die neue gezeichnet ist, dann gleitet diese herein (`arriveView()` nach `routeView()`). Ohne Unschärfe-Filter, nur `translate3d` und Deckkraft, damit es auf dem iPhone nicht ruckelt.
+- Kartenauswahl: Unter der Karte stehen beim Herunterscrollen die zuletzt eingetragenen Orte, höchstens 5, neueste zuerst, jeder Name einmal (`recentPlaces`). Antippen übernimmt den Ort direkt.

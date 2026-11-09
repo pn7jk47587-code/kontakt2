@@ -677,7 +677,7 @@ async function rollFrames(body, roll, stock) {
     </div>
     <div class="grid" id="frameGrid">${cells.join('')}</div>
     ${bottom}`;
-  setupReorder(body, roll, fr);
+  const reorder = setupReorder(body, roll, fr);
   const slide = body.querySelector('#devSlide');
   if (slide) setupSlide(slide, () => openDevModal(roll, () => route()));
   body.querySelector('#pickupOpen')?.addEventListener('click', () => openPickupModal(roll, () => route()));
@@ -690,49 +690,32 @@ async function rollFrames(body, roll, stock) {
   imp.innerHTML = PIN_IC + '<input type="file" accept="image/*" multiple hidden id="phoneImp">';
   if (tabsRow) { const ro = tabsRow.querySelector('#reorderOn'); ro ? tabsRow.insertBefore(imp, ro) : tabsRow.appendChild(imp); }
   imp.querySelector('#phoneImp').addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(roll, files); });
-  // Ort für mehrere Frames, auch während die Rolle in der Kamera ist: Frames antippen, dann Ort aus der Liste, auf der Karte oder per Standort
-  tabsRow?.querySelector('#rollPickBtn')?.remove();
-  const pk = document.createElement('button');
-  pk.type = 'button'; pk.id = 'rollPickBtn'; pk.className = 'reorderbtn'; pk.setAttribute('aria-label', 'Ort für mehrere Frames festlegen'); pk.title = 'Ort für mehrere Frames'; pk.setAttribute('aria-pressed', 'false');
-  pk.innerHTML = MAP_PICK_IC;
-  if (tabsRow) tabsRow.insertBefore(pk, imp);
   const grid = body.querySelector('#frameGrid');
-  let picked = null, bar = null;
-  const endPick = () => { picked = null; bar?.remove(); bar = null; grid.classList.remove('picking'); grid.querySelectorAll('.pickmark').forEach(x => x.remove()); grid.querySelectorAll('.picked').forEach(x => x.classList.remove('picked')); pk.classList.remove('on'); pk.setAttribute('aria-pressed', 'false'); };
-  const drawBar = () => {
-    bar.innerHTML = `<span>${picked.size} ausgewählt</span><button type="button" class="btn small" id="rpAll">${picked.size === fr.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn accent small" id="rpGo"${picked.size ? '' : ' disabled'}>Ort wählen</button>`;
-    bar.querySelector('#rpAll').onclick = () => { if (picked.size === fr.length) picked.clear(); else fr.forEach(f => picked.add(f.id)); grid.querySelectorAll('.cell').forEach((c, i) => c.classList.toggle('picked', picked.has(fr[i].id))); drawBar(); };
-    bar.querySelector('#rpGo').onclick = () => openPlaceChooser(async p => {
-      let n = 0;
-      for (const fid of picked) { const f = await DB.get('frames', fid); if (!f) continue; f.place = p.name || f.place || ''; if (p.lat != null) { f.placeLat = p.lat; f.placeLng = p.lng; delete f.placeAcc; f.placeSrc = p.src || 'map'; if (p.cc) f.placeCC = p.cc; else delete f.placeCC; } f.placeNameAuto = !!p.auto; await DB.put('frames', f); n++; }
-      endPick(); U.toast(`Ort bei ${n} ${n === 1 ? 'Frame' : 'Frames'} eingetragen`); U.haptic && U.haptic([12, 40, 12]);
-    }, { rollId: roll.id });
-  };
-  pk.addEventListener('click', () => {
-    if (picked) { endPick(); return; }
-    picked = new Set(); U.haptic && U.haptic(10);
-    pk.classList.add('on'); pk.setAttribute('aria-pressed', 'true'); grid.classList.add('picking');
-    grid.querySelectorAll('.cell').forEach(c => c.insertAdjacentHTML('beforeend', '<span class="pickmark" aria-hidden="true"></span>'));
-    bar = document.createElement('div'); bar.className = 'pickbar'; document.body.appendChild(bar); drawBar();
-    window.addEventListener('hashchange', endPick, { once: true });
-  });
   // Langes Drücken auf einen Frame: dessen Einstellungen auf andere Frames übertragen
   let lp = null, lpFired = false;
   grid.addEventListener('pointerdown', e => {
-    const c = e.target.closest('.cell'); if (!c || picked || grid.classList.contains('reorder')) return;
+    const c = e.target.closest('.cell'); if (!c || grid.classList.contains('reorder')) return;
     const x0 = e.clientX, y0 = e.clientY;
-    lp = { t: setTimeout(() => { lp = null; lpFired = true; U.haptic && U.haptic(15); const f = fr[[...grid.querySelectorAll('.cell')].indexOf(c)]; if (f) openCopySettings(roll, f, fr); }, 520), x0, y0 };
+    lp = { t: setTimeout(() => { lp = null; lpFired = true; U.haptic && U.haptic(15); const f = fr[[...grid.querySelectorAll('.cell')].indexOf(c)]; if (f) openFramePop(c, f); }, 520), x0, y0 };
   });
   const lpCancel = e => { if (!lp) return; if (e.type === 'pointermove' && Math.hypot(e.clientX - lp.x0, e.clientY - lp.y0) < 9) return; clearTimeout(lp.t); lp = null; };
   ['pointermove', 'pointerup', 'pointercancel'].forEach(ev => grid.addEventListener(ev, lpCancel));
   grid.addEventListener('contextmenu', e => { if (e.target.closest('.cell')) e.preventDefault(); });
+  // Zwei runde Symbole ploppen am Frame auf: Verschieben (Reihenfolge ändern) und Einstellungen übertragen
+  const openFramePop = (c, f) => {
+    document.querySelector('.framepop')?.remove();
+    const r = c.getBoundingClientRect();
+    const pop = document.createElement('div'); pop.className = 'framepop';
+    pop.innerHTML = `<button type="button" class="fpbtn" data-act="move" aria-label="Reihenfolge ändern">${MOVE_IC}</button><button type="button" class="fpbtn" data-act="copy" aria-label="Einstellungen von Frame ${U.esc(frameLabel(f))} übertragen">${COPY_IC}</button>`;
+    pop.style.left = Math.min(window.innerWidth - 120, Math.max(8, r.left + r.width / 2 - 52)) + 'px';
+    pop.style.top = (r.top + r.height / 2 - 23) + 'px';
+    document.body.appendChild(pop);
+    const close = () => { pop.remove(); document.removeEventListener('pointerdown', away, true); window.removeEventListener('scroll', close); window.removeEventListener('hashchange', close); };
+    const away = ev => { if (!pop.contains(ev.target)) close(); };
+    setTimeout(() => { document.addEventListener('pointerdown', away, true); window.addEventListener('scroll', close, { once: true }); window.addEventListener('hashchange', close, { once: true }); }, 0);
+    pop.addEventListener('click', ev => { const b = ev.target.closest('[data-act]'); if (!b) return; close(); U.haptic && U.haptic(10); if (b.dataset.act === 'move') reorder && reorder(true); else openCopySettings(roll, f, fr); });
+  };
   grid.addEventListener('click', e => { if (lpFired) { lpFired = false; e.preventDefault(); e.stopPropagation(); } }, true);
-  grid.addEventListener('click', e => {
-    if (!picked) return;
-    const c = e.target.closest('.cell'); if (!c) return; e.preventDefault(); e.stopPropagation();
-    const f = fr[[...grid.querySelectorAll('.cell')].indexOf(c)]; if (!f) return;
-    picked.has(f.id) ? picked.delete(f.id) : picked.add(f.id); c.classList.toggle('picked', picked.has(f.id)); U.haptic && U.haptic(8); drawBar();
-  }, true);
   body.querySelector('#bulk')?.addEventListener('change', async e => {
     const files = [...e.target.files];
     if (!files.length) return;
@@ -903,6 +886,7 @@ function openFrameFilterSearch(filters, chosen, roll, onDone, onCancel) {
 /* ---------- Einträge der Bilder verschieben ----------
    Die Plätze (Bild 1, 2, 3 …) bleiben, verschoben wird alles, was zu einem Bild eingetragen ist:
    Blende, Zeit, Objektiv, Filter, Notiz, Datum, Handyfotos, Scans. */
+const COPY_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6c0 .9.8 1.7 1.7 1.7h2.3"/></svg>';
 const MOVE_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3.5 7.5 7 11M3.5 7.5H15M17 13l3.5 3.5L17 20M20.5 16.5H9"/></svg>';
 const FRAME_FIXED = ['id', 'rollId', 'index', 'bonus'];
 const frameContent = f => Object.fromEntries(Object.entries(f).filter(([k]) => !FRAME_FIXED.includes(k)));
@@ -929,7 +913,8 @@ function setupReorder(body, roll, fr) {
   const tools = bar.querySelector('.reordertools');
   let undo = null;
   const setMode = m => { grid.classList.toggle('reorder', m); tools.hidden = !m; on.classList.toggle('on', m); on.setAttribute('aria-pressed', m); };
-  on.addEventListener('click', () => { if (grid.classList.contains('reorder')) route(); else setMode(true); });
+  // Aktiviert wird über langes Drücken auf einen Frame. Das Symbol beendet das Verschieben bzw. zeigt, wie es geht.
+  on.addEventListener('click', () => { if (grid.classList.contains('reorder')) route(); else U.toast('Zum Verschieben einen Frame lange drücken'); });
   const commit = async contents => {
     undo = fr.map(frameContent);
     await applyContents(fr, contents);
@@ -1004,6 +989,7 @@ function setupReorder(body, roll, fr) {
   document.addEventListener('pointerup', end);
   document.addEventListener('pointercancel', end);
   window.addEventListener('hashchange', () => { document.removeEventListener('pointerup', end); document.removeEventListener('pointercancel', end); }, { once: true });
+  return setMode;
 }
 
 // Schieberegler: Knopf von links nach rechts ziehen, um die Aktion auszulösen

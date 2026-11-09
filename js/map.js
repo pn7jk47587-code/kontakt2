@@ -86,6 +86,13 @@ async function viewMap() {
 /* Ort auf einer Karte wählen: verschieben und zoomen, die Nadel in der Mitte markiert den Ort.
    Suche über OpenStreetMap Nominatim (nur auf Tastendruck, keine Vorschläge beim Tippen, wie es die Nutzungsregeln verlangen). */
 const MAP_PICK_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg>';
+// Zuletzt eingetragene Orte mit Koordinaten, neueste zuerst, jeder Name einmal
+async function recentPlaces(n) {
+  const seen = new Set(), out = [];
+  const fr = (await DB.all('frames')).filter(f => f.place && f.placeLat != null).map(f => ({ f, at: String(f.placeAt || f.date || '') })).sort((a, b) => b.at.localeCompare(a.at));
+  for (const { f, at } of fr) { if (seen.has(f.place)) continue; seen.add(f.place); out.push({ name: f.place, lat: +f.placeLat, lng: +f.placeLng, cc: f.placeCC, when: at }); if (out.length >= n) break; }
+  return out;
+}
 async function openMapPicker(start, onPick, opts = {}) {
   const ov = document.createElement('div');
   ov.className = 'modalbg mappickbg';
@@ -94,14 +101,22 @@ async function openMapPicker(start, onPick, opts = {}) {
     <div class="mpres" id="mpRes" hidden></div>
     <div class="mpmapwrap"><div id="mpMap" class="mpmap"></div><span class="mppin" aria-hidden="true">${typeof PIN_IC !== 'undefined' ? PIN_IC : ''}</span></div>
     <p class="mpname sub2" id="mpName"></p>
+    <div class="mphist" id="mpHist" hidden></div>
     <div class="modalfoot"><button class="closex" id="mpNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="mpOk" aria-label="Ort übernehmen">${ART.check}</button></div>
   </div>`;
   document.body.appendChild(ov);
   const close = () => ov.remove();
   ov.querySelector('#mpNo').addEventListener('click', close);
+  // Unter der Karte: die zuletzt eingetragenen Orte (höchstens 5), antippen übernimmt den Ort direkt
+  recentPlaces(5).then(list => {
+    const box = ov.querySelector('#mpHist'); if (!list.length || !box) return;
+    box.hidden = false;
+    box.innerHTML = `<div class="qlabel">Zuletzt eingetragen</div>` + list.map((p, i) => `<button type="button" class="mpitem" data-h="${i}"><span>${U.esc(p.name)}</span>${p.when ? `<span class="sub2">${U.esc(U.fmtDate(p.when.slice(0, 10)))}</span>` : ''}</button>`).join('');
+    box.querySelectorAll('[data-h]').forEach(b => b.addEventListener('click', () => { const p = list[+b.dataset.h]; try { window.__mpMap?.remove(); } catch (_) {} close(); onPick({ lat: p.lat, lng: p.lng, name: p.name, cc: p.cc || null }); }));
+  });
   try { await loadMapLibre(); } catch (e) { ov.querySelector('#mpName').textContent = e.message; return; }
   const has = start && start.lat != null && start.lng != null;
-  const map = new maplibregl.Map({ container: ov.querySelector('#mpMap'), style: MAP_STYLE, center: has ? [+start.lng, +start.lat] : [10.4, 51.2], zoom: has ? 15 : 4.5, attributionControl: { compact: true } });
+  const map = window.__mpMap = new maplibregl.Map({ container: ov.querySelector('#mpMap'), style: MAP_STYLE, center: has ? [+start.lng, +start.lat] : [10.4, 51.2], zoom: has ? 15 : 4.5, attributionControl: { compact: true } });
   let chosenName = null;
   const nameEl = ov.querySelector('#mpName');
   map.on('movestart', () => { chosenName = null; nameEl.textContent = ''; });

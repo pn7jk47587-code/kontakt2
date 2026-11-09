@@ -2462,3 +2462,31 @@ html[data-aplook^="sheet"] .rollsep { padding-left: 12px; }
 html[data-aplook="sheet-ring"] .photogrid:not(.favgrid) > a .favdot { display: none; }
 html[data-aplook="sheet-ring"] .photogrid:not(.favgrid) > a.isfav::after { content: ''; position: absolute; inset: 7px -2px 9px; border: 2px solid rgba(236,58,48,.92); border-radius: 50% 46% 52% 48% / 52% 50% 46% 50%; rotate: -3deg; z-index: 2; pointer-events: none;
   box-shadow: 1px 1px 0 -0.5px rgba(236,58,48,.5); }
+/* v180: Langes Drücken auf einen Frame, zwei runde Symbole ploppen auf */
+.framepop { position: fixed; z-index: 900; display: flex; gap: 12px; }
+.fpbtn { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; padding: 0; cursor: pointer; color: var(--text);
+  border: 2px solid transparent; background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box; box-shadow: var(--glow), 0 10px 26px rgba(0,0,0,.45);
+  animation: fppop .32s cubic-bezier(.2,1.5,.4,1) both; }
+.fpbtn + .fpbtn { animation-delay: .05s; }
+@keyframes fppop { from { transform: scale(.2) translateY(14px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fpbtn { animation: none; } }
+/* Reiterzeile: Standort- und Verschieben-Symbol mit festem, angenehmem Abstand */
+.tabs .phoneimpbtn + .reorderbtn { margin-left: -8px !important; }   /* 18 px Lücke der Reiterzeile minus 8 = 10 px */
+/* v180: Wegfliegen flüssig. Ohne Unschärfe-Filter (auf dem iPhone teuer und ruckelig), nur Verschieben und Ausblenden auf der Grafikkarte */
+body.leaving #view, #view.arrive, #view.arrive-l, #view.arrive-r { will-change: transform, opacity; }
+body.leaving #view { animation: leavelevel2 .21s cubic-bezier(.4, 0, 1, 1) forwards !important; }
+body.leaving[data-dir="r"] #view { animation: leaveright2 .21s cubic-bezier(.4, 0, 1, 1) forwards !important; }
+body.leaving[data-dir="l"] #view { animation: leaveleft2 .21s cubic-bezier(.4, 0, 1, 1) forwards !important; }
+#view.arrive { animation: arrivelevel2 .42s cubic-bezier(.16, 1, .3, 1) !important; }
+#view.arrive-l { animation: arriveleft2 .42s cubic-bezier(.16, 1, .3, 1) !important; }
+#view.arrive-r { animation: arriveright2 .42s cubic-bezier(.16, 1, .3, 1) !important; }
+@keyframes leavelevel2 { to { opacity: 0; transform: translate3d(0, 14px, 0) scale(.98); } }
+@keyframes leaveright2 { to { opacity: 0; transform: translate3d(40px, 0, 0); } }
+@keyframes leaveleft2 { to { opacity: 0; transform: translate3d(-40px, 0, 0); } }
+@keyframes arrivelevel2 { from { opacity: 0; transform: translate3d(0, -8px, 0); } }
+@keyframes arriveleft2 { from { opacity: 0; transform: translate3d(-30px, 0, 0); } }
+@keyframes arriveright2 { from { opacity: 0; transform: translate3d(30px, 0, 0); } }
+@media (prefers-reduced-motion: reduce) { body.leaving #view, #view.arrive, #view.arrive-l, #view.arrive-r { animation: none !important; } }
+/* v180: Kartenauswahl, unter der Karte die letzten 5 Orte */
+.mphist { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.mphist .mpitem { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
