@@ -1366,6 +1366,7 @@ async function viewFrame(idWithQuery) {
       <div class="timefld${frame.date ? ' has' : ''}" id="timeFld"><label class="timeedit"><span id="frameTimeTxt">${frame.date ? fmtShot(frame.date) : ''}</span><input type="datetime-local" id="frameTime" value="${U.esc(String(frame.date || '').slice(0, 16))}" aria-label="Aufnahmezeit ändern"></label><button type="button" class="clockbtn" id="timeNow" aria-label="Aktuelle Uhrzeit eintragen">${CLOCK_IC}</button></div>
     </div>
     <span class="placecoord" id="framePlaceCoord">${U.esc(fmtCoord(frame))}</span>
+    <p class="framewx" id="frameWx" hidden></p>
     <textarea id="note" class="mininote" rows="1" placeholder="Notizen" aria-label="Notizen">${U.esc(frame.note || '')}</textarea>
     <textarea id="info" class="mininote" rows="1" placeholder="Infos, nur für dich" aria-label="Infos, nur für dich, erscheinen nicht im Fotoalbum">${U.esc(frame.info || '')}</textarea>
   </div>`;
@@ -1400,8 +1401,25 @@ async function viewFrame(idWithQuery) {
     });
   };
   setChip('apRow', 'apOther', 'aperture');
+  // Wetter zur Aufnahme: erscheint unter Ort und Zeit, sobald beides eingetragen ist (Uhrzeit und Koordinaten)
+  let wxReq = 0;
+  const showWx = async () => {
+    const box = view.querySelector('#frameWx'); if (!box || typeof SKY === 'undefined') return;
+    const ds = String(frame.date || ''), timed = ds.length > 10 && !/T12:00/.test(ds);
+    if (!timed || frame.placeLat == null) { box.hidden = true; return; }
+    const key = `${ds.slice(0, 16)}|${(+frame.placeLat).toFixed(3)}|${(+frame.placeLng).toFixed(3)}`;
+    const when = new Date(ds), night = SKY.sun(when, +frame.placeLat, +frame.placeLng).alt < -0.8;
+    const draw = w => { box.hidden = !w; if (w) box.innerHTML = `${SKY.wxIcon(w, night)}<span>${U.esc(SKY.wxShort(w))}</span>`; };
+    if (frame.wx && frame.wxKey === key) { draw(frame.wx); return; }
+    const my = ++wxReq;
+    box.hidden = false; box.innerHTML = '<span class="sub2">Wetter …</span>';
+    let w = null; try { w = await SKY.weather(when, +frame.placeLat, +frame.placeLng); } catch (_) {}
+    if (my !== wxReq) return;
+    if (w) { frame.wx = w; frame.wxKey = key; const fresh = await DB.get('frames', frame.id); if (fresh) { fresh.wx = w; fresh.wxKey = key; await DB.put('frames', fresh); } }
+    draw(w);
+  };
   // Aufnahmezeit: steht neben dem Ort, minutengenau; von Hand geändert zählt sie als gesetzt
-  const showTime = () => { view.querySelector('#frameTimeTxt').textContent = frame.date ? fmtShot(frame.date) : ''; view.querySelector('#frameTime').value = String(frame.date || '').slice(0, 16); view.querySelector('#timeFld').classList.toggle('has', !!frame.date); };
+  const showTime = () => { showWx(); view.querySelector('#frameTimeTxt').textContent = frame.date ? fmtShot(frame.date) : ''; view.querySelector('#frameTime').value = String(frame.date || '').slice(0, 16); view.querySelector('#timeFld').classList.toggle('has', !!frame.date); };
   // Uhrsymbol: trägt die aktuelle Uhrzeit minutengenau ein (erst dann, nicht automatisch)
   view.querySelector('#timeNow').addEventListener('click', () => {
     frame.date = nowLocal().slice(0, 16) + ':00'; frame.dateSet = true; delete frame.wx;
@@ -1547,7 +1565,8 @@ async function viewFrame(idWithQuery) {
   });
   fitChipRows(view);
   requestAnimationFrame(fitNote);
-  let placeRefresh = null; wirePlace(view, 'framePlace', frame, save).then(fn => { placeRefresh = fn; });
+  let placeRefresh = null; wirePlace(view, 'framePlace', frame, () => { save(); showWx(); }).then(fn => { placeRefresh = fn; });
+  showWx();
   view.querySelector('#lensRow')?.addEventListener('click', e => {
     const b = e.target.closest('[data-lens]'); if (!b) return;
     lensId = lensId === b.dataset.lens ? null : b.dataset.lens;
@@ -2462,11 +2481,10 @@ async function viewAllPhotos() {
   d.frames = d.frames.filter(f => apMatch(d, f, item));
   const toolbar = sorting ? '' : `<div class="aptools"><select id="apOrder" aria-label="Rollen sortieren">${[['date', 'Neueste zuerst'], ['dateOld', 'Älteste zuerst'], ['film', 'Film'], ['name', 'Name'], ['cam', 'Kamera'], ['rate', 'Bewertung']].map(([v, t]) => `<option value="${v}"${order === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${itemSel}</div>`;
   const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
-  // Favoriten: Stern unten rechts am Foto, alle Favoriten zusätzlich oben in einer eigenen Reihe
-  const pstar = f => `<button type="button" class="pfav${f.fav ? ' on' : ''}" data-pfav="${f.id}" aria-pressed="${!!f.fav}" aria-label="${f.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</button>`;
-  const favs = item ? [] : d.frames.map((f, i) => [f, i]).filter(([f]) => f.fav);
+  // Favoriten sind die Fotos mit +5 (fünf Leuchtpunkte). Sie stehen zusätzlich oben in einer eigenen Reihe.
+  const favs = item ? [] : d.frames.map((f, i) => [f, i]).filter(([f]) => f.rate === 5);
   // Favoriten-Reihe klappt auf und zu; beim Hineinnavigieren ist sie zugeklappt
-  let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}">★ Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy">${pstar(f)}</a>`).join('')}</div>` : '';
+  let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}">Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
   let cur = null;
   d.frames.forEach((f, i) => {
     const gk = order === 'rate' ? 'r' + (f.rate ?? 'x') : f.rollId;
@@ -2480,7 +2498,7 @@ async function viewAllPhotos() {
         html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid${sorting ? ' sorting' : ''}" data-roll="${cur}">`;
       }
     }
-    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : pstar(f)}</a>`;
+    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : ''}</a>`;
   });
   view.innerHTML = arBtn + toolbar + html + '</div>' + (sorting || item ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
   view.querySelector('#apOrder')?.addEventListener('change', async e => { try { localStorage.setItem('kb-ap-order', e.target.value); } catch (_) {} await viewAllPhotos(); });
@@ -2497,13 +2515,6 @@ async function viewAllPhotos() {
   });
   while (PHOTOSORT_OFF.length) PHOTOSORT_OFF.pop()();
   if (sorting) view.querySelectorAll('.photogrid.sorting').forEach(g => setupPhotoSort(g));
-  view.querySelectorAll('[data-pfav]').forEach(b => b.addEventListener('click', async e => {
-    e.preventDefault(); e.stopPropagation();
-    const f = await DB.get('frames', b.dataset.pfav); if (!f) return;
-    f.fav = !f.fav; await DB.put('frames', f);
-    U.haptic && U.haptic(f.fav ? [12, 40, 12] : 10);
-    const y = window.scrollY; document.querySelectorAll('.donebtn').forEach(x => x.remove()); await viewAllPhotos(); window.scrollTo(0, y);
-  }));
 }
 
 /* ---------- Archivieren: früher entwickelte Rollen nachtragen, ohne Einlegen und Entwickeln ----------

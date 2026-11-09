@@ -421,8 +421,12 @@ async function openSettings() {
       <span class="appver" title="App-Version und letzte Änderung">${typeof APP_VERSION !== 'undefined' ? `Version ${APP_VERSION.replace('kb-v', '')}<br>${(() => { const [d, t] = APP_BUILT.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}, ${t}`; })()}` : ''}</span>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
-      <div class="sethead">${ART.sun}<span>Farbschema</span></div>
-      <div class="moodpick" id="menuMood">${[['auto', 'Automatisch'], ['sun', 'Sonne'], ['moon', 'Mond']].map(([k, l]) => `<button type="button" data-mood="${k}">${l}</button>`).join('')}</div>
+      <div class="sethead">${ART.sun}<span>Goldene und blaue Stunde (Entwürfe)</span></div>
+      <div class="seggroup" id="skyTest">${[['', 'Echt'], ['golden', 'Golden'], ['blue', 'Blau']].map(([k, l]) => `<button type="button" class="seg" data-skyt="${k}">${l}</button>`).join('')}</div>
+      <div class="qlabel">Goldene Stunde</div>
+      <div class="seggroup" id="skyGold">${[['a', 'Glut'], ['b', 'Abendhimmel'], ['c', 'Halation']].map(([k, l]) => `<button type="button" class="seg" data-skyv="golden:${k}">${l}</button>`).join('')}</div>
+      <div class="qlabel">Blaue Stunde</div>
+      <div class="seggroup" id="skyBlue">${[['a', 'Tiefblau'], ['b', 'Stadtlicht'], ['c', 'Petrol']].map(([k, l]) => `<button type="button" class="seg" data-skyv="blue:${k}">${l}</button>`).join('')}</div>
       <div class="qlabel" id="clockLabel"></div>
       <input type="range" id="clockRange" min="0" max="23.75" step="0.25" aria-label="Uhrzeit simulieren" style="padding:0;border:0;background:none;accent-color:var(--teal)">
       <button type="button" class="btn ghost small" id="clockReal">Echte Uhrzeit</button>
@@ -454,7 +458,6 @@ async function openSettings() {
     const b = e.target.closest('[data-nl]'); if (!b) return;
     try { localStorage.setItem('kb-nightlight', b.dataset.nl); } catch (_) {}
     ov.querySelectorAll('#nightPick .seg').forEach(x => x.classList.toggle('on', x === b)); BEAM.update(); U.haptic && U.haptic(8);
-    if (MOOD.current() !== 'moon') U.toast('Wirkt nachts bzw. im Farbschema „Mond“');
   });
   ov.querySelector('#fontPick').addEventListener('change', e => { try { e.target.value ? localStorage.setItem('kb-font', e.target.value) : localStorage.removeItem('kb-font'); } catch (_) {} MOOD.testLook(); });
   let demoV = 3;
@@ -511,14 +514,17 @@ async function openSettings() {
 function setupLightSettings(root) {
   const hm = h => `${String(Math.floor(h)).padStart(2, '0')}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`;
   const mark = () => {
-    root.querySelectorAll('#menuMood button').forEach(b => b.classList.toggle('on', b.dataset.mood === MOOD.pref()));
+    const ls = k => { try { return localStorage.getItem(k) || ''; } catch (_) { return ''; } };
+    root.querySelectorAll('[data-skyt]').forEach(b => b.classList.toggle('on', b.dataset.skyt === ls('kb-skytest')));
+    root.querySelectorAll('[data-skyv]').forEach(b => { const [k, v] = b.dataset.skyv.split(':'); b.classList.toggle('on', (ls('kb-sky-' + k) || 'a') === v); });
     const c = MOOD.clock(), now = new Date();
     root.querySelector('#clockRange').value = c ?? (now.getHours() + now.getMinutes() / 60);
     root.querySelector('#clockLabel').textContent = c === null ? 'Uhrzeit simulieren' : `Simuliert: ${hm(c)} Uhr`;
   };
-  root.querySelector('#clockRange').addEventListener('input', e => { if (MOOD.pref() !== 'auto') MOOD.set('auto'); MOOD.setClock(parseFloat(e.target.value)); mark(); });
+  root.querySelector('#clockRange').addEventListener('input', e => { try { localStorage.removeItem('kb-skytest'); } catch (_) {} MOOD.setClock(parseFloat(e.target.value)); mark(); });
   root.querySelector('#clockReal').addEventListener('click', () => { MOOD.setClock(null); mark(); });
-  root.querySelector('#menuMood').addEventListener('click', e => { const b = e.target.closest('[data-mood]'); if (!b) return; MOOD.set(b.dataset.mood); mark(); });
+  root.querySelector('#skyTest').addEventListener('click', e => { const b = e.target.closest('[data-skyt]'); if (!b) return; try { b.dataset.skyt ? localStorage.setItem('kb-skytest', b.dataset.skyt) : localStorage.removeItem('kb-skytest'); } catch (_) {} MOOD.apply(); mark(); });
+  root.querySelectorAll('#skyGold, #skyBlue').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('[data-skyv]'); if (!b) return; const [k, v] = b.dataset.skyv.split(':'); try { localStorage.setItem('kb-sky-' + k, v); if (localStorage.getItem('kb-skytest')) localStorage.setItem('kb-skytest', k); } catch (_) {} MOOD.apply(); mark(); }));
   mark();
 }
 
@@ -795,7 +801,7 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
-      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear || spend.own ? ' und Ausrüstung' : ''} ausgegeben. Dein Filmgeldberg ist <b>${euro(spend.total)}</b> hoch.</p>
+      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear || spend.own ? ' und Ausrüstung' : ''} ausgegeben. Insgesamt hast du schon <b>${euro(spend.total)}</b> in das bodenlose Loch geworfen.</p>
       <div class="spendsplit four">
         <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
         <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
@@ -818,7 +824,7 @@ function setupSpend(root) {
     ov.className = 'modalbg';
     ov.innerHTML = `<div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="rsTitle">
       <h2 id="rsTitle">Ausgaben zurücksetzen?</h2>
-      <p class="hint">Der Filmgeldberg und dieser Monat stehen danach auf 0 €. Filme, Rollen und Fotos bleiben erhalten. Was du danach kaufst oder entwickeln lässt, zählt wieder.</p>
+      <p class="hint">Das bodenlose Loch und dieser Monat stehen danach auf 0 €. Filme, Rollen und Fotos bleiben erhalten. Was du danach kaufst oder entwickeln lässt, zählt wieder.</p>
       <div class="modalfoot"><button class="closex" id="rsNo" aria-label="Abbrechen">${ART.x}</button><button class="btn danger" id="rsYes">Zurücksetzen</button></div>
     </div>`;
     document.body.appendChild(ov);

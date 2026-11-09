@@ -836,16 +836,7 @@ async function viewMore() {
   try { persisted = navigator.storage?.persisted ? await navigator.storage.persisted() : null; } catch (_) {}
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
   const lastBackup = (await DB.get('meta', 'backup'))?.at;
-  const t = MOOD.sunTimes(new Date());
-  const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(Math.round(m % 60)).padStart(2, '0')}`;
   view.innerHTML = `
-  <div class="card">
-    <h3 class="sub">Licht</h3>
-    <div class="moodpick" id="mood">
-      ${[['auto', 'Automatisch'], ['sun', 'Sonne'], ['moon', 'Mond']].map(([k, l]) => `<button type="button" data-mood="${k}" class="${MOOD.pref() === k ? 'on' : ''}">${l}</button>`).join('')}
-    </div>
-    <p class="hint">Automatisch: Sonne von etwa ${hm(t.rise)} bis ${hm(t.set)} Uhr, danach Mondschein. Gerechnet für die Mitte Deutschlands, auf ein paar Minuten genau.</p>
-  </div>
   <div class="card">
     <h3 class="sub">Sicherung</h3>
     <p>Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.</p>
@@ -869,11 +860,6 @@ async function viewMore() {
     <button class="btn danger wide" id="wipe">Alle Daten auf diesem Gerät löschen</button>
   </div>
   <p class="hint pad">Bibliotheken: JSZip, exifr (Lizenzen im Ordner vendor).</p>`;
-  view.querySelector('#mood').addEventListener('click', e => {
-    const b = e.target.closest('[data-mood]'); if (!b) return;
-    MOOD.set(b.dataset.mood);
-    view.querySelectorAll('#mood button').forEach(x => x.classList.toggle('on', x === b));
-  });
   view.querySelector('#exp').addEventListener('click', exportZip);
   view.querySelector('#imp').addEventListener('change', e => importZip(e.target.files[0]));
   view.querySelector('#wipe').addEventListener('click', async () => {

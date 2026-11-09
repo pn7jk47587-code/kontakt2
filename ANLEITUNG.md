@@ -505,3 +505,15 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Oben stehen die Einstellungen dieses Frames: Blende, Zeit, Objektiv, Filter, Blitz, ISO und Ort. Bis auf den Ort sind alle vorausgewählt. Antippen wählt ab oder wieder an.
 - Darunter die anderen Frames der Rolle. Antippen wählt die Ziele, der Haken überträgt. Er bleibt grau, bis mindestens eine Einstellung und ein Frame gewählt sind.
 - Ohne eingetragene Einstellungen erscheint nur ein Hinweis.
+
+## v177 Nur noch dunkles Design, Entwürfe für goldene und blaue Stunde, Favoriten über +5, Wetter in der Bildansicht
+
+- Das helle Design (Sonne) ist entfernt. Die App ist immer im dunklen Mondschein-Design. Die Wahl Automatisch, Sonne oder Mond ist aus den Einstellungen verschwunden. Statusleisten- und Manifest-Farbe sind dunkel (`#090e1d`).
+- Goldene Stunde (Sonne zwischen −4° und 6°) und blaue Stunde (zwischen −6° und −4°): `theme.js` setzt dann `data-sky` auf `golden-a|b|c` bzw. `blue-a|b|c`. Gerechnet für die Mitte Deutschlands.
+- Drei Entwürfe je Phase:
+  - Goldene Stunde: Glut (warmes Schwarz, Bernstein), Abendhimmel (Violett zum Pfirsich am Horizont), Halation (Nachtblau mit rotorange glühenden Rändern).
+  - Blaue Stunde: Tiefblau (gesättigtes Blau, Eisblau), Stadtlicht (Blau mit Natriumorange wie Laternen), Petrol (Blaugrün mit Türkis).
+- Einstellungen › „Goldene und blaue Stunde (Entwürfe)“: „Echt“ folgt dem Sonnenstand, „Golden“ und „Blau“ zeigen die Phase sofort. Darunter die Wahl des Entwurfs je Phase. Gespeichert in `kb-skytest`, `kb-sky-golden`, `kb-sky-blue`. Der Regler „Uhrzeit simulieren“ wirkt weiterhin.
+- Favoriten: Der Stern an den Fotos in „Alle Fotos“ ist entfernt. Favoriten sind jetzt die Fotos mit +5 (fünf Leuchtpunkte), oben in der Reihe „Favoriten“. Alte Sternmarkierungen (`fav`) bleiben gespeichert, zählen aber nicht mehr. Die Sterne im Kameraschrank bleiben.
+- Bildansicht eines Frames: Sobald Uhrzeit und Ort mit Koordinaten eingetragen sind, steht unter den beiden Feldern das Wetter mit Symbol, Temperatur, Wetterlage und Wind ab 20 km/h. Symbole: Sonne, Mond, Sonne oder Mond mit Wolke, Wolke, Regen, Schnee, Gewitter, Nebel, Wind (ab 40 km/h ohne Niederschlag). Nachts ab Sonnenhöhe unter −0,8° Mond statt Sonne. Quelle Open-Meteo, jetzt mit Windgeschwindigkeit. Gespeichert am Frame (`wx`, `wxKey`), neu geholt, wenn sich Zeit oder Ort ändert.
+- Geld: Statt „Filmgeldberg“ heißt es „Insgesamt hast du schon … in das bodenlose Loch geworfen.“

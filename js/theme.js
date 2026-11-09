@@ -23,7 +23,9 @@ const MOOD = (() => {
   // Simulierte Uhrzeit (Stunden als Dezimalzahl), nur zum Ausprobieren
   function clock() { try { const v = localStorage.getItem('kb-clock'); return v === null ? null : parseFloat(v); } catch (_) { return null; } }
   function setClock(h) { try { h === null ? localStorage.removeItem('kb-clock') : localStorage.setItem('kb-clock', String(h)); } catch (_) {} apply(); if (window.BEAM) BEAM.update(); }
-  function current() {
+  // Das helle Design ist entfernt (v177): die App ist immer im dunklen Mondschein-Design.
+  function current() { return 'moon'; }
+  function currentOld() {
     const p = pref();
     if (p === 'sun' || p === 'moon') return p;
     const d = new Date();
@@ -33,11 +35,34 @@ const MOOD = (() => {
     return (m >= t.rise && m < t.set) ? 'sun' : 'moon';
   }
 
+  // Sonnenhöhe in Grad (Näherung wie oben, Mitte Deutschlands), für goldene und blaue Stunde
+  function sunAlt(date, minutes) {
+    const rad = Math.PI / 180;
+    const start = new Date(date.getFullYear(), 0, 0);
+    const day = Math.floor((date - start) / 86400000);
+    const decl = 23.44 * rad * Math.sin(rad * (360 / 365) * (day - 81));
+    const B = rad * (360 / 365) * (day - 81);
+    const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);
+    const utc = minutes + date.getTimezoneOffset();
+    const ha = ((utc + 4 * LON + eot) / 4 - 180) * rad;   // Stundenwinkel
+    return Math.asin(Math.sin(LAT * rad) * Math.sin(decl) + Math.cos(LAT * rad) * Math.cos(decl) * Math.cos(ha)) / rad;
+  }
+  // Goldene Stunde: Sonne zwischen −4° und 6°. Blaue Stunde: zwischen −6° und −4° (wie in „Wann und wo“).
+  function sky() {
+    let force = ''; try { force = localStorage.getItem('kb-skytest') || ''; } catch (_) {}
+    if (force) return force;
+    const d = new Date(), sim = clock();
+    const a = sunAlt(d, sim !== null && !isNaN(sim) ? sim * 60 : d.getHours() * 60 + d.getMinutes());
+    return a >= -4 && a < 6 ? 'golden' : a >= -6 && a < -4 ? 'blue' : '';
+  }
+  function skyVar(k) { try { return localStorage.getItem('kb-sky-' + k) || 'a'; } catch (_) { return 'a'; } }
   function apply() {
     const m = current();
     document.documentElement.dataset.mood = m;
+    const ph = sky();
+    if (ph) document.documentElement.dataset.sky = ph + '-' + skyVar(ph); else delete document.documentElement.dataset.sky;
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute('content', m === 'sun' ? '#fbfaf6' : '#090e1d');
+    if (meta) meta.setAttribute('content', '#090e1d');
   }
 
   function set(p) { try { localStorage.setItem(KEY, p); } catch (_) {} apply(); }
@@ -57,5 +82,5 @@ const MOOD = (() => {
   apply();
   setInterval(apply, 5 * 60 * 1000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) apply(); });
-  return { pref, set, current, sunTimes, clock, setClock, testLook };
+  return { pref, set, current, sunTimes, clock, setClock, testLook, sky, sunAlt, apply };
 })();

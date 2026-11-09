@@ -198,7 +198,8 @@ Filmkühlschrank	Film fridge
 Geld	Money
 diesen Monat {0}	this month {0}
 Du hast diesen Monat schon	This month you have already spent
-für Film ausgegeben. Dein Filmgeldberg ist	on film. Your film money mountain is
+ausgegeben. Insgesamt hast du schon	spent. Altogether you have already thrown
+in das bodenlose Loch geworfen.	into the bottomless pit.
 hoch.	high.
 Filme	Films
 Scans	Scans
@@ -206,7 +207,7 @@ Verlauf	History
 Film entfernt	Film removed
 {0} Rollen entfernt	{0} rolls removed
 Ausgaben zurücksetzen?	Reset spending?
-Der Filmgeldberg und dieser Monat stehen danach auf 0 €. Filme, Rollen und Fotos bleiben erhalten. Was du danach kaufst oder entwickeln lässt, zählt wieder.	The film money mountain and this month will be set to €0. Films, rolls and photos are kept. Anything you buy or have developed afterwards counts again.
+Das bodenlose Loch und dieser Monat stehen danach auf 0 €. Filme, Rollen und Fotos bleiben erhalten. Was du danach kaufst oder entwickeln lässt, zählt wieder.	The bottomless pit and this month will be set to €0. Films, rolls and photos are kept. Anything you buy or have developed afterwards counts again.
 Zurücksetzen	Reset
 Ausgaben zurückgesetzt	Spending reset
 Uhrzeit simulieren	Simulate time of day
