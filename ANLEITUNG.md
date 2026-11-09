@@ -517,3 +517,11 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Favoriten: Der Stern an den Fotos in „Alle Fotos“ ist entfernt. Favoriten sind jetzt die Fotos mit +5 (fünf Leuchtpunkte), oben in der Reihe „Favoriten“. Alte Sternmarkierungen (`fav`) bleiben gespeichert, zählen aber nicht mehr. Die Sterne im Kameraschrank bleiben.
 - Bildansicht eines Frames: Sobald Uhrzeit und Ort mit Koordinaten eingetragen sind, steht unter den beiden Feldern das Wetter mit Symbol, Temperatur, Wetterlage und Wind ab 20 km/h. Symbole: Sonne, Mond, Sonne oder Mond mit Wolke, Wolke, Regen, Schnee, Gewitter, Nebel, Wind (ab 40 km/h ohne Niederschlag). Nachts ab Sonnenhöhe unter −0,8° Mond statt Sonne. Quelle Open-Meteo, jetzt mit Windgeschwindigkeit. Gespeichert am Frame (`wx`, `wxKey`), neu geholt, wenn sich Zeit oder Ort ändert.
 - Geld: Statt „Filmgeldberg“ heißt es „Insgesamt hast du schon … in das bodenlose Loch geworfen.“
+
+## v178 Korrektur Kopfzeile, Bewertung nur noch Lichtpunkte, Laborequipment, Geld, Nutzername
+
+- Korrektur: Mit dem hellen Design waren in v177 auch die Variablen `--safe-t`, `--safe-b` und `--r` verschwunden. Dadurch fehlte der obere Abstand, und die Kopfzeile verdeckte Profilbild und Menüknopf. Die Variablen stehen jetzt im dunklen Grundblock.
+- Bewertung: Endgültig Lichtpunkte. Lichtleiste und Belichtungsmesser sind entfernt, ebenso die Auswahl in den Einstellungen (`kb-rate-style` wird nicht mehr gelesen).
+- Kameraschrank › Zubehör: neue Art „Laborequipment“ (Kolbensymbol), z. B. Tank, Spiralen, Thermometer. Ohne Zuordnung zu Kameras. Der Kaufpreis zählt unter „Ausrüstung“ im Abschnitt Geld.
+- Geld: Der Satz lautet „Du hast diesen Monat schon … ausgegeben.“ Unten links steht „Verlauf“, rechts daneben nur ein runder Plus-Knopf für eine eigene Ausgabe.
+- Nutzername: Auf Startseite und Profil nur noch Anzeige, etwas näher am Profilbild. Ändern lässt er sich im Menü (Hamburger) unter „Profil“.

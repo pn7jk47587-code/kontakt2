@@ -3,6 +3,9 @@
 /* Lichtthema: tagsüber Sonne und Prisma, abends Mondschein.
    Layout: einspaltige App mit Glas-Karten über einer Lichtschicht aus Strahlen. */
 :root, :root[data-mood="moon"] {
+  --r: 18px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
   --bg: #090e1d;
   --bg2: rgba(255,255,255,.05);
   --card: rgba(22,30,58,.55);
@@ -2233,23 +2236,6 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
 .rate-dots .rc.neg.on::before { background: color-mix(in srgb, var(--cool) calc(40% + var(--i) * 12%), transparent); }
 .rate-dots .rc.zero.on::before { background: var(--text); }
 .rate-dots .rc.cur::before { transform: scale(1.25); }
-/* Lichtleiste: durchgehender Balken, von der Mitte aus gefüllt */
-.rate-bar { gap: 0; height: 26px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); overflow: hidden; }
-.rate-bar .rc { height: 26px; }
-.rate-bar .rc.on.pos { background: linear-gradient(90deg, rgba(255,200,90,calc(.25 + var(--i) * .13)), rgba(255,220,130,calc(.3 + var(--i) * .13))); }
-.rate-bar .rc.on.neg { background: rgba(111,134,201,calc(.15 + var(--i) * .1)); }
-.rate-bar .rc.zero { border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
-.rate-bar .rc.cur::after { content: ''; position: absolute; inset: 3px 2px; border-radius: 999px; background: var(--text); opacity: .9; box-shadow: 0 0 10px rgba(255,210,120,.7); }
-.rate-bar .rc.cur.neg::after { box-shadow: none; }
-/* Belichtungsmesser: Skala wie im Sucher, die gewählte Stufe leuchtet als Lichtmarke */
-.rate-meter { gap: 0; align-items: end; height: 40px; }
-.rate-meter .rc { height: 40px; align-content: end; }
-.rate-meter .rc::before { content: ''; width: 2px; height: calc(var(--i) * 1.5px + 9px); border-radius: 1px; background: var(--muted); opacity: .6; margin-bottom: 14px; }
-.rate-meter .rc.zero::before { height: 18px; opacity: 1; background: var(--text); }
-.rate-meter .rc em { position: absolute; bottom: 0; left: 50%; translate: -50% 0; font-style: normal; font-size: 10px; color: var(--muted); }
-.rate-meter .rc.cur::after { content: ''; position: absolute; top: 2px; left: 50%; translate: -50% 0; width: 10px; height: 10px; border-radius: 50%; background: var(--warm); box-shadow: 0 0 10px 3px rgba(255,180,70,.75); }
-.rate-meter .rc.cur.neg::after { background: var(--cool); box-shadow: 0 0 8px 2px rgba(111,134,201,.6); }
-.rate-meter .rc.cur.zero::after { background: #7be08a; box-shadow: 0 0 10px 3px rgba(123,224,138,.6); }
 .rate.unset .rc { opacity: .8; }
 /* Personen */
 .pprow { display: flex; align-items: center; gap: 8px; margin-top: 6px; min-height: var(--navd); }
@@ -2356,7 +2342,7 @@ body.leaving[data-dir="l"] #view { animation: leaveleft .22s ease-in forwards; }
 body { overflow-x: clip; }
 
 /* ---------- v175: eigene Ausgaben ---------- */
-.expadd { display: block; margin: 10px 0 0 auto; }
+
 .txrow.txown { width: 100%; font: inherit; color: inherit; background: none; border: 0; padding: 2px 0; text-align: left; cursor: pointer; }
 .txrow.txown em { font-style: normal; font-size: 11px; color: var(--muted); margin-left: 6px; }
 
@@ -2447,3 +2433,10 @@ html[data-sky] body { transition: background-color .8s; }
 /* v177: Wetter in der Bildansicht, unter Ort und Zeit */
 .framewx { display: flex; align-items: center; gap: 6px; margin: 4px 2px 0; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .framewx svg { flex: 0 0 auto; color: var(--teal); }
+/* v178: Geld, unten links Verlauf, rechts nur ein Plus */
+.spendhist summary { display: flex; align-items: center; justify-content: space-between; text-align: left; }
+.spendhist summary .expadd { width: 40px; height: 40px; font-size: 22px; line-height: 1; display: grid; place-items: center; padding: 0; }
+/* v178: Name näher am Profilbild, nur noch in den Einstellungen änderbar */
+.profilehead { gap: 0 !important; }
+.profilehead .pname { margin-top: 4px; padding: 0 10px !important; }
+.setname { margin: 0 0 4px; }

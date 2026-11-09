@@ -310,6 +310,7 @@ const ACC_KINDS = [
   ['blende', 'Gegenlichtblende', '<path d="M4 8h4v8H4zM8 6l10-3v18L8 18z"/>'],
   ['adapter', 'Adapter und Filterhalter', '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/>'],
   ['tasche', 'Tasche und Gurt', '<path d="M4 8h16v12H4zM9 8V5h6v3"/>'],
+  ['labor', 'Laborequipment', '<path d="M9 3h6M10 3v6l-5 10a1.6 1.6 0 0 0 1.4 2.3h11.2A1.6 1.6 0 0 0 19 19l-5-10V3"/><path d="M7.5 15h9"/>'],
   ['sonst', 'Sonstiges', '<circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/>']
 ];
 const accKind = k => ACC_KINDS.find(x => x[0] === k) || ACC_KINDS[ACC_KINDS.length - 1];
@@ -363,7 +364,7 @@ async function openAccEditor(a) {
         <label class="fld"><span>Modell</span><input id="acName" maxlength="60" value="${U.esc(ed.name || '')}"></label>
       </div>
       <div class="fld"><span>Anzahl</span><div class="stepper"><button type="button" id="acMinus" aria-label="weniger">−</button><span id="acCount">${ed.count || 1}</span><button type="button" id="acPlus" aria-label="mehr">+</button></div></div>
-      ${cams.length ? `<div class="qlabel">Passt an</div><div class="camchecks" id="acCams">${cams.map(c => `<label class="camcheck"><input type="checkbox" value="${c.id}" ${ed.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}</span></label>`).join('')}</div>` : ''}
+      ${cams.length ? `<div class="qlabel" id="acCamsLbl"${ed.kind === 'labor' ? ' hidden' : ''}>Passt an</div><div class="camchecks" id="acCams"${ed.kind === 'labor' ? ' hidden' : ''}>${cams.map(c => `<label class="camcheck"><input type="checkbox" value="${c.id}" ${ed.cameraIds.includes(c.id) ? 'checked' : ''}><span>${U.esc(camLabel(c))}</span></label>`).join('')}</div>` : ''}
       <div class="two"><label class="fld"><span>Kaufpreis (€)</span><input id="acPrice" inputmode="decimal" value="${U.esc(ed.price != null ? String(ed.price).replace('.', ',') : '')}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="acBought" value="${U.esc(ed.boughtAt || '')}"></label></div>
       <label class="fld" id="acGnBox"${ed.kind === 'blitz' ? '' : ' hidden'}><span>Leitzahl (ISO 100, Meter)</span><input id="acGn" inputmode="decimal" value="${U.esc(ed.gn != null ? String(ed.gn).replace('.', ',') : '')}"></label>
@@ -377,6 +378,8 @@ async function openAccEditor(a) {
     const b = e.target.closest('[data-k]'); if (!b) return;
     ed.kind = b.dataset.k; ov.querySelectorAll('.acckind').forEach(x => x.classList.toggle('on', x === b));
     $('acGnBox').hidden = ed.kind !== 'blitz';
+    // Laborequipment (Tank, Spirale, Thermometer, Messbecher …) gehört zu keiner Kamera
+    if ($('acCams')) { $('acCams').hidden = ed.kind === 'labor'; $('acCamsLbl').hidden = ed.kind === 'labor'; }
   });
   $('acMinus').addEventListener('click', () => { ed.count = Math.max(1, (ed.count || 1) - 1); $('acCount').textContent = ed.count; });
   $('acPlus').addEventListener('click', () => { ed.count = Math.min(99, (ed.count || 1) + 1); $('acCount').textContent = ed.count; });
@@ -387,7 +390,7 @@ async function openAccEditor(a) {
     ed.maker = $('acMaker').value.trim(); ed.name = $('acName').value.trim(); ed.notes = $('acNotes').value.trim();
     { const p = parseFloat($('acPrice').value.replace(',', '.')); ed.price = isNaN(p) ? null : Math.round(p * 100) / 100; ed.boughtAt = $('acBought').value || null; }
     { const g = parseFloat($('acGn').value.replace(',', '.')); ed.gn = ed.kind === 'blitz' && g > 0 ? g : null; }
-    ed.cameraIds = [...ov.querySelectorAll('#acCams input:checked')].map(i => i.value);
+    ed.cameraIds = ed.kind === 'labor' ? [] : [...ov.querySelectorAll('#acCams input:checked')].map(i => i.value);
     const list = await getAccessories();
     const i = list.findIndex(x => x.id === ed.id);
     if (i >= 0) list[i] = ed; else list.push(ed);

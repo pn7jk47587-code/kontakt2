@@ -321,7 +321,7 @@ async function viewProfile() {
       <button class="gearbtn" id="openSettings" aria-label="Einstellungen">${ART.menu}</button>
       <button class="heroav big" id="pAv" aria-label="Profilbild ändern">${await avatarHtml(120)}</button>
       <input type="file" accept="image/*" hidden id="pPic">
-      <label class="atname pname"><span class="at" aria-hidden="true">@</span><input id="pName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false"></label>
+      <span class="pname" id="pNameTxt">${U.esc(atName(PROFILE?.name))}</span>
     </div>
 
     <a class="tile photostile" href="#/alle-fotos">
@@ -357,18 +357,6 @@ async function viewProfile() {
     ${await ideasFoldHtml()}
 
     ${await diaryFoldHtml()}`;
-  const nameIn = view.querySelector('#pName');
-  const fit = () => { nameIn.size = Math.max(2, nameIn.value.length + 1); };
-  fit();
-  let t;
-  nameIn.addEventListener('input', () => {
-    stripAt(nameIn); fit();
-    clearTimeout(t);
-    t = setTimeout(async () => {
-      if (!nameIn.value.trim()) return;
-      PROFILE.name = nameIn.value.trim(); await DB.put('meta', PROFILE);
-    }, 400);
-  });
   view.querySelector('#pAv').addEventListener('click', () => view.querySelector('#pPic').click());
   view.querySelector('#pPic').addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
@@ -419,6 +407,8 @@ async function openSettings() {
     <div class="modal setmodal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
       <h2 id="setTitle">Einstellungen</h2>
       <span class="appver" title="App-Version und letzte Änderung">${typeof APP_VERSION !== 'undefined' ? `Version ${APP_VERSION.replace('kb-v', '')}<br>${(() => { const [d, t] = APP_BUILT.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}, ${t}`; })()}` : ''}</span>
+      <div class="sethead"><span>Profil</span></div>
+      <label class="atname setname"><span class="at" aria-hidden="true">@</span><input id="setName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false" enterkeyhint="done"></label>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Goldene und blaue Stunde (Entwürfe)</span></div>
@@ -434,9 +424,6 @@ async function openSettings() {
       <div class="seggroup nightpick" id="nightPick">${NIGHT_LIGHT_NAMES.map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-nightlight') || 'streif') === k ? ' on' : ''}" data-nl="${k}">${l}</button>`).join('')}</div>
       <div class="sethead"><span>Schrift (zum Ausprobieren)</span></div>
       <label class="fld" style="margin:0"><select id="fontPick" aria-label="Schrift">${TEST_FONTS.map(([k, l]) => `<option value="${k}"${(localStorage.getItem('kb-font') || '') === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
-      <div class="sethead"><span>Bewertung (zum Ausprobieren)</span></div>
-      <div class="seggroup" id="rateStyle">${RATE_STYLES.map(([k, l]) => `<button type="button" class="seg${rateStyle() === k ? ' on' : ''}" data-rs="${k}">${l}</button>`).join('')}</div>
-      <div id="rateDemo" style="margin:8px 0 4px">${rateHtml(3, 'rateDemoR')}</div>
       <div class="sethead">${ART.tank}<span>Entwicklung</span></div>
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
@@ -454,21 +441,16 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  // Nutzername nur noch hier änderbar (nicht mehr auf Startseite und Profil)
+  { const inp = ov.querySelector('#setName'); let tn;
+    inp.addEventListener('input', () => { stripAt(inp); clearTimeout(tn); tn = setTimeout(async () => { const v = inp.value.trim(); if (!v) return; PROFILE.name = v; await DB.put('meta', PROFILE); document.querySelectorAll('#pNameTxt, .homehead .pname').forEach(el => el.textContent = atName(v)); }, 400); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); }); }
   ov.querySelector('#nightPick').addEventListener('click', e => {
     const b = e.target.closest('[data-nl]'); if (!b) return;
     try { localStorage.setItem('kb-nightlight', b.dataset.nl); } catch (_) {}
     ov.querySelectorAll('#nightPick .seg').forEach(x => x.classList.toggle('on', x === b)); BEAM.update(); U.haptic && U.haptic(8);
   });
   ov.querySelector('#fontPick').addEventListener('change', e => { try { e.target.value ? localStorage.setItem('kb-font', e.target.value) : localStorage.removeItem('kb-font'); } catch (_) {} MOOD.testLook(); });
-  let demoV = 3;
-  const wireDemo = () => wireRate(ov, 'rateDemoR', () => demoV, v => { demoV = v; });
-  wireDemo();
-  ov.querySelector('#rateStyle').addEventListener('click', e => {
-    const b = e.target.closest('[data-rs]'); if (!b) return;
-    try { localStorage.setItem('kb-rate-style', b.dataset.rs); } catch (_) {}
-    ov.querySelectorAll('#rateStyle .seg').forEach(x => x.classList.toggle('on', x === b));
-    ov.querySelector('#rateDemo').innerHTML = rateHtml(demoV, 'rateDemoR'); wireDemo(); U.haptic && U.haptic(8);
-  });
   // Seiten aus den Einstellungen: Zurück führt wieder in die Einstellungen (Zwischenebene)
   ov.querySelectorAll('.profilelinks a').forEach(l => l.addEventListener('click', () => { try { sessionStorage.setItem('kb-from-settings', l.getAttribute('href')); } catch (_) {} }));
   ov.querySelector('#setLang').addEventListener('click', e => {
@@ -801,7 +783,7 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
-      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> für Film${spend.gear || spend.own ? ' und Ausrüstung' : ''} ausgegeben. Insgesamt hast du schon <b>${euro(spend.total)}</b> in das bodenlose Loch geworfen.</p>
+      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> ausgegeben. Insgesamt hast du schon <b>${euro(spend.total)}</b> in das bodenlose Loch geworfen.</p>
       <div class="spendsplit four">
         <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
         <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
@@ -809,15 +791,14 @@ async function spendFoldHtml() {
         <div><span class="sub2">Ausrüstung</span><b>${euro(spend.gear)}</b></div>
         ${Object.entries(spend.cats).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<div><span class="sub2">${U.esc(c)}</span><b>${euro(v)}</b></div>`).join('')}
       </div>
-      <button type="button" class="btn ghost small expadd" id="expAdd">+ Ausgabe</button>
-      <details class="txhist"><summary>Verlauf</summary>${historyHtml(tx)}
+      <details class="txhist spendhist"><summary><span>Verlauf</span><button type="button" class="roundic expadd" id="expAdd" aria-label="Ausgabe hinzufügen">+</button></summary>${historyHtml(tx)}
         ${tx.length ? '<button class="btn danger small" id="spendReset">Ausgaben zurücksetzen</button>' : ''}</details>
       </div>
     </section>`;
 }
 function setupSpend(root) {
   const redraw = () => { const y = window.scrollY; route().then(() => window.scrollTo(0, y)); };
-  root.querySelector('#expAdd')?.addEventListener('click', () => openExpenseEditor(null, redraw));
+  root.querySelector('#expAdd')?.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openExpenseEditor(null, redraw); });
   root.querySelectorAll('[data-exp]').forEach(b => b.addEventListener('click', async () => { const it = (await ownExpenses()).find(e => e.id === b.dataset.exp); if (it) openExpenseEditor(it, redraw); }));
   root.querySelector('#spendReset')?.addEventListener('click', () => {
     const ov = document.createElement('div');

@@ -1,19 +1,16 @@
 /* Bewertung von −5 bis +5 und Personen auf Fotos */
 
 // ---------- Bewertung ----------
-// Drei Darstellungen zum Ausprobieren (Einstellungen › Bewertung): Lichtpunkte, Lichtleiste, Belichtungsmesser
-const RATE_STYLES = [['dots', 'Lichtpunkte'], ['bar', 'Lichtleiste'], ['meter', 'Belichtungsmesser']];
-const rateStyle = () => { try { return localStorage.getItem('kb-rate-style') || 'dots'; } catch (_) { return 'dots'; } };
+// Darstellung: Lichtpunkte (Lichtleiste und Belichtungsmesser sind seit v178 entfernt)
 const fmtRate = v => v == null ? '–' : v > 0 ? '+' + v : String(v).replace('-', '−');
 function rateHtml(v, id = 'rate') {
-  const st = rateStyle();
   const cells = [];
   for (let k = -5; k <= 5; k++) {
     const on = v != null && (k === 0 ? true : (v > 0 ? k > 0 && k <= v : v < 0 ? k < 0 && k >= v : false));
     const cur = v != null && k === v;
-    cells.push(`<button type="button" class="rc${on ? ' on' : ''}${cur ? ' cur' : ''}${k === 0 ? ' zero' : k > 0 ? ' pos' : ' neg'}" data-v="${k}" style="--i:${Math.abs(k)}" role="radio" aria-checked="${cur}" aria-label="${fmtRate(k)}">${st === 'meter' && (k === -5 || k === 0 || k === 5) ? `<em>${fmtRate(k)}</em>` : ''}</button>`);
+    cells.push(`<button type="button" class="rc${on ? ' on' : ''}${cur ? ' cur' : ''}${k === 0 ? ' zero' : k > 0 ? ' pos' : ' neg'}" data-v="${k}" style="--i:${Math.abs(k)}" role="radio" aria-checked="${cur}" aria-label="${fmtRate(k)}"></button>`);
   }
-  return `<div class="ratewrap"><div class="rate rate-${st}${v == null ? ' unset' : ''}" id="${id}" role="radiogroup" aria-label="Bewertung von −5 bis +5">${cells.join('')}</div><span class="ratev" id="${id}V">${v == null ? '' : fmtRate(v)}</span></div>`;
+  return `<div class="ratewrap"><div class="rate rate-dots${v == null ? ' unset' : ''}" id="${id}" role="radiogroup" aria-label="Bewertung von −5 bis +5">${cells.join('')}</div><span class="ratev" id="${id}V">${v == null ? '' : fmtRate(v)}</span></div>`;
 }
 function wireRate(root, id, get, set) {
   const el = root.querySelector('#' + id); if (!el) return;
