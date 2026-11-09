@@ -2244,9 +2244,12 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
 .pprow { display: flex; align-items: center; gap: 8px; margin-top: 6px; min-height: var(--navd); }
 .ppchips { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 6px; }
 .pchip { padding: 5px 12px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line); font-size: 14px; }
-.pplist { display: flex; flex-wrap: wrap; gap: 6px; max-height: 40vh; overflow-y: auto; margin-bottom: 12px; }
+.pplist { display: flex; flex-wrap: wrap; gap: 6px; max-height: 40vh; overflow-y: auto; margin: 12px 0; }
+.pplist:empty { display: none; }
+.ppadd { border-style: dashed !important; color: var(--teal) !important; }
 .ppnew { display: flex; align-items: flex-end; gap: 8px; }
 .ppnew .fld { flex: 1; margin: 0; }
+.ppnew input { flex: 1; min-width: 0; }
 /* Analytics */
 section.ratefold.fold { background: linear-gradient(160deg, rgba(255,181,71,.2), var(--card) 70%) !important; border-color: rgba(255,181,71,.42) !important; }
 .ratebars { display: grid; grid-template-columns: repeat(11, minmax(0, 1fr)); gap: 3px; align-items: end; height: 110px; margin: 6px 0 4px; }
@@ -2577,3 +2580,7 @@ section.badgefold .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-ro
 /* v197: Ortswahl auf der Karte. Der Fertig-Knopf schwebt immer unten rechts, auch wenn die Liste der letzten Orte lang ist */
 .mappick .modalfoot { position: sticky; bottom: 0; z-index: 6; pointer-events: none; }
 .mappick .modalfoot > * { pointer-events: auto; }
+/* v199: Fotoansicht. Alle Werte in der Karte (Titel, Personen, Ort, Zeit, Infos) in derselben Schrift, Größe und Farbe */
+figcaption .titlefld input, figcaption .titlefld textarea, figcaption .titlefld .pchip, figcaption #phTimeTxt { font-family: inherit !important; font-size: 16px !important; color: var(--text) !important; font-weight: 400; }
+figcaption .titlefld .pchip { padding: 6px 12px; }
+.phedit.wide { margin: 14px 0 10px; }

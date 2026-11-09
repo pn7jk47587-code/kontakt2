@@ -652,3 +652,9 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v198 Fehler beim Hinzufügen einer Person behoben
 
 - Nach „Personen benennen“ in „Alle Fotos“ kam die Meldung „Can't find variable: peopleAll“. Die Metadaten des Fotos lasen die Personenliste aus einer Variable, die es nur auf der Startseite gab. Die Liste wird jetzt dort geladen, wo sie gebraucht wird. Die Person war trotz Meldung gespeichert.
+
+## v199 Personen in einem Feld, Fotoansicht aufgeräumt
+
+- Personen benennen: Es gibt nur noch ein Feld. Tippen filtert die vorhandenen Namen, ein neuer Name erscheint als „+ Name“. Antippen wählt aus, Enter oder der Haken legen einen neuen Namen auch direkt an. Passt der getippte Text zu vorhandenen Namen, legt der Haken nichts Neues an.
+- Fotoansicht in „Alle Fotos“: „Alle Angaben bearbeiten“ steht jetzt unten, direkt über den Gesamtinformationen. Der Knopf „Filter eintragen“ ist entfallen, Filter trägt man über „Alle Angaben bearbeiten“ ein. Gewählte Filter stehen weiter in der Karte.
+- In der Karte haben Titel, Personen, Ort, Aufnahmezeit und Infos dieselbe Schrift, Größe und Farbe.

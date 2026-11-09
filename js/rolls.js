@@ -2163,12 +2163,12 @@ async function viewPhoto(albumId, frameId) {
         <div class="titlefld peoplerow"><span>Personen</span><div class="pprow"><span class="ppchips" id="phPeople">${await peopleChips(f.people)}</span><button type="button" class="roundic" id="phPeopleBtn" aria-label="Personen benennen">${PERSON_IC}</button></div></div>
         ${placeFieldHtml('phPlace', f.place, 'titlefld', f)}
         <div class="titlefld phtime"><span>Aufgenommen</span><div class="placefld1"><label class="timeedit2"><span id="phTimeTxt">${f.date ? U.esc(fmtShotLong(f.date)) : ''}</span><input type="datetime-local" id="phTime" value="${U.esc(String(f.date || '').slice(0, 16))}" aria-label="Aufnahmedatum und Uhrzeit"></label><button type="button" class="placepin" id="phTimeNow" aria-label="Jetzige Uhrzeit eintragen">${CLOCK_IC}</button></div></div>
-        <button type="button" class="btn ghost small phedit" id="phEdit">Alle Angaben bearbeiten</button>
         <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2">${U.esc(f.info || '')}</textarea></label>
         <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
         ${ln.spec ? `<p class="photospec">${U.esc(ln.spec)}</p>` : ''}
         ${phones.length ? '<p class="photodate">Nach oben wischen: Handyfoto</p>' : ''}
+        <button type="button" class="btn ghost wide phedit" id="phEdit">Alle Angaben bearbeiten</button>
         ${albumId === 'alle' ? '<dl class="metabox" id="phMeta"></dl>' : ''}
       </figcaption>
     </figure>`;
@@ -2221,8 +2221,10 @@ async function viewPhoto(albumId, frameId) {
   const drawPhFilters = () => {
     const fs = (f.filterIds || []).map(id => filterById(allFilters, id)).filter(Boolean);
     const box = view.querySelector('#phFilters'); if (!box) return;
-    box.innerHTML = `<span class="phflabel">Filter</span>${fs.length ? fs.map(x => `<span class="ffchip">${filterArt(x, 22)}<span>${U.esc(filterShort(x))}</span></span>`).join('') : '<span class="sub2">keiner</span>'}<button type="button" class="btn ghost small" id="phFilterEdit">${SEARCH_IC}${fs.length ? 'Ändern' : 'Filter eintragen'}</button>`;
-    box.querySelector('#phFilterEdit').addEventListener('click', async () => {
+    // v199: Filter werden über „Alle Angaben bearbeiten“ eingetragen. Hier stehen sie nur, wenn welche gewählt sind.
+    box.hidden = !fs.length;
+    box.innerHTML = fs.length ? `<span class="phflabel">Filter</span>${fs.map(x => `<span class="ffchip">${filterArt(x, 22)}<span>${U.esc(filterShort(x))}</span></span>`).join('')}` : '';
+    box.querySelector('#phFilterEdit')?.addEventListener('click', async () => {
       const roll = await DB.get('rolls', f.rollId);
       openFrameFilterSearch(allFilters, (f.filterIds || []).filter(id => filterById(allFilters, id)), roll, async ids => {
         f.filterIds = [...ids]; await DB.put('frames', f);

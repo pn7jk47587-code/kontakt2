@@ -33,28 +33,44 @@ async function peopleChips(ids) {
   const all = await getPeople();
   return (ids || []).map(id => all.find(p => p.id === id)).filter(Boolean).map(p => `<span class="pchip">${U.esc(p.name)}</span>`).join('');
 }
-// Auswahl: bisher benannte Personen (häufigste zuerst) antippen, neue Namen hinzufügen
+// Auswahl (v199): ein Feld zum Suchen und Anlegen. Tippen filtert die Namen, ein neuer Name erscheint als „+ Name“.
+// Antippen wählt aus, Enter oder der Haken übernehmen auch einen gerade getippten neuen Namen.
 async function openPeoplePicker(chosen, onDone) {
   const counts = new Map();
   (await DB.all('frames')).forEach(f => (f.people || []).forEach(id => counts.set(id, (counts.get(id) || 0) + 1)));
   let list = (await getPeople()).sort((a, b) => (counts.get(b.id) || 0) - (counts.get(a.id) || 0) || a.name.localeCompare(b.name, 'de'));
   const sel = new Set(chosen || []);
   const ov = document.createElement('div'); ov.className = 'modalbg';
-  const draw = () => {
-    ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Personen auf dem Foto">
-      <div class="pplist">${list.map(p => `<button type="button" class="chip pp${sel.has(p.id) ? ' on' : ''}" data-p="${p.id}" aria-pressed="${sel.has(p.id)}">${U.esc(p.name)}${counts.get(p.id) ? `<span class="sub2"> ${counts.get(p.id)}</span>` : ''}</button>`).join('')}</div>
-      <form class="ppnew" id="ppForm"><label class="fld"><span>Neue Person</span><input id="ppName" maxlength="40" autocomplete="off" enterkeyhint="done"></label><button type="submit" class="roundic" aria-label="Person hinzufügen">${PERSON_IC}</button></form>
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Personen auf dem Foto">
+      <form class="ppnew" id="ppForm"><input id="ppName" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Name" aria-label="Name suchen oder neu anlegen"></form>
+      <div class="pplist" id="ppList"></div>
       <div class="modalfoot"><button class="closex" id="ppNo" aria-label="Abbrechen">${ART.x}</button><button class="okbtn" id="ppOk" aria-label="Übernehmen">${ART.check}</button></div></div>`;
-    ov.querySelectorAll('[data-p]').forEach(b => b.onclick = () => { const id = b.dataset.p; sel.has(id) ? sel.delete(id) : sel.add(id); U.haptic && U.haptic(8); draw(); });
-    ov.querySelector('#ppForm').onsubmit = async e => {
-      e.preventDefault();
-      const name = ov.querySelector('#ppName').value.trim(); if (!name) return;
-      let p = list.find(x => x.name.toLowerCase() === name.toLowerCase());
-      if (!p) { p = { id: U.uid(), name }; list.push(p); await savePeople(list); }
-      sel.add(p.id); draw(); ov.querySelector('#ppName').focus();
-    };
-    ov.querySelector('#ppNo').onclick = () => ov.remove();
-    ov.querySelector('#ppOk').onclick = () => { ov.remove(); onDone([...sel]); };
+  const inp = ov.querySelector('#ppName'), box = ov.querySelector('#ppList');
+  const norm = t => t.trim().toLowerCase();
+  const draw = () => {
+    const q = norm(inp.value);
+    const shown = list.filter(p => !q || sel.has(p.id) || p.name.toLowerCase().includes(q));
+    const isNew = q && !list.some(p => p.name.toLowerCase() === q);
+    box.innerHTML = (isNew ? `<button type="button" class="chip pp ppadd" data-new="1">+ ${U.esc(inp.value.trim())}</button>` : '')
+      + shown.map(p => `<button type="button" class="chip pp${sel.has(p.id) ? ' on' : ''}" data-p="${p.id}" aria-pressed="${sel.has(p.id)}">${U.esc(p.name)}${counts.get(p.id) ? `<span class="sub2"> ${counts.get(p.id)}</span>` : ''}</button>`).join('');
   };
+  // Getippten Namen übernehmen: vorhandene Person auswählen oder neu anlegen
+  const commit = async () => {
+    const name = inp.value.trim(); if (!name) return false;
+    let p = list.find(x => x.name.toLowerCase() === name.toLowerCase());
+    if (!p) { p = { id: U.uid(), name }; list.push(p); await savePeople(list); }
+    sel.add(p.id); inp.value = ''; draw(); U.haptic && U.haptic(8); return true;
+  };
+  inp.addEventListener('input', draw);
+  ov.querySelector('#ppForm').onsubmit = async e => { e.preventDefault(); await commit(); inp.focus(); };
+  box.addEventListener('click', async e => {
+    if (e.target.closest('[data-new]')) { await commit(); return; }
+    const b = e.target.closest('[data-p]'); if (!b) return;
+    const id = b.dataset.p; sel.has(id) ? sel.delete(id) : sel.add(id); inp.value = ''; U.haptic && U.haptic(8); draw();
+  });
+  ov.querySelector('#ppNo').onclick = () => ov.remove();
+  // Haken: ein getippter Name, zu dem es noch niemanden gibt, wird mit angelegt. Passt er zu vorhandenen Namen, bleibt es bei der Auswahl.
+  ov.querySelector('#ppOk').onclick = async () => { const q = norm(inp.value); if (q && !list.some(p => p.name.toLowerCase().includes(q))) await commit(); ov.remove(); onDone([...sel]); };
   draw(); document.body.appendChild(ov);
+  if (!list.length) inp.focus();
 }
