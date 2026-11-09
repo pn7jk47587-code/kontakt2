@@ -540,3 +540,8 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Der Karten-Knopf für „Ort für mehrere Frames“ (v174) ist entfernt. Den Ort eines Frames überträgt man jetzt über „Einstellungen übertragen“, dort die Option Ort anwählen. Standort- und Verschieben-Symbol stehen mit 10 px Abstand nebeneinander.
 - Übergänge: Lichtring und Wegfliegen starten gleichzeitig. Die Seite wechselt erst, wenn die alte Ansicht ausgeblendet ist (210 ms). Die alte Ansicht bleibt unsichtbar, bis die neue gezeichnet ist, dann gleitet diese herein (`arriveView()` nach `routeView()`). Ohne Unschärfe-Filter, nur `translate3d` und Deckkraft, damit es auf dem iPhone nicht ruckelt.
 - Kartenauswahl: Unter der Karte stehen beim Herunterscrollen die zuletzt eingetragenen Orte, höchstens 5, neueste zuerst, jeder Name einmal (`recentPlaces`). Antippen übernimmt den Ort direkt.
+
+## v181 Schriftzug und Kopfzeile
+
+- Schriftzug „lightleak“: Die Laufweite war auf −0,03 em gesetzt. Dadurch lief das „a“ in das „k“. Jetzt normale Laufweite. Die Kerben in „a“ und „k“ gehören zur Schrift Unbounded selbst (geprüft gegen @fontsource/unbounded 5.1.0, gleiche Glyphen).
+- Kopfzeile: kein heller Trennstrich und keine eigene Fläche mehr. Ein weicher Verlauf in der Hintergrundfarbe läuft 18 px unter die Kopfzeile aus, damit gescrollte Inhalte darunter lesbar verschwinden.

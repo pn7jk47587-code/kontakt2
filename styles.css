@@ -2490,3 +2490,9 @@ body.leaving[data-dir="l"] #view { animation: leaveleft2 .21s cubic-bezier(.4, 0
 /* v180: Kartenauswahl, unter der Karte die letzten 5 Orte */
 .mphist { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .mphist .mpitem { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+/* v181: Schriftzug ohne enge Laufweite (bei −0,03 em lief das „a“ in das „k“) */
+.wordmark { letter-spacing: 0 !important; }
+/* v181: Kopfzeile ohne hellen Trennstrich und ohne eigene Fläche; ein weicher Verlauf hält gescrollte Inhalte lesbar */
+.topbar { border-bottom: 0 !important; background: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+.topbar::before { content: ''; position: absolute; inset: 0 0 -18px; z-index: -1; pointer-events: none;
+  background: linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 62%, transparent 100%); }
