@@ -132,24 +132,37 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
   if (info.favMark) strips.forEach((strip, k) => {
     const y = L.topY + k * (sh + sgap);
     strip.forEach((it, i) => {
-      if (it.f?.rate !== 5) return;
+      // v210: +5 rot, +4 blau, −4 und −5 ein Kreuz durchs Bild
+      const rate = it.f?.rate;
+      if (rate !== 5 && rate !== 4 && !(rate <= -4)) return;
+      FAVPAL = rate === 4 ? PAL.blue : PAL.red;
       const x = L.x0 + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
       // v207: Mittelformat etwas weiter außen umkreisen, Strichstärke wächst mit der Bildgröße
-      const grow = info.square ? 1.1 : 1, kk = Math.min(2, Math.max(1, fw / 85)), seed = (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i;
-      if (info.favMark === 'box') { drawFavBox(ctx, s, x - gap * 0.35, y + edge - gap * 0.35, fw + gap * 0.7, fh + gap * 0.7, seed, kk); return; }
-      if (info.favMark === 'fine') { drawFavFine(ctx, s, x - gap * 0.3, y + edge - gap * 0.3, fw + gap * 0.6, fh + gap * 0.6, seed, kk); return; }
-      if (info.favMark === 'wild') { drawFavWild(ctx, s, x, y + edge, fw, fh, seed, kk, gap, edge); return; }
-      if (info.favMark === 'chalk') { drawFavChalk(ctx, s, cx, cy, fw / 2 + gap * 2.2 * grow, fh / 2 + edge * 1.25, seed, kk); return; }
+      const grow = info.square ? 1.03 : 1, kk = Math.min(2, Math.max(1, fw / 85)), seed = (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i;
+      // v210: jedes markierte Bild bekommt zufällig eine der Formen Kreis, Kasten, fein oder wild (fest je Bild, damit das Sheet beim nächsten Mal gleich aussieht)
+      const mode = ['wax', 'box', 'fine', 'wild'][Math.floor(rnd(seed + 3)() * 4)];
+      if (rate <= -4) { drawCross(ctx, s, x, y + edge, fw, fh, seed, kk, mode); return; }
+      if (mode === 'box') { drawFavBox(ctx, s, x - gap * 0.35, y + edge - gap * 0.35, fw + gap * 0.7, fh + gap * 0.7, seed, kk); return; }
+      if (mode === 'fine') { drawFavFine(ctx, s, x - gap * 0.3, y + edge - gap * 0.3, fw + gap * 0.6, fh + gap * 0.6, seed, kk); return; }
+      if (mode === 'wild') { drawFavWild(ctx, s, x, y + edge, fw, fh, seed, kk, gap, edge); return; }
       drawFavMark(ctx, s, cx, cy, (fw / 2 + gap * 0.9) * grow, (fh / 2 + edge * 0.55) * grow, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme, Math.min(2, Math.max(1, fw / 85)));
     });
   });
 }
 
-// Favoriten (+5) auf dem Sheet markieren: dicker Wachsstift, von Hand umkreist.
+// Markierungen auf dem Sheet (+5 rot, +4 blau, −4/−5 Kreuz): dicker Wachsstift, von Hand umkreist.
 // Jede Markierung bekommt eine eigene Form (Oval, eckige Schleife, doppelte Runde, Lasso mit Auslauf),
 // Neigung, Größe und Zittern hängen vom Bild ab, damit keine zwei gleich aussehen.
 // Roter Wachsstift auf hellem und dunklem Papier (v207).
 function rnd(seed) { let x = (seed * 9301 + 49297) % 233280; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
+// Farben der Markierung. Rot für +5 und für das Kreuz, Blau für +4
+const PAL = {
+  red: { solid: [226, 46, 38], base: 'rgba(176,64,48,.92)', hi: [255, 72, 48], lo: [140, 40, 32] },
+  blue: { solid: [36, 108, 228], base: 'rgba(42,90,176,.92)', hi: [80, 160, 255], lo: [22, 46, 118] }
+};
+let FAVPAL = PAL.red;
+const PAL_STREAK = R => R() < 0.6 ? `rgba(${FAVPAL.hi.map(v => Math.min(255, v + (R() * 30 | 0)))},${.55 + R() * .4})` : `rgba(${FAVPAL.lo},${.4 + R() * .4})`;
+const PAL_BASE = (a = .88) => `rgba(${FAVPAL.solid},${a})`;
 function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme, k = 1) {
   const R = rnd(seed + 7), shape = Math.floor(R() * 4), tilt = (R() - 0.5) * 0.3, size = 0.96 + R() * 0.12;
   const a0 = R() * Math.PI * 2, wob = [R() * 0.07, R() * 0.05, R() * 6, R() * 6];
@@ -175,7 +188,7 @@ function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme, k = 1) {
   }
   // v207: immer roter Wachsstift, dick und deckend, auch auf dunklem Papier
   const light = theme === 'light';
-  const col = light ? [206, 40, 30] : [232, 52, 40];
+  const col = FAVPAL.solid;
   const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x * s, y * s) : ctx.moveTo(x * s, y * s)); };
   ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   // Wachs: breiter, deckender Strich, darüber ein körniger Strich, dann helle Lücken, die das Wachs auf dem Film ungleichmäßig wirken lassen
@@ -198,12 +211,12 @@ function drawFavBox(ctx, s, x, y, w, h, seed, k = 1) {
     const W = 5.6 * k, nx = -uy, ny = ux;
     const path = (off = 0) => { ctx.beginPath(); ctx.moveTo((a[0] + nx * off) * s, (a[1] + ny * off) * s); ctx.quadraticCurveTo((mid[0] + nx * off) * s, (mid[1] + ny * off) * s, (b[0] + nx * off) * s, (b[1] + ny * off) * s); };
     // Grundstrich ziegelrot, darüber trockene Längsstreifen in Hellrot und Braunrot wie Pastell auf glattem Papier
-    ctx.setLineDash([]); path(); ctx.strokeStyle = 'rgba(168,66,52,.9)'; ctx.lineWidth = W * s; ctx.stroke();
+    ctx.setLineDash([]); path(); ctx.strokeStyle = FAVPAL.base; ctx.lineWidth = W * s; ctx.stroke();
     for (let n = 0; n < 9; n++) {
       const off = (R() - 0.5) * W * 0.9, bright = R() < 0.55;
       ctx.setLineDash([(6 + R() * 22) * k * s, (0.8 + R() * 4) * k * s, (3 + R() * 12) * k * s, (0.5 + R() * 2.5) * k * s]);
       ctx.lineDashOffset = R() * 30 * k * s;
-      path(off); ctx.strokeStyle = bright ? `rgba(255,${60 + R() * 30 | 0},${40 + R() * 20 | 0},${.55 + R() * .4})` : `rgba(${120 + R() * 40 | 0},48,38,${.4 + R() * .4})`;
+      path(off); ctx.strokeStyle = bright ? `rgba(${FAVPAL.hi.map(v => Math.min(255, v + (R() * 30 | 0)))},${.55 + R() * .4})` : `rgba(${FAVPAL.lo},${.4 + R() * .4})`;
       ctx.lineWidth = W * (0.12 + R() * 0.2) * s; ctx.stroke();
     }
     ctx.setLineDash([]); ctx.lineDashOffset = 0;
@@ -239,12 +252,11 @@ function looseRect(cx, cy, rx, ry, R, turns = 1.1, wob = 0.05, sharp = 0.5) {
   }
   return pts;
 }
-const RED_STREAK = R => R() < 0.6 ? `rgba(255,${55 + R() * 40 | 0},${35 + R() * 25 | 0},${.55 + R() * .4})` : `rgba(${130 + R() * 50 | 0},40,32,${.4 + R() * .4})`;
 
 // „Fein“: dünner roter Stift wie bei René Burri, Che Guevara 1963. Kasten zweimal gezogen, oben ein schneller Zickzack
 function drawFavFine(ctx, s, x, y, w, h, seed, k = 1) {
   const R = rnd(seed + 23), j = () => (R() - 0.5) * 1.4 * k;
-  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = 'rgba(226,38,36,.95)';
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = PAL_BASE(.95);
   for (let pass = 0; pass < 2; pass++) {
     ctx.lineWidth = (pass ? 0.9 : 1.3) * k * s;
     [[x, y, x + w, y], [x + w, y, x + w, y + h], [x + w, y + h, x, y + h], [x, y + h, x, y]].forEach(([x1, y1, x2, y2]) => {
@@ -265,23 +277,24 @@ function drawFavWild(ctx, s, x, y, w, h, seed, k = 1, gap = 4, edge = 12) {
   const loops = 2 + Math.floor(R() * 2);
   for (let i = 0; i < loops; i++) {
     const sc = 1 + i * 0.07 + R() * 0.06;
-    waxLine(ctx, s, looseRect(cx + (R() - 0.5) * 3 * k, cy + (R() - 0.5) * 3 * k, (w / 2 + gap) * sc, (h / 2 + edge * 0.4) * sc, R, 1.02 + R() * 0.15, 0.04, 0.35), W * (i ? 0.7 : 1), R, 'rgba(214,52,40,.85)', RED_STREAK, 7, k);
+    waxLine(ctx, s, looseRect(cx + (R() - 0.5) * 3 * k, cy + (R() - 0.5) * 3 * k, (w / 2 + gap) * sc, (h / 2 + edge * 0.4) * sc, R, 1.02 + R() * 0.15, 0.04, 0.35), W * (i ? 0.7 : 1), R, PAL_BASE(.85), PAL_STREAK, 7, k);
   }
   // langer Strich von unten links nach oben rechts, über den Rand hinaus
   const a = [x - w * (0.2 + R() * 0.15), y + h + edge * (0.6 + R() * 0.6)], b = [x + w * (0.55 + R() * 0.25), y - edge * (0.8 + R() * 0.8)];
   const pts = []; for (let i = 0; i <= 20; i++) { const t = i / 20; pts.push([a[0] + (b[0] - a[0]) * t + Math.sin(t * 3 + R()) * 1.5 * k, a[1] + (b[1] - a[1]) * t]); }
-  waxLine(ctx, s, pts, W * 0.65, R, 'rgba(214,52,40,.8)', RED_STREAK, 4, k);
+  waxLine(ctx, s, pts, W * 0.65, R, PAL_BASE(.8), PAL_STREAK, 4, k);
 }
 
-// „Kreide“: hellblaue, fast weiße Schlinge, weit um das Bild, mit Auslauf nach außen
-function drawFavChalk(ctx, s, cx, cy, rx, ry, seed, k = 1) {
-  const R = rnd(seed + 59), pts = [], a0 = Math.PI * (0.95 + R() * 0.2), tilt = (R() - 0.5) * 0.15;
-  const tail = 0.25 + R() * 0.15;
-  // Auslauf von außen herein, dann gut eine Runde
-  for (let i = 0; i <= 14; i++) { const t = a0 - (14 - i) * 0.035, g = 1 + (14 - i) * 0.05; pts.push([Math.cos(t) * rx * g, Math.sin(t) * ry * g - (14 - i) * tail * k]); }
-  for (let i = 1; i <= 130; i++) { const t = a0 + i / 120 * Math.PI * 2, w = 1 + 0.05 * Math.sin(t * 2 + 1) + 0.04 * Math.sin(t * 3); pts.push([Math.cos(t) * rx * w * (1 - i / 1300), Math.sin(t) * ry * w * (1 - i / 1300)]); }
-  const P = pts.map(([x, y]) => [cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]);
-  waxLine(ctx, s, P, 4.4 * k, R, 'rgba(196,216,228,.92)', R2 => R2() < 0.5 ? `rgba(245,250,252,${.5 + R2() * .4})` : `rgba(120,150,170,${.3 + R2() * .35})`, 9, k);
+
+// v210: Kreuz durchs Bild für −4 und −5, im Strich der gewählten Markierung
+function drawCross(ctx, s, x, y, w, h, seed, k, mode) {
+  const R = rnd(seed + 71), j = () => (R() - 0.5) * 2.4 * k, o = () => (1 + R() * 3) * k;
+  const lines = [[[x - o(), y - o()], [x + w + o(), y + h + o()]], [[x + w + o(), y - o()], [x - o(), y + h + o()]]];
+  lines.forEach(([a, b]) => {
+    const pts = []; for (let i = 0; i <= 16; i++) { const t = i / 16, bow = Math.sin(t * Math.PI) * (R() - 0.5) * 0.6 * k; pts.push([a[0] + (b[0] - a[0]) * t + bow + (i === 0 || i === 16 ? j() : 0), a[1] + (b[1] - a[1]) * t + bow]); }
+    if (mode === 'fine') { ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = PAL_BASE(.95); ctx.lineWidth = 1.4 * k * s; ctx.beginPath(); pts.forEach(([px, py], i) => i ? ctx.lineTo(px * s, py * s) : ctx.moveTo(px * s, py * s)); ctx.stroke(); ctx.restore(); }
+    else waxLine(ctx, s, pts, (mode === 'wax' ? 5.2 : 4.6) * k, R, PAL_BASE(.88), PAL_STREAK, 8, k);
+  });
 }
 
 async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMark = '') {
@@ -341,7 +354,7 @@ function openContactSheet(rollId) {
     </div>
     <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
-    <div class="seggroup cstheme csfav" role="group" aria-label="Favoriten" hidden><button type="button" class="seg" data-fm="wax"><span class="favdot" aria-hidden="true"></span>Kreis</button><button type="button" class="seg" data-fm="box">Kasten</button><button type="button" class="seg" data-fm="fine">Fein</button><button type="button" class="seg" data-fm="wild">Wild</button><button type="button" class="seg" data-fm="chalk">Kreide</button><button type="button" class="seg" data-fm="">Ohne</button></div>
+    <div class="seggroup cstheme csfav" role="group" aria-label="Markierungen" hidden><button type="button" class="seg" data-fm="mix"><span class="favdot" aria-hidden="true"></span>Markieren</button><button type="button" class="seg" data-fm="">Ohne</button></div>
     <p class="sub2 csstate" id="csState"></p>
     <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><button class="cspvshare csgo" id="csGo" aria-label="Contact Sheet erstellen" disabled>${ART.check}</button></div></div>`;
   document.body.appendChild(ov);
@@ -350,8 +363,8 @@ function openContactSheet(rollId) {
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
   const sel = { p: get('kb-cs-paper'), t: get('kb-cs-theme'), r: get('kb-cs-per') };
   // Favoriten umkreisen: freiwillig, nur sichtbar, wenn die Rolle Fotos mit +5 hat
-  let fm = get('kb-cs-fav') || '';
-  albumData(rollId).then(d => { if (d && d.frames.some(f => f.rate === 5)) { ov.querySelector('.csfav').hidden = false; paint(); } });
+  let fm = get('kb-cs-fav') ? 'mix' : '';   // frühere Werte (wax, box …) gelten als „Markieren“
+  albumData(rollId).then(d => { if (d && d.frames.some(f => f.rate === 5 || f.rate === 4 || f.rate <= -4)) { ov.querySelector('.csfav').hidden = false; paint(); } });
   ov.querySelectorAll('[data-fm]').forEach(x => x.onclick = () => { fm = x.dataset.fm; put('kb-cs-fav', fm); paint(); });
   const go = ov.querySelector('#csGo'), stEl = ov.querySelector('#csState');
   const paint = () => {

@@ -703,3 +703,7 @@ Nach zwei Magnum-Kontaktbögen gibt es für Favoriten (+5) drei weitere Markieru
 - Fein: dünner roter Stift wie auf René Burris Bogen von 1963. Der Kasten ist zweimal gezogen, an der oberen Kante sitzt ein schneller Zickzack.
 - Wild: zwei bis drei lose rote Wachsrunden übereinander und ein langer Strich quer über das Bild bis über den Rand, wie auf dem Bogen vom Mai 1968.
 - Kreide: hellblaue, fast weiße Schlinge weit um das Bild, mit einem Auslauf, der von außen hereinkommt.
+
+## Version 210: Markierungen nach Bewertung, Formen gemischt
+
+Beim Contact Sheet heißt die Auswahl jetzt „Markieren“ oder „Ohne“. Mit „Markieren“ bekommen Fotos mit +5 einen roten Rahmen, Fotos mit +4 einen blauen. Fotos mit −4 oder −5 bekommen ein Kreuz durchs Bild. Welche Form ein Bild bekommt, ist zufällig gemischt: Kreis, Kasten, fein oder wild. Die Form bleibt je Bild fest, damit das Sheet beim nächsten Erstellen gleich aussieht. Kreide ist entfernt. Die Auswahl erscheint, sobald die Rolle mindestens ein Foto mit +5, +4, −4 oder −5 hat. Eine frühere Wahl einer einzelnen Form gilt jetzt als „Markieren“.

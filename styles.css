@@ -2602,6 +2602,3 @@ figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; wi
 .bcell .bname { font-size: 10.5px; line-height: 1.25; letter-spacing: -.01em; text-align: center; color: var(--text); width: 100%; hyphens: auto; -webkit-hyphens: auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .bcell.locked .bname { color: var(--muted); opacity: .8; }
 
-/* v209: Varianten der Favoriten-Markierung umbrechen in zwei Reihen */
-.seggroup.csfav { flex-wrap: wrap; row-gap: 3px; }
-.seggroup.csfav .seg { flex: 1 0 30%; }
