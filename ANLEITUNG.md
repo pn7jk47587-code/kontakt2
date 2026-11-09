@@ -671,3 +671,8 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 
 - Der Knopf zum Auf- und Zuklappen eines Albums war ein weißer Kreis mit grauem Pfeil und stach auf dem dunklen Filmstreifen heraus. Er ist jetzt dunkel und halb durchsichtig, mit feinem violettem Rand und violettem Pfeil in der Farbe des Fotoalbums.
 - Die Pfeile neben den Abschnittsüberschriften (In der Kamera, In Entwicklung, Fotoalbum) tragen die Farbe ihres Abschnitts.
+
+## v203 Album-Knopf in jedem Licht dunkel
+
+- Der Knopf zum Auf- und Zuklappen der Alben hat jetzt einen festen dunklen, halb durchsichtigen Grund statt der Kartenfarbe. Er bleibt damit auch bei hellem Licht dunkel. Der Pfeil ist hellviolett.
+- Wer noch den weißen Kreis sieht, hat eine ältere Version im Zwischenspeicher. Die App einmal ganz schließen und neu öffnen, unten in den Einstellungen muss Version 203 stehen.

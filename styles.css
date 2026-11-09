@@ -2593,6 +2593,6 @@ figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; wi
 .spend, .analyticstile { --chev: #a35cff; } .shots { --chev: #d659c8; } .ideas { --chev: #e8549a; } .badgefold { --chev: #ffc56b; }
 .favtoggle { --chev: #ffbe50; }
 /* v202: Auf- und Zuklappen der Alben auf der Startseite. Dunkler Knopf statt weißem Kreis, Pfeil in der Albumfarbe */
-.rcfold { background: color-mix(in srgb, var(--solid) 82%, transparent) !important; border: 1px solid color-mix(in srgb, var(--st3) 55%, transparent) !important; box-shadow: 0 1px 6px rgba(0,0,0,.35) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
-.rcfold .foldchev { --chev: var(--st3); }
+.rcfold { background: rgba(10, 12, 28, .62) !important; border: 1px solid color-mix(in srgb, var(--st3) 55%, transparent) !important; box-shadow: 0 1px 6px rgba(0,0,0,.35) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.rcfold .foldchev { --chev: color-mix(in srgb, var(--st3) 70%, #fff); }
 .sec-entwurf .foldchev { --chev: var(--st1); } .sec-belichtet .foldchev { --chev: var(--st2); } .sec-entwickelt .foldchev { --chev: var(--st3); }
