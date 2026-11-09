@@ -690,6 +690,38 @@ async function rollFrames(body, roll, stock) {
   imp.innerHTML = PIN_IC + '<input type="file" accept="image/*" multiple hidden id="phoneImp">';
   if (tabsRow) { const ro = tabsRow.querySelector('#reorderOn'); ro ? tabsRow.insertBefore(imp, ro) : tabsRow.appendChild(imp); }
   imp.querySelector('#phoneImp').addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(roll, files); });
+  // Ort für mehrere Frames, auch während die Rolle in der Kamera ist: Frames antippen, dann Ort aus der Liste, auf der Karte oder per Standort
+  tabsRow?.querySelector('#rollPickBtn')?.remove();
+  const pk = document.createElement('button');
+  pk.type = 'button'; pk.id = 'rollPickBtn'; pk.className = 'reorderbtn'; pk.setAttribute('aria-label', 'Ort für mehrere Frames festlegen'); pk.title = 'Ort für mehrere Frames'; pk.setAttribute('aria-pressed', 'false');
+  pk.innerHTML = MAP_PICK_IC;
+  if (tabsRow) tabsRow.insertBefore(pk, imp);
+  const grid = body.querySelector('#frameGrid');
+  let picked = null, bar = null;
+  const endPick = () => { picked = null; bar?.remove(); bar = null; grid.classList.remove('picking'); grid.querySelectorAll('.pickmark').forEach(x => x.remove()); grid.querySelectorAll('.picked').forEach(x => x.classList.remove('picked')); pk.classList.remove('on'); pk.setAttribute('aria-pressed', 'false'); };
+  const drawBar = () => {
+    bar.innerHTML = `<span>${picked.size} ausgewählt</span><button type="button" class="btn small" id="rpAll">${picked.size === fr.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn accent small" id="rpGo"${picked.size ? '' : ' disabled'}>Ort wählen</button>`;
+    bar.querySelector('#rpAll').onclick = () => { if (picked.size === fr.length) picked.clear(); else fr.forEach(f => picked.add(f.id)); grid.querySelectorAll('.cell').forEach((c, i) => c.classList.toggle('picked', picked.has(fr[i].id))); drawBar(); };
+    bar.querySelector('#rpGo').onclick = () => openPlaceChooser(async p => {
+      let n = 0;
+      for (const fid of picked) { const f = await DB.get('frames', fid); if (!f) continue; f.place = p.name || f.place || ''; if (p.lat != null) { f.placeLat = p.lat; f.placeLng = p.lng; delete f.placeAcc; f.placeSrc = p.src || 'map'; if (p.cc) f.placeCC = p.cc; else delete f.placeCC; } f.placeNameAuto = !!p.auto; await DB.put('frames', f); n++; }
+      endPick(); U.toast(`Ort bei ${n} ${n === 1 ? 'Frame' : 'Frames'} eingetragen`); U.haptic && U.haptic([12, 40, 12]);
+    }, { rollId: roll.id });
+  };
+  pk.addEventListener('click', () => {
+    if (picked) { endPick(); return; }
+    picked = new Set(); U.haptic && U.haptic(10);
+    pk.classList.add('on'); pk.setAttribute('aria-pressed', 'true'); grid.classList.add('picking');
+    grid.querySelectorAll('.cell').forEach(c => c.insertAdjacentHTML('beforeend', '<span class="pickmark" aria-hidden="true"></span>'));
+    bar = document.createElement('div'); bar.className = 'pickbar'; document.body.appendChild(bar); drawBar();
+    window.addEventListener('hashchange', endPick, { once: true });
+  });
+  grid.addEventListener('click', e => {
+    if (!picked) return;
+    const c = e.target.closest('.cell'); if (!c) return; e.preventDefault(); e.stopPropagation();
+    const f = fr[[...grid.querySelectorAll('.cell')].indexOf(c)]; if (!f) return;
+    picked.has(f.id) ? picked.delete(f.id) : picked.add(f.id); c.classList.toggle('picked', picked.has(f.id)); U.haptic && U.haptic(8); drawBar();
+  }, true);
   body.querySelector('#bulk')?.addEventListener('change', async e => {
     const files = [...e.target.files];
     if (!files.length) return;
@@ -1700,23 +1732,26 @@ async function albumData(id) {
 }
 
 // Ort auswählen: schon benutzte Orte, auf der Karte (mit Suche) oder aktueller Standort
-async function knownPlaces() {
+async function knownPlaces(rollId) {
   const m = new Map();
   for (const f of await DB.all('frames')) {
     if (!f.place) continue;
-    const e = m.get(f.place) || { name: f.place, n: 0, lat: null, lng: null, cc: null };
+    const e = m.get(f.place) || { name: f.place, n: 0, lat: null, lng: null, cc: null, fr: [] };
+    if (rollId && f.rollId === rollId) e.fr.push(f);
     e.n++; if (e.lat == null && f.placeLat != null) { e.lat = +f.placeLat; e.lng = +f.placeLng; e.cc = f.placeCC || null; }
     m.set(f.place, e);
   }
   for (const r of await DB.all('rolls')) if (r.place && !m.has(r.place)) m.set(r.place, { name: r.place, n: 0, lat: r.placeLat ?? null, lng: r.placeLng ?? null, cc: r.placeCC || null });
-  return [...m.values()].sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'de'));
+  // Orte aus der eigenen Rolle zuerst, mit den Frames, die ihn schon haben (so lässt sich der Ort eines Frames auf weitere übertragen)
+  return [...m.values()].map(e => ({ ...e, fr: e.fr || [] })).sort((a, b) => (b.fr.length > 0) - (a.fr.length > 0) || b.n - a.n || a.name.localeCompare(b.name, 'de'));
 }
 async function openPlaceChooser(onPick, opts = {}) {
-  const places = await knownPlaces();
+  const places = await knownPlaces(opts.rollId);
+  const frTxt = p => { const l = p.fr.sort((a, b) => a.index - b.index).map(frameLabel); return (l.length === 1 ? 'Frame ' : 'Frames ') + (l.length > 4 ? l.slice(0, 4).join(', ') + ' …' : l.join(', ')); };
   const ov = document.createElement('div'); ov.className = 'modalbg';
   ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Ort wählen">
     <div class="pcacts"><button type="button" class="btn ghost" id="pcMap">${MAP_PICK_IC}<span>${opts.city ? 'Stadt suchen' : 'Auf der Karte'}</span></button><button type="button" class="btn ghost" id="pcGps">${PIN_IC}<span>Hier</span></button></div>
-    ${places.length ? `<div class="pclist">${places.map((p, i) => `<button type="button" class="pcitem" data-i="${i}"><span>${U.esc(p.name)}</span><span class="sub2">${p.n ? p.n + (p.n === 1 ? ' Foto' : ' Fotos') : ''}</span></button>`).join('')}</div>` : ''}
+    ${places.length ? `<div class="pclist">${places.map((p, i) => `<button type="button" class="pcitem" data-i="${i}"><span>${U.esc(p.name)}</span><span class="sub2${p.fr.length ? ' pcfr' : ''}">${p.fr.length ? frTxt(p) : p.n ? p.n + (p.n === 1 ? ' Foto' : ' Fotos') : ''}</span></button>`).join('')}</div>` : ''}
     <div class="modalfoot"><button class="closex" id="pcNo" aria-label="Abbrechen">${ART.x}</button><span></span></div></div>`;
   document.body.appendChild(ov);
   const done = p => { ov.remove(); onPick(p); };
@@ -2093,11 +2128,11 @@ async function viewPhoto(albumId, frameId) {
   infoIn.addEventListener('input', () => { clearTimeout(it); it = setTimeout(saveInfo, 400); infoIn.style.height = 'auto'; infoIn.style.height = infoIn.scrollHeight + 'px'; });
   infoIn.addEventListener('blur', saveInfo);
   const go = async g => { if (g) { await saveTitle(); location.replace(`#/foto/${albumId}/${g.id}`); } };
-  // Haken unten rechts: Titel speichern und zurück zum Raster
+  // Haken unten rechts: speichern und zurück zum Raster, dort auf der Höhe dieses Fotos
   const done = document.createElement('button');
-  // Haken speichert und bleibt beim Foto; weiter geht es mit Wischen, zurück zum Raster mit dem Pfeil oben links
-  done.className = 'donebtn stay'; done.setAttribute('aria-label', 'Speichern'); done.innerHTML = ART.check;
+  done.className = 'donebtn goesback'; done.setAttribute('aria-label', 'Fertig, zurück zur Übersicht'); done.innerHTML = ART.check;
   document.body.appendChild(done);
+  done.addEventListener('click', async () => { await saveTitle(); await saveInfo(); document.activeElement?.blur(); goHash(albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId); });
   document.getElementById('phDel')?.addEventListener('click', async () => {
     await saveTitle();
     const imgId = f.imgId, back = albumId === 'alle' ? '#/alle-fotos' : '#/album/' + albumId;

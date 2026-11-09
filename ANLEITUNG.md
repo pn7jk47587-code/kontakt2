@@ -482,3 +482,12 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v173 Vorschau des Contact Sheets scrollt
 
 - In der Vorschau lassen sich mehrere Seiten jetzt nach oben und unten durchscrollen. Vorher hat die Sperre für offene Fenster das Wischen dort abgefangen, weil das Auswahlfenster dahinter noch offen ist.
+## v174 Ort für mehrere Frames, Kartensuche, Zurückgehen an die richtige Stelle, Übergänge
+
+- Kartensuche: Das Suchfeld hat nur noch einen Rand. Er leuchtet im Regenbogenverlauf wie die Knöpfe. Das Eingabefeld zeichnet keinen eigenen Fokusrahmen mehr darüber.
+- Bildansicht einer Rolle in der Kamera: Neben dem Standort-Knopf ist wieder der Karten-Knopf. So lässt sich für frühere Frames der Ort auf der Karte suchen.
+- Rasteransicht einer Rolle (Reiter „Bilder“, auch in der Kamera): Der Karten-Knopf oben in der Reiterzeile startet die Auswahl. Frames antippen, unten „Ort wählen“. Zur Wahl stehen Karte, aktueller Standort und schon benutzte Orte. Orte aus derselben Rolle stehen oben, mit den Frames, die sie schon haben („Frame 2“). So überträgt man den Ort eines Frames auf weitere. Erneutes Tippen auf den Karten-Knopf bricht ab.
+- Einzelfoto in „Alle Fotos“ und im Album: Der Haken speichert und führt zurück zur Übersicht. Sie steht danach auf der Höhe dieses Fotos.
+- Zurück aus einem Album oder einer Rolle: Die Startseite steht auf der Höhe der Karte dieser Rolle, nicht mehr ganz oben. Gemerkt wird das in `kb-anchor` (sessionStorage).
+- Zurück-Pfeil oben links: Wie beim Haken leuchtet ein Lichtring auf, dann gleitet die Ansicht weg. Ein offenes Fenster schließt der Pfeil weiterhin ohne Übergang.
+- Räumliche Ordnung: Die Startseite liegt links, die Unterseiten in der Mitte, das Profil rechts. Geht man zur Startseite, gleitet die Ansicht leicht nach rechts weg und die Startseite kommt von links. Geht man zum Profil, ist es umgekehrt. Das gilt für den Zurück-Pfeil, den Haken und die Knöpfe für Startseite und Profil. Innerhalb der Unterseiten bleibt der bisherige Übergang.

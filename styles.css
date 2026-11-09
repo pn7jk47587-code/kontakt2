@@ -2281,7 +2281,7 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
 .phedit { margin: 12px 0 4px; }
 .rpic { color: var(--teal); display: grid; place-items: center; width: 30px; }
 .rpic svg { width: 22px; height: 22px; }
-.placetime .placemap { display: none !important; }
+/* v173: Kartenknopf auch in der Bildansicht der aktiven Rolle (siehe unten) */
 
 /* ---------- v162: Bewertung −5 bis +5 (drei Darstellungen) und Personen ---------- */
 :root { --warm: #ffb547; --warm2: #ffe28a; --cool: #6f86c9; }
@@ -2392,3 +2392,29 @@ html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albti
 .cspvshare:active { transform: scale(.94); }
 .csopt.on { border-color: var(--teal); box-shadow: 0 0 0 1px var(--teal), var(--glow); }
 .csgo:disabled { opacity: .35; box-shadow: none; cursor: default; }
+
+/* ---------- v173: Kartensuche, Karte in der Bildansicht, Ort für mehrere Frames ---------- */
+/* Suchfeld der Karte: ein einziger Rand, leuchtend wie die Knöpfe; das Eingabefeld zeichnet keinen eigenen Rahmen mehr */
+.mpsearch { border: 2px solid transparent !important; background: linear-gradient(var(--solid), var(--solid)) padding-box, var(--prism) border-box !important; box-shadow: var(--glow); }
+.mpsearch input, .mpsearch input:focus { outline: none !important; position: static !important; background: none !important; box-shadow: none !important; }
+/* Bildansicht: Ort mit Karte und Standort, Knöpfe schmaler, damit der Name Platz hat */
+.placetime .placefld1 .placepin { width: 36px; }
+.placetime .placefld1 input { padding-right: 0 !important; }
+/* Rasteransicht der Rolle: Frames für einen gemeinsamen Ort auswählen */
+.grid.picking .cell { position: relative; transition: transform .15s, opacity .15s; }
+.grid.picking .cell.picked { transform: scale(.92); }
+.grid.picking .cell .pickmark { z-index: 2; }
+.grid.picking .cell.picked .pickmark { background: var(--teal); }
+.grid.picking .cell.picked .pickmark::after { content: ''; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.pcitem .pcfr { color: var(--teal); }
+/* Ebenenwechsel seitlich: Startseite links, Unterseiten Mitte, Profil rechts (leicht, damit es nicht ablenkt) */
+body.leaving[data-dir="r"] #view { animation: leaveright .22s ease-in forwards; }
+body.leaving[data-dir="l"] #view { animation: leaveleft .22s ease-in forwards; }
+#view.arrive-l { animation: arriveleft .38s cubic-bezier(.2,.8,.2,1); }
+#view.arrive-r { animation: arriveright .38s cubic-bezier(.2,.8,.2,1); }
+@keyframes leaveright { to { opacity: 0; transform: translateX(34px); filter: blur(1.5px); } }
+@keyframes leaveleft { to { opacity: 0; transform: translateX(-34px); filter: blur(1.5px); } }
+@keyframes arriveleft { from { opacity: 0; transform: translateX(-26px); } }
+@keyframes arriveright { from { opacity: 0; transform: translateX(26px); } }
+@media (prefers-reduced-motion: reduce) { body.leaving #view, #view.arrive-l, #view.arrive-r { animation: none !important; } }
+body { overflow-x: clip; }

@@ -234,6 +234,7 @@ function setTab() {}
 async function route() {
   await routeView();
   if (typeof TOUR !== 'undefined') TOUR.after();
+  restoreAnchor();
   // Nach „Haken“ aus Kamera oder Objektiv: an dieselbe Stelle zurückscrollen
   try {
     const r = JSON.parse(sessionStorage.getItem('kb-restore') || 'null');
@@ -274,7 +275,32 @@ document.addEventListener('click', e => {
 });
 backBtn.setAttribute('aria-label', 'Zurück');
 backBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15.5 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-backBtn.addEventListener('click', () => { U.haptic && U.haptic(8); goUp(); });
+// Zurück-Pfeil: wie beim Haken leuchtet ein Lichtring auf, die Ansicht gleitet weg und die vorige taucht auf.
+// Ein offenes Fenster schließt er ohne Übergang.
+backBtn.addEventListener('click', () => {
+  if (document.querySelector('.modalbg, .loadsheet #lsClose') || document.body.classList.contains('leaving')) { U.haptic && U.haptic(8); goUp(); return; }
+  if (window.FEEL) FEEL.burst(backBtn);
+  backBtn.classList.add('rewarded'); U.haptic && U.haptic([10, 30, 14]);
+  setTimeout(() => { startLeave(parentHash() || '#/'); goUp(); setTimeout(() => backBtn.classList.remove('rewarded'), 1200); }, 230);
+});
+// Beim Zurückgehen merkt sich die App, wo man herkommt: die Startseite zeigt danach die Karte dieser Rolle,
+// „Alle Fotos“ und das Album das zuletzt angesehene Foto (statt wieder ganz oben anzufangen).
+function markAnchor(target) {
+  const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
+  let sel = null;
+  if ((parts[0] === 'album' || parts[0] === 'rolle') && parts[1] && target === '#/') sel = `[data-rc="${parts[1]}"]`;
+  else if (parts[0] === 'foto' && parts[2]) sel = `[data-fid="${parts[2]}"]`;
+  else if (parts[0] === 'album' && parts[2] === 'buch') sel = null;
+  try { sel ? sessionStorage.setItem('kb-anchor', JSON.stringify({ hash: target, sel })) : sessionStorage.removeItem('kb-anchor'); } catch (_) {}
+}
+function goHash(target) { markAnchor(target); location.hash = target; }
+function restoreAnchor() {
+  let a = null; try { a = JSON.parse(sessionStorage.getItem('kb-anchor') || 'null'); } catch (_) {}
+  if (!a || a.hash !== (location.hash || '#/')) return;
+  try { sessionStorage.removeItem('kb-anchor'); } catch (_) {}
+  const go = () => { const el = document.querySelector(a.sel); if (!el || !el.offsetHeight) return; const r = el.getBoundingClientRect(); window.scrollTo(0, Math.max(0, r.top + window.scrollY - (window.innerHeight - r.height) / 2)); };
+  requestAnimationFrame(go); setTimeout(go, 260);
+}
 async function goUp() {
   const modals = document.querySelectorAll('.modalbg');
   if (modals.length) { modals[modals.length - 1].remove(); return; }
@@ -282,7 +308,7 @@ async function goUp() {
   if (sheet) { sheet.click(); return; }
   const parts = (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
   if (parts[0] === 'album' && parts[2] === 'buch') { location.hash = '#/album/' + parts[1]; return; }
-  if (parts[0] === 'foto' && !document.querySelector('.modalbg')) { location.hash = parts[1] === 'alle' ? '#/alle-fotos' : '#/album/' + parts[1]; return; }
+  if (parts[0] === 'foto' && !document.querySelector('.modalbg')) { goHash(parts[1] === 'alle' ? '#/alle-fotos' : '#/album/' + parts[1]); return; }
   // Aus den Einstellungen geöffnete Seite: zurück in die Einstellungen
   try {
     const from = sessionStorage.getItem('kb-from-settings');
@@ -290,9 +316,28 @@ async function goUp() {
   } catch (_) {}
   const done = document.querySelector('.donebtn.goesback');
   if (done) { done.click(); return; }
-  const up = { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', karte: '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', analytics: '#/profil', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]];
-  if (parts.length) location.hash = up || '#/';
+  if (parts.length) goHash(parentHash() || '#/');
 }
+// Übergeordnete Seite der aktuellen Ansicht
+function parentHash(hash = location.hash) {
+  const parts = (hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);
+  if (!parts.length) return null;
+  if (parts[0] === 'album' && parts[2] === 'buch') return '#/album/' + parts[1];
+  if (parts[0] === 'foto') return parts[1] === 'alle' ? '#/alle-fotos' : '#/album/' + parts[1];
+  return { rolle: '#/', album: '#/', film: '#/filme', filme: '#/profil', rechner: '#/profil', mehr: '#/profil', kameras: '#/profil', 'alle-fotos': '#/profil', karte: '#/profil', tagebuch: parts[1] ? '#/tagebuch' : '#/profil', profil: '#/', schrank: '#/profil', archiv: '#/alle-fotos', analytics: '#/profil', kamera: '#/schrank/kameras', objektiv: '#/schrank/objektive' }[parts[0]] || '#/';
+}
+// Räumliche Ordnung der Ansichten: links die Startseite, in der Mitte die Unterseiten, rechts das Profil.
+// Wechselt man die Ebene, gleitet die Ansicht leicht zur Seite weg und die neue kommt von der anderen Seite.
+function levelOf(hash) { const h = hash || '#/'; return h === '#/' || h === '#' ? 0 : /^#\/profil\/?$/.test(h) ? 2 : 1; }
+let LAST_HASH = location.hash || '#/';
+function leaveDir(target) { const d = levelOf(target) - levelOf(location.hash); return d < 0 ? 'r' : d > 0 ? 'l' : ''; }
+function startLeave(target) { document.body.dataset.dir = leaveDir(target); document.body.classList.add('leaving'); setTimeout(() => document.body.classList.remove('leaving'), 1200); }
+// Startseiten- und Profilknopf oben: dieselbe Bewegung
+document.addEventListener('click', e => {
+  const a = e.target.closest('#homeBtn, #profBtn'); if (!a || document.body.classList.contains('leaving')) return;
+  const target = a.getAttribute('href'); if ((location.hash || '#/') === target) return;
+  e.preventDefault(); markAnchor(target); startLeave(target); setTimeout(() => { location.hash = target; }, 170);
+}, true);
 
 // Aus der oberen linken Ecke bewusst nach unten rechts wischen: eine Ebene zurück (ohne Anzeige).
 // Ausgewertet wird schon während der Bewegung, weil iOS das Ende einer Berührung beim Scrollen verschlucken kann.
@@ -416,7 +461,10 @@ document.addEventListener('touchmove', e => { if (e.touches.length > 1 && !e.tar
 let FRESH_ID = null;
 async function routeView() {
   // Nach dem Haken: die vorige Ebene erscheint sanft statt abrupt
-  if (document.body.classList.contains('leaving')) { document.body.classList.remove('leaving'); view.classList.remove('arrive'); void view.offsetWidth; view.classList.add('arrive'); setTimeout(() => view.classList.remove('arrive'), 420); }
+  const lv = levelOf(location.hash) - levelOf(LAST_HASH); LAST_HASH = location.hash || '#/';
+  const arr = lv < 0 ? 'arrive-l' : lv > 0 ? 'arrive-r' : document.body.classList.contains('leaving') ? 'arrive' : '';
+  document.body.classList.remove('leaving');
+  if (arr) { view.classList.remove('arrive', 'arrive-l', 'arrive-r'); void view.offsetWidth; view.classList.add(arr); setTimeout(() => view.classList.remove(arr), 420); }
   if (FRESH_ID && !location.hash.endsWith('/' + FRESH_ID)) FRESH_ID = null;
   document.body.classList.remove('albummode', 'mapmode');
   document.querySelectorAll('.modalbg, .overlay').forEach(x => x.remove());
@@ -988,6 +1036,6 @@ function growFrom(ov, btn) {
     if (d.classList.contains('stay')) { burst(d); U.haptic && U.haptic([10, 30, 14]); return; }   // speichert, ohne die Ebene zu verlassen
     e.stopImmediatePropagation(); e.preventDefault();
     burst(d); d.classList.add('rewarded'); U.haptic && U.haptic([10, 30, 14]);
-    setTimeout(() => { document.body.classList.add('leaving'); d.dataset.go = '1'; d.click(); delete d.dataset.go; setTimeout(() => document.body.classList.remove('leaving'), 1200); }, 230);
+    setTimeout(() => { startLeave(parentHash() || '#/'); d.dataset.go = '1'; d.click(); delete d.dataset.go; }, 230);
   }, true);
 })();
