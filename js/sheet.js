@@ -1,5 +1,5 @@
 /* Contact Sheet als PDF, hell oder dunkel: Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
-   A4 hoch: alle Bilder auf einer Seite. Passen die Streifen nicht, werden die Bilder kleiner und der Block mittig gesetzt (v206).
+   A4 hoch: alle Bilder auf einer Seite. A5 quer bei Mittelformat: zwei Seiten. Passen die Streifen nicht, werden die Bilder kleiner und der Block mittig gesetzt (v206).
    Jede Seite wird in hoher Auflösung auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT). */
 const SHEET_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.6"/><path d="M7 7h4v3H7zM13 7h4v3h-4zM7 12.5h4v3H7zM13 12.5h4v3h-4z"/></svg>';
 let JSPDF_P = null;
@@ -307,17 +307,19 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
   const imgs = await sheetImages(d.frames);
   const items = imgs.map(x => ({ ...x, n: frameLabel(x.f) }));
   const strips = []; for (let i = 0; i < items.length; i += per) strips.push(items.slice(i, i + per));
-  const P = SHEET_PAPER[paper], L = sheetLayout(P, square, per, paper === 'a4' ? Math.ceil(items.length / per) : 0);
+  // v215: A4 alle Streifen auf eine Seite. A5 bei Mittelformat auf höchstens zwei Seiten, gleichmäßig verteilt.
+  const rows = paper === 'a4' ? strips.length : square ? Math.ceil(strips.length / 2) : 0;
+  const P = SHEET_PAPER[paper], L = sheetLayout(P, square, per, rows);
   const avail = P.h - L.topY - L.m;
   // so viele Streifen wie passen, lückenlos untereinander, der Reihe nach gefüllt. Rest bleibt unten frei.
-  const perPage = Math.max(1, Math.floor(avail / L.sh));
+  const perPage = Math.max(1, Math.floor(avail / L.sh + 1e-6));
   const pages = Math.ceil(strips.length / perPage);
   const slices = []; for (let p = 0; p < pages; p++) slices.push(strips.slice(p * perPage, (p + 1) * perPage));
   const sgap = 0;
   const dates = d.frames.map(f => f.date).filter(Boolean).sort();
   const range = (r?.loadedAt || dates[0]) ? [U.fmtDate(String(r?.loadedAt || dates[0]).slice(0, 10)), U.fmtDate(String(r?.finishedAt || dates[dates.length - 1] || '').slice(0, 10))].filter(Boolean).join('–') : '';
   const info = {
-    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap, pages, theme, rows: paper === 'a4' ? strips.length : 0,
+    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap, pages, theme, rows,
     favMark,
     sub: [U.stockLabel(st), r?.ei ? 'EI ' + r.ei : '', camLabel(cam) || r?.camera || '', range].filter(Boolean).join(' · '),
     count: `${d.frames.length} Bilder`
@@ -364,7 +366,13 @@ function openContactSheet(rollId) {
   const sel = { p: get('kb-cs-paper'), t: get('kb-cs-theme'), r: get('kb-cs-per') };
   // Favoriten umkreisen: freiwillig, nur sichtbar, wenn die Rolle Fotos mit +5 hat
   let fm = get('kb-cs-fav') ? 'mix' : '';   // frühere Werte (wax, box …) gelten als „Markieren“
-  albumData(rollId).then(d => { if (d && d.frames.some(f => f.rate === 5 || f.rate === 4 || f.rate <= -4)) { ov.querySelector('.csfav').hidden = false; paint(); } });
+  albumData(rollId).then(d => {
+    if (!d) return;
+    // Mittelformat: die Knöpfe nennen die echte Zahl je Reihe (4 oder 3 statt 6 oder 4)
+    const r = d.roll, st = d.stocks.get(r?.stockId);
+    if (r?.format === '120' || r?.format === 'gross' || /6x6|120/.test(String(st?.format || r?.format || ''))) { ov.querySelector('[data-r="6"]').textContent = '4 je Reihe'; ov.querySelector('[data-r="4"]').textContent = '3 je Reihe'; }
+    if (d.frames.some(f => f.rate === 5 || f.rate === 4 || f.rate <= -4)) { ov.querySelector('.csfav').hidden = false; paint(); }
+  });
   ov.querySelectorAll('[data-fm]').forEach(x => x.onclick = () => { fm = x.dataset.fm; put('kb-cs-fav', fm); paint(); });
   const go = ov.querySelector('#csGo'), stEl = ov.querySelector('#csState');
   const paint = () => {

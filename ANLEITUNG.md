@@ -723,3 +723,16 @@ Bei einem Film, den du selbst entwickelst, heißt der Knopf unter den Bildern je
 ## v214: Album ohne Sammel-Filterknopf
 
 Unter dem Fotoraster der Albenansicht gibt es den Knopf „Filter für alle Bilder eintragen“ nicht mehr. Filter trägst du beim einzelnen Bild ein.
+
+## v215: Contact Sheet Mittelformat, Aufteilung
+
+Bei Mittelformat heißen die Knöpfe jetzt „4 je Reihe“ und „3 je Reihe“. Das ist die Zahl, die tatsächlich gedruckt wird.
+
+A5 quer verteilt einen Mittelformatfilm auf höchstens zwei Seiten, gleichmäßig. Bei 12 Bildern mit 3 je Reihe stehen auf jeder Seite zwei Streifen mit je drei Bildern. Früher waren es vier Seiten.
+
+Für 12 Bilder 6×6 ist „3 je Reihe“ die bessere Wahl:
+
+| Papier | 3 je Reihe | 4 je Reihe |
+|---|---|---|
+| A4 hoch | 4 Streifen, ca. 62 mm je Bild, Seite voll | 3 Streifen, ca. 47 mm je Bild, untere Hälfte leer |
+| A5 quer | 2 Seiten mit je 6 Bildern, ca. 57 mm je Bild | 2 Seiten mit 8 und 4 Bildern, ca. 47 mm je Bild |
