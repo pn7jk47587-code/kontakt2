@@ -863,8 +863,7 @@ async function viewAnalytics() {
     ${await shotsFoldHtml()}
     ${await rateFoldHtml()}
     ${await rollTimeFoldHtml()}
-    ${await labFoldHtml()}
-    ${await fridgeUseFoldHtml()}`;
+    ${await labFoldHtml()}`;
   setupFolds(view);
   setupSpend(view);
 }
@@ -1035,7 +1034,6 @@ function whenWhereBody(frames, home = null) {
 const AN_FILM_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 8h16M4 16h16M8 4v4M12 4v4M16 4v4M8 16v4M12 16v4M16 16v4"/></svg>';
 const AN_AP_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5 15 12M20.5 12l-8.5 3M12 20.5 9 12M3.5 12l8.5-3"/></svg>';
 const AN_LAB_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6l-5 10a1.6 1.6 0 0 0 1.4 2.3h11.2A1.6 1.6 0 0 0 19 19l-5-10V3"/><path d="M7.5 15h9"/></svg>';
-const AN_FRIDGE_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M6 10h12M9 6v2M9 13v3"/></svg>';
 const num1 = v => { const n = parseFloat(String(v ?? '').replace(',', '.')); return isNaN(n) ? null : n; };
 const fmtRateAvg = v => (v > 0 ? '+' : '') + fmtNum(v, 1).replace('-', '−');
 // Belichtungszeit in Sekunden: „1/125“, „2 s“, „2“; B, T, X zählen nicht
@@ -1087,18 +1085,6 @@ async function labFoldHtml() {
   const rows = [...m].sort((a, b) => b[1].n - a[1].n).map(([k, e]) => `<div class="txrow labrow"><span>${U.esc(k)}<span class="sub2">${e.n} ${e.n === 1 ? 'Rolle' : 'Rollen'}</span></span>
       <span class="labvals"><span><b>${avg(e.cost) != null ? euro(avg(e.cost)) : '–'}</b><span class="sub2">je Rolle</span></span><span><b>${avg(e.days) != null ? fmtNum(avg(e.days), 0) + ' T' : '–'}</b><span class="sub2">bis zurück</span></span><span><b>${avg(e.rate) != null ? fmtRateAvg(avg(e.rate)) : '–'}</b><span class="sub2">Schnitt</span></span></span></div>`).join('');
   return anFold('labs', 'labfold', AN_LAB_IC, 'Labore', `${m.size} ${m.size === 1 ? 'Labor' : 'Labore'} · ${rolls.length} ${rolls.length === 1 ? 'Rolle' : 'Rollen'}`, rows);
-}
-// Kühlschrank nach Ablaufdatum: abgelaufen, bald, dann die Reihenfolge zum Verbrauchen
-async function fridgeUseFoldHtml() {
-  const entries = (await DB.all('fridge')).filter(e => (e.count || 0) > 0);
-  const stocks = await stocksMap();
-  const dated = entries.filter(e => e.expiresAt).sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
-  if (!entries.length) return anFold('fridgeuse', 'fridgeusefold', AN_FRIDGE_IC, 'Zuerst verbrauchen', 'Kühlschrank leer', '<p class="hint">Der Kühlschrank ist leer.</p>');
-  const st = e => fridgeExpiry(e).state;
-  const exp = dated.filter(e => st(e) === 'expired').reduce((n, e) => n + e.count, 0), soon = dated.filter(e => st(e) === 'soon').reduce((n, e) => n + e.count, 0);
-  const tiles = `<div class="spendsplit three"><div><span class="sub2">abgelaufen</span><b>${exp}</b></div><div><span class="sub2">in 3 Monaten</span><b>${soon}</b></div><div><span class="sub2">ohne Datum</span><b>${entries.filter(e => !e.expiresAt).reduce((n, e) => n + e.count, 0)}</b></div></div>`;
-  const list = dated.slice(0, 6).map(e => `<div class="txrow"><span>${U.esc(U.stockLabel(stocks.get(e.stockId)))}<span class="sub2">${e.count} ${e.count === 1 ? 'Rolle' : 'Rollen'}</span></span><span${st(e) === 'expired' ? ' class="expd"' : ''}>${fmtMonth(e.expiresAt)}</span></div>`).join('');
-  return anFold('fridgeuse', 'fridgeusefold', AN_FRIDGE_IC, 'Zuerst verbrauchen', dated[0] ? `als Nächstes: ${U.esc(U.stockLabel(stocks.get(dated[0].stockId)))}` : 'kein Ablaufdatum eingetragen', tiles + (list ? `<h3 class="anh">Reihenfolge</h3>${list}` : ''));
 }
 async function rollTimeFoldHtml() {
   const rolls = await DB.all('rolls'), frames = await DB.all('frames'), stocks = await stocksMap();

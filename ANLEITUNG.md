@@ -590,3 +590,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
   - Fujifilm, eingestellt, für gelagerte Rollen: Fujicolor C200, Superia X-Tra 400, Pro 400H.
   - Lucky: Color C200, Color C400 (seit Sommer 2026), SHD 100, SHD 400, Yingzhe 100 und 400 (bisher nur in China, Format nicht bestätigt).
 - Quellen stehen am Film (Datenblatt-Link): Pellica (Stand 22.10.2026), Fujifilm USA, 35mmc, analog.cafe, Digital Camera World, Analogue Wonderland. Schwarzschild-Werte sind für diese Filme nicht hinterlegt.
+
+## v188 „Zuerst verbrauchen“ entfernt
+
+- Der Abschnitt „Zuerst verbrauchen“ in den Analytics ist wieder entfernt. Ablaufdaten stehen weiter im Filmkühlschrank selbst („bald“, „Expired“).
