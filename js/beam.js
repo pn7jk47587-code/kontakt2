@@ -10,7 +10,7 @@ const BEAM = (() => {
   let layer = null, raf = 0;
 
   // Nachtlicht zum Ausprobieren (Einstellungen): die vier Nacht-Entwürfe
-  const NIGHT_LIGHTS = ['streif', 'glut', 'kuehl', 'schleier'];
+  const NIGHT_LIGHTS = ['streif', 'glut'];
   const nightLight = () => { try { const v = localStorage.getItem('kb-nightlight'); return NIGHT_LIGHTS.includes(v) ? v : 'streif'; } catch (_) { return 'streif'; } };
   function sources(night, W, H) {
     if (night) {
@@ -18,16 +18,6 @@ const BEAM = (() => {
       // Glut von unten: warmes Licht steigt vom unteren Rand auf, Karten glühen an, je weiter unten sie sind
       if (v === 'glut') return [
         { x: W / 2, y: H + 60, rx: W * 1.15, ry: H * 0.62, stops: [[255,226,170,.85,0],[255,150,80,.5,26],[255,80,110,.22,56],[163,92,255,.06,82],[163,92,255,0,100]] }
-      ];
-      // Kühler Leak: Violett und Blau aus der Ecke rechts oben, mit kleinem warmem Kern
-      if (v === 'kuehl') return [
-        { x: W + 40, y: -40, rx: W * 1.0, ry: H * 0.62, stops: [[226,210,255,.75,0],[150,120,255,.45,24],[90,130,255,.2,55],[90,130,255,0,100]] },
-        { x: W - 6, y: 6, rx: 130, ry: 130, stops: [[255,236,200,.85,0],[255,170,120,.32,45],[255,170,120,0,100]] }
-      ];
-      // Diagonaler Schleier: weicher schräger Lichtschleier in Rosa und Orange von links oben nach rechts unten
-      if (v === 'schleier') return [
-        { lin: k => `linear-gradient(128deg, rgba(255,120,150,0) 18%, rgba(255,120,150,${(.2 * k).toFixed(3)}) 34%, rgba(255,176,110,${(.32 * k).toFixed(3)}) 46%, rgba(255,226,180,${(.36 * k).toFixed(3)}) 50%, rgba(255,176,110,${(.28 * k).toFixed(3)}) 55%, rgba(255,110,150,${(.16 * k).toFixed(3)}) 66%, rgba(163,92,255,0) 82%)` },
-        { x: -40, y: -40, rx: W * 0.5, ry: H * 0.28, stops: [[255,232,200,.6,0],[255,160,120,.2,45],[255,160,120,0,100]] }
       ];
       // Streiflicht: warmes Licht gleichmäßig vom linken Rand
       return [

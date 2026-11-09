@@ -704,13 +704,12 @@ async function rollFrames(body, roll, stock) {
   // Zwei runde Symbole ploppen am Frame auf: Verschieben (Reihenfolge ändern) und Einstellungen übertragen
   const openFramePop = (c, f) => {
     document.querySelector('.framepop')?.remove();
-    const r = c.getBoundingClientRect();
     const pop = document.createElement('div'); pop.className = 'framepop';
     pop.innerHTML = `<button type="button" class="fpbtn" data-act="move" aria-label="Reihenfolge ändern">${MOVE_IC}</button><button type="button" class="fpbtn" data-act="copy" aria-label="Einstellungen von Frame ${U.esc(frameLabel(f))} übertragen">${COPY_IC}</button>`;
-    pop.style.left = Math.min(window.innerWidth - 120, Math.max(8, r.left + r.width / 2 - 52)) + 'px';
-    pop.style.top = (r.top + r.height / 2 - 23) + 'px';
+    // unten rechts, wo sonst der Haken sitzt; der gedrückte Frame bleibt markiert, solange die Symbole offen sind
+    c.classList.add('lpsel');
     document.body.appendChild(pop);
-    const close = () => { pop.remove(); document.removeEventListener('pointerdown', away, true); window.removeEventListener('scroll', close); window.removeEventListener('hashchange', close); };
+    const close = () => { pop.remove(); c.classList.remove('lpsel'); document.removeEventListener('pointerdown', away, true); window.removeEventListener('scroll', close); window.removeEventListener('hashchange', close); };
     const away = ev => { if (!pop.contains(ev.target)) close(); };
     setTimeout(() => { document.addEventListener('pointerdown', away, true); window.addEventListener('scroll', close, { once: true }); window.addEventListener('hashchange', close, { once: true }); }, 0);
     pop.addEventListener('click', ev => { const b = ev.target.closest('[data-act]'); if (!b) return; close(); U.haptic && U.haptic(10); if (b.dataset.act === 'move') reorder && reorder(true); else openCopySettings(roll, f, fr); });
@@ -886,8 +885,8 @@ function openFrameFilterSearch(filters, chosen, roll, onDone, onCancel) {
 /* ---------- Einträge der Bilder verschieben ----------
    Die Plätze (Bild 1, 2, 3 …) bleiben, verschoben wird alles, was zu einem Bild eingetragen ist:
    Blende, Zeit, Objektiv, Filter, Notiz, Datum, Handyfotos, Scans. */
-// Referenzfotos hochladen, Ort und Zeit übernehmen: Foto, Pfeil nach oben, Ortsnadel
-const REF_IMP_IC = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="9.5" width="12" height="11" rx="2"/><path d="M4.5 18.2l2.8-3 2.2 2.2 1.4-1.4 2.1 2.2"/><path d="M8.5 7V2.8M6.7 4.6l1.8-1.8 1.8 1.8"/><path d="M18.5 8.5a3 3 0 0 0-3 3c0 2.2 3 5 3 5s3-2.8 3-5a3 3 0 0 0-3-3z"/><circle cx="18.5" cy="11.5" r="1"/></svg>';
+// Referenzfotos hochladen, Ort und Zeit übernehmen: Foto mit Ortsnadel darin
+const REF_IMP_IC = '<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.6"/><path d="M12 7.2a3.6 3.6 0 0 0-3.6 3.6c0 2.7 3.6 6 3.6 6s3.6-3.3 3.6-6A3.6 3.6 0 0 0 12 7.2z"/><circle cx="12" cy="10.8" r="1.2"/></svg>';
 const COPY_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2.2"/><path d="M15.5 8.5V6.2a1.7 1.7 0 0 0-1.7-1.7H6.2a1.7 1.7 0 0 0-1.7 1.7v7.6c0 .9.8 1.7 1.7 1.7h2.3"/></svg>';
 const MOVE_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4 3.5 7.5 7 11M3.5 7.5H15M17 13l3.5 3.5L17 20M20.5 16.5H9"/></svg>';
 const FRAME_FIXED = ['id', 'rollId', 'index', 'bonus'];

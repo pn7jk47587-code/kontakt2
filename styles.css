@@ -2359,13 +2359,13 @@ body { overflow-x: clip; }
 :root[data-sky^="golden"] .light::after, :root[data-sky="blue-b"] .light::after { opacity: .25; }
 /* Goldene Stunde A: Glut. Warmes Schwarz, Bernstein als Akzent, tief stehende Sonne unten rechts */
 :root[data-sky="golden-a"] {
-  --bg: #140c0c; --solid: #24150f; --card: rgba(58,32,22,.52); --line: rgba(255,200,150,.13);
-  --text: #f7ece2; --muted: #c6a892; --teal: #ffb35c; --onaccent: #2a1508;
+  --bg: #2a1912; --solid: #3a2318; --card: rgba(92,52,32,.5); --line: rgba(255,205,160,.16);
+  --text: #fbefe4; --muted: #d6b49c; --teal: #ffb35c; --onaccent: #2a1508;
   --prism: linear-gradient(90deg, #ffcf7a, #ff9a52, #ff6f61, #ffb35c, #ffe2a0);
-  --tint: rgba(255,170,90,.12); --tint2: rgba(255,170,90,.4); --headbg: rgba(20,12,12,.66);
-  --glass: rgba(255,170,100,.09); --glassline: rgba(255,200,150,.2); --glasson: rgba(255,180,110,.2);
-  --glow: 0 0 0 1px rgba(255,200,140,.22), 0 10px 34px rgba(255,140,60,.32);
-  --albumbg: radial-gradient(120% 90% at 50% 0%, #3a2016, #140c0c 75%); --toastbg: rgba(48,28,18,.92);
+  --tint: rgba(255,175,95,.18); --tint2: rgba(255,170,90,.42); --headbg: rgba(42,25,18,.66);
+  --glass: rgba(255,175,105,.11); --glassline: rgba(255,205,155,.24); --glasson: rgba(255,185,115,.22);
+  --glow: 0 0 0 1px rgba(255,205,145,.25), 0 10px 34px rgba(255,145,65,.34);
+  --albumbg: radial-gradient(120% 90% at 50% 0%, #5a3220, #2a1912 75%); --toastbg: rgba(62,36,22,.92);
 }
 :root[data-sky="golden-a"] .light::before { background:
   radial-gradient(55% 32% at 92% 104%, rgba(255,150,60,.42), transparent 70%),
@@ -2497,3 +2497,16 @@ body.leaving[data-dir="l"] #view { animation: leaveleft2 .21s cubic-bezier(.4, 0
 .topbar::before { content: ''; position: absolute; inset: 0 0 -18px; z-index: -1; pointer-events: none;
   background: linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 88%, transparent) 62%, transparent 100%); }
 .phoneimpbtn svg { width: 24px !important; height: 24px !important; }
+
+/* v183: Glut heller, die tief stehende Sonne leuchtet stärker von unten rechts */
+:root[data-sky="golden-a"] .light::before { background:
+  radial-gradient(70% 40% at 95% 105%, rgba(255,160,70,.5), transparent 70%),
+  radial-gradient(100% 45% at 40% 115%, rgba(255,110,70,.24), transparent 70%),
+  radial-gradient(60% 35% at 100% -5%, rgba(255,205,140,.16), transparent 70%); }
+/* v183: Symbole nach langem Drücken unten rechts, übereinander; der Frame ist markiert */
+.framepop { left: auto !important; top: auto !important; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + var(--safe-b)); flex-direction: column; gap: 12px; }
+.framepop .fpbtn { width: var(--navd); height: var(--navd); }
+.grid .cell.lpsel { outline: 2px solid var(--teal); outline-offset: 2px; transform: scale(.97); transition: transform .15s; }
+/* v183: Favoritenpunkt oben rechts in der Ecke */
+.photogrid > a .favdot { top: 7px !important; bottom: auto !important; right: 7px !important; }
+html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { top: 21px !important; right: 9px !important; }

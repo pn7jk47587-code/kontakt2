@@ -549,3 +549,15 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v182 Neues Symbol für Referenzfotos
 
 - Der Knopf, der Handyfotos als Referenz hochlädt und daraus Ort und Zeit übernimmt, hat ein eigenes Symbol: Foto mit Pfeil nach oben und Ortsnadel (`REF_IMP_IC`). Vorher war es nur die Ortsnadel, im Album ein Handy. Es gilt in der Reiterzeile der Rolle und im Album. Beschriftung für Bildschirmleser: „Referenzfotos hochladen: Ort und Zeit übernehmen“.
+
+## v183 Glut und Halation fest, Nachtlichter, Symbole
+
+- Licht nach Tageszeit (`theme.js`, Mitte Deutschlands):
+  - Goldene Stunde (Sonne zwischen −4° und 6°, morgens und vor Sonnenuntergang): Glut, jetzt heller und wärmer (`data-sky="golden-a"`).
+  - Abends ab Sonnenuntergang bis Mitternacht: Halation (`golden-c`).
+  - Blaue Stunde am Morgen (−6° bis −4°, vor Sonnenaufgang): weiter Entwurf zur Wahl (Tiefblau, Stadtlicht, Petrol).
+  - Abendhimmel ist entfernt. Einstellungen › „Licht nach Tageszeit“: Echt, Glut, Abend, Blau zum Ansehen, darunter die Wahl für die blaue Stunde.
+- Licht bei Nacht: „Kühler Leak“ und „Diagonaler Schleier“ sind entfernt. Zum Testen bleiben Streiflicht und Glut von unten.
+- Referenzfotos hochladen: Symbol ist jetzt ein Foto mit Ortsnadel darin.
+- Langes Drücken auf einen Frame: Die beiden runden Symbole (Verschieben, Einstellungen übertragen) erscheinen übereinander unten rechts. Der gedrückte Frame bleibt so lange markiert.
+- „Alle Fotos“: Der Favoritenpunkt sitzt oben rechts in der Ecke.

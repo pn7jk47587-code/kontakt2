@@ -48,12 +48,20 @@ const MOOD = (() => {
     return Math.asin(Math.sin(LAT * rad) * Math.sin(decl) + Math.cos(LAT * rad) * Math.cos(decl) * Math.cos(ha)) / rad;
   }
   // Goldene Stunde: Sonne zwischen −4° und 6°. Blaue Stunde: zwischen −6° und −4° (wie in „Wann und wo“).
+  // Phasen (v183): goldene Stunde = Glut, abends ab Sonnenuntergang bis Mitternacht = Halation,
+  // blaue Stunde am Morgen = Entwurf zur Wahl. Test über kb-skytest: golden, evening, blue.
   function sky() {
     let force = ''; try { force = localStorage.getItem('kb-skytest') || ''; } catch (_) {}
-    if (force) return force;
+    if (force === 'golden') return 'golden-a';
+    if (force === 'evening') return 'golden-c';
+    if (force === 'blue') return 'blue-' + skyVar('blue');
     const d = new Date(), sim = clock();
-    const a = sunAlt(d, sim !== null && !isNaN(sim) ? sim * 60 : d.getHours() * 60 + d.getMinutes());
-    return a >= -4 && a < 6 ? 'golden' : a >= -6 && a < -4 ? 'blue' : '';
+    const m = sim !== null && !isNaN(sim) ? sim * 60 : d.getHours() * 60 + d.getMinutes();
+    const t = sunTimes(d), a = sunAlt(d, m);
+    if (m >= t.set) return 'golden-c';
+    if (a >= -4 && a < 6) return 'golden-a';
+    if (a >= -6 && a < -4 && m < t.rise) return 'blue-' + skyVar('blue');
+    return '';
   }
   function skyVar(k) { try { return localStorage.getItem('kb-sky-' + k) || 'a'; } catch (_) { return 'a'; } }
   function apply() {
@@ -62,7 +70,7 @@ const MOOD = (() => {
     // Entwurf: „Alle Fotos“ als Contact Sheet (Einstellungen), Favoriten als Punkt oder Fettstiftkreis
     try { const l = localStorage.getItem('kb-ap-look') || ''; if (l) document.documentElement.dataset.aplook = l; else delete document.documentElement.dataset.aplook; } catch (_) {}
     const ph = sky();
-    if (ph) document.documentElement.dataset.sky = ph + '-' + skyVar(ph); else delete document.documentElement.dataset.sky;
+    if (ph) document.documentElement.dataset.sky = ph; else delete document.documentElement.dataset.sky;
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', '#090e1d');
   }

@@ -413,11 +413,9 @@ async function openSettings() {
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>
       <div class="seggroup" id="apLook">${[['', 'Raster'], ['sheet', 'Contact Sheet'], ['sheet-ring', 'Sheet mit Fettstift']].map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-ap-look') || '') === k ? ' on' : ''}" data-apl="${k}">${l}</button>`).join('')}</div>
-      <div class="sethead">${ART.sun}<span>Goldene und blaue Stunde (Entwürfe)</span></div>
-      <div class="seggroup" id="skyTest">${[['', 'Echt'], ['golden', 'Golden'], ['blue', 'Blau']].map(([k, l]) => `<button type="button" class="seg" data-skyt="${k}">${l}</button>`).join('')}</div>
-      <div class="qlabel">Goldene Stunde</div>
-      <div class="seggroup" id="skyGold">${[['a', 'Glut'], ['b', 'Abendhimmel'], ['c', 'Halation']].map(([k, l]) => `<button type="button" class="seg" data-skyv="golden:${k}">${l}</button>`).join('')}</div>
-      <div class="qlabel">Blaue Stunde</div>
+      <div class="sethead">${ART.sun}<span>Licht nach Tageszeit</span></div>
+      <div class="seggroup" id="skyTest">${[['', 'Echt'], ['golden', 'Glut'], ['evening', 'Abend'], ['blue', 'Blau']].map(([k, l]) => `<button type="button" class="seg" data-skyt="${k}">${l}</button>`).join('')}</div>
+      <div class="qlabel">Blaue Stunde am Morgen (Entwurf)</div>
       <div class="seggroup" id="skyBlue">${[['a', 'Tiefblau'], ['b', 'Stadtlicht'], ['c', 'Petrol']].map(([k, l]) => `<button type="button" class="seg" data-skyv="blue:${k}">${l}</button>`).join('')}</div>
       <div class="qlabel" id="clockLabel"></div>
       <input type="range" id="clockRange" min="0" max="23.75" step="0.25" aria-label="Uhrzeit simulieren" style="padding:0;border:0;background:none;accent-color:var(--teal)">
@@ -509,7 +507,7 @@ function setupLightSettings(root) {
   root.querySelector('#clockRange').addEventListener('input', e => { try { localStorage.removeItem('kb-skytest'); } catch (_) {} MOOD.setClock(parseFloat(e.target.value)); mark(); });
   root.querySelector('#clockReal').addEventListener('click', () => { MOOD.setClock(null); mark(); });
   root.querySelector('#skyTest').addEventListener('click', e => { const b = e.target.closest('[data-skyt]'); if (!b) return; try { b.dataset.skyt ? localStorage.setItem('kb-skytest', b.dataset.skyt) : localStorage.removeItem('kb-skytest'); } catch (_) {} MOOD.apply(); mark(); });
-  root.querySelectorAll('#skyGold, #skyBlue').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('[data-skyv]'); if (!b) return; const [k, v] = b.dataset.skyv.split(':'); try { localStorage.setItem('kb-sky-' + k, v); if (localStorage.getItem('kb-skytest')) localStorage.setItem('kb-skytest', k); } catch (_) {} MOOD.apply(); mark(); }));
+  root.querySelectorAll('#skyBlue').forEach(g => g.addEventListener('click', e => { const b = e.target.closest('[data-skyv]'); if (!b) return; const [k, v] = b.dataset.skyv.split(':'); try { localStorage.setItem('kb-sky-' + k, v); if (localStorage.getItem('kb-skytest')) localStorage.setItem('kb-skytest', k); } catch (_) {} MOOD.apply(); mark(); }));
   mark();
 }
 
@@ -1111,5 +1109,5 @@ async function rateFoldHtml() {
 }
 
 // Nur zum Ausprobieren in den Einstellungen; wird nach der Entscheidung wieder entfernt
-const NIGHT_LIGHT_NAMES = [['streif', 'Streiflicht'], ['glut', 'Glut von unten'], ['kuehl', 'Kühler Leak'], ['schleier', 'Diagonaler Schleier']];
+const NIGHT_LIGHT_NAMES = [['streif', 'Streiflicht'], ['glut', 'Glut von unten']];
 const TEST_FONTS = [['', 'System (SF Pro)'], ['Inter', 'Inter'], ['DM Sans', 'DM Sans'], ['Manrope', 'Manrope'], ['Plus Jakarta Sans', 'Plus Jakarta Sans'], ['Outfit', 'Outfit'], ['Nunito', 'Nunito'], ['Sora', 'Sora'], ['Space Grotesk', 'Space Grotesk'], ['Fraunces', 'Fraunces (Serif)']];
