@@ -1,5 +1,5 @@
 /* Contact Sheet als PDF, hell oder dunkel: Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
-   A4 hoch: alle Bilder auf einer Seite. Streifen lückenlos untereinander, so viele wie passen, 6 oder 4 Bilder je Reihe.
+   A4 hoch: alle Bilder auf einer Seite. Passen die Streifen nicht, werden die Bilder kleiner und der Block mittig gesetzt (v206).
    Jede Seite wird in hoher Auflösung auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT). */
 const SHEET_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.6"/><path d="M7 7h4v3H7zM13 7h4v3h-4zM7 12.5h4v3H7zM13 12.5h4v3h-4z"/></svg>';
 let JSPDF_P = null;
@@ -57,16 +57,20 @@ const SHEET_THEME = {
   light: { paper: '#f7f5f0', text: '#1b1b1b', dim: '#6b675f', line: '#c9c4b8' }
 };
 // Maße einer Seite: schmaler Rand, eine kleine Kopfzeile, Streifen über die volle Breite
-function sheetLayout(P, square, per) {
-  const m = 16, pad = 5, gap = square ? 6 : 4, edge = 12;
-  const fw = (P.w - 2 * m - 2 * pad - (per - 1) * gap) / per, fh = square ? fw : fw * 2 / 3;
-  return { m, pad, gap, edge, fw, fh, sh: fh + 2 * edge, topY: m + 15 };
+function sheetLayout(P, square, per, rows = 0) {
+  const m = 16, pad = 5, gap = square ? 6 : 4, edge = 12, topY = m + 15;
+  let fw = (P.w - 2 * m - 2 * pad - (per - 1) * gap) / per;
+  const ratio = square ? 1 : 2 / 3;
+  // v206: rows gesetzt (A4), dann werden die Bilder so weit verkleinert, dass alle Streifen auf eine Seite passen
+  if (rows) { const maxFh = (P.h - topY - m) / rows - 2 * edge; if (fw * ratio > maxFh) fw = maxFh / ratio; }
+  const fh = fw * ratio, full = 2 * pad + per * fw + (per - 1) * gap;
+  return { m, pad, gap, edge, fw, fh, sh: fh + 2 * edge, topY, full, x0: m + (P.w - 2 * m - full) / 2 };
 }
 
 // Ein Blatt zeichnen. s = Skalierung Punkt → Pixel
 function drawSheetPage(ctx, P, s, info, strips, page) {
   const W = P.w, H = P.h, th = SHEET_THEME[info.theme] || SHEET_THEME.dark;
-  const L = sheetLayout(P, info.square, info.per), m = L.m;
+  const L = sheetLayout(P, info.square, info.per, info.rows), m = L.m;
   ctx.fillStyle = th.paper; ctx.fillRect(0, 0, W * s, H * s);
   const sans = '-apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif', edgeF = 'LLEdge, "Arial Narrow", ' + sans;
   const T = (txt, x, y, size, color, font = sans, weight = '400', align = 'left', track = 0) => {
@@ -95,13 +99,13 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
   const tri = (x, y, h) => { ctx.fillStyle = ink; ctx.beginPath(); ctx.moveTo(x * s, (y - h) * s); ctx.lineTo((x + h * 0.9) * s, (y - h / 2) * s); ctx.lineTo(x * s, y * s); ctx.closePath(); ctx.fill(); };
   strips.forEach((strip, k) => {
     const y = L.topY + k * (sh + sgap);
-    const sw = strip.length < info.per ? 2 * pad + strip.length * fw + (strip.length - 1) * gap + 6 : W - 2 * m;   // Reststück kürzer, wie abgeschnitten
-    ctx.fillStyle = '#060606'; ctx.fillRect(m * s, y * s, sw * s, sh * s);
+    const sw = strip.length < info.per ? 2 * pad + strip.length * fw + (strip.length - 1) * gap + 6 : (info.rows ? L.full : W - 2 * m);   // Reststück kürzer, wie abgeschnitten
+    ctx.fillStyle = '#060606'; ctx.fillRect(L.x0 * s, y * s, sw * s, sh * s);
     // oberer Rand: Filmname in Abständen wiederholt
     const name = info.film.toUpperCase(), ty = y + edge - 4.2;
-    for (let i = 0; i < strip.length; i += 2) E(name, m + pad + i * (fw + gap) + fw * 0.25, ty, 3.4);
+    for (let i = 0; i < strip.length; i += 2) E(name, L.x0 + pad + i * (fw + gap) + fw * 0.25, ty, 3.4);
     strip.forEach((it, i) => {
-      const x = m + pad + i * (fw + gap), fy = y + edge;
+      const x = L.x0 + pad + i * (fw + gap), fy = y + edge;
       ctx.fillStyle = '#16140f'; ctx.fillRect(x * s, fy * s, fw * s, fh * s);
       if (it.src) {
         const iw = it.src.width, ih = it.src.height;
@@ -129,7 +133,7 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
     const y = L.topY + k * (sh + sgap);
     strip.forEach((it, i) => {
       if (it.f?.rate !== 5) return;
-      const x = m + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
+      const x = L.x0 + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
       drawFavMark(ctx, s, cx, cy, fw / 2 + gap * 0.9, fh / 2 + edge * 0.55, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme);
     });
   });
@@ -184,7 +188,7 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
   const imgs = await sheetImages(d.frames);
   const items = imgs.map(x => ({ ...x, n: frameLabel(x.f) }));
   const strips = []; for (let i = 0; i < items.length; i += per) strips.push(items.slice(i, i + per));
-  const P = SHEET_PAPER[paper], L = sheetLayout(P, square, per);
+  const P = SHEET_PAPER[paper], L = sheetLayout(P, square, per, paper === 'a4' ? Math.ceil(items.length / per) : 0);
   const avail = P.h - L.topY - L.m;
   // so viele Streifen wie passen, lückenlos untereinander, der Reihe nach gefüllt. Rest bleibt unten frei.
   const perPage = Math.max(1, Math.floor(avail / L.sh));
@@ -194,7 +198,7 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
   const dates = d.frames.map(f => f.date).filter(Boolean).sort();
   const range = (r?.loadedAt || dates[0]) ? [U.fmtDate(String(r?.loadedAt || dates[0]).slice(0, 10)), U.fmtDate(String(r?.finishedAt || dates[dates.length - 1] || '').slice(0, 10))].filter(Boolean).join('–') : '';
   const info = {
-    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap, pages, theme,
+    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap, pages, theme, rows: paper === 'a4' ? strips.length : 0,
     favMark,
     sub: [U.stockLabel(st), r?.ei ? 'EI ' + r.ei : '', camLabel(cam) || r?.camera || '', range].filter(Boolean).join(' · '),
     count: `${d.frames.length} Bilder`

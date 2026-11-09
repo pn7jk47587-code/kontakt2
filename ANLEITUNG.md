@@ -684,3 +684,7 @@ Unter jedem Abzeichensymbol im Profil steht jetzt sein Name. Verdiente Abzeichen
 ## Version 205: Spruch zum Geld zurück
 
 In Analytics steht in der Karte „Geld“ wieder der Satz „Du hast diesen Monat schon … für Film ausgegeben. Insgesamt hast du schon … in das bodenlose Loch geworfen.“ Darunter folgen wie bisher die beiden Kästen für Monat und Gesamt.
+
+## Version 206: Contact Sheet A4 immer auf einer Seite
+
+Beim Contact Sheet in A4 passen jetzt immer alle Bilder auf ein Blatt. Bisher lief Mittelformat mit drei Bildern pro Reihe auf eine zweite Seite über. Reichen die Streifen in voller Breite nicht, werden die Bilder so weit verkleinert, dass alles auf die Seite passt, und der Block steht mittig. A5 bleibt unverändert.
