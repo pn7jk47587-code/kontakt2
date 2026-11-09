@@ -130,45 +130,47 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
     strip.forEach((it, i) => {
       if (it.f?.rate !== 5) return;
       const x = m + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
-      if (info.favMark === 'dot') drawFavMark(ctx, s, 'dot', x + fw / 2 - 7, y + edge + fh + 6.3, 0, 0, 0, info.theme);
-      else drawFavMark(ctx, s, info.favMark, cx, cy, fw / 2 + gap * 0.9, fh / 2 + edge * 0.55, (page + 1) * 100 + k * 10 + i, info.theme);
+      drawFavMark(ctx, s, cx, cy, fw / 2 + gap * 0.9, fh / 2 + edge * 0.55, (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i, info.theme);
     });
   });
 }
 
-// Favoriten (+5) auf dem Sheet markieren. Entwürfe:
-// pencil: roter Fettstift von Hand umkreist (wie beim Auswählen am Leuchttisch)
-// wax: heller Wachsstift, auf dunklem Papier besser sichtbar
-// glow: sauberer, warm leuchtender Ring wie der fünfte Lichtpunkt der App
-// dot: nur ein leuchtender Punkt neben der Bildnummer
-function rnd(seed) { let x = seed * 9301 + 49297; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
-function drawFavMark(ctx, s, kind, cx, cy, rx, ry, seed, theme) {
-  ctx.save();
-  if (kind === 'pencil' || kind === 'wax') {
-    const R = rnd(seed), turns = 1.12 + R() * 0.08, a0 = R() * Math.PI * 2, tilt = (R() - 0.5) * 0.18;
-    const col = kind === 'pencil' ? (theme === 'light' ? 'rgba(206,32,28,.9)' : 'rgba(236,58,48,.92)') : 'rgba(255,236,170,.9)';
-    for (let pass = 0; pass < 2; pass++) {
-      ctx.beginPath();
-      const N = 90, wob = [R() * 0.06, R() * 0.05, R() * 6, R() * 6];
-      for (let i = 0; i <= N; i++) {
-        const t = a0 + (i / N) * turns * Math.PI * 2;
-        const grow = 1 + (i / N) * 0.07 + pass * 0.025;
-        const w = 1 + wob[0] * Math.sin(t * 2 + wob[2]) + wob[1] * Math.sin(t * 3 + wob[3]);
-        const x = Math.cos(t) * rx * grow * w, y = Math.sin(t) * ry * grow * w;
-        const xr = x * Math.cos(tilt) - y * Math.sin(tilt), yr = x * Math.sin(tilt) + y * Math.cos(tilt);
-        i ? ctx.lineTo((cx + xr) * s, (cy + yr) * s) : ctx.moveTo((cx + xr) * s, (cy + yr) * s);
-      }
-      ctx.strokeStyle = col; ctx.globalAlpha = pass ? 0.55 : 1; ctx.lineWidth = (pass ? 1.0 : 1.6) * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
-    }
-  } else if (kind === 'glow') {
-    ctx.beginPath(); ctx.ellipse(cx * s, cy * s, rx * s, ry * s, 0, 0, Math.PI * 2);
-    ctx.shadowColor = 'rgba(255,190,80,.95)'; ctx.shadowBlur = 6 * s; ctx.strokeStyle = 'rgba(255,214,120,.95)'; ctx.lineWidth = 1.3 * s; ctx.stroke();
-    ctx.shadowBlur = 2 * s; ctx.stroke();
-  } else if (kind === 'dot') {
-    const g = ctx.createRadialGradient(cx * s, cy * s, 0, cx * s, cy * s, 5 * s);
-    g.addColorStop(0, 'rgba(255,240,180,1)'); g.addColorStop(.35, 'rgba(255,190,80,.95)'); g.addColorStop(1, 'rgba(255,170,60,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx * s, cy * s, 5 * s, 0, Math.PI * 2); ctx.fill();
+// Favoriten (+5) auf dem Sheet markieren: dicker Wachsstift, von Hand umkreist.
+// Jede Markierung bekommt eine eigene Form (Oval, eckige Schleife, doppelte Runde, Lasso mit Auslauf),
+// Neigung, Größe und Zittern hängen vom Bild ab, damit keine zwei gleich aussehen.
+// Dunkles Papier: heller Wachsstift. Helles Papier: roter Wachsstift.
+function rnd(seed) { let x = (seed * 9301 + 49297) % 233280; return () => { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
+function drawFavMark(ctx, s, cx, cy, rx, ry, seed, theme) {
+  const R = rnd(seed + 7), shape = Math.floor(R() * 4), tilt = (R() - 0.5) * 0.3, size = 0.96 + R() * 0.12;
+  const a0 = R() * Math.PI * 2, wob = [R() * 0.07, R() * 0.05, R() * 6, R() * 6];
+  rx *= size; ry *= size;
+  const pts = [];
+  const add = (x, y) => { const xr = x * Math.cos(tilt) - y * Math.sin(tilt), yr = x * Math.sin(tilt) + y * Math.cos(tilt); pts.push([cx + xr, cy + yr]); };
+  const N = 140;
+  if (shape === 1) {   // eckige Schleife: abgerundetes Rechteck, etwas mehr als eine Runde
+    const turns = 1.08 + R() * 0.1;
+    for (let i = 0; i <= N; i++) { const t = a0 + i / N * turns * Math.PI * 2, c = Math.cos(t), sn = Math.sin(t), g = 1 + i / N * 0.06;
+      add(Math.sign(c) * Math.pow(Math.abs(c), 0.55) * rx * 0.97 * g, Math.sign(sn) * Math.pow(Math.abs(sn), 0.55) * ry * 0.93 * g); }
+  } else if (shape === 2) {   // doppelte Runde, die zweite etwas kleiner und versetzt
+    const turns = 1.85 + R() * 0.2;
+    for (let i = 0; i <= N * 1.6; i++) { const u = i / (N * 1.6), t = a0 + u * turns * Math.PI * 2, g = 1.04 - u * 0.1, w = 1 + wob[0] * Math.sin(t * 2 + wob[2]);
+      add(Math.cos(t) * rx * g * w + u * 2, Math.sin(t) * ry * g * w - u * 1.5); }
+  } else if (shape === 3) {   // Lasso: eine Runde, dann ein Auslauf nach außen
+    for (let i = 0; i <= N; i++) { const t = a0 + i / N * Math.PI * 2, w = 1 + wob[0] * Math.sin(t * 2 + wob[2]) + wob[1] * Math.sin(t * 3 + wob[3]); add(Math.cos(t) * rx * w, Math.sin(t) * ry * w); }
+    const tEnd = a0 + Math.PI * 2;
+    for (let i = 1; i <= 18; i++) { const t = tEnd + i * 0.03, g = 1 + i * 0.018; add(Math.cos(t) * rx * g, Math.sin(t) * ry * g); }
+  } else {   // Oval mit Überlauf
+    const turns = 1.12 + R() * 0.12;
+    for (let i = 0; i <= N; i++) { const t = a0 + i / N * turns * Math.PI * 2, g = 1 + i / N * 0.08, w = 1 + wob[0] * Math.sin(t * 2 + wob[2]) + wob[1] * Math.sin(t * 3 + wob[3]); add(Math.cos(t) * rx * g * w, Math.sin(t) * ry * g * w); }
   }
+  const light = theme === 'light';
+  const col = light ? [208, 52, 38] : [255, 238, 182];
+  const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x * s, y * s) : ctx.moveTo(x * s, y * s)); };
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  // Wachs: breiter, deckender Strich, dazu ein körniger Strich, der das Wachs auf dem Film ungleichmäßig wirken lässt
+  path(); ctx.strokeStyle = `rgba(${col},${light ? .82 : .78})`; ctx.lineWidth = 3.2 * s; ctx.stroke();
+  path(); ctx.setLineDash([0.5 * s, 1.3 * s, 1.6 * s, 0.9 * s]); ctx.strokeStyle = `rgba(${col},.95)`; ctx.lineWidth = 2.1 * s; ctx.stroke();
+  path(); ctx.setLineDash([0.4 * s, 2.6 * s]); ctx.strokeStyle = light ? 'rgba(255,255,255,.18)' : 'rgba(0,0,0,.22)'; ctx.lineWidth = 3.4 * s; ctx.stroke();
   ctx.restore();
 }
 
@@ -229,6 +231,7 @@ function openContactSheet(rollId) {
     </div>
     <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
+    <div class="seggroup cstheme csfav" role="group" aria-label="Favoriten" hidden><button type="button" class="seg" data-fm="wax"><span class="favdot" aria-hidden="true"></span>Favoriten umkreisen</button><button type="button" class="seg" data-fm="">Ohne</button></div>
     <p class="sub2 csstate" id="csState"></p>
     <div class="modalfoot"><button class="closex" id="csNo" aria-label="Abbrechen">${ART.x}</button><button class="cspvshare csgo" id="csGo" aria-label="Contact Sheet erstellen" disabled>${ART.check}</button></div></div>`;
   document.body.appendChild(ov);
@@ -236,11 +239,16 @@ function openContactSheet(rollId) {
   const get = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
   const sel = { p: get('kb-cs-paper'), t: get('kb-cs-theme'), r: get('kb-cs-per') };
+  // Favoriten umkreisen: freiwillig, nur sichtbar, wenn die Rolle Fotos mit +5 hat
+  let fm = get('kb-cs-fav') || '';
+  albumData(rollId).then(d => { if (d && d.frames.some(f => f.rate === 5)) { ov.querySelector('.csfav').hidden = false; paint(); } });
+  ov.querySelectorAll('[data-fm]').forEach(x => x.onclick = () => { fm = x.dataset.fm; put('kb-cs-fav', fm); paint(); });
   const go = ov.querySelector('#csGo'), stEl = ov.querySelector('#csState');
   const paint = () => {
     ov.querySelectorAll('[data-p]').forEach(x => x.classList.toggle('on', x.dataset.p === sel.p));
     ov.querySelectorAll('[data-t]').forEach(x => x.classList.toggle('on', x.dataset.t === sel.t));
     ov.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', x.dataset.r === sel.r));
+    ov.querySelectorAll('[data-fm]').forEach(x => x.classList.toggle('on', x.dataset.fm === fm));
     ov.querySelector('.csopts').dataset.t = sel.t || 'dark';
     go.disabled = !(sel.p && sel.t && sel.r);
   };
@@ -251,7 +259,7 @@ function openContactSheet(rollId) {
     const all = ov.querySelectorAll('button'); all.forEach(x => x.disabled = true);
     stEl.textContent = 'PDF wird erstellt …';
     try {
-      const res = await makeContactSheet(rollId, sel.p, sel.t, +sel.r);
+      const res = await makeContactSheet(rollId, sel.p, sel.t, +sel.r, ov.querySelector('.csfav').hidden ? '' : fm);
       stEl.textContent = '';
       openSheetPreview(res, () => ov.remove());
     } catch (e) { stEl.textContent = e.message || 'PDF konnte nicht erstellt werden'; }

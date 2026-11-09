@@ -2510,3 +2510,4 @@ body.leaving[data-dir="l"] #view { animation: leaveleft2 .21s cubic-bezier(.4, 0
 /* v183: Favoritenpunkt oben rechts in der Ecke */
 .photogrid > a .favdot { top: 7px !important; bottom: auto !important; right: 7px !important; }
 html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { top: 21px !important; right: 9px !important; }
+.csfav .favdot { width: 10px; height: 10px; margin-right: 8px; box-shadow: 0 0 9px 2px rgba(255,190,80,.7); }

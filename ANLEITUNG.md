@@ -561,3 +561,10 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Referenzfotos hochladen: Symbol ist jetzt ein Foto mit Ortsnadel darin.
 - Langes Drücken auf einen Frame: Die beiden runden Symbole (Verschieben, Einstellungen übertragen) erscheinen übereinander unten rechts. Der gedrückte Frame bleibt so lange markiert.
 - „Alle Fotos“: Der Favoritenpunkt sitzt oben rechts in der Ecke.
+
+## v184 Favoriten im Contact Sheet umkreisen
+
+- Im Auswahlfenster des Contact Sheets gibt es eine vierte, freiwillige Wahl: „Favoriten umkreisen“ oder „Ohne“. Sie erscheint nur, wenn die Rolle Fotos mit +5 hat, und wird gemerkt (`kb-cs-fav`). Der Haken hängt nicht davon ab.
+- Markierung: dicker Wachsstift (3,2 pt), von Hand umkreist. Dunkles Papier: heller Wachsstift. Helles Papier: roter Wachsstift. Ein zweiter, gestrichelter Strich macht das Wachs körnig.
+- Jedes Favoritenbild bekommt eine eigene Form: Oval mit Überlauf, eckige Schleife, doppelte Runde oder Lasso mit Auslauf. Neigung, Größe und Zittern hängen vom Bild ab, so sieht keine Markierung wie die andere aus, beim erneuten Erstellen aber gleich aus wie vorher.
+- Die Entwürfe Fettstift, Leuchtring und Leuchtpunkt sind entfernt.
