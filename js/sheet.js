@@ -139,8 +139,8 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
       const x = L.x0 + pad + i * (fw + gap), cx = x + fw / 2, cy = y + edge + fh / 2;
       // v207: Mittelformat etwas weiter außen umkreisen, Strichstärke wächst mit der Bildgröße
       const grow = info.square ? 1.03 : 1, kk = Math.min(2, Math.max(1, fw / 85)), seed = (+String(it.f.index || 0) || 0) * 37 + (page + 1) * 101 + k * 13 + i;
-      // v210: jedes markierte Bild bekommt zufällig eine der Formen Kreis, Kasten, fein oder wild (fest je Bild, damit das Sheet beim nächsten Mal gleich aussieht)
-      const mode = ['wax', 'box', 'fine', 'wild'][Math.floor(rnd(seed + 3)() * 4)];
+      // v210: jedes markierte Bild bekommt zufällig eine der Formen Kasten, fein oder wild (fest je Bild, damit das Sheet beim nächsten Mal gleich aussieht)
+      const mode = ['box', 'fine', 'wild'][Math.floor(rnd(seed + 3)() * 3)];   // v211: ohne Kreis
       if (rate <= -4) { drawCross(ctx, s, x, y + edge, fw, fh, seed, kk, mode); return; }
       if (mode === 'box') { drawFavBox(ctx, s, x - gap * 0.35, y + edge - gap * 0.35, fw + gap * 0.7, fh + gap * 0.7, seed, kk); return; }
       if (mode === 'fine') { drawFavFine(ctx, s, x - gap * 0.3, y + edge - gap * 0.3, fw + gap * 0.6, fh + gap * 0.6, seed, kk); return; }
