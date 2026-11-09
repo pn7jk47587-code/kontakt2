@@ -34,7 +34,8 @@ const BADGES = (() => {
     { id: 'loch', name: 'Bodenloses Loch', cls: 'geld', lv: [1000, 5000, 10000], txt: '{n} € ausgegeben' },
     { id: 'adler', name: 'Adlerauge', cls: 'geld', lv: [25, 100, 250], txt: '{n} Fotos mit fünf Leuchtpunkten' },
     { id: 'pech', name: 'Pechvogel', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit −3 oder schlechter' },
-    { id: 'waage', name: 'Waage', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit 0 bewertet' }
+    { id: 'waage', name: 'Waage', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit 0 bewertet' },
+    { id: 'archiv', name: 'Archivarin', cls: 'kuehl', lv: [100, 500, 1000], txt: '{n} Fotos ins Archiv nachgetragen' }
   ];
   const BIG_MAKERS = [/kodak/i, /fuji/i, /ilford|harman|kentmere/i, /foma/i, /agfa/i, /cinestill/i, /orwo|wolfen/i];
   const nfmt = n => Number(n).toLocaleString('de-DE');
@@ -46,7 +47,10 @@ const BADGES = (() => {
   const timed = f => { const s = String(f.date || ''); return s.length > 10 && !/T12:00/.test(s); };
 
   async function values() {
-    const [frames, rolls, cams, lenses, fridge, stocksM] = await Promise.all([DB.all('frames'), DB.all('rolls'), DB.all('cameras'), DB.all('lenses'), DB.all('fridge'), stocksMap()]);
+    const [allFrames, allRolls, cams, lenses, fridge, stocksM] = await Promise.all([DB.all('frames'), DB.all('rolls'), DB.all('cameras'), DB.all('lenses'), DB.all('fridge'), stocksMap()]);
+    // Nur Rollen, die den ganzen Weg in der App gegangen sind (eingelegt, entwickelt, hochgeladen). Archivierte zählen nur für die Archivarin.
+    const archivedIds = new Set(allRolls.filter(r => r.archived).map(r => r.id));
+    const rolls = allRolls.filter(r => !r.archived), frames = allFrames.filter(f => !archivedIds.has(f.rollId));
     const filters = await getFilters(), acc = await getAccessories(), lensM = new Map(lenses.map(l => [l.id, l]));
     const rollM = new Map(rolls.map(r => [r.id, r]));
     const used = rolls.filter(r => (r.status || 'entwurf') !== 'entwurf' || frames.some(f => f.rollId === r.id && f.shot));
@@ -108,16 +112,19 @@ const BADGES = (() => {
     v.adler = frames.filter(f => f.rate === 5).length;
     v.pech = frames.filter(f => f.rate != null && f.rate <= -3).length;
     v.waage = frames.filter(f => f.rate === 0).length;
+    v.archiv = allFrames.filter(f => archivedIds.has(f.rollId) && f.imgId).length;
     return v;
   }
 
-  async function state() { return (await DB.get('meta', 'badges')) || { id: 'badges', earned: {}, pin: null }; }
+  async function state() { return (await DB.get('meta', 'badges')) || { id: 'badges', earned: {}, pin: null, v: 2 }; }
   // Neu berechnen, neue Stufen mit heutigem Datum festhalten. Eine einmal verdiente Stufe bleibt.
   let running = null;
   async function check(quiet) {
     if (running) return running;
     running = (async () => {
       const v = await values(), st = await state(), fresh = [];
+      // Einmalig (v192): Stufen, die in v191 aus archivierten Fotos verdient wurden, auf den heutigen Stand zurücksetzen
+      if ((st.v || 1) < 2) { for (const d of DEF) { const e = st.earned[d.id]; if (!e) continue; const lv = level(d, v[d.id] || 0); if (lv < e.lv) { if (lv) e.lv = lv; else delete st.earned[d.id]; } } if (st.pin && !st.earned[st.pin]) st.pin = null; st.v = 2; await DB.put('meta', st); }
       for (const d of DEF) {
         const lv = level(d, v[d.id] || 0), had = st.earned[d.id]?.lv || 0;
         if (lv > had) { st.earned[d.id] = { lv, at: U.today() }; fresh.push([d, lv]); }

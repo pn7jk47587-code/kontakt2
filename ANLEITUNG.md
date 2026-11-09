@@ -615,3 +615,9 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Schnorrer (statt „Verwöhnte Hauskatze“): Teile im Kameraschrank, bei denen der Kaufpreis ausdrücklich 0 € ist. Ein leeres Preisfeld zählt nicht.
 - Großformat ist als Format beim Nachtragen ins Archiv wählbar (für die Matroschka).
 - Biene: Kodak, Fujifilm, Ilford/Harman/Kentmere, Foma, AgfaPhoto, CineStill, ORWO/Wolfen.
+
+## v192 Abzeichen nur für den ganzen Weg, Archivarin
+
+- Abzeichen zählen nur Rollen und Fotos, die in der App eingelegt, entwickelt und hochgeladen wurden. Archivierte Rollen (`archived: true`, über „Archivieren“ nachgetragen) zählen nicht mit.
+- Neues Abzeichen Archivarin: Fotos ins Archiv nachgetragen, Stufen 100 · 500 · 1.000.
+- Einmalig beim ersten Prüfen nach dem Update: Stufen, die in v191 aus archivierten Fotos verdient wurden, werden auf den heutigen Stand zurückgesetzt. Ein Anstecker, dessen Abzeichen dabei wegfällt, wird abgenommen.
