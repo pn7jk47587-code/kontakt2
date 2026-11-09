@@ -901,8 +901,8 @@ Archivieren	Archive
 Tippe auf den Pfeil oben links, um zurückzugehen.	Tap the arrow at the top left to go back.
 Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.	Press and hold a card to see the film, camera and dates of the roll.
 Wische auf dem Bild nach links oder rechts zum nächsten oder vorigen Bild. Unten rechts speichert der Haken und führt zurück zur Rolle.	Swipe left or right on the picture for the next or previous frame. The check mark at the bottom right saves and takes you back to the roll.
-Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben.	The star on the picture makes an item a favourite, it then appears at the top.
-Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.	The star on the picture makes an item a favourite, it then appears at the top. With “Order” you drag items to another place; without the button, press and hold.
+Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben.	The glowing dot on the picture makes an item a favourite, it then appears at the top.
+Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.	The glowing dot on the picture makes an item a favourite, it then appears at the top. With “Order” you drag items to another place; without the button, press and hold.
 Kamera gelöscht	Camera deleted
 Objektiv gelöscht	Lens deleted
 Zubehör entfernt	Accessory removed

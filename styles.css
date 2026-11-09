@@ -1611,9 +1611,8 @@ html[data-mood="moon"] .wordmark { text-shadow: none; }
 .crowart.filtart, .crowart.accart { flex: 0 0 auto !important; display: inline-flex; }
 .favstar { position: absolute; top: -6px; left: -6px; z-index: 2; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   color: var(--muted); fill: none; background: var(--solid, #fff); box-shadow: 0 1px 4px rgba(0,0,0,.18); cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.favstar svg { fill: none; }
-.favstar.on { color: #e2a400; }
-.favstar.on svg { fill: #f5c518; }
+.favstar .favpt { width: 11px; height: 11px; border-radius: 50%; background: currentColor; opacity: .55; }
+.favstar.on .favpt { opacity: 1; background: color-mix(in srgb, var(--warm2) 40%, var(--warm)); box-shadow: 0 0 10px 3px rgba(255,190,80,.8); }
 .favstar:active { transform: scale(.9); }
 .archlink { display: inline-flex; align-items: center; gap: 5px; color: var(--text); white-space: nowrap; }
 .archlink svg { flex: 0 0 auto; }
@@ -2134,6 +2133,8 @@ section.rolltimefold.fold { background: linear-gradient(160deg, rgba(255,170,64,
    weil sie von der Bildschirmgröße abhängen. Sterne, Mondstrahlen und Prismastrahlen entfallen. */
 :root .light::before, :root .light::after, :root[data-mood] .light::before, :root[data-mood] .light::after { content: none !important; background: none !important; animation: none !important; }
 .leakhost { position: relative; }
+/* v196: Lichtschein im Bereich „Inaktiv“ mit runden Ecken wie die Karten */
+.cabsub.leakhost { border-radius: 16px; }
 .leakfx { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 3; }
 /* Einstellungen-Knopf zurückhaltender (v157): dünner, abgeschwächter Prisma-Rand, Symbol gedämpft */
 .gearbtn { border-width: 1.5px !important; color: var(--muted) !important;

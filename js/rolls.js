@@ -2714,8 +2714,9 @@ const leakSentence = st => st.since
 const camSortFb = (a, b) => camLabel(a).localeCompare(camLabel(b));
 const lensSortFb = (a, b) => (a.mount || '').localeCompare(b.mount || '') || parseFloat(a.focal) - parseFloat(b.focal);
 function gearSort(list, fb) { return list.sort((a, b) => (!!b.fav - !!a.fav) || (a.order ?? 1e6) - (b.order ?? 1e6) || fb(a, b)); }
-// Favoriten im Kameraschrank: Stern in der Ecke des Bildes, Favoriten stehen oben in ihrer Liste
-const FAV_IC = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 16.6l-5.3 2.9 1.1-5.9L3.4 9.5l6-.8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+// Favoriten im Kameraschrank: Leuchtpunkt in der Ecke des Bildes, Favoriten stehen oben in ihrer Liste
+// v196: gleicher leuchtender Punkt wie bei den Favoriten in „Alle Fotos“
+const FAV_IC = '<span class="favpt" aria-hidden="true"></span>';
 const favStar = (store, item) => `<span class="favstar${item.fav ? ' on' : ''}" role="button" tabindex="0" data-fav="${store}:${item.id}" aria-pressed="${!!item.fav}" aria-label="${item.fav ? 'Aus Favoriten entfernen' : 'Als Favorit markieren'}">${FAV_IC}</span>`;
 async function toggleFav(store, id) {
   if (store === 'filters' || store === 'accessories') {
@@ -2856,7 +2857,7 @@ async function viewCabinetPart(k) {
   const sortable = k === 'kameras' || k === 'objektive';
   view.innerHTML = `<div class="cabnav">${CAB_PARTS.map(([key, label]) => `<a class="seg${key === k ? ' on' : ''}" href="#/schrank/${key}">${label}</a>`).join('')}</div>`
     + (sortable ? `<div class="archcorner"><button type="button" class="archlink" id="cabSort" aria-pressed="false">${MOVE_IC}<span>Reihenfolge</span></button></div>` : '')
-    + U.hintOnce('cab-gestures', sortable ? 'Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.' : 'Der Stern am Bild macht einen Eintrag zum Favoriten, er steht dann oben.')
+    + U.hintOnce('cab-gestures', sortable ? 'Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben. Mit „Reihenfolge“ ziehst du Einträge an eine andere Stelle, ohne den Knopf geht das mit langem Drücken.' : 'Der Leuchtpunkt am Bild macht einen Eintrag zum Favoriten, er steht dann oben.')
     + await cabinetHtml(false, k);
   setupFolds(view);
   setupCabinet(view);

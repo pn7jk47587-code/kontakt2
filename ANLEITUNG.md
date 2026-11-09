@@ -632,3 +632,9 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 
 - Adlerauge heißt jetzt Pfau (gleiche Regel: Fotos mit fünf Leuchtpunkten, 25 · 100 · 250). Das Symbol ist ein Pfau, dessen fünf Augenfedern die fünf Leuchtpunkte zeigen. Die interne Kennung `adler` bleibt, verdiente Stufen gehen nicht verloren. (v195 korrigiert v194, wo der Name versehentlich mit dem Glühwürmchen der blauen Stunde zusammenfiel.)
 - Chamäleon neu gezeichnet: Seitenansicht auf einem Ast, mit Helm, Kegelauge und eingerolltem Schwanz.
+
+## v196 Leuchtpunkt als Favoritensymbol, runde Ecken bei „Inaktiv“
+
+- Im Kameraschrank (Kameras, Objektive, Filter, Zubehör) ist der Favorit kein Stern mehr. Es ist derselbe leuchtende Punkt wie bei den Favoriten in „Alle Fotos“. Ist der Eintrag kein Favorit, bleibt der Punkt grau, so wie noch nicht verdiente Abzeichen grau bleiben.
+- Der Hinweis im Kameraschrank spricht jetzt vom Leuchtpunkt.
+- Der Lichtschein über dem Bereich „Inaktiv“ hatte eckige Kanten. Er hat jetzt runde Ecken wie die Karten.
