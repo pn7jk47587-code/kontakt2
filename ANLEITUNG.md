@@ -582,3 +582,11 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Labore: je Labor Anzahl Rollen, Preis je Rolle (Entwicklung plus Scan), Tage vom Abgeben bis zum Abholen und Schnitt der Bewertung.
 - Zuerst verbrauchen: Kühlschrank mit Kacheln abgelaufen, in 3 Monaten fällig, ohne Datum, darunter die Reihenfolge nach Ablaufdatum.
 - „Wann und wo“: die Fotografierrate zu Hause und unterwegs ist entfernt.
+
+## v187 Fujifilm und Lucky im Filmkatalog
+
+- 16 neue Filme (Seed-Version 26, werden beim Start ergänzt, eigene Einträge bleiben unberührt):
+  - Fujifilm, im Programm: 200, 400, Velvia 50, Velvia 100, Provia 100F, Neopan 100 Acros II, Superia Premium 400 (nur Japan).
+  - Fujifilm, eingestellt, für gelagerte Rollen: Fujicolor C200, Superia X-Tra 400, Pro 400H.
+  - Lucky: Color C200, Color C400 (seit Sommer 2026), SHD 100, SHD 400, Yingzhe 100 und 400 (bisher nur in China, Format nicht bestätigt).
+- Quellen stehen am Film (Datenblatt-Link): Pellica (Stand 22.10.2026), Fujifilm USA, 35mmc, analog.cafe, Digital Camera World, Analogue Wonderland. Schwarzschild-Werte sind für diese Filme nicht hinterlegt.

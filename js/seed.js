@@ -472,3 +472,26 @@ const SEED_FLASH = {
   'cam-superheadz-olivesan': { flashNote: 'Synchronzeit nicht gefunden. Der Verschluss hat fest 1/125 s.' }
 };
 SEED_CAMERAS.forEach(c => Object.assign(c, SEED_FLASH[c.id] || {}));
+
+// Fujifilm und Lucky (v187). Stand der Programme: Pellica, „Does Fujifilm Still Make Film?“ (22.10.2026), Fujifilm USA Professional Film; Lucky: 35mmc, analog.cafe, PetaPixel, Pellica.
+const FUJI_SRC = 'https://pellica.app/blog/fujifilm-discontinuation-guide-2026/';
+const FUJI_PRO = 'https://www.fujifilm.com/us/en/business/professional-photography/film';
+const FUJI_GONE = (when) => `Wird nicht mehr hergestellt (${when}). Im Katalog, weil noch abgelaufene oder gelagerte Rollen belichtet werden.`;
+SEED_STOCKS.push(
+  seedStock('fuji-200', 'Fujifilm', '200', 'farbneg', 'C-41', 200, ['135'], { makerNote: 'Farbnegativfilm für Kleinbild. Hat in den USA Fujicolor C200 abgelöst. Wer ihn herstellt, sagt Fujifilm nicht.', datasheet: FUJI_SRC }),
+  seedStock('fuji-400', 'Fujifilm', '400', 'farbneg', 'C-41', 400, ['135'], { makerNote: 'Farbnegativfilm für Kleinbild. Wird laut Wikipedia im Auftrag von Kodak gefertigt, Fujifilm äußert sich dazu nicht.', datasheet: FUJI_SRC }),
+  seedStock('fuji-velvia50', 'Fujifilm', 'Velvia 50', 'dia', 'E-6', 50, ['135', '120'], { makerNote: 'Diafilm mit kräftigen Farben. Planfilm ist eingestellt (8×10 Ende 2021, 4×5 März 2023). Oft ausverkauft.', datasheet: FUJI_PRO }),
+  seedStock('fuji-velvia100', 'Fujifilm', 'Velvia 100', 'dia', 'E-6', 100, ['135', '120'], { makerNote: 'Diafilm, auch als Planfilm. Oft ausverkauft.', datasheet: FUJI_PRO }),
+  seedStock('fuji-provia100f', 'Fujifilm', 'Provia 100F', 'dia', 'E-6', 100, ['135', '120'], { makerNote: 'Diafilm mit natürlicheren Farben als Velvia, auch als Planfilm. Oft ausverkauft.', datasheet: FUJI_PRO }),
+  seedStock('fuji-acros100ii', 'Fujifilm', 'Neopan 100 Acros II', 'sw', 'SW', 100, ['135', '120'], { makerNote: 'Schwarzweißfilm. Kleinbild und 120 laut Preisliste von Fujifilm Japan.', datasheet: FUJI_SRC }),
+  seedStock('fuji-superiapremium400', 'Fujifilm', 'Superia Premium 400', 'farbneg', 'C-41', 400, ['135'], { makerNote: 'Nur in Japan im Handel, die Rolle mit 36 Aufnahmen. Die mit 27 wird nicht mehr ausgeliefert.', datasheet: 'https://pellica.app/blog/fujifilm-superia-premium-400-available-2026/' }),
+  seedStock('fuji-c200', 'Fujifilm', 'Fujicolor C200', 'farbneg', 'C-41', 200, ['135'], { makerNote: 'Nicht mehr im Programm von Fujifilm USA, dort ersetzt durch Fujifilm 200. Im Katalog für gelagerte Rollen.', datasheet: FUJI_SRC }),
+  seedStock('fuji-superiaxtra400', 'Fujifilm', 'Superia X-Tra 400', 'farbneg', 'C-41', 400, ['135'], { makerNote: FUJI_GONE('Mitteilung von Fujifilm Japan, April 2024'), datasheet: FUJI_SRC }),
+  seedStock('fuji-pro400h', 'Fujifilm', 'Pro 400H', 'farbneg', 'C-41', 400, ['135', '120'], { makerNote: FUJI_GONE('Kleinbild seit Januar 2021, 120 bis Ende 2021'), datasheet: FUJI_SRC }),
+  seedStock('lucky-c200', 'Lucky', 'Color C200', 'farbneg', 'C-41', 200, ['135', '120'], { makerNote: 'Erster neuer Farbnegativfilm von China Lucky, seit 2025. Eher körnig, weniger Belichtungsspielraum als Portra.', datasheet: 'https://www.analog.cafe/r/lucky-c200--film-review-p0zm' }),
+  seedStock('lucky-c400', 'Lucky', 'Color C400', 'farbneg', 'C-41', 400, ['135', '120'], { makerNote: 'Seit Sommer 2026, eine Blende empfindlicher als C200.', datasheet: 'https://www.35mmc.com/31/05/2026/lucky-color-400-5-frames-with-this-soon-to-be-released-film/' }),
+  seedStock('lucky-shd100', 'Lucky', 'SHD 100', 'sw', 'SW', 100, ['135'], { makerNote: 'Schwarzweißfilm, seit Februar 2024 wieder hergestellt.', datasheet: 'https://www.digitalcameraworld.com/news/its-your-lucky-day-as-lucky-film-relaunches-its-black-and-white-35mm-film' }),
+  seedStock('lucky-shd400', 'Lucky', 'SHD 400', 'sw', 'SW', 400, ['135', '120'], { makerNote: 'Schwarzweißfilm, seit Februar 2024 wieder hergestellt.', datasheet: 'https://analoguewonderland.co.uk/products/lucky-film-shd-400-120-film' }),
+  seedStock('lucky-yingzhe100', 'Lucky', 'Yingzhe 100', 'sw', 'SW', 100, ['135'], { makerNote: 'Neuer Schwarzweißfilm von 2026, bisher nur im chinesischen Onlinehandel. Kein Datenblatt. Das Format ist nicht bestätigt, hier vorläufig Kleinbild.', datasheet: 'https://pellica.app/blog/lucky-yingzhe-100-400-new-bw-film-2026/' }),
+  seedStock('lucky-yingzhe400', 'Lucky', 'Yingzhe 400', 'sw', 'SW', 400, ['135'], { makerNote: 'Neuer Schwarzweißfilm von 2026, bisher nur im chinesischen Onlinehandel. Kein Datenblatt. Das Format ist nicht bestätigt, hier vorläufig Kleinbild.', datasheet: 'https://pellica.app/blog/lucky-yingzhe-100-400-new-bw-film-2026/' })
+);
