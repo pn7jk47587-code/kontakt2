@@ -662,3 +662,7 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v200 Personen kompakt nebeneinander
 
 - In der Fotoansicht stehen mehrere Personen nebeneinander und brechen nur bei Bedarf in die nächste Zeile um. 15 Namen bilden so einen kleinen Block statt einer langen Liste.
+
+## v201 Farbige Pfeile
+
+- Die Pfeile sind nicht mehr weiß. Auf den Karten im Profil tragen sie die Farbe des Symbols ihrer Karte (Alle Fotos bernstein, Filmkühlschrank orange, Kameraschrank rot, Analytics violett, Abzeichen gold, Ideen und Filmtagebuch pink). In Listen wie dem Kameraschrank haben sie das gedämpfte Lila der Nebentexte, voll deckend.

@@ -2587,3 +2587,8 @@ figcaption .titlefld .pchip { padding: 6px 12px; }
 /* v200: mehrere Personen stehen kompakt nebeneinander und brechen nur bei Bedarf um */
 figcaption .pprow .ppchips { display: flex !important; flex-wrap: wrap; gap: 6px; margin: 0; font-size: inherit; }
 figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; width: auto; margin: 0; }
+/* v201: Pfeile nicht mehr weiß. Sie tragen die Farbe des Symbols ihrer Karte, sonst das gedämpfte Lila der Nebentexte, jeweils voll deckend */
+.chev, .albuminfo .chev, .foldchev, .favchev { color: var(--chev, var(--muted)) !important; opacity: 1 !important; }
+.photostile { --chev: #e8901f; } .fridge { --chev: #ff7a3d; } .cabinet { --chev: #ff5f5a; } .diaryfold { --chev: #ff4f6e; }
+.spend, .analyticstile { --chev: #a35cff; } .shots { --chev: #d659c8; } .ideas { --chev: #e8549a; } .badgefold { --chev: #ffc56b; }
+.favtoggle { --chev: #ffbe50; }
