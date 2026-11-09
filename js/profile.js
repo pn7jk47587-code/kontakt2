@@ -941,7 +941,8 @@ async function viewWhenWhere(scope) {
   const sc = whenScope(scope);
   setHeader('Wann und wo');
   const frames = (await DB.all('frames')).filter(sc.test);
-  const { body, sub } = whenWhereBody(frames);
+  const home = await DB.get('meta', 'home');
+  const { body, sub } = whenWhereBody(frames, home);
   view.innerHTML = `
     <div class="whenscope">${[['monat', 'Monat'], ['jahr', 'Jahr'], ['gesamt', 'Gesamt']].map(([k, t]) => `<a class="chip${k === sc.key ? ' on' : ''}" href="#/wannwo/${k}" ${k === sc.key ? 'aria-current="page"' : ''}>${t}</a>`).join('')}</div>
     <section class="card whencard">
@@ -950,9 +951,16 @@ async function viewWhenWhere(scope) {
       ${body}
     </section>`;
   view.querySelectorAll('.whenscope a').forEach(a => a.addEventListener('click', e => { e.preventDefault(); location.replace(a.getAttribute('href')); }));
+  // Zuhause selbst festlegen (Liste, Karte oder Standort); ohne Festlegung gilt das Gebiet mit den meisten Fotos
+  view.querySelector('#homeSet')?.addEventListener('click', () => openPlaceChooser(async p => {
+    if (p.lat == null) { U.toast('Dieser Ort hat keine Koordinaten'); return; }
+    await DB.put('meta', { id: 'home', name: p.name || 'Zuhause', lat: +p.lat, lng: +p.lng, cc: p.cc || null });
+    U.toast('Zuhause festgelegt'); U.haptic && U.haptic([12, 40, 12]); viewWhenWhere(scope);
+  }));
+  view.querySelector('#homeClr')?.addEventListener('click', async () => { await DB.del('meta', 'home'); U.toast('Zuhause wird wieder aus den Fotos bestimmt'); viewWhenWhere(scope); });
 }
 
-function whenWhereBody(frames) {
+function whenWhereBody(frames, home = null) {
   const timed = frames.filter(hasTime);
   const located = frames.filter(f => f.placeLat != null && f.placeLng != null);
   if (!timed.length && !located.length) return { sub: 'noch keine Zeiten oder Orte', body: '<p class="hint">In diesem Zeitraum hat noch kein Bild eine Uhrzeit oder einen Ort. Beides kommt über das Uhr- und das Standortsymbol in der Bildansicht oder aus Handyfotos.</p>' };
@@ -987,10 +995,11 @@ function whenWhereBody(frames) {
     const km1 = new Map();
     located.forEach(f => { const k = `${(+f.placeLat).toFixed(2)},${(+f.placeLng).toFixed(2)}`; if (!km1.has(k)) km1.set(k, []); km1.get(k).push(f); });
     const homeFs = [...km1.values()].sort((a, b) => b.length - a.length)[0];
-    const hLa = homeFs.reduce((a, f) => a + +f.placeLat, 0) / homeFs.length, hLo = homeFs.reduce((a, f) => a + +f.placeLng, 0) / homeFs.length;
-    const homeName = mostName(homeFs);
+    const own = home && home.lat != null;
+    const hLa = own ? +home.lat : homeFs.reduce((a, f) => a + +f.placeLat, 0) / homeFs.length, hLo = own ? +home.lng : homeFs.reduce((a, f) => a + +f.placeLng, 0) / homeFs.length;
+    const homeName = own ? home.name : mostName(homeFs);
     const ccCount = new Map(); homeFs.forEach(f => f.placeCC && ccCount.set(f.placeCC, (ccCount.get(f.placeCC) || 0) + 1));
-    const homeCC = [...ccCount].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    const homeCC = own && home.cc ? home.cc : [...ccCount].sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     const dist = located.map(f => ({ f, d: distKm(hLa, hLo, +f.placeLat, +f.placeLng) }));
     const ds = dist.map(x => x.d);
     const cat = x => (homeCC && x.f.placeCC && x.f.placeCC !== homeCC) ? 'Ausland' : x.d <= 3 ? 'Zuhause' : x.d <= 50 ? 'Umgebung' : 'Unterwegs';
@@ -1001,7 +1010,8 @@ function whenWhereBody(frames) {
     const catDesc = { Zuhause: 'bis 3 km', Umgebung: '3 bis 50 km', Unterwegs: 'über 50 km', Ausland: homeCC ? 'anderes Land' : '' };
     body += `<h3 class="anh">Orte</h3>${barList(topPlaces)}
       <h3 class="anh">Radius</h3>
-      <p class="spendtext">Dein Zuhause ist <b>${U.esc(homeName)}</b>. Die Hälfte deiner Fotos entsteht im Umkreis von <b>${fmtKm(median(ds))}</b>, neun von zehn innerhalb von <b>${fmtKm(quant(ds, 0.9))}</b>. Am weitesten weg: <b>${U.esc(far.f.place || 'ohne Namen')}</b>, ${fmtKm(far.d)}.${infoBtn('Als Zuhause gilt das Gebiet von rund einem Kilometer, in dem die meisten deiner Fotos mit Ort entstanden sind. Umkreis und Entfernungen misst die App von dort aus.')}</p>
+      <div class="homerow"><span class="sub2">Zuhause${own ? '' : ' (aus deinen Fotos)'}</span><b>${U.esc(homeName)}</b><button type="button" class="placepin homeset" id="homeSet" aria-label="Zuhause festlegen">${PIN_IC}</button>${own ? `<button type="button" class="placepin homeclr" id="homeClr" aria-label="Festlegung aufheben">${ART.x}</button>` : ''}</div>
+      <p class="spendtext">Die Hälfte deiner Fotos entsteht im Umkreis von <b>${fmtKm(median(ds))}</b>, neun von zehn innerhalb von <b>${fmtKm(quant(ds, 0.9))}</b>. Am weitesten weg: <b>${U.esc(far.f.place || 'ohne Namen')}</b>, ${fmtKm(far.d)}.${infoBtn('Als Zuhause gilt der Ort, den du mit der Ortsnadel festlegst. Ohne Festlegung ist es das Gebiet von rund einem Kilometer, in dem die meisten deiner Fotos mit Ort entstanden sind. Umkreis und Entfernungen misst die App von dort aus.')}</p>
       <div class="spendsplit four">${Object.entries(cats).filter(([k, fs]) => fs.length || k !== 'Ausland').map(([k, fs]) => `<div><span class="sub2">${k}${catDesc[k] ? ` · ${catDesc[k]}` : ''}</span><b>${fs.length}</b><span class="sub2">${Math.round(fs.length / located.length * 100)} %</span></div>`).join('')}</div>
       <h3 class="anh">Fotografierrate ${infoBtn('Fotos pro Tag, an dem du dort fotografiert hast. Wie lange du insgesamt zu Hause oder unterwegs warst, weiß die App nicht. Sie kennt nur die Tage mit Fotos.')}</h3>
       ${barList(Object.entries(cats).filter(([, fs]) => rate(fs)).map(([k, fs]) => { const days = new Set(fs.filter(f => f.date).map(f => String(f.date).slice(0, 10))).size; return [k, rate(fs), `${days} ${days === 1 ? 'Tag' : 'Tage'}`, fmtNum(rate(fs))]; }))}`;

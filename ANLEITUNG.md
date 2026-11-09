@@ -568,3 +568,8 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 - Markierung: dicker Wachsstift (3,2 pt), von Hand umkreist. Dunkles Papier: heller Wachsstift. Helles Papier: roter Wachsstift. Ein zweiter, gestrichelter Strich macht das Wachs körnig.
 - Jedes Favoritenbild bekommt eine eigene Form: Oval mit Überlauf, eckige Schleife, doppelte Runde oder Lasso mit Auslauf. Neigung, Größe und Zittern hängen vom Bild ab, so sieht keine Markierung wie die andere aus, beim erneuten Erstellen aber gleich aus wie vorher.
 - Die Entwürfe Fettstift, Leuchtring und Leuchtpunkt sind entfernt.
+
+## v185 Zuhause selbst festlegen
+
+- Analytics › „Wann und wo“ › Radius: Über der Radius-Zeile steht „Zuhause“ mit dem Ort. Die Ortsnadel daneben legt das Zuhause selbst fest (Liste der benutzten Orte, Karte oder aktueller Standort). Das X hebt die Festlegung auf.
+- Ohne Festlegung gilt weiter das Gebiet von rund 1 km mit den meisten Fotos, gekennzeichnet mit „(aus deinen Fotos)“. Gespeichert in `meta` unter `home` (Name, Koordinaten, Land). Radius, Zuhause/Umgebung/Unterwegs/Ausland und Fotografierrate rechnen von dort.
