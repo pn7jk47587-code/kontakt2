@@ -594,3 +594,8 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v188 „Zuerst verbrauchen“ entfernt
 
 - Der Abschnitt „Zuerst verbrauchen“ in den Analytics ist wieder entfernt. Ablaufdaten stehen weiter im Filmkühlschrank selbst („bald“, „Expired“).
+
+## v189 Geld wieder schlank
+
+- Analytics › Geld zeigt oben nur zwei Kacheln: „Diesen Monat“ (mit Monatsname) und „Gesamt“ (im bodenlosen Loch). Der Satz ist entfallen.
+- Darunter klappt „Aufteilung“ die Kacheln Filme, Entwicklung, Scans, Ausrüstung, eigene Kategorien sowie „pro Bild“ und „pro gutem Bild“ auf. „Verlauf“ mit dem Plus bleibt darunter.

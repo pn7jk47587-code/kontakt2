@@ -792,8 +792,11 @@ async function spendFoldHtml() {
         <span class="foldchev" aria-hidden="true"></span>
       </div>
       <div class="foldbody">
-      ${perPic}
-      <p class="spendtext">Du hast diesen Monat schon <b>${euro(spend.month)}</b> ausgegeben. Insgesamt hast du schon <b>${euro(spend.total)}</b> in das bodenlose Loch geworfen.</p>
+      <div class="spendsplit spendmain">
+        <div><span class="sub2">Diesen Monat</span><b>${euro(spend.month)}</b><span class="sub2">${I18N.t(MONTHS[new Date().getMonth()])}</span></div>
+        <div><span class="sub2">Gesamt</span><b>${euro(spend.total)}</b><span class="sub2">im bodenlosen Loch</span></div>
+      </div>
+      <details class="txhist spendsplitd"><summary><span>Aufteilung</span></summary>
       <div class="spendsplit four">
         <div><span class="sub2">Filme</span><b>${euro(spend.film)}</b></div>
         <div><span class="sub2">Entwicklung</span><b>${euro(spend.dev)}</b></div>
@@ -801,6 +804,8 @@ async function spendFoldHtml() {
         <div><span class="sub2">Ausrüstung</span><b>${euro(spend.gear)}</b></div>
         ${Object.entries(spend.cats).sort((a, b) => b[1] - a[1]).map(([c, v]) => `<div><span class="sub2">${U.esc(c)}</span><b>${euro(v)}</b></div>`).join('')}
       </div>
+      ${perPic}
+      </details>
       <details class="txhist spendhist"><summary><span>Verlauf</span><button type="button" class="roundic expadd" id="expAdd" aria-label="Ausgabe hinzufügen">+</button></summary>${historyHtml(tx)}
         ${tx.length ? '<button class="btn danger small" id="spendReset">Ausgaben zurücksetzen</button>' : ''}</details>
       </div>

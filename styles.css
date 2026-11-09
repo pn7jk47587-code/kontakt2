@@ -2525,3 +2525,8 @@ html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { top: 21px !imp
 .labvals b { font-size: 14px; font-variant-numeric: tabular-nums; }
 .txrow .expd { color: var(--danger); }
 .spend .spendsplit + .spendtext { margin-top: 12px; }
+/* v189: Geld schlank, oben nur Monat und Gesamt; Aufteilung und Kosten pro Bild aufklappbar */
+.spendmain b { font-size: 24px; }
+.spendsplitd summary { text-align: left; }
+.spendsplitd[open] .spendsplit + .spendsplit { margin-top: 10px; }
+.spendsplitd + .spendhist { margin-top: 6px; }
