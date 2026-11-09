@@ -2593,7 +2593,7 @@ async function viewArchive() {
       <h2 class="wiztitle">5 · Film und Name</h2>
       <div class="arfilm" id="arFilm"><button type="button" class="filmpickbtn" id="arStock"><span class="filmselart" id="arStockArt"></span><span class="filmpickname" id="arStockName">Film wählen</span><span class="filmpickchg">Pflicht</span></button>
         <button type="button" class="btn ghost small" id="arStockUnknown">Weiß ich nicht mehr</button></div>
-      <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
+      <div class="seggroup" id="arFmt">${[['135', 'Kleinbild'], ['120', 'Mittelformat'], ['half', 'Halbformat'], ['gross', 'Großformat'], ['sonst', 'Sonstiges']].map(([k, l]) => `<button type="button" class="seg${k === ed.format ? ' on' : ''}" data-f="${k}">${l}</button>`).join('')}</div>
       <label class="fld"><span>Name der Rolle</span><input id="arTitle" maxlength="80"></label>
     </section>`;
   const $ = id => view.querySelector('#' + id);

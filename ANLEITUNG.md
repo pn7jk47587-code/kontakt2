@@ -603,3 +603,15 @@ Technik: Jede Seite wird mit 300 dpi auf ein Canvas gezeichnet und als JPEG ins 
 ## v190 Filme in der Kamera ohne Umrechnung
 
 - Analytics › Filme in der Kamera: die Umrechnung auf 36 Bilder und die Stunden zwischen erstem und letztem Foto sind entfernt. Es bleiben drei Kacheln in einfachen Tagen (Üblich, Schnellste, Langsamste), „Alle Rollen“ mit Bildern und Tagen je Rolle und die Prognose für die eingelegte Rolle.
+
+## v191 Abzeichen in der App
+
+- 31 Abzeichen (`js/badges.js`, Symbole in `js/badgeicons.js` aus der Entwurfsseite). Berechnet aus den gespeicherten Daten, verdiente Stufen mit Datum in `meta` unter `badges` (`earned`, `pin`). Eine einmal verdiente Stufe bleibt, auch wenn Daten später gelöscht werden.
+- Profil: Kachel „Abzeichen“ (aufklappbar) mit den verdienten Abzeichen und 1 bis 3 Lichtpunkten für die Stufe. Die übrigen stehen als graue Platzhalter mit Fragezeichen, ohne Regel.
+- Antippen eines verdienten Abzeichens: Name, Stufe, Datum und wofür es war, dazu „Als Anstecker tragen“. Der Anstecker sitzt unten rechts am Profilbild, im Profil und auf der Startseite.
+- Geprüft wird beim Öffnen des Profils. Neue Abzeichen oder Stufen melden sich mit einem Hinweis.
+- Wetter: Beim Öffnen des Profils holt die App im Hintergrund das Wetter für Fotos mit Uhrzeit und Ort nach, höchstens 60 je Start, mit kurzer Pause zwischen den Abrufen. Ohne Netz bricht es ab. Laubfrosch, Eisbär und Eidechse zählen nur Fotos, für die das Wetter vorliegt.
+- Küken: nur, wenn die Einführung ab dieser Version bis zum Ende durchgegangen wird (`meta` `tourDone`), nicht rückwirkend.
+- Schnorrer (statt „Verwöhnte Hauskatze“): Teile im Kameraschrank, bei denen der Kaufpreis ausdrücklich 0 € ist. Ein leeres Preisfeld zählt nicht.
+- Großformat ist als Format beim Nachtragen ins Archiv wählbar (für die Matroschka).
+- Biene: Kodak, Fujifilm, Ilford/Harman/Kentmere, Foma, AgfaPhoto, CineStill, ORWO/Wolfen.

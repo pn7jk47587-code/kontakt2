@@ -81,7 +81,7 @@ const TOUR = (() => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.act === 'skip') { st = null; save(); draw(); return; }
       if (st.step === 'fridgeDone') { DB.all('cameras').then(c => go('cabinet', { camIds: c.map(x => x.id) })); return; }
-      if (st.step === 'end') { st = null; save(); draw(); }
+      if (st.step === 'end') { st = null; save(); draw(); try { DB.put('meta', { id: 'tourDone', at: new Date().toISOString() }).then(() => window.BADGES && BADGES.check()); } catch (_) {} }   // Abzeichen Küken (nur ab v191, nicht rückwirkend)
     });
   }
   function draw() {

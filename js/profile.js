@@ -34,7 +34,7 @@ async function avatarHtml(size = 96, profile = PROFILE) {
 
 async function profileHero() {
   return `<a class="profilehead homehead" href="#/profil" aria-label="Profil">
-    <span class="heroav big">${await avatarHtml(120)}</span>
+    <span class="heroav big">${await avatarHtml(120)}${await BADGES.pinHtml()}</span>
     <span class="pname">${U.esc(atName(PROFILE?.name))}</span>
   </a>`;
 }
@@ -319,7 +319,7 @@ async function viewProfile() {
   view.innerHTML = `
     <div class="profilehead">
       <button class="gearbtn" id="openSettings" aria-label="Einstellungen">${ART.menu}</button>
-      <button class="heroav big" id="pAv" aria-label="Profilbild ändern">${await avatarHtml(120)}</button>
+      <button class="heroav big" id="pAv" aria-label="Profilbild ändern">${await avatarHtml(120)}${await BADGES.pinHtml()}</button>
       <input type="file" accept="image/*" hidden id="pPic">
       <span class="pname" id="pNameTxt">${U.esc(atName(PROFILE?.name))}</span>
     </div>
@@ -347,6 +347,7 @@ async function viewProfile() {
     ${await cabinetHtml(true)}
 
     ${await analyticsTileHtml()}
+    ${await BADGES.foldHtml()}
 
     <a class="tile photostile" href="#/karte">
       <span class="fridgeicon photoicon">${PIN_IC}</span>
@@ -393,6 +394,8 @@ async function viewProfile() {
   setupCabinet(view);
   setupDiaryFold(view);
   setupIdeas(view);
+  // Abzeichen prüfen; neue Stufen zeigen sich als Hinweis und beim nächsten Öffnen im Profil. Danach im Hintergrund Wetter nachholen.
+  BADGES.check().then(r => { if (r.fresh.length && location.hash === '#/profil') { const y = window.scrollY; viewProfile().then(() => window.scrollTo(0, y)); } setTimeout(() => BADGES.backfillWeather(), 1500); });
   setupFolds(view);
   view.querySelector('#openSettings').addEventListener('click', openSettings);
   try { if (sessionStorage.getItem('kb-open-settings')) { sessionStorage.removeItem('kb-open-settings'); openSettings(); } } catch (_) {}

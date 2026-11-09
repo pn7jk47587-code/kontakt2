@@ -2530,3 +2530,34 @@ html[data-aplook^="sheet"] .photogrid:not(.favgrid) > a .favdot { top: 21px !imp
 .spendsplitd summary { text-align: left; }
 .spendsplitd[open] .spendsplit + .spendsplit { margin-top: 10px; }
 .spendsplitd + .spendhist { margin-top: 6px; }
+
+/* ---------- v191: Abzeichen ---------- */
+.bmed { --c: var(--teal); width: 56px; height: 56px; border-radius: 50%; padding: 2.5px; background: var(--prism); box-shadow: 0 0 18px color-mix(in srgb, var(--c) 32%, transparent); flex: 0 0 auto; display: inline-block; box-sizing: border-box; }
+.bmed > span { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; color: var(--c); background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c) 26%, var(--solid)), var(--solid) 70%); }
+.bmed svg { width: 64%; height: 64%; display: block; }
+.bmed.xs { width: 34px; height: 34px; padding: 1.8px; box-shadow: 0 0 10px color-mix(in srgb, var(--c) 40%, transparent), 0 2px 6px rgba(0,0,0,.45); }
+.bmed.lg { width: 96px; height: 96px; padding: 3px; }
+.bmed.lock { background: color-mix(in srgb, var(--line) 160%, transparent); box-shadow: none; }
+.bmed.lock > span { color: var(--muted); background: var(--solid); opacity: .7; }
+.bmed.wetter { --c: #7fd8e6; } .bmed.licht { --c: #ffc56b; } .bmed.kuehl { --c: #9fd0ff; } .bmed.gear { --c: #ff9a7a; }
+.bmed.film { --c: #c7a6ff; } .bmed.geld { --c: #ffd27a; } .bmed.ort { --c: #86d8bb; } .bmed.tempo { --c: #f0a6ff; }
+.bmed.gold { --c: #ffd27a; background: linear-gradient(135deg, #fff2c4, #e8b04b 40%, #fff0b8 60%, #c8892a); box-shadow: 0 0 22px rgba(255,200,90,.55); }
+.bgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 14px 8px; justify-items: center; padding-top: 4px; }
+.bcell { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: inherit; }
+span.bcell { cursor: default; }
+.bdots { display: flex; gap: 3px; }
+.bdots i { width: 5px; height: 5px; border-radius: 50%; background: color-mix(in srgb, var(--line) 200%, transparent); }
+.bdots i.on { background: #ffc56b; box-shadow: 0 0 6px 1px rgba(255,190,80,.7); }
+.bpin { position: absolute; right: -2px; bottom: 2px; z-index: 2; pointer-events: none; line-height: 0; }
+.heroav { position: relative; }
+.badgemodal { text-align: center; }
+.badgemodal .bbig { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 4px 0 10px; }
+.badgemodal .bdots i { width: 8px; height: 8px; }
+.badgemodal h2 { margin: 0 0 2px; }
+.badgemodal p { margin: 6px auto; max-width: 34ch; }
+.badgemodal .modalfoot { align-items: center; }
+.badgefold .fridgeicon svg { width: 22px; height: 22px; }
+section.badgefold.fold { margin: 12px 16px !important; padding: 14px; border-radius: 26px !important; background: linear-gradient(160deg, rgba(255,197,107,.20), var(--card) 70%) !important; border: 1px solid rgba(255,197,107,.45) !important; box-shadow: var(--shadow) !important; color: var(--text); }
+section.badgefold .fridgetop h2 { margin: 0; font-size: 20px; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+.badgefold .fridgeicon { color: #ffc56b !important; background: var(--solid) !important; box-shadow: none !important; }
+.badgefold .bgrid { margin-top: 12px; }
