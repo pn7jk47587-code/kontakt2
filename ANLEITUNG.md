@@ -754,3 +754,11 @@ Tippe einen Scan an und danach die Zeile, zu der er gehört. Liegt dort schon ei
 Ist eine ganze Reihe um eins verrutscht, tippst du den ersten falschen Scan an und dann „Ab hier eins runter“ oder „Ab hier eins hoch“. Verschoben wird der zusammenhängende Block bis zur nächsten leeren Zeile. „Hoch“ geht nur, wenn die Zeile darüber leer ist. Reicht der Platz nach unten nicht, kommt hinten eine Zeile dazu.
 
 Mit dem Haken wird gespeichert, mit X verworfen. Mit dem Scan wandern seine Bewertung, Personen, Titel, Bildinfo und die Lightleak-Markierung. Die Beschreibungen bleiben an ihrer Nummer.
+
+## v219: Zuordnen in zwei Spalten
+
+Die Zuordnung aus v218 ist ersetzt. Das Fenster hat jetzt zwei Spalten, die jede für sich scrollen: links alle Fotos, rechts alle Beschreibungen, die du beim Fotografieren angelegt hast.
+
+Tippe ein Foto an und dann die Beschreibung, zu der es gehört. Umgekehrt geht es auch. Jedes Foto trägt oben links die Nummer seiner Beschreibung, jede Beschreibung zeigt ihr Foto klein neben der Nummer. Geänderte Nummern sind farbig. Hatte die Beschreibung vorher ein anderes Foto, bekommt dieses ein gelbes Fragezeichen und wartet auf seine Zuordnung. Beschreibungen ohne Foto haben einen gelb gestrichelten Rahmen.
+
+„Alle lösen“ nimmt alle Zuordnungen weg, dann ordnest du von vorn zu. Mit dem Haken wird gespeichert. Fotos, die dann noch ein Fragezeichen haben, kommen auf Bilder ohne Beschreibung oder hinten an.
