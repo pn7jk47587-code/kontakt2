@@ -744,3 +744,13 @@ Der Eintrag „Unbekannter Film · ISO ?“ entsteht, wenn du alte Rollen ohne F
 ## v217: Contact Sheet auch als PNG
 
 In der Vorschau des Contact Sheets wählst du unten zwischen PDF und PNG. Danach tippst du auf Teilen. PNG liefert jede Seite als eigenes Bild in 300 dpi, auf dem iPhone mit „Bild sichern“ direkt in die Fotos. Die letzte Wahl merkt sich die App.
+
+## v218: Scans den Beschreibungen zuordnen
+
+Wenn die Scans in der Reihenfolge verrutscht sind, öffnest du im Album das Symbol mit den zwei Bildern und Zeilen (neben dem Pfeil für die Reihenfolge). Jede Zeile zeigt links den Scan, rechts das, was du beim Fotografieren eingetragen hast: Nummer, Blende, Zeit, Objektiv, Notiz, Ort, Datum und, falls vorhanden, das Handyfoto.
+
+Tippe einen Scan an und danach die Zeile, zu der er gehört. Liegt dort schon ein Scan, tauschen die beiden den Platz. Bei einer leeren Zeile wandert der Scan einfach dorthin.
+
+Ist eine ganze Reihe um eins verrutscht, tippst du den ersten falschen Scan an und dann „Ab hier eins runter“ oder „Ab hier eins hoch“. Verschoben wird der zusammenhängende Block bis zur nächsten leeren Zeile. „Hoch“ geht nur, wenn die Zeile darüber leer ist. Reicht der Platz nach unten nicht, kommt hinten eine Zeile dazu.
+
+Mit dem Haken wird gespeichert, mit X verworfen. Mit dem Scan wandern seine Bewertung, Personen, Titel, Bildinfo und die Lightleak-Markierung. Die Beschreibungen bleiben an ihrer Nummer.
