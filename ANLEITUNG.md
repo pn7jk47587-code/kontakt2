@@ -772,3 +772,9 @@ Im Filmtagebuch lässt sich jeder Film auf der Lichtpunkte-Skala von −5 bis +5
 Im Contact-Sheet-Fenster gibt es neben A4 hoch und A5 quer die Option „Story“. Wähle Hell oder Dunkel und tippe auf den Haken. Danach erscheinen alle Bilder der Rolle im Raster. Tippe die Bilder an, die in die Story sollen, höchstens 12. Bilder mit +4 und +5 sind schon vorgewählt.
 
 Der Haken erzeugt ein PNG mit 1080 × 1920 Pixeln. Die Bilder liegen darauf als kurze Filmstreifen mit Filmname und Bildnummern, wie auf dem Contact Sheet. Die App wählt 1, 2 oder 3 Bilder je Reihe, je nachdem, wobei die Bilder am größten werden. Oben und unten bleibt Platz für die Bedienelemente von Instagram. Mit „Markieren“ erscheinen die Wachsstift-Markierungen auch in der Story. Über den Teilen-Knopf lässt sich das Bild direkt an Instagram geben oder sichern.
+
+## v222: Filmtagebuch nutzt die Fotos aus den Rollen
+
+Das Plus bei einer Lichtsituation lädt keine Datei mehr hoch. Es öffnet alle Fotos, die in der App auf Rollen mit diesem Film liegen, nach Rolle gruppiert, die neueste oben. Tippe die passenden Fotos an und bestätige mit dem Haken. Abgewählte Fotos verschwinden wieder aus dieser Lichtsituation.
+
+Das Tagebuch speichert nur einen Verweis auf das Foto der Rolle, kein zweites Bild. Das spart Speicher. Entfernst du ein Foto aus dem Tagebuch, bleibt es in der Rolle erhalten. Löschst du das Foto in der Rolle, verschwindet es auch aus dem Tagebuch. Früher hochgeladene Tagebuchfotos bleiben wie bisher erhalten.

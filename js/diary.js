@@ -47,14 +47,16 @@ async function viewDiary(stockId) {
   document.getElementById('dDel')?.addEventListener('click', async () => {
     const before = JSON.parse(JSON.stringify(d));
     await DB.del('meta', d.id); location.hash = '#/tagebuch';
-    U.undo('Tagebucheintrag gelöscht', async () => { await DB.put('meta', before); location.hash = '#/tagebuch/' + stockId; }, async () => { for (const p of before.photos || []) await deleteImage(p.imgId); });
+    U.undo('Tagebucheintrag gelöscht', async () => { await DB.put('meta', before); location.hash = '#/tagebuch/' + stockId; }, async () => { for (const p of before.photos || []) if (!p.ref) await deleteImage(p.imgId); });
   });
   const thumbs = {};
   for (const p of d.photos) thumbs[p.imgId] = await U.imgUrl(p.imgId, true);
+  const gone = d.photos.filter(p => p.ref && !thumbs[p.imgId]);
+  if (gone.length) { d.photos = d.photos.filter(p => !gone.includes(p)); await save(); }
   const card = ([k, label]) => {
     const ps = d.photos.filter(p => p.tag === k);
     return `<section class="card diarytag" data-tag="${k}">
-      <div class="dthead"><h3>${label}</h3><label class="fridgeplus dtadd" aria-label="Foto hinzufügen: ${label}">+<input type="file" accept="image/*" multiple hidden data-tag="${k}"></label></div>
+      <div class="dthead"><h3>${label}</h3><button type="button" class="fridgeplus dtadd" data-add="${k}" aria-label="Foto auswählen: ${label}">+</button></div>
       ${ps.length ? `<div class="dtgrid">${ps.map(p => `<span class="dtph"><img src="${thumbs[p.imgId] || ''}" alt="" data-img="${p.imgId}"><button type="button" class="dtdel" data-del="${p.imgId}" aria-label="Foto entfernen">×</button></span>`).join('')}</div>` : '<p class="hint dtempty">Noch kein Foto.</p>'}
     </section>`;
   };
@@ -62,28 +64,31 @@ async function viewDiary(stockId) {
     <div class="diaryhead"><span class="stockart">${await filmArt(stock, 56)}</span><div><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">ISO ${U.esc(stock.isoLabel || stock.boxIso || '?')}</span></div></div>
     <div class="card"><div class="titlefld raterow"><span>Bewertung</span>${rateHtml(d.rate ?? null, 'dRate')}</div>
       <label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5">${U.esc(d.notes || '')}</textarea></label></div>
-    <p class="hint pad">Lade für jede Lichtsituation Fotos hoch, die du mit diesem Film gemacht hast.</p>
+    <p class="hint pad">Wähle für jede Lichtsituation Fotos aus deinen Rollen mit diesem Film.</p>
     <div class="diarytags">${DIARY_TAGS.map(card).join('')}</div>`;
   let tmr = null;
   wireRate(view, 'dRate', () => d.rate ?? null, async v => { if (v == null) delete d.rate; else d.rate = v; d.notes = view.querySelector('#dNotes').value; await save(); });
   view.querySelector('#dNotes').addEventListener('input', e => { d.notes = e.target.value; clearTimeout(tmr); tmr = setTimeout(save, 400); });
-  view.addEventListener('change', async e => {
-    const inp = e.target.closest('input[type=file][data-tag]'); if (!inp) return;
-    const files = [...inp.files]; if (!files.length) return;
-    U.toast(files.length === 1 ? 'Foto wird gespeichert …' : `${files.length} Fotos werden gespeichert …`);
-    for (const f of files) {
-      try { const rec = await U.storeImage(f, 'diary'); d.photos.push({ imgId: rec.id, tag: inp.dataset.tag, at: new Date().toISOString() }); }
-      catch (err) { U.toast('Bild konnte nicht gelesen werden'); }
-    }
-    clearTimeout(tmr); d.notes = view.querySelector('#dNotes').value;
-    await save(); U.toast('Im Filmtagebuch gespeichert'); route();
-  });
   view.addEventListener('click', async e => {
+    const add = e.target.closest('[data-add]');
+    if (add) {
+      const tag = add.dataset.add;
+      clearTimeout(tmr); d.notes = view.querySelector('#dNotes').value;
+      openDiaryPicker(stockId, d.photos.filter(p => p.tag === tag).map(p => p.imgId), async ids => {
+        // v222: nur verknüpfen, kein zweites Bild. Abgewählte verknüpfte Fotos fallen aus dieser Lichtsituation heraus.
+        d.photos = d.photos.filter(p => p.tag !== tag || !p.ref || ids.includes(p.imgId));
+        const have = new Set(d.photos.filter(p => p.tag === tag).map(p => p.imgId));
+        ids.filter(id => !have.has(id)).forEach(id => d.photos.push({ imgId: id, tag, ref: true, at: new Date().toISOString() }));
+        await save(); route();
+      });
+      return;
+    }
     const del = e.target.closest('[data-del]');
     if (del) {
       const before = [...d.photos], id = del.dataset.del;
       d.photos = d.photos.filter(p => p.imgId !== id); await save(); route();
-      U.undo('Foto entfernt', async () => { d.photos = before; await save(); route(); }, () => deleteImage(id));
+      const ref = before.find(p => p.imgId === id)?.ref;
+      U.undo('Foto entfernt', async () => { d.photos = before; await save(); route(); }, () => { if (!ref) return deleteImage(id); });
       return;
     }
     const img = e.target.closest('img[data-img]');
@@ -135,4 +140,34 @@ async function diaryFoldHtml() {
 }
 function setupDiaryFold(root) {
   root.querySelector('#addDiary')?.addEventListener('click', () => openStockPicker(id => { location.hash = '#/tagebuch/' + id; }));
+}
+
+/* v222: Fotos aus den eigenen Rollen mit diesem Film auswählen. Das Tagebuch speichert nur einen Verweis (ref) auf das Bild. */
+async function openDiaryPicker(stockId, chosenIds, onDone) {
+  const rolls = (await DB.all('rolls')).filter(r => r.stockId === stockId).sort((a, b) => String(b.loadedAt || '').localeCompare(String(a.loadedAt || '')));
+  const groups = [];
+  for (const r of rolls) { const fs = (await framesOf(r.id)).filter(f => f.imgId); if (fs.length) groups.push([r, fs]); }
+  if (!groups.length) { U.toast('Noch keine Fotos mit diesem Film'); return; }
+  const chosen = new Set(chosenIds), own = [], urls = new Map();
+  await Promise.all(groups.flatMap(([, fs]) => fs).map(async f => { const rec = await DB.get('images', f.imgId); const b = rec && U.recBlob(rec, true); if (b) { const u = URL.createObjectURL(b); own.push(u); urls.set(f.imgId, u); } }));
+  const ov = document.createElement('div'); ov.className = 'cspv storypick diarypick';
+  ov.innerHTML = `<div class="spgrid">${groups.map(([r, fs]) => `<div class="sproll">${U.esc(r.title || U.fmtDate(String(r.loadedAt || '').slice(0, 10)) || 'Rolle')}</div>${fs.filter(f => urls.has(f.imgId)).map(f => `<button type="button" class="spph" data-i="${f.imgId}"><img src="${urls.get(f.imgId)}" alt="" draggable="false"><span class="spnum">${U.esc(String(frameLabel(f)))}</span><span class="spck" aria-hidden="true">${ART.check}</span></button>`).join('')}`).join('')}</div>
+    <div class="cspvfoot"><button class="closex" id="dpX" aria-label="Abbrechen">${ART.x}</button>
+    <span class="sub2 mcount" id="dpN"></span>
+    <button class="cspvshare" id="dpOk" aria-label="Übernehmen">${ART.check}</button></div>`;
+  document.body.appendChild(ov);
+  const close = () => { ov.remove(); setTimeout(() => own.forEach(u => URL.revokeObjectURL(u)), 1000); };
+  const draw = () => {
+    ov.querySelectorAll('.spph').forEach(b => b.classList.toggle('on', chosen.has(b.dataset.i)));
+    ov.querySelector('#dpN').textContent = chosen.size ? `${chosen.size} gewählt` : '';
+  };
+  ov.querySelector('.spgrid').addEventListener('click', e => {
+    const b = e.target.closest('.spph'); if (!b) return;
+    const id = b.dataset.i; chosen.has(id) ? chosen.delete(id) : chosen.add(id);
+    U.haptic && U.haptic(8); draw();
+  });
+  ov.querySelector('#dpX').onclick = close;
+  ov.querySelector('#dpOk').onclick = async () => { await onDone([...chosen]); close(); };
+  window.addEventListener('hashchange', close, { once: true });
+  draw();
 }
