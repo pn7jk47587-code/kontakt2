@@ -762,3 +762,7 @@ Die Zuordnung aus v218 ist ersetzt. Das Fenster hat jetzt zwei Spalten, die jede
 Tippe ein Foto an und dann die Beschreibung, zu der es gehört. Umgekehrt geht es auch. Jedes Foto trägt oben links die Nummer seiner Beschreibung, jede Beschreibung zeigt ihr Foto klein neben der Nummer. Geänderte Nummern sind farbig. Hatte die Beschreibung vorher ein anderes Foto, bekommt dieses ein gelbes Fragezeichen und wartet auf seine Zuordnung. Beschreibungen ohne Foto haben einen gelb gestrichelten Rahmen.
 
 „Alle lösen“ nimmt alle Zuordnungen weg, dann ordnest du von vorn zu. Mit dem Haken wird gespeichert. Fotos, die dann noch ein Fragezeichen haben, kommen auf Bilder ohne Beschreibung oder hinten an.
+
+## v220: Filme im Filmtagebuch bewerten
+
+Im Filmtagebuch lässt sich jeder Film auf der Lichtpunkte-Skala von −5 bis +5 bewerten. Die Punkte stehen über „Deine Erfahrungen“. Ein zweites Antippen derselben Stufe entfernt die Bewertung wieder. Die Bewertung erscheint in der Tagebuchliste, in der Karte im Profil und im Reiter „Rolle“ neben dem Filmnamen. Ein Film mit Bewertung, aber ohne Notizen und Fotos, bleibt als Tagebucheintrag erhalten.

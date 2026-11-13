@@ -9,7 +9,9 @@ const DIARY_BACK = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden=
 const diaryKey = stockId => 'diary:' + stockId;
 async function getDiary(stockId) { return (await DB.get('meta', diaryKey(stockId))) || { id: diaryKey(stockId), stockId, notes: '', photos: [] }; }
 async function allDiaries() { return (await DB.all('meta')).filter(m => String(m.id).startsWith('diary:')); }
-const diaryHas = d => !!(d && ((d.notes || '').trim() || (d.photos || []).length));
+const diaryHas = d => !!(d && ((d.notes || '').trim() || (d.photos || []).length || d.rate != null));
+// v220: Kurzzeile unter dem Filmnamen, mit Bewertung auf der Lichtpunkte-Skala
+const diarySub = d => { const n = (d.photos || []).length; return [d.rate != null ? fmtRate(d.rate) : '', n ? `${n} ${n === 1 ? 'Foto' : 'Fotos'}` : '', (d.notes || '').trim() ? 'mit Notizen' : ''].filter(Boolean).join(' · '); };
 
 // Zurück geht jetzt über den Pfeil oben links in der Kopfzeile
 function diaryBackBtn() {}
@@ -23,7 +25,7 @@ async function viewDiaryList() {
     const st = stocks.get(d.stockId);
     const n = (d.photos || []).length;
     return `<a class="item diaryrow" href="#/tagebuch/${d.stockId}"><span class="stockart">${await filmArt(st, 44)}</span>
-      <span><b>${U.esc(U.stockLabel(st) || 'Unbekannter Film')}</b><br><span class="sub2">${n} ${n === 1 ? 'Foto' : 'Fotos'}${(d.notes || '').trim() ? ' · mit Notizen' : ''}</span></span><span class="chev">›</span></a>`;
+      <span><b>${U.esc(U.stockLabel(st) || 'Unbekannter Film')}</b><br><span class="sub2">${diarySub(d)}</span></span><span class="chev">›</span></a>`;
   }));
   view.innerHTML = `
     <p class="hint pad">Halte fest, wie sich ein Film bei dir verhält: Notizen und Beispielfotos nach Lichtsituation. Liegt der Film in der Kamera, siehst du das im Reiter „Rolle“.</p>
@@ -58,10 +60,12 @@ async function viewDiary(stockId) {
   };
   view.innerHTML = `
     <div class="diaryhead"><span class="stockart">${await filmArt(stock, 56)}</span><div><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">ISO ${U.esc(stock.isoLabel || stock.boxIso || '?')}</span></div></div>
-    <div class="card"><label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5">${U.esc(d.notes || '')}</textarea></label></div>
+    <div class="card"><div class="titlefld raterow"><span>Bewertung</span>${rateHtml(d.rate ?? null, 'dRate')}</div>
+      <label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5">${U.esc(d.notes || '')}</textarea></label></div>
     <p class="hint pad">Lade für jede Lichtsituation Fotos hoch, die du mit diesem Film gemacht hast.</p>
     <div class="diarytags">${DIARY_TAGS.map(card).join('')}</div>`;
   let tmr = null;
+  wireRate(view, 'dRate', () => d.rate ?? null, async v => { if (v == null) delete d.rate; else d.rate = v; d.notes = view.querySelector('#dNotes').value; await save(); });
   view.querySelector('#dNotes').addEventListener('input', e => { d.notes = e.target.value; clearTimeout(tmr); tmr = setTimeout(save, 400); });
   view.addEventListener('change', async e => {
     const inp = e.target.closest('input[type=file][data-tag]'); if (!inp) return;
@@ -98,6 +102,7 @@ async function diaryCardHtml(stock) {
   for (const p of photos) th[p.imgId] = await U.imgUrl(p.imgId, true);
   return `<section class="diarycard">
     <h3>Deine Erfahrungen mit ${U.esc(U.stockLabel(stock))}</h3>
+    ${d.rate != null ? `<p class="sub2">Bewertung ${fmtRate(d.rate)}</p>` : ''}
     ${(d.notes || '').trim() ? `<p class="dnotes">${U.esc(d.notes).replace(/\n/g, '<br>')}</p>` : ''}
     ${groups.map(([label, ps]) => `<div class="dgroup"><span class="sub2">${label}</span><div class="dtgrid small">${ps.map(p => `<img src="${th[p.imgId] || ''}" alt="" data-img="${p.imgId}">`).join('')}</div></div>`).join('')}
     ${diaryHas(d) ? '' : '<p class="hint">Noch nichts notiert.</p>'}
@@ -112,7 +117,7 @@ async function diaryFoldHtml() {
   const rows = await Promise.all(list.map(async d => {
     const st = stocks.get(d.stockId), n = (d.photos || []).length;
     return `<a class="crow diaryrow" href="#/tagebuch/${d.stockId}"><span class="frowart">${await filmArt(st, 42)}</span>
-      <span class="frowmain"><span class="frowname">${U.esc(U.stockLabel(st) || 'Unbekannter Film')}</span><span class="frowsub">${n} ${n === 1 ? 'Foto' : 'Fotos'}${(d.notes || '').trim() ? ' · mit Notizen' : ''}</span></span><span class="chev">›</span></a>`;
+      <span class="frowmain"><span class="frowname">${U.esc(U.stockLabel(st) || 'Unbekannter Film')}</span><span class="frowsub">${diarySub(d)}</span></span><span class="chev">›</span></a>`;
   }));
   return `
     <section class="diaryfold fold${foldOpen('diary') ? ' open' : ''}" data-fold="diary">
