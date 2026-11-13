@@ -786,3 +786,7 @@ Neues Abzeichen in der Kategorie Orte. Es zählt alle Fotos mit Koordinaten, als
 ## v224: Kartografin zählt alle Fotos mit Ort
 
 Das Abzeichen Kartografin zählt jetzt jedes Foto mit Ort. Dazu gehören auch Fotos aus archivierten Rollen, also nachträglich hochgeladene, und Fotos, die erst später im Album oder auf der Karte verortet wurden. Ein Bild ohne eigenen Ort zählt ebenfalls, wenn die ganze Rolle einen Ort hat. Bei den übrigen Abzeichen bleiben archivierte Rollen weiter außen vor.
+
+## v225: Story-Auswahl mit großen, ganzen Bildern
+
+In der Bildauswahl für die Instagram Story stehen die Bilder jetzt in zwei Spalten und ungeschnitten, Hochformat und Querformat ganz sichtbar. Bei vielen Bildern scrollt die Liste. Vorher wurden die Kacheln bei langen Rollen flach gedrückt, statt zu scrollen. Die Auswahl der Fotos im Filmtagebuch nutzt dieselbe Ansicht.

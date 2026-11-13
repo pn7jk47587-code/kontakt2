@@ -2666,3 +2666,12 @@ figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; wi
 .diarypick .sproll { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--muted); margin: 8px 2px 0; }
 .diarypick .sproll:first-child { margin-top: 0; }
 button.dtadd { display: flex; align-items: center; justify-content: center; padding: 0; font-family: inherit; }
+
+/* v225: Story-Auswahl, größere ganze Bilder in zwei Spalten, die Liste scrollt */
+.storypick .spgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+.storypick .spph { background: #050608; }
+.storypick .spph img { aspect-ratio: 1; object-fit: contain; }
+.storypick .spgrid { grid-auto-rows: max-content; }
+.storypick .spph { aspect-ratio: 1; }
+.storypick .spph img { width: 100%; height: 100%; }
+.storypick .sproll { align-self: end; }
