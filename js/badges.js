@@ -31,6 +31,7 @@ const BADGES = (() => {
     { id: 'gepard', name: 'Gepard', cls: 'tempo', lv: [1, 5, 10], txt: '{n} {GR} an einem Tag' },
     { id: 'zugvogel', name: 'Zugvogel', cls: 'ort', lv: [7, 15, 30], txt: 'Fotos in {n} Ländern' },
     { id: 'maulwurf', name: 'Maulwurf', cls: 'ort', lv: [1], txt: 'Vier von fünf Fotos im Umkreis von 3 km um Zuhause' },
+    { id: 'kartograf', name: 'Kartografin', cls: 'ort', lv: [100, 500, 1500], txt: '{n} Fotos mit Ort' },
     { id: 'loch', name: 'Bodenloses Loch', cls: 'geld', lv: [1000, 5000, 10000], txt: '{n} € ausgegeben' },
     { id: 'adler', name: 'Pfau', cls: 'geld', lv: [25, 100, 250], txt: '{n} Fotos mit fünf Leuchtpunkten' },
     { id: 'pech', name: 'Pechvogel', cls: 'tempo', lv: [25, 100, 250], txt: '{n} Fotos mit −3 oder schlechter' },
@@ -47,7 +48,8 @@ const BADGES = (() => {
     leck: ['Lightleakerin', 'Lightleaker', 'Lightleaker*in'],
     alchemist: ['Alchemistin', 'Alchemist', 'Alchemist*in'],
     doppel: ['Doppelgängerin', 'Doppelgänger', 'Doppelgänger*in'],
-    archiv: ['Archivarin', 'Archivar', 'Archivar*in']
+    archiv: ['Archivarin', 'Archivar', 'Archivar*in'],
+    kartograf: ['Kartografin', 'Kartograf', 'Kartograf*in']
   };
   for (const d of DEF) if (FORMS[d.id]) Object.defineProperty(d, 'name', { get: () => FORMS[d.id][{ f: 0, m: 1 }[typeof PROFILE !== 'undefined' && PROFILE?.gender] ?? 2] });
   const BIG_MAKERS = [/kodak/i, /fuji/i, /ilford|harman|kentmere/i, /foma/i, /agfa/i, /cinestill/i, /orwo|wolfen/i];
@@ -116,6 +118,7 @@ const BADGES = (() => {
     // Orte
     v.zugvogel = new Set(frames.map(f => f.placeCC).filter(Boolean)).size;
     const loc = frames.filter(f => f.placeLat != null);
+    v.kartograf = loc.length;   // v223: Fotos mit Koordinaten
     if (loc.length >= 50) {
       const home = await DB.get('meta', 'home');
       let hLa, hLo;

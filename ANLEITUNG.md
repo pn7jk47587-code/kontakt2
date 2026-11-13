@@ -778,3 +778,7 @@ Der Haken erzeugt ein PNG mit 1080 × 1920 Pixeln. Die Bilder liegen darauf als 
 Das Plus bei einer Lichtsituation lädt keine Datei mehr hoch. Es öffnet alle Fotos, die in der App auf Rollen mit diesem Film liegen, nach Rolle gruppiert, die neueste oben. Tippe die passenden Fotos an und bestätige mit dem Haken. Abgewählte Fotos verschwinden wieder aus dieser Lichtsituation.
 
 Das Tagebuch speichert nur einen Verweis auf das Foto der Rolle, kein zweites Bild. Das spart Speicher. Entfernst du ein Foto aus dem Tagebuch, bleibt es in der Rolle erhalten. Löschst du das Foto in der Rolle, verschwindet es auch aus dem Tagebuch. Früher hochgeladene Tagebuchfotos bleiben wie bisher erhalten.
+
+## v223: Abzeichen Kartografin
+
+Neues Abzeichen in der Kategorie Orte. Es zählt alle Fotos mit Koordinaten, also mit Ort aus dem Handyfoto, der Karte oder der Ortssuche. Stufe 1 gibt es ab 100 Fotos mit Ort, Stufe 2 ab 500, Stufe 3 ab 1.500. Archivierte Rollen zählen wie bei den anderen Abzeichen nicht mit. Die Bezeichnung richtet sich nach der Anrede im Profil: Kartografin, Kartograf oder Kartograf*in. Das Symbol zeigt eine gefaltete Karte mit Ortsnadel.
