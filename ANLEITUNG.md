@@ -814,3 +814,14 @@ Die Knöpfe oben im Album werden bei Bedarf etwas kleiner, damit alle in eine Re
 Fehler behoben: Wer im Filmtagebuch erst einen Film und danach einen anderen öffnete, etwa Harman Phoenix 200 und dann Phoenix II, dem schrieb die App beim Hinzufügen von Fotos die Notizen und Fotos des zweiten Films auch in den Eintrag des ersten. Der erste Eintrag sah danach aus wie eine Kopie. Ursache war, dass die Seite eines Films nach dem Wechsel unsichtbar weiter auf Tipps reagierte. Jede Filmseite reagiert jetzt nur noch auf sich selbst.
 
 Ein bereits überschriebener Eintrag lässt sich in der App nicht zurückholen. Den alten Text gibt es nur noch in einer Sicherung von vor dem Überschreiben.
+
+## v229: Albumleiste mit vier Symbolen
+
+Oben im Album stehen jetzt vier Symbole statt sieben. Drei davon öffnen ihre Unterpunkte als Symbolsäule unten rechts am Rand. Ein Tipp daneben schließt sie wieder.
+
+1. Plus: Scans nachtragen oder Handyfotos zuordnen.
+2. Pfeile mit Linien (Ordnen): Fotos samt Angaben verschieben oder Scans neu den Beschreibungen zuordnen.
+3. Ortsnadel: Ort für mehrere Fotos, unverändert direkt.
+4. Teilen: Contact Sheet, Instagram Story oder Instagram-Beitrag.
+
+Die Instagram Story steht nicht mehr im Contact-Sheet-Fenster, sie liegt jetzt unter Teilen. Hell oder Dunkel lässt sich in der Story-Vorschau umschalten, Markierungen folgen der letzten Wahl beim Contact Sheet. Im Sortier- und im Ortsmodus steht oben nur der Knopf, der den Modus beendet.

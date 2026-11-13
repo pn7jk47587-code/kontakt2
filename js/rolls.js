@@ -1859,7 +1859,7 @@ async function viewAlbum(id) {
     <div class="albhead">${filmCircle}
       ${d.roll ? `<label class="rollname albname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : '<span class="albname"></span>'}
     </div>
-    <div class="albtools">${ALBUM_SORT || ALBUM_PICK ? '' : sheetBtn + addPhotosBtn + phoneBtn}${d.roll && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort für mehrere Fotos festlegen" title="Ort für mehrere Fotos">${PIN_IC}</button>` : ''}${d.roll && !ALBUM_SORT && !ALBUM_PICK ? `<button type="button" class="roundic" id="albMatch" aria-label="Scans den Beschreibungen zuordnen" title="Zuordnung korrigieren">${MATCH_IC}</button>` : ''}${d.roll && !ALBUM_SORT && !ALBUM_PICK ? `<button type="button" class="roundic" id="albInsta" aria-label="Instagram-Beitrag testen" title="Instagram-Beitrag">${INSTA_IC}</button>` : ''}${d.frames.length > 1 && !ALBUM_PICK ? `<button type="button" class="roundic${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}" aria-label="Reihenfolge ändern" title="Reihenfolge">${MOVE_IC}</button>` : ''}</div>
+    <div class="albtools">${albumToolsHtml(d, sheetBtn, addPhotosBtn, phoneBtn)}</div>
     ${ALBUM_PICK ? '<p class="hint pad sorthint">Tippe die Fotos an, die denselben Ort bekommen sollen.</p>' : ''}
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
     <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
@@ -1869,6 +1869,8 @@ async function viewAlbum(id) {
   wireAdd();
   view.querySelector('#albSheet')?.addEventListener('click', () => openContactSheet(id));
   view.querySelector('#albInsta')?.addEventListener('click', () => openInstaPost(d.roll.id));
+  view.querySelector('#albStory')?.addEventListener('click', () => openStoryFlow(d.roll.id));
+  view.querySelectorAll('.albgrp').forEach(g => g.addEventListener('click', () => openAlbumGroup(g)));
   view.querySelector('#albMatch')?.addEventListener('click', () => openMatcher(d.roll, async () => { const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y); }));
   view.querySelector('#albPhone')?.addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(d.roll, files); });
   // Ort für mehrere Fotos: Auswahlmodus, dann Ort aus der Liste, auf der Karte oder per Standort
@@ -1948,6 +1950,44 @@ function fitChipRows(root) {
 }
 const FILTER_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9.5" cy="12" r="6"/><circle cx="14.5" cy="12" r="6"/></svg>';
 const FLASH_TOG_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z"/></svg>';
+// v229: Albumleiste mit vier Symbolen. Hinzufügen, Ordnen und Teilen öffnen ihre Unterpunkte als Symbole unten rechts.
+// Die eigentlichen Knöpfe bleiben unsichtbar im Album, damit ihre Handler unverändert greifen.
+const ALB_ADD_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+const ALB_ORDER_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M4 12h9M4 17h9"/><path d="M18 4v16M15.5 6.5 18 4l2.5 2.5M15.5 17.5 18 20l2.5-2.5"/></svg>';
+const ALB_STORY_IC = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M9 8h2.6v2.6H9zM12.4 8H15v2.6h-2.4zM9 11.8h2.6v2.6H9zM12.4 11.8H15v2.6h-2.4z" stroke-width="1.4"/></svg>';
+function albumToolsHtml(d, sheetBtn, addPhotosBtn, phoneBtn) {
+  const r = d.roll, many = d.frames.length > 1;
+  const pick = r && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort für mehrere Fotos festlegen" title="Ort für mehrere Fotos">${PIN_IC}</button>` : '';
+  const sort = many && !ALBUM_PICK ? `<button type="button" class="roundic${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}" aria-label="Reihenfolge ändern" title="Reihenfolge">${MOVE_IC}</button>` : '';
+  // Im Sortier- oder Ortsmodus steht nur der Knopf, der den Modus wieder beendet
+  if (ALBUM_SORT) return sort;
+  if (ALBUM_PICK) return pick;
+  const match = r ? `<button type="button" class="roundic" id="albMatch" aria-label="Scans den Beschreibungen zuordnen" title="Zuordnung korrigieren">${MATCH_IC}</button>` : '';
+  const story = r ? `<button type="button" class="roundic" id="albStory" aria-label="Instagram Story" title="Instagram Story">${ALB_STORY_IC}</button>` : '';
+  const insta = r ? `<button type="button" class="roundic" id="albInsta" aria-label="Instagram-Beitrag testen" title="Instagram-Beitrag">${INSTA_IC}</button>` : '';
+  const grp = (k, ic, label, items) => items.filter(Boolean).length ? `<button type="button" class="roundic albgrp" data-grp="${k}" aria-label="${label}" title="${label}">${ic}</button><span class="albsub" data-sub="${k}" hidden>${items.join('')}</span>` : '';
+  return grp('add', ALB_ADD_IC, 'Hinzufügen', [addPhotosBtn, phoneBtn])
+    + grp('order', ALB_ORDER_IC, 'Ordnen', [sort, match])
+    + pick
+    + grp('share', SHARE_IC, 'Teilen', [sheetBtn, story, insta]);
+}
+// Unterpunkte als Symbolsäule unten rechts. Die Symbole sind die echten Knöpfe, sie wandern für die Zeit des Menüs dorthin.
+function openAlbumGroup(btn) {
+  const sub = btn.nextElementSibling; if (!sub || !sub.classList.contains('albsub')) return;
+  const home = sub.parentElement, next = sub.nextSibling;
+  const ov = document.createElement('div'); ov.className = 'albpop';
+  const col = document.createElement('div'); col.className = 'albpopcol';
+  [...sub.children].forEach((el, i) => { el.style.setProperty('--i', i); col.appendChild(el); });
+  ov.appendChild(col); document.body.appendChild(ov);
+  btn.classList.add('on'); U.haptic && U.haptic(8);
+  const close = () => { if (!ov.isConnected) return; [...col.children].forEach(el => sub.appendChild(el)); home.insertBefore(sub, next); ov.remove(); btn.classList.remove('on'); };
+  ov.addEventListener('click', e => { if (e.target === ov) close(); });
+  // Ein Tipp auf einen Unterpunkt löst ihn aus, danach schließt das Menü. Datei-Knöpfe schließen erst nach der Auswahl.
+  col.addEventListener('click', e => { if (e.target.closest('label')) { setTimeout(close, 400); return; } if (e.target.closest('button')) setTimeout(close, 0); });
+  col.addEventListener('change', () => setTimeout(close, 0));
+  window.addEventListener('hashchange', close, { once: true });
+}
+
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
 function placeFieldHtml(id, value, cls = 'fld', obj = null) {

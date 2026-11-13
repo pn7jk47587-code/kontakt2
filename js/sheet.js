@@ -389,6 +389,18 @@ async function makeStorySheet(rollId, frameIds, theme = 'dark', favMark = '') {
   return { blob: png, name, pages: 1, previews: [c.toDataURL('image/jpeg', 0.85)], pngs: [png], ratio: SW / SH, story: true };
 }
 
+// v229: Story direkt aus dem Album (Teilen). Hell oder Dunkel und Markieren wie zuletzt beim Contact Sheet.
+async function openStoryFlow(rollId) {
+  let theme = 'dark', fav = '';
+  try { theme = localStorage.getItem('kb-cs-theme') || 'dark'; fav = localStorage.getItem('kb-cs-fav') ? 'mix' : ''; } catch (_) {}
+  openStoryPicker(rollId, async ids => {
+    const res = await makeStorySheet(rollId, ids, theme, fav);
+    res.theme = theme;
+    res.retheme = async t => { try { localStorage.setItem('kb-cs-theme', t); } catch (_) {} return makeStorySheet(rollId, ids, t, fav); };
+    openSheetPreview(res);
+  });
+}
+
 // Bilder für die Story antippen. Vorgewählt sind die mit +4 und +5, höchstens 12.
 // v227: auch für den Instagram-Beitrag (opts.max, opts.preset: schon gewählte Bild-IDs)
 async function openStoryPicker(rollId, onPick, opts = {}) {
@@ -455,7 +467,6 @@ function openContactSheet(rollId) {
     <div class="csopts">
       <button type="button" class="csopt" data-p="a4"><span class="cspage a4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>A4 hoch</b></button>
       <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b></button>
-      <button type="button" class="csopt" data-p="story"><span class="cspage story"><i></i><i></i><i></i></span><b>Story</b></button>
     </div>
     <div class="seggroup cstheme csper" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
@@ -467,6 +478,7 @@ function openContactSheet(rollId) {
   const get = k => { try { return localStorage.getItem(k); } catch (_) { return null; } };
   const put = (k, v) => { try { localStorage.setItem(k, v); } catch (_) {} };
   const sel = { p: get('kb-cs-paper'), t: get('kb-cs-theme'), r: get('kb-cs-per') };
+  if (sel.p === 'story') sel.p = null;   // v229: Story liegt jetzt unter Teilen im Album
   // Favoriten umkreisen: freiwillig, nur sichtbar, wenn die Rolle Fotos mit +5 hat
   let fm = get('kb-cs-fav') ? 'mix' : '';   // frühere Werte (wax, box …) gelten als „Markieren“
   albumData(rollId).then(d => {
@@ -493,10 +505,6 @@ function openContactSheet(rollId) {
   paint();
   go.onclick = async () => {
     const favm = ov.querySelector('.csfav').hidden ? '' : fm;
-    if (sel.p === 'story') {
-      openStoryPicker(rollId, async ids => { const res = await makeStorySheet(rollId, ids, sel.t, favm); openSheetPreview(res, () => ov.remove()); });
-      return;
-    }
     const all = ov.querySelectorAll('button'); all.forEach(x => x.disabled = true);
     stEl.textContent = 'PDF wird erstellt …';
     try {
@@ -512,17 +520,26 @@ const SHARE_IC = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="t
 // Vorschau aller Seiten. X führt zurück zur Auswahl, der Teilen-Knopf öffnet Teilen bzw. Sichern.
 // Das Teilen startet erst auf diesen Tipp hin, so bleibt die Nutzergeste für navigator.share frisch.
 function openSheetPreview(res, onDone) {
-  const { blob, name, pages, previews, pngs, ratio, story } = res;
+  let { blob, name, pages, previews, pngs, ratio, story } = res;
   let fmt = 'pdf';
   try { if (localStorage.getItem('kb-cs-fmt') === 'png') fmt = 'png'; } catch (_) {}
   if (story) fmt = 'png';
   const ov = document.createElement('div'); ov.className = 'cspv' + (story ? ' storypv' : '');
   ov.innerHTML = `<div class="cspvpages">${previews.map((u, i) => `<img src="${u}" alt="Seite ${i + 1} von ${pages}" style="aspect-ratio:${ratio}">`).join('')}</div>
     <div class="cspvfoot"><button class="closex" id="pvBack" aria-label="Zurück">${ART.x}</button>
-    ${story ? '' : '<div class="seggroup cspvfmt" role="group" aria-label="Dateiformat"><button type="button" class="seg" data-x="pdf">PDF</button><button type="button" class="seg" data-x="png">PNG</button></div>'}
+    ${story ? (res.retheme ? `<div class="seggroup cspvfmt" role="group" aria-label="Papier"><button type="button" class="seg" data-st="light">Hell</button><button type="button" class="seg" data-st="dark">Dunkel</button></div>` : '') : '<div class="seggroup cspvfmt" role="group" aria-label="Dateiformat"><button type="button" class="seg" data-x="pdf">PDF</button><button type="button" class="seg" data-x="png">PNG</button></div>'}
     <button class="cspvshare" id="pvShare" aria-label="Teilen oder sichern">${SHARE_IC}</button></div>`;
   document.body.appendChild(ov);
   const paint = () => ov.querySelectorAll('[data-x]').forEach(x => x.classList.toggle('on', x.dataset.x === fmt));
+  // v229: Story hell oder dunkel, neu gezeichnet
+  let th = res.theme;
+  const paintSt = () => ov.querySelectorAll('[data-st]').forEach(x => x.classList.toggle('on', x.dataset.st === th));
+  ov.querySelectorAll('[data-st]').forEach(x => x.onclick = async () => {
+    if (x.dataset.st === th) return; th = x.dataset.st; paintSt();
+    const r2 = await res.retheme(th);
+    ({ blob, pngs, previews } = r2); ov.querySelector('.cspvpages img').src = previews[0];
+  });
+  paintSt();
   ov.querySelectorAll('[data-x]').forEach(x => x.onclick = () => { fmt = x.dataset.x; try { localStorage.setItem('kb-cs-fmt', fmt); } catch (_) {} paint(); });
   paint();
   ov.querySelector('#pvBack').onclick = () => ov.remove();
