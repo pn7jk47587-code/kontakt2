@@ -390,10 +390,11 @@ async function makeStorySheet(rollId, frameIds, theme = 'dark', favMark = '') {
 }
 
 // Bilder für die Story antippen. Vorgewählt sind die mit +4 und +5, höchstens 12.
-async function openStoryPicker(rollId, onPick) {
+// v227: auch für den Instagram-Beitrag (opts.max, opts.preset: schon gewählte Bild-IDs)
+async function openStoryPicker(rollId, onPick, opts = {}) {
   const d = await albumData(rollId);
-  const frames = d.frames.filter(f => f.imgId), MAX = 12;
-  const chosen = new Set(frames.filter(f => f.rate >= 4).slice(0, MAX).map(f => f.id));
+  const frames = d.frames.filter(f => f.imgId), MAX = opts.max || 12;
+  const chosen = new Set(opts.preset ? opts.preset.filter(id => frames.some(f => f.id === id)) : frames.filter(f => f.rate >= 4).slice(0, MAX).map(f => f.id));
   const own = [];
   const urls = await Promise.all(frames.map(async f => { const rec = await DB.get('images', f.imgId); const b = rec && U.recBlob(rec, true); if (!b) return ''; const u = URL.createObjectURL(b); own.push(u); return u; }));
   const ov = document.createElement('div'); ov.className = 'cspv storypick';
@@ -439,7 +440,7 @@ async function openStoryPicker(rollId, onPick) {
   ov.querySelector('#spX').onclick = close;
   ov.querySelector('#spOk').onclick = async e => {
     const btn = e.currentTarget; btn.disabled = true;
-    const ids = frames.filter(f => chosen.has(f.id)).map(f => f.id);
+    const ids = opts.preset ? [...opts.preset.filter(id => chosen.has(id)), ...frames.filter(f => chosen.has(f.id) && !opts.preset.includes(f.id)).map(f => f.id)] : frames.filter(f => chosen.has(f.id)).map(f => f.id);
     try { await onPick(ids); close(); }
     catch (err) { U.toast(err.message || 'Story konnte nicht erstellt werden'); btn.disabled = false; }
   };

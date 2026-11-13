@@ -796,3 +796,15 @@ In der Bildauswahl für die Instagram Story stehen die Bilder jetzt in zwei Spal
 Über der Fußleiste der Story-Auswahl stehen die gewählten Bilder klein nebeneinander, in der Reihenfolge, in der sie in der Story erscheinen. Ein Tipp auf ein kleines Bild holt es in der Liste ins Bild und lässt es kurz aufleuchten. Die Leiste lässt sich seitlich wischen.
 
 Darüber liegen die Knöpfe „Alle“ und „Keine“ und die Zahl der gewählten Bilder. „Alle“ wählt der Reihe nach bis zu 12 Bilder, mehr passen nicht in eine Story. „Keine“ hebt die ganze Auswahl auf.
+
+## v227: Instagram-Beitrag testen
+
+Im Album einer Rolle gibt es einen neuen Knopf mit gestapelten Bildern. Er plant einen Instagram-Beitrag mit mehreren Bildern.
+
+Beim ersten Öffnen erscheint die Bildauswahl, vorgewählt sind die Bilder mit +4 und +5. Es passen bis zu 20 Bilder in einen Beitrag. Danach zeigt die App oben eine Vorschau wie im Feed: Profilname, das Bild, die Zahl „2/7“ und die Punkte darunter. Wischen oder rechts und links antippen blättert weiter und zurück.
+
+Unter der Vorschau liegen die gewählten Bilder als kleine Kacheln mit Nummer. Eine Kachel lässt sich mit dem Finger an eine andere Stelle ziehen, die übrigen rücken nach. Ein Tipp auf eine Kachel zeigt das Bild in der Vorschau.
+
+Unten lässt sich das Seitenverhältnis wählen: 4:5 hoch, 1:1 oder 1,91:1 quer. Instagram schneidet alle Bilder eines Beitrags auf dasselbe Format zu, die Vorschau zeigt diesen Zuschnitt. „Bilder wählen“ ändert die Auswahl, die Reihenfolge bleibt dabei erhalten. Der Teilen-Knopf gibt die Bilder in der geplanten Reihenfolge weiter, nummeriert ab 01. Reihenfolge und Format bleiben für jede Rolle gespeichert.
+
+Die Knöpfe oben im Album werden bei Bedarf etwas kleiner, damit alle in eine Reihe passen.
