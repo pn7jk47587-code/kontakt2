@@ -2675,3 +2675,17 @@ button.dtadd { display: flex; align-items: center; justify-content: center; padd
 .storypick .spph { aspect-ratio: 1; }
 .storypick .spph img { width: 100%; height: 100%; }
 .storypick .sproll { align-self: end; }
+
+/* v226: Story-Auswahl, gewählte Bilder klein über der Fußleiste */
+.sptray { display: flex; gap: 6px; overflow-x: auto; padding: 8px 14px; border-top: 1px solid var(--line); background: var(--card); scrollbar-width: none; overscroll-behavior: contain; touch-action: pan-x; }
+.sptray::-webkit-scrollbar { display: none; }
+.sptray[hidden] { display: none; }
+.sptray + .cspvfoot { border-top: 0; }
+.sptr { flex: 0 0 auto; width: 46px; height: 46px; padding: 0; border: 0; border-radius: 7px; overflow: hidden; background: #050608; cursor: pointer; box-shadow: 0 0 0 1.5px var(--teal); animation: sptrin .2s ease-out; }
+.sptr img { width: 100%; height: 100%; object-fit: cover; display: block; }
+@keyframes sptrin { from { transform: scale(.6); opacity: 0; } }
+.spph.flash { animation: spflash .9s ease-out; }
+@keyframes spflash { 0%, 40% { box-shadow: 0 0 0 4px #fff; } }
+.spbar { gap: 8px; }
+.spbar #spN { margin-left: auto; }
+.spbar + .sptray { border-top: 0; padding-top: 0; }

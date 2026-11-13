@@ -790,3 +790,9 @@ Das Abzeichen Kartografin zählt jetzt jedes Foto mit Ort. Dazu gehören auch Fo
 ## v225: Story-Auswahl mit großen, ganzen Bildern
 
 In der Bildauswahl für die Instagram Story stehen die Bilder jetzt in zwei Spalten und ungeschnitten, Hochformat und Querformat ganz sichtbar. Bei vielen Bildern scrollt die Liste. Vorher wurden die Kacheln bei langen Rollen flach gedrückt, statt zu scrollen. Die Auswahl der Fotos im Filmtagebuch nutzt dieselbe Ansicht.
+
+## v226: Story-Auswahl mit Leiste der gewählten Bilder, Alle und Keine
+
+Über der Fußleiste der Story-Auswahl stehen die gewählten Bilder klein nebeneinander, in der Reihenfolge, in der sie in der Story erscheinen. Ein Tipp auf ein kleines Bild holt es in der Liste ins Bild und lässt es kurz aufleuchten. Die Leiste lässt sich seitlich wischen.
+
+Darüber liegen die Knöpfe „Alle“ und „Keine“ und die Zahl der gewählten Bilder. „Alle“ wählt der Reihe nach bis zu 12 Bilder, mehr passen nicht in eine Story. „Keine“ hebt die ganze Auswahl auf.

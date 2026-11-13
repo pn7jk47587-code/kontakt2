@@ -398,15 +398,22 @@ async function openStoryPicker(rollId, onPick) {
   const urls = await Promise.all(frames.map(async f => { const rec = await DB.get('images', f.imgId); const b = rec && U.recBlob(rec, true); if (!b) return ''; const u = URL.createObjectURL(b); own.push(u); return u; }));
   const ov = document.createElement('div'); ov.className = 'cspv storypick';
   ov.innerHTML = `<div class="spgrid">${frames.map((f, i) => `<button type="button" class="spph" data-f="${f.id}"><img src="${urls[i]}" alt="" draggable="false"><span class="spnum">${U.esc(String(frameLabel(f)))}</span><span class="spck" aria-hidden="true">${ART.check}</span></button>`).join('')}</div>
+    <div class="matchbar spbar"><button type="button" class="btn ghost small" id="spAll">Alle</button><button type="button" class="btn ghost small" id="spNone">Keine</button><span class="sub2" id="spN"></span></div>
+    <div class="sptray" id="spTray" hidden></div>
     <div class="cspvfoot"><button class="closex" id="spX" aria-label="Abbrechen">${ART.x}</button>
-    <span class="sub2 mcount" id="spN"></span>
     <button class="cspvshare" id="spOk" aria-label="Story erstellen">${ART.check}</button></div>`;
   document.body.appendChild(ov);
   const close = () => { ov.remove(); setTimeout(() => own.forEach(u => URL.revokeObjectURL(u)), 1000); };
   const draw = () => {
     ov.querySelectorAll('.spph').forEach(b => b.classList.toggle('on', chosen.has(b.dataset.f)));
     ov.querySelector('#spN').textContent = `${chosen.size} von ${MAX}`;
+    // v226: gewählte Bilder klein über der Fußleiste, in der Reihenfolge der Story
+    const tray = ov.querySelector('#spTray'), sel = frames.map((f, i) => [f, urls[i]]).filter(([f]) => chosen.has(f.id));
+    tray.hidden = !sel.length;
+    tray.innerHTML = sel.map(([f, u]) => `<button type="button" class="sptr" data-t="${f.id}" aria-label="Bild ${U.esc(String(frameLabel(f)))} zeigen"><img src="${u}" alt="" draggable="false"></button>`).join('');
     ov.querySelector('#spOk').disabled = !chosen.size;
+    ov.querySelector('#spNone').disabled = !chosen.size;
+    ov.querySelector('#spAll').disabled = chosen.size >= Math.min(MAX, frames.length);
   };
   ov.querySelector('.spgrid').addEventListener('click', e => {
     const b = e.target.closest('.spph'); if (!b) return;
@@ -416,6 +423,19 @@ async function openStoryPicker(rollId, onPick) {
     else { U.toast(`Höchstens ${MAX} Bilder`); return; }
     U.haptic && U.haptic(8); draw();
   });
+  // Antippen in der Leiste holt das Bild in der Liste ins Bild
+  ov.querySelector('#spTray').addEventListener('click', e => {
+    const t = e.target.closest('.sptr'); if (!t) return;
+    const b = ov.querySelector(`.spph[data-f="${t.dataset.t}"]`);
+    if (b) { b.scrollIntoView({ block: 'center', behavior: 'smooth' }); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); }
+  });
+  // v226: alle (höchstens 12, der Reihe nach) oder keine
+  ov.querySelector('#spAll').onclick = () => {
+    for (const f of frames) { if (chosen.size >= MAX) break; chosen.add(f.id); }
+    if (frames.length > MAX) U.toast(`Höchstens ${MAX} Bilder`);
+    U.haptic && U.haptic(10); draw();
+  };
+  ov.querySelector('#spNone').onclick = () => { chosen.clear(); U.haptic && U.haptic(8); draw(); };
   ov.querySelector('#spX').onclick = close;
   ov.querySelector('#spOk').onclick = async e => {
     const btn = e.currentTarget; btn.disabled = true;
