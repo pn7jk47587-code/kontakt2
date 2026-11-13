@@ -3,7 +3,8 @@
    Gespeichert in „meta“ unter igpost:<Rollen-ID>, damit die Reihenfolge beim nächsten Öffnen noch da ist. */
 const INSTA_IC = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="15" rx="2"/><path d="M2.5 6v10M21.5 6v10"/><circle cx="9.5" cy="21" r=".6" fill="currentColor"/><circle cx="12" cy="21" r=".6" fill="currentColor"/><circle cx="14.5" cy="21" r=".6" fill="currentColor"/></svg>';
 const IG_MAX = 20;
-const IG_RATIOS = [['45', '4:5', 4 / 5], ['11', '1:1', 1], ['191', '1,91:1', 1.91]];
+// v231: Instagram erlaubt laut den Anleitungen von 2026 1,91:1 bis 3:4 (3:4 neu, 1080 × 1440). Alle Bilder eines Beitrags bekommen dasselbe Format.
+const IG_RATIOS = [['34', '3:4', 3 / 4], ['45', '4:5', 4 / 5], ['11', '1:1', 1], ['191', '1,91:1', 1.91]];
 
 async function openInstaPost(rollId) {
   const key = 'igpost:' + rollId;
