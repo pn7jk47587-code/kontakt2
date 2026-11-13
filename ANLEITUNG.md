@@ -766,3 +766,9 @@ Tippe ein Foto an und dann die Beschreibung, zu der es gehört. Umgekehrt geht e
 ## v220: Filme im Filmtagebuch bewerten
 
 Im Filmtagebuch lässt sich jeder Film auf der Lichtpunkte-Skala von −5 bis +5 bewerten. Die Punkte stehen über „Deine Erfahrungen“. Ein zweites Antippen derselben Stufe entfernt die Bewertung wieder. Die Bewertung erscheint in der Tagebuchliste, in der Karte im Profil und im Reiter „Rolle“ neben dem Filmnamen. Ein Film mit Bewertung, aber ohne Notizen und Fotos, bleibt als Tagebucheintrag erhalten.
+
+## v221: Contact Sheet als Instagram Story
+
+Im Contact-Sheet-Fenster gibt es neben A4 hoch und A5 quer die Option „Story“. Wähle Hell oder Dunkel und tippe auf den Haken. Danach erscheinen alle Bilder der Rolle im Raster. Tippe die Bilder an, die in die Story sollen, höchstens 12. Bilder mit +4 und +5 sind schon vorgewählt.
+
+Der Haken erzeugt ein PNG mit 1080 × 1920 Pixeln. Die Bilder liegen darauf als kurze Filmstreifen mit Filmname und Bildnummern, wie auf dem Contact Sheet. Die App wählt 1, 2 oder 3 Bilder je Reihe, je nachdem, wobei die Bilder am größten werden. Oben und unten bleibt Platz für die Bedienelemente von Instagram. Mit „Markieren“ erscheinen die Wachsstift-Markierungen auch in der Story. Über den Teilen-Knopf lässt sich das Bild direkt an Instagram geben oder sichern.

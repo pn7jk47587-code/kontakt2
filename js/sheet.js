@@ -347,6 +347,85 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
   return { blob: doc.output('blob'), name, pages, previews, pngs, ratio: P.w / P.h };
 }
 
+// v221: Instagram Story. Ausgewählte Bilder als kurze Filmstreifen im Raster, 1080 × 1920 Pixel.
+// Gezeichnet mit drawSheetPage auf einer Seite von 270 pt Breite in vierfacher Auflösung,
+// danach mittig auf die Story gesetzt. Oben und unten bleibt Platz für die Bedienelemente von Instagram.
+async function makeStorySheet(rollId, frameIds, theme = 'dark', favMark = '') {
+  const d = await albumData(rollId);
+  const pick = d.frames.filter(f => frameIds.includes(f.id));
+  if (!pick.length) throw new Error('Keine Bilder gewählt');
+  const r = d.roll, st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
+  const square = r?.format === '120' || r?.format === 'gross' || /6x6|120/.test(String(st?.format || r?.format || ''));
+  const n = pick.length;
+  const imgs = await sheetImages(pick);
+  const items = imgs.map(x => ({ ...x, n: frameLabel(x.f) }));
+  const SW = 1080, SH = 1920, s = 4, Wpt = SW / s, maxH = SH / s - 2 * 62;   // 62 pt ≈ 250 px frei oben und unten
+  // 1 bis 3 Bilder je Reihe: genommen wird die Aufteilung mit den größten Bildern
+  const fit = per => {
+    const k = Math.ceil(n / per);
+    let L = sheetLayout({ w: Wpt, h: 9999 }, square, per, 0), Hpt = L.topY + k * L.sh + L.m, rows = 0;
+    if (Hpt > maxH) { Hpt = maxH; rows = k; L = sheetLayout({ w: Wpt, h: Hpt }, square, per, rows); }
+    return { per, L, Hpt, rows };
+  };
+  const { per, Hpt, rows } = [1, 2, 3].map(fit).reduce((a, b) => b.L.fw > a.L.fw + 0.5 ? b : a);
+  const strips = []; for (let i = 0; i < items.length; i += per) strips.push(items.slice(i, i + per));
+  const P = { w: Wpt, h: Hpt };
+  const info = {
+    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap: 0, pages: 1, theme, rows,
+    favMark,
+    sub: [U.stockLabel(st), camLabel(cam) || r?.camera || ''].filter(Boolean).join(' · '),
+    count: n === 1 ? '1 Bild' : `${n} Bilder`
+  };
+  await loadEdgeFont();
+  const c = document.createElement('canvas'); c.width = SW; c.height = SH;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+  ctx.fillStyle = (SHEET_THEME[theme] || SHEET_THEME.dark).paper; ctx.fillRect(0, 0, SW, SH);
+  ctx.save(); ctx.translate(0, Math.round((SH - Hpt * s) / 2));
+  drawSheetPage(ctx, P, s, info, strips, 0);
+  ctx.restore();
+  imgs.forEach(x => x.src && x.src.close && x.src.close());
+  const png = await new Promise(res => c.toBlob(res, 'image/png'));
+  const name = `Story ${(info.title || 'Rolle').replace(/[\\/:*?"<>|]+/g, ' ').trim()}.pdf`;
+  return { blob: png, name, pages: 1, previews: [c.toDataURL('image/jpeg', 0.85)], pngs: [png], ratio: SW / SH, story: true };
+}
+
+// Bilder für die Story antippen. Vorgewählt sind die mit +4 und +5, höchstens 12.
+async function openStoryPicker(rollId, onPick) {
+  const d = await albumData(rollId);
+  const frames = d.frames.filter(f => f.imgId), MAX = 12;
+  const chosen = new Set(frames.filter(f => f.rate >= 4).slice(0, MAX).map(f => f.id));
+  const own = [];
+  const urls = await Promise.all(frames.map(async f => { const rec = await DB.get('images', f.imgId); const b = rec && U.recBlob(rec, true); if (!b) return ''; const u = URL.createObjectURL(b); own.push(u); return u; }));
+  const ov = document.createElement('div'); ov.className = 'cspv storypick';
+  ov.innerHTML = `<div class="spgrid">${frames.map((f, i) => `<button type="button" class="spph" data-f="${f.id}"><img src="${urls[i]}" alt="" draggable="false"><span class="spnum">${U.esc(String(frameLabel(f)))}</span><span class="spck" aria-hidden="true">${ART.check}</span></button>`).join('')}</div>
+    <div class="cspvfoot"><button class="closex" id="spX" aria-label="Abbrechen">${ART.x}</button>
+    <span class="sub2 mcount" id="spN"></span>
+    <button class="cspvshare" id="spOk" aria-label="Story erstellen">${ART.check}</button></div>`;
+  document.body.appendChild(ov);
+  const close = () => { ov.remove(); setTimeout(() => own.forEach(u => URL.revokeObjectURL(u)), 1000); };
+  const draw = () => {
+    ov.querySelectorAll('.spph').forEach(b => b.classList.toggle('on', chosen.has(b.dataset.f)));
+    ov.querySelector('#spN').textContent = `${chosen.size} von ${MAX}`;
+    ov.querySelector('#spOk').disabled = !chosen.size;
+  };
+  ov.querySelector('.spgrid').addEventListener('click', e => {
+    const b = e.target.closest('.spph'); if (!b) return;
+    const id = b.dataset.f;
+    if (chosen.has(id)) chosen.delete(id);
+    else if (chosen.size < MAX) chosen.add(id);
+    else { U.toast(`Höchstens ${MAX} Bilder`); return; }
+    U.haptic && U.haptic(8); draw();
+  });
+  ov.querySelector('#spX').onclick = close;
+  ov.querySelector('#spOk').onclick = async e => {
+    const btn = e.currentTarget; btn.disabled = true;
+    const ids = frames.filter(f => chosen.has(f.id)).map(f => f.id);
+    try { await onPick(ids); close(); }
+    catch (err) { U.toast(err.message || 'Story konnte nicht erstellt werden'); btn.disabled = false; }
+  };
+  draw();
+}
+
 // Auswahl: Format, Hell/Dunkel und Bilder je Reihe antippen, erst der Haken erstellt das Sheet.
 // Die letzte Wahl wird vorausgewählt, beim ersten Mal ist nichts gewählt.
 function openContactSheet(rollId) {
@@ -355,8 +434,9 @@ function openContactSheet(rollId) {
     <div class="csopts">
       <button type="button" class="csopt" data-p="a4"><span class="cspage a4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>A4 hoch</b></button>
       <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b></button>
+      <button type="button" class="csopt" data-p="story"><span class="cspage story"><i></i><i></i><i></i></span><b>Story</b></button>
     </div>
-    <div class="seggroup cstheme" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
+    <div class="seggroup cstheme csper" role="group" aria-label="Bilder je Reihe"><button type="button" class="seg" data-r="6">6 je Reihe</button><button type="button" class="seg" data-r="4">4 je Reihe</button></div>
     <div class="seggroup cstheme" role="group" aria-label="Papier"><button type="button" class="seg" data-t="light">Hell</button><button type="button" class="seg" data-t="dark">Dunkel</button></div>
     <div class="seggroup cstheme csfav" role="group" aria-label="Markierungen" hidden><button type="button" class="seg" data-fm="mix"><span class="favdot" aria-hidden="true"></span>Markieren</button><button type="button" class="seg" data-fm="">Ohne</button></div>
     <p class="sub2 csstate" id="csState"></p>
@@ -383,12 +463,19 @@ function openContactSheet(rollId) {
     ov.querySelectorAll('[data-r]').forEach(x => x.classList.toggle('on', x.dataset.r === sel.r));
     ov.querySelectorAll('[data-fm]').forEach(x => x.classList.toggle('on', x.dataset.fm === fm));
     ov.querySelector('.csopts').dataset.t = sel.t || 'dark';
-    go.disabled = !(sel.p && sel.t && sel.r);
+    const story = sel.p === 'story';
+    ov.querySelector('.csper').hidden = story;
+    go.disabled = !(sel.p && sel.t && (sel.r || story));
   };
   [['p', 'kb-cs-paper'], ['t', 'kb-cs-theme'], ['r', 'kb-cs-per']].forEach(([k, key]) =>
     ov.querySelectorAll(`[data-${k}]`).forEach(x => x.onclick = () => { sel[k] = x.dataset[k]; put(key, sel[k]); stEl.textContent = ''; paint(); }));
   paint();
   go.onclick = async () => {
+    const favm = ov.querySelector('.csfav').hidden ? '' : fm;
+    if (sel.p === 'story') {
+      openStoryPicker(rollId, async ids => { const res = await makeStorySheet(rollId, ids, sel.t, favm); openSheetPreview(res, () => ov.remove()); });
+      return;
+    }
     const all = ov.querySelectorAll('button'); all.forEach(x => x.disabled = true);
     stEl.textContent = 'PDF wird erstellt …';
     try {
@@ -404,13 +491,14 @@ const SHARE_IC = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="t
 // Vorschau aller Seiten. X führt zurück zur Auswahl, der Teilen-Knopf öffnet Teilen bzw. Sichern.
 // Das Teilen startet erst auf diesen Tipp hin, so bleibt die Nutzergeste für navigator.share frisch.
 function openSheetPreview(res, onDone) {
-  const { blob, name, pages, previews, pngs, ratio } = res;
+  const { blob, name, pages, previews, pngs, ratio, story } = res;
   let fmt = 'pdf';
   try { if (localStorage.getItem('kb-cs-fmt') === 'png') fmt = 'png'; } catch (_) {}
-  const ov = document.createElement('div'); ov.className = 'cspv';
+  if (story) fmt = 'png';
+  const ov = document.createElement('div'); ov.className = 'cspv' + (story ? ' storypv' : '');
   ov.innerHTML = `<div class="cspvpages">${previews.map((u, i) => `<img src="${u}" alt="Seite ${i + 1} von ${pages}" style="aspect-ratio:${ratio}">`).join('')}</div>
     <div class="cspvfoot"><button class="closex" id="pvBack" aria-label="Zurück">${ART.x}</button>
-    <div class="seggroup cspvfmt" role="group" aria-label="Dateiformat"><button type="button" class="seg" data-x="pdf">PDF</button><button type="button" class="seg" data-x="png">PNG</button></div>
+    ${story ? '' : '<div class="seggroup cspvfmt" role="group" aria-label="Dateiformat"><button type="button" class="seg" data-x="pdf">PDF</button><button type="button" class="seg" data-x="png">PNG</button></div>'}
     <button class="cspvshare" id="pvShare" aria-label="Teilen oder sichern">${SHARE_IC}</button></div>`;
   document.body.appendChild(ov);
   const paint = () => ov.querySelectorAll('[data-x]').forEach(x => x.classList.toggle('on', x.dataset.x === fmt));

@@ -2646,3 +2646,18 @@ figcaption .ppchips .pchip { display: inline-flex !important; flex: 0 0 auto; wi
 .matchbar .sub2 { flex: 1; text-align: right; }
 .matchbar + .cspvfoot { border-top: 0; }
 .matchov .mcount { flex: 1; text-align: center; }
+
+/* v221: Contact Sheet als Instagram Story */
+.csopts { grid-template-columns: repeat(3, 1fr); }
+.cspage.story { width: 40px; height: 72px; justify-content: center; }
+.storypv .cspvpages img { max-width: 380px; }
+.storypick .spgrid { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: calc(14px + env(safe-area-inset-top, 0px)) 14px 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; }
+.spph { position: relative; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: var(--bg2); cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.spph img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; transition: opacity .12s; }
+.spph .spnum { position: absolute; left: 6px; bottom: 6px; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+.spph .spck { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,.85); background: rgba(0,0,0,.25); color: transparent; }
+.spph .spck svg { width: 14px; height: 14px; }
+.spph.on { box-shadow: 0 0 0 3px var(--teal); transform: scale(.96); }
+.spph.on .spck { background: var(--teal); border-color: var(--teal); color: #06202a; }
+.storypick:has(.spph.on) .spph:not(.on) img { opacity: .55; }
+.storypick .mcount { flex: 1; text-align: center; }
