@@ -833,3 +833,7 @@ Fehler behoben: Wer im Album den Ortsmodus mit der Ortsnadel einschaltete und mi
 ## v231: Instagram-Beitrag mit 3:4
 
 Die Formatwahl beim Instagram-Beitrag bietet jetzt 3:4, 4:5, 1:1 und 1,91:1. Instagram nimmt für Beiträge Bilder von 1,91:1 quer bis 3:4 hoch, 3:4 (1080 × 1440 Pixel) ist 2026 dazugekommen. Das Profilraster zeigt Beiträge im Format 3:4, 3:4 erscheint dort also ohne Beschnitt. Alle Bilder eines Beitrags bekommen dasselbe Format. Grundlage sind Anleitungen von Drittanbietern aus Mai und Juni 2026, eine offizielle Seite von Instagram mit diesen Angaben war nicht zu finden.
+
+## v232: Instagram Story ohne Kopfzeile
+
+Die Story zeigt keine Kopfzeile mit Filmname und Bildanzahl mehr. Der Film steht ohnehin am Rand der Streifen. Die Streifen sitzen mittig auf der Story, der frei gewordene Platz kommt den Bildern zugute, wenn sie sonst in der Höhe begrenzt wären. Das Contact Sheet behält seine Kopfzeile.

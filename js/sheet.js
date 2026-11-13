@@ -79,9 +79,11 @@ function drawSheetPage(ctx, P, s, info, strips, page) {
     ctx.fillText(txt, x * s, y * s);
   };
   // Kopfzeile: eine kleine Zeile, kein großer Titel
-  T(info.sub, m, m + 6.5, 6.5, th.text);
-  T(info.pages > 1 ? `${info.count} · ${page + 1}/${info.pages}` : info.count, W - m, m + 6.5, 6.5, th.dim, sans, '400', 'right');
-  ctx.fillStyle = th.line; ctx.fillRect(m * s, (m + 10) * s, (W - 2 * m) * s, 0.5 * s);
+  if (!info.noHead) {   // v232: die Story kommt ohne Kopfzeile aus, der Film steht ohnehin am Streifenrand
+    T(info.sub, m, m + 6.5, 6.5, th.text);
+    T(info.pages > 1 ? `${info.count} · ${page + 1}/${info.pages}` : info.count, W - m, m + 6.5, 6.5, th.dim, sans, '400', 'right');
+    ctx.fillStyle = th.line; ctx.fillRect(m * s, (m + 10) * s, (W - 2 * m) * s, 0.5 * s);
+  }
   const { pad, gap, edge, fw, fh, sh } = L, sgap = info.sgap, ink = info.edge.color;
   const deaccent = t => t.toUpperCase().replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   // Randtext in der Schrift der Marke; size = Versalhöhe in Punkt
@@ -364,14 +366,15 @@ async function makeStorySheet(rollId, frameIds, theme = 'dark', favMark = '') {
   const fit = per => {
     const k = Math.ceil(n / per);
     let L = sheetLayout({ w: Wpt, h: 9999 }, square, per, 0), Hpt = L.topY + k * L.sh + L.m, rows = 0;
-    if (Hpt > maxH) { Hpt = maxH; rows = k; L = sheetLayout({ w: Wpt, h: Hpt }, square, per, rows); }
+    const head = L.topY - L.m;   // Höhe der Kopfzeile, die in der Story wegfällt
+    if (Hpt - head > maxH) { Hpt = maxH + head; rows = k; L = sheetLayout({ w: Wpt, h: Hpt }, square, per, rows); }
     return { per, L, Hpt, rows };
   };
   const { per, Hpt, rows } = [1, 2, 3].map(fit).reduce((a, b) => b.L.fw > a.L.fw + 0.5 ? b : a);
   const strips = []; for (let i = 0; i < items.length; i += per) strips.push(items.slice(i, i + per));
   const P = { w: Wpt, h: Hpt };
   const info = {
-    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap: 0, pages: 1, theme, rows,
+    title: r?.title || U.stockLabel(st), film: U.stockLabel(st), edge: edgeStyle(st), square, per, sgap: 0, pages: 1, theme, rows, noHead: true,
     favMark,
     sub: [U.stockLabel(st), camLabel(cam) || r?.camera || ''].filter(Boolean).join(' · '),
     count: n === 1 ? '1 Bild' : `${n} Bilder`
@@ -380,7 +383,8 @@ async function makeStorySheet(rollId, frameIds, theme = 'dark', favMark = '') {
   const c = document.createElement('canvas'); c.width = SW; c.height = SH;
   const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
   ctx.fillStyle = (SHEET_THEME[theme] || SHEET_THEME.dark).paper; ctx.fillRect(0, 0, SW, SH);
-  ctx.save(); ctx.translate(0, Math.round((SH - Hpt * s) / 2));
+  const head = 15;   // wie sheetLayout: topY = m + 15
+  ctx.save(); ctx.translate(0, Math.round((SH - (Hpt - head) * s) / 2 - head * s));
   drawSheetPage(ctx, P, s, info, strips, 0);
   ctx.restore();
   imgs.forEach(x => x.src && x.src.close && x.src.close());
