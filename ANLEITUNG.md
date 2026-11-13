@@ -808,3 +808,9 @@ Unter der Vorschau liegen die gewählten Bilder als kleine Kacheln mit Nummer. E
 Unten lässt sich das Seitenverhältnis wählen: 4:5 hoch, 1:1 oder 1,91:1 quer. Instagram schneidet alle Bilder eines Beitrags auf dasselbe Format zu, die Vorschau zeigt diesen Zuschnitt. „Bilder wählen“ ändert die Auswahl, die Reihenfolge bleibt dabei erhalten. Der Teilen-Knopf gibt die Bilder in der geplanten Reihenfolge weiter, nummeriert ab 01. Reihenfolge und Format bleiben für jede Rolle gespeichert.
 
 Die Knöpfe oben im Album werden bei Bedarf etwas kleiner, damit alle in eine Reihe passen.
+
+## v228: Filmtagebuch überschreibt keine anderen Einträge mehr
+
+Fehler behoben: Wer im Filmtagebuch erst einen Film und danach einen anderen öffnete, etwa Harman Phoenix 200 und dann Phoenix II, dem schrieb die App beim Hinzufügen von Fotos die Notizen und Fotos des zweiten Films auch in den Eintrag des ersten. Der erste Eintrag sah danach aus wie eine Kopie. Ursache war, dass die Seite eines Films nach dem Wechsel unsichtbar weiter auf Tipps reagierte. Jede Filmseite reagiert jetzt nur noch auf sich selbst.
+
+Ein bereits überschriebener Eintrag lässt sich in der App nicht zurückholen. Den alten Text gibt es nur noch in einer Sicherung von vor dem Überschreiben.

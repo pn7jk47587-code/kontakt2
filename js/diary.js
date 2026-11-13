@@ -60,16 +60,19 @@ async function viewDiary(stockId) {
       ${ps.length ? `<div class="dtgrid">${ps.map(p => `<span class="dtph"><img src="${thumbs[p.imgId] || ''}" alt="" data-img="${p.imgId}"><button type="button" class="dtdel" data-del="${p.imgId}" aria-label="Foto entfernen">×</button></span>`).join('')}</div>` : '<p class="hint dtempty">Noch kein Foto.</p>'}
     </section>`;
   };
-  view.innerHTML = `
+  // v228: eigener Rahmen je Aufruf. Vorher hingen die Tipp-Handler am bleibenden #view und schrieben beim Wechsel
+  // zu einem anderen Film dessen Notizen und Fotos zusätzlich in den zuvor geöffneten Eintrag.
+  view.innerHTML = `<div class="diarypage">
     <div class="diaryhead"><span class="stockart">${await filmArt(stock, 56)}</span><div><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">ISO ${U.esc(stock.isoLabel || stock.boxIso || '?')}</span></div></div>
     <div class="card"><div class="titlefld raterow"><span>Bewertung</span>${rateHtml(d.rate ?? null, 'dRate')}</div>
       <label class="fld"><span>Deine Erfahrungen</span><textarea id="dNotes" rows="5">${U.esc(d.notes || '')}</textarea></label></div>
     <p class="hint pad">Wähle für jede Lichtsituation Fotos aus deinen Rollen mit diesem Film.</p>
-    <div class="diarytags">${DIARY_TAGS.map(card).join('')}</div>`;
+    <div class="diarytags">${DIARY_TAGS.map(card).join('')}</div></div>`;
+  const page = view.querySelector('.diarypage');
   let tmr = null;
-  wireRate(view, 'dRate', () => d.rate ?? null, async v => { if (v == null) delete d.rate; else d.rate = v; d.notes = view.querySelector('#dNotes').value; await save(); });
+  wireRate(page, 'dRate', () => d.rate ?? null, async v => { if (v == null) delete d.rate; else d.rate = v; d.notes = view.querySelector('#dNotes').value; await save(); });
   view.querySelector('#dNotes').addEventListener('input', e => { d.notes = e.target.value; clearTimeout(tmr); tmr = setTimeout(save, 400); });
-  view.addEventListener('click', async e => {
+  page.addEventListener('click', async e => {
     const add = e.target.closest('[data-add]');
     if (add) {
       const tag = add.dataset.add;
