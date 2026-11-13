@@ -1875,6 +1875,8 @@ async function viewAlbum(id) {
   view.querySelector('#albPhone')?.addEventListener('change', e => { const files = [...e.target.files]; e.target.value = ''; if (files.length) openPhoneImport(d.roll, files); });
   // Ort für mehrere Fotos: Auswahlmodus, dann Ort aus der Liste, auf der Karte oder per Standort
   view.querySelector('#albPick')?.addEventListener('click', async () => { ALBUM_PICK = !ALBUM_PICK; ALBUM_PICKED = new Set(); U.haptic && U.haptic(10); const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y); });
+  // v230: alte Auswahlleiste immer entfernen, auch wenn der Ortsmodus über denselben Knopf beendet wird
+  document.querySelectorAll('.pickbar').forEach(b => b.remove());
   if (ALBUM_PICK) {
     const grid = view.querySelector('.photogrid');
     const bar = document.createElement('div'); bar.className = 'pickbar';

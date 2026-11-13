@@ -825,3 +825,7 @@ Oben im Album stehen jetzt vier Symbole statt sieben. Drei davon öffnen ihre Un
 4. Teilen: Contact Sheet, Instagram Story oder Instagram-Beitrag.
 
 Die Instagram Story steht nicht mehr im Contact-Sheet-Fenster, sie liegt jetzt unter Teilen. Hell oder Dunkel lässt sich in der Story-Vorschau umschalten, Markierungen folgen der letzten Wahl beim Contact Sheet. Im Sortier- und im Ortsmodus steht oben nur der Knopf, der den Modus beendet.
+
+## v230: Auswahlleiste verschwindet beim Verlassen des Ortsmodus
+
+Fehler behoben: Wer im Album den Ortsmodus mit der Ortsnadel einschaltete und mit demselben Knopf wieder verließ, behielt unten die Leiste „0 ausgewählt“. Die Leiste verschwindet jetzt, sobald der Modus endet.
