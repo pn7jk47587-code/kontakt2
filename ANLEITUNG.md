@@ -782,3 +782,7 @@ Das Tagebuch speichert nur einen Verweis auf das Foto der Rolle, kein zweites Bi
 ## v223: Abzeichen Kartografin
 
 Neues Abzeichen in der Kategorie Orte. Es zählt alle Fotos mit Koordinaten, also mit Ort aus dem Handyfoto, der Karte oder der Ortssuche. Stufe 1 gibt es ab 100 Fotos mit Ort, Stufe 2 ab 500, Stufe 3 ab 1.500. Archivierte Rollen zählen wie bei den anderen Abzeichen nicht mit. Die Bezeichnung richtet sich nach der Anrede im Profil: Kartografin, Kartograf oder Kartograf*in. Das Symbol zeigt eine gefaltete Karte mit Ortsnadel.
+
+## v224: Kartografin zählt alle Fotos mit Ort
+
+Das Abzeichen Kartografin zählt jetzt jedes Foto mit Ort. Dazu gehören auch Fotos aus archivierten Rollen, also nachträglich hochgeladene, und Fotos, die erst später im Album oder auf der Karte verortet wurden. Ein Bild ohne eigenen Ort zählt ebenfalls, wenn die ganze Rolle einen Ort hat. Bei den übrigen Abzeichen bleiben archivierte Rollen weiter außen vor.

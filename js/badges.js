@@ -118,7 +118,9 @@ const BADGES = (() => {
     // Orte
     v.zugvogel = new Set(frames.map(f => f.placeCC).filter(Boolean)).size;
     const loc = frames.filter(f => f.placeLat != null);
-    v.kartograf = loc.length;   // v223: Fotos mit Koordinaten
+    // v224: alle Fotos mit Ort, auch aus archivierten Rollen und nachträglich verortete. Bilder ohne eigenen Ort zählen, wenn die Rolle einen Ort hat.
+    const allRollM = new Map(allRolls.map(r => [r.id, r]));
+    v.kartograf = allFrames.filter(f => f.placeLat != null || (f.imgId && allRollM.get(f.rollId)?.placeLat != null)).length;
     if (loc.length >= 50) {
       const home = await DB.get('meta', 'home');
       let hLa, hLo;
