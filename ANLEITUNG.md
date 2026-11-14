@@ -947,3 +947,7 @@ Der Knopf hat keinen Farbverlauf mehr. Er ist kleiner und besteht aus dunklem, h
 ## v252: Lichtblick-Beschriftung kleiner
 
 „Lichtblick“ und die Zeile mit Ort, Rolle und Datum stehen kleiner und blasser unten im Foto, der dunkle Verlauf darunter ist schwächer.
+
+## v253: „Film einlegen“ wieder über der Rolle in der Kamera
+
+Der Knopf „Film einlegen“ steht wieder in der früheren Form zwischen Lichtblick und „Film in der Kamera“.

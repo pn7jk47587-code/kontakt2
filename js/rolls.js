@@ -110,8 +110,8 @@ async function viewRolls() {
     LP_STATE = { pool, cur: pick.id, day, line: lpLine };
     if (u) html += `<div class="lpwrap"><a class="lightpick" href="#/foto/${pick.rollId}/${pick.id}" aria-label="Lichtblick des Tages öffnen"><img src="${u}" alt=""><span class="lpleak" aria-hidden="true"></span><span class="lptext"><b>Lichtblick</b><span>${U.esc(lpLine(pick))}</span></span></a>${pool.length > 1 ? `<button type="button" class="lprefresh" id="lpNext" aria-label="Anderen Lichtblick zeigen">${LP_IC}</button>` : ''}</div>`;
   }
-  const newRoll = `<a class="btn ghost small newroll" href="#/rolle/neu"><span aria-hidden="true">+</span> Film einlegen</a>`;
-  if (!rolls.some(r => (r.status || 'entwurf') === 'entwurf')) html += newRoll;
+  // v253: „Film einlegen“ steht wieder wie früher als Knopf über „Film in der Kamera“
+  html += `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;
   if (rolls.length) html += U.hintOnce('home-longpress', 'Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.');
   const order = [['entwurf', 'Film in der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']];
   for (const [g, label] of order) {
@@ -145,7 +145,7 @@ async function viewRolls() {
           </div>
         </a>${act}</div>`;
     }
-    html += (g !== 'entwurf') ? `</div></section>` : `</div>${newRoll}`;
+    html += (g !== 'entwurf') ? `</div></section>` : `</div>`;
   }
   view.innerHTML = html;
   setupFolds(view);
