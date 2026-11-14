@@ -849,3 +849,27 @@ In den Einstellungen steht die Anrede jetzt als drei kleine runde Knöpfe w, m u
 ## v235: Produktfoto für Kodak UltraMax 400
 
 Kodak UltraMax 400 zeigt jetzt das freigestellte Foto der gelb-blauen Packung statt der gezeichneten Filmpatrone, in der Filmliste, im Kühlschrank, bei den Rollen und im Filmtagebuch. Ein eigenes Foto im Filmeintrag hat weiterhin Vorrang.
+
+## v236 (Vorschau, nicht in der richtigen App): Bedienung und Gestaltung überarbeitet
+
+Dieser Stand liegt nur im Zweig `vorschau-ux` und in einer eigenen Vorschau-Seite. Die richtige App bleibt bei v235.
+
+Bedienung
+- Leiste unten mit Rollen, Fotos, Karte und Profil, in der Mitte das Plus für „Film einlegen“. App-Symbol und Profilkreis oben entfallen, Unterseiten haben den Pfeil zurück.
+- Startseite ohne Avatar und Namen, die Rollen stehen oben.
+- Tippflächen mindestens 44 Punkt (Chips, Umschalter, kleine Knöpfe).
+- Langes Drücken auf einen Symbolknopf zeigt seinen Namen, der Knopf löst dabei nicht aus. Ausgenommen sind die fünf Schalter im Bild, dort öffnet langes Drücken schon die Auswahl.
+- Keine Hinweiskästen mehr in den Ansichten, die Einführung erklärt die Gesten. Meldungen sitzen über der Leiste.
+- Der rote Papierkorb oben in der Rolle ist weg. Löschen steht im Reiter „Rolle“ und beim langen Drücken auf die Karte.
+- Profil in drei Gruppen: Ausrüstung, Auswertung, Notizen. Alle Fotos und Karte liegen in der Leiste. „Analytics“ heißt „Auswertung“.
+- Einstellungen: Entwürfe und Tests sowie Zurücksetzen sind eingeklappt. Unter „Sicherung und Speicher“ ist „Geplant“ entfernt, die Texte nennen auf Android die Schritte für Chrome.
+
+Gestaltung
+- Titel und Infos im Foto haben denselben Kasten wie die anderen Felder.
+- Eckenradien von 23 auf 6 Werte, Schriftgrößen von 25 auf 13 Werte, kleinste Schrift 11 px.
+- Profilkarten ohne farbige Leuchtränder, eine Pfeilfarbe.
+
+Neu
+- Schnellerfassung: runder Auslöser in der Rolle. Ein Tipp legt das nächste freie Bild mit Blende, Zeit, Objektiv und Filtern des letzten Bildes an, trägt die Uhrzeit ein und holt den Ort im Hintergrund. „Rückgängig“ nimmt es zurück.
+- Blendenring: Blende und Zeit laufen als Band unter einer festen Marke, der Wert in der Mitte rastet ein und vibriert. Tippen auf einen Wert geht weiterhin.
+- Lichteinfall: Wandert eine Rolle in die Entwicklung oder ins Fotoalbum, zieht kurz ein Lichtschein über den Bildschirm. Bei „Bewegung reduzieren“ entfällt er.

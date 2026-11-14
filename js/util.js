@@ -257,6 +257,7 @@ const U = {
 
   // Hinweis auf eine Geste oder Funktion, der nur bis zum Wegtippen erscheint
   hintOnce(key, text) {
+    return '';   // v236 Vorschau: keine Hinweiskästen mehr in den Ansichten, die Einführung erklärt die Gesten
     try { if (localStorage.getItem('kb-hint-' + key)) return ''; } catch (_) { return ''; }
     return `<div class="oncehint" data-hint="${key}"><span>${text}</span><button type="button" class="oncex" aria-label="Hinweis schließen">×</button></div>`;
   },

@@ -324,13 +324,7 @@ async function viewProfile() {
       <span class="pname" id="pNameTxt">${U.esc(atName(PROFILE?.name))}</span>
     </div>
 
-    <a class="tile photostile" href="#/alle-fotos">
-      <span class="fridgeicon photoicon">${ART.album}</span>
-      <div><h2>Alle Fotos</h2><span class="sub2">${photos.length} ${photos.length === 1 ? 'Foto' : 'Fotos'}</span></div>
-      <span class="chev">›</span>
-    </a>
-
-
+    <h3 class="pgroup">Ausrüstung</h3>
     <section class="fridge fold${foldOpen('fridge') ? ' open' : ''}" data-fold="fridge">
       <div class="fridgetop foldhead">
         <span class="fridgeicon">${SNOW}</span>
@@ -346,15 +340,11 @@ async function viewProfile() {
 
     ${await cabinetHtml(true)}
 
+    <h3 class="pgroup">Auswertung</h3>
     ${await analyticsTileHtml()}
     ${await BADGES.foldHtml()}
 
-    <a class="tile photostile" href="#/karte">
-      <span class="fridgeicon photoicon">${PIN_IC}</span>
-      <div><h2>Karte</h2><span class="sub2">${located} ${located === 1 ? 'Bild' : 'Bilder'} mit Ort</span></div>
-      <span class="chev">›</span>
-    </a>
-
+    <h3 class="pgroup">Notizen</h3>
     ${await ideasFoldHtml()}
 
     ${await diaryFoldHtml()}`;
@@ -415,6 +405,7 @@ async function openSettings() {
       <div class="genderpick" id="genderPick" role="group" aria-label="Anrede">${[['f', 'w', 'Weiblich'], ['m', 'm', 'Männlich'], ['n', 'd', 'Divers']].map(([k, l, a]) => `<button type="button" class="seg gchip${(PROFILE?.gender || 'n') === k ? ' on' : ''}" data-gender="${k}" aria-label="${a}" title="${a}" aria-pressed="${(PROFILE?.gender || 'n') === k}">${l}</button>`).join('')}</div></div>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
+      <details class="labfold"><summary>Labor: Entwürfe und Tests</summary>
       <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>
       <div class="seggroup" id="apLook">${[['', 'Raster'], ['sheet', 'Contact Sheet'], ['sheet-ring', 'Sheet mit Fettstift']].map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-ap-look') || '') === k ? ' on' : ''}" data-apl="${k}">${l}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Licht nach Tageszeit</span></div>
@@ -428,6 +419,7 @@ async function openSettings() {
       <div class="seggroup nightpick" id="nightPick">${NIGHT_LIGHT_NAMES.map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-nightlight') || 'streif') === k ? ' on' : ''}" data-nl="${k}">${l}</button>`).join('')}</div>
       <div class="sethead"><span>Schrift (zum Ausprobieren)</span></div>
       <label class="fld" style="margin:0"><select id="fontPick" aria-label="Schrift">${TEST_FONTS.map(([k, l]) => `<option value="${k}"${(localStorage.getItem('kb-font') || '') === k ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+      </details>
       <div class="sethead">${ART.tank}<span>Entwicklung</span></div>
       <div class="list labs" id="labList" style="margin:0"></div>
       <button type="button" class="btn ghost small" id="labNew" style="margin-top:8px">+ Neues Labor anlegen</button>
@@ -436,11 +428,13 @@ async function openSettings() {
         <a class="item" href="#/rechner"><span class="setlink">${ART.moon}Belichtungsrechner für Nachtaufnahmen</span><span class="chev">›</span></a>
         <a class="item" href="#/mehr"><span class="setlink">${ART.save}Sicherung und Speicher</span><span class="chev">›</span></a>
       </div>
+      <details class="labfold"><summary>Zurücksetzen und Testdaten</summary>
       <div class="sethead">${ART.x}<span>Reset/Test</span></div>
       <p class="hint" style="margin:0 0 8px">Löscht alle hochgeladenen Fotos, deinen Namen und dein Profilbild. Rollen, Filme, Kameras und Preise bleiben.</p>
       <button type="button" class="btn danger small" id="resetAll">Fotos, Name und Profilbild löschen</button>
       <p class="hint" style="margin:14px 0 8px">Wessen Ausrüstung steht im Kameraschrank? Was nicht zum gewählten Gear gehört, wird beiseitegelegt und kommt beim Zurückwechseln unverändert wieder. Ausrüstung mit Filmrollen bleibt als inaktiv stehen.</p>
       <div class="seg gearset" id="gearSet" role="group" aria-label="Ausrüstung">${Object.entries(GEAR_SETS).map(([k, g]) => `<button type="button" data-gear="${k}" aria-pressed="${gearSetKey === k}" class="${gearSetKey === k ? 'on' : ''}">${g.label}</button>`).join('')}</div>
+      </details>
       <div class="modalfoot"><button class="closex" id="setClose" aria-label="Schließen">${ART.x}</button><span></span></div>
     </div>`;
   document.body.appendChild(ov);
@@ -775,7 +769,7 @@ async function analyticsTileHtml() {
   const top = (await filmRanking())[0];
   return `<a class="tile photostile analyticstile" href="#/analytics">
       <span class="fridgeicon">${ANALYTICS_IC}</span>
-      <div><h2>Analytics</h2><span class="sub2">${top ? `Dein Lieblingsfilm: ${U.esc(U.stockLabel(top.st))}` : 'Filme, Fotos und Geld'}</span></div>
+      <div><h2>Auswertung</h2><span class="sub2">${top ? `Dein Lieblingsfilm: ${U.esc(U.stockLabel(top.st))}` : 'Filme, Fotos und Geld'}</span></div>
       <span class="chev">›</span>
     </a>`;
 }
@@ -848,7 +842,7 @@ function setupSpend(root) {
   });
 }
 async function viewAnalytics() {
-  setHeader('Analytics');
+  setHeader('Auswertung');
   const rank = await filmRanking();
   const top = rank[0], max = top ? top.n : 1;
   const rows = await Promise.all(rank.slice(0, 10).map(async (e, i) => `

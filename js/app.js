@@ -218,11 +218,17 @@ function setHeader(title, { action = '', soft = false } = {}) {
   const has = !!PROFILE;
   // Unterseiten: oben links der Zurück-Pfeil (wie in iOS). Startseite und Profil: oben links das App-Symbol zur Startseite.
   const h = location.hash || '#/';
-  const top = h === '#/' || h === '#' || h.startsWith('#/profil') || h.startsWith('#/willkommen');
-  document.getElementById('homeBtn').hidden = !has || !top;
+  // v236 Vorschau: vier Hauptseiten mit Leiste unten. App-Symbol und Profilkreis oben entfallen.
+  const tabOf = h === '#/' || h === '#' || h === '' ? 'rollen' : h.startsWith('#/alle-fotos') ? 'fotos' : h.startsWith('#/karte') ? 'karte' : h === '#/profil' ? 'profil' : '';
+  const top = !!tabOf || h.startsWith('#/willkommen');
+  document.getElementById('homeBtn').hidden = true;
   backBtn.hidden = !has || top;
+  const bar = document.getElementById('tabBar');
+  bar.hidden = !has || !tabOf;
+  document.body.classList.toggle('hastabs', has && !!tabOf);
+  bar.querySelectorAll('[data-tab]').forEach(a => { const on = a.dataset.tab === tabOf; a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'); });
   const prof = document.getElementById('profBtn');
-  prof.hidden = !has;
+  prof.hidden = true;
   prof.classList.toggle('here', location.hash.startsWith('#/profil'));
   document.getElementById('homeBtn').classList.toggle('here', !location.hash || location.hash === '#/' || location.hash === '#');
   if (has) avatarHtml(34).then(h => { prof.querySelector('.whoav').innerHTML = h; });
@@ -866,7 +872,7 @@ async function viewMore() {
   view.innerHTML = `
   <div class="card">
     <h3 class="sub">Sicherung</h3>
-    <p>Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen iPhone.</p>
+    <p>Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen Gerät.</p>
     <p class="hint">Letzte Sicherung: ${lastBackup ? U.fmtDate(lastBackup) : 'noch keine'}</p>
     <button class="btn wide" id="exp">Sicherung erstellen</button>
     <label class="btn ghost wide">Sicherung einspielen<input type="file" accept=".zip,application/zip" hidden id="imp"></label>
@@ -874,13 +880,8 @@ async function viewMore() {
   <div class="card">
     <h3 class="sub">Speicher</h3>
     <p>${est || 'Speicherbelegung nicht abrufbar.'}</p>
-    <p>Als App installiert: ${standalone ? 'ja' : 'nein. In Safari „Teilen“ → „Zum Home-Bildschirm“ wählen und nur noch das Symbol verwenden.'}</p>
+    <p>Als App installiert: ${standalone ? 'ja' : /Android/i.test(navigator.userAgent) ? 'nein. In Chrome im Menü „App installieren“ wählen und nur noch das Symbol verwenden.' : 'nein. In Safari „Teilen“ → „Zum Home-Bildschirm“ wählen und nur noch das Symbol verwenden.'}</p>
     ${persisted !== null ? `<p>Dauerhafter Speicher gewährt: ${persisted ? 'ja' : 'nein'}</p>` : ''}
-  </div>
-  <div class="card">
-    <h3 class="sub">Geplant</h3>
-    <p>Belichtungsmesser mit Vorschau verschiedener Einstellungen.</p>
-    <p>Film selbst entwickeln: Ablauf mit Chemie, Zeiten und Temperaturen.</p>
   </div>
   <div class="card">
     <h3 class="sub">Alles löschen</h3>
@@ -1053,3 +1054,37 @@ function growFrom(ov, btn) {
     setTimeout(() => { d.dataset.go = '1'; d.click(); delete d.dataset.go; }, 210);
   }, true);
 })();
+
+/* v236 Vorschau: langes Drücken auf einen Symbolknopf zeigt seinen Namen. Der Knopf löst dabei nicht aus. */
+(() => {
+  const SEL = '.roundic, .reorderbtn, .lensbtn, .fridgeplus, .gearbtn, .cspvshare, .closex, .tabbar a, .placepin, .timenow, .fpbtn';   // .togbtn nicht: dort öffnet langes Drücken schon die Auswahl
+  let timer = null, tip = null, shown = false;
+  const hide = () => { clearTimeout(timer); timer = null; if (tip) { tip.remove(); tip = null; } };
+  document.addEventListener('pointerdown', e => {
+    hide(); shown = false;
+    const el = e.target.closest(SEL); if (!el) return;
+    const label = el.getAttribute('aria-label') || el.title; if (!label) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    const move = ev => { if (Math.hypot(ev.clientX - x0, ev.clientY - y0) > 9) { hide(); document.removeEventListener('pointermove', move, true); } };
+    document.addEventListener('pointermove', move, true);
+    timer = setTimeout(() => {
+      document.removeEventListener('pointermove', move, true);
+      tip = document.createElement('div'); tip.className = 'lptip'; tip.setAttribute('role', 'tooltip'); tip.textContent = I18N && I18N.t ? I18N.t(label) : label;
+      document.body.appendChild(tip);
+      const r = el.getBoundingClientRect(), w = tip.offsetWidth, hgt = tip.offsetHeight;
+      const left = Math.max(8, Math.min(window.innerWidth - w - 8, r.left + r.width / 2 - w / 2));
+      const above = r.top - hgt - 10;
+      tip.style.left = left + 'px'; tip.style.top = (above > 8 ? above : r.bottom + 10) + 'px';
+      shown = true; U.haptic && U.haptic(10);
+    }, 480);
+  }, true);
+  const up = () => { clearTimeout(timer); timer = null; if (shown) setTimeout(hide, 1400); };
+  document.addEventListener('pointerup', up, true);
+  document.addEventListener('pointercancel', () => { hide(); shown = false; }, true);
+  // Der Klick nach einem langen Druck zählt nicht
+  document.addEventListener('click', e => { if (shown) { shown = false; e.preventDefault(); e.stopPropagation(); } }, true);
+  window.addEventListener('scroll', hide, { passive: true });
+})();
+
+// v236 Vorschau: das Plus in der Leiste öffnet „Film einlegen“ wie bisher der Knopf auf der Startseite
+document.querySelector('#tabBar .tabplus')?.addEventListener('click', e => { if (typeof openLoadSheet === 'function') { e.preventDefault(); openLoadSheet(e.currentTarget); } });

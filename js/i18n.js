@@ -921,6 +921,8 @@ Tippe auf das Plus und lege eine Kamera an.	Tap the plus and add a camera.
 Tippe auf „Kameras“ und öffne deine neue Kamera.	Tap “Cameras” and open your new camera.
 Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe auf den Pfeil oben links, um zurückzugehen.	Great, now you’re ready to load your first film into the camera. Tap the arrow at the top left to go back.
 Analytics	Analytics
+Auswertung	Analytics
+Ausrüstung	Gear
 Deine Filme	Your films
 Filme, Fotos und Geld	Films, photos and money
 Der Klassiker. Gut und günstig. So wie du.	The classic. Good and cheap. Just like you.

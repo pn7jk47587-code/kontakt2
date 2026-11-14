@@ -1,5 +1,7 @@
 // Auf Unterseiten steht oben links der Zurück-Pfeil statt des App-Symbols
-const homeStep = (text, back) => document.querySelector('#homeBtn:not([hidden])') ? [['#homeBtn', text]] : [['#backBtn', back || 'Tippe auf den Pfeil oben links, um zurückzugehen.']];
+// v236 Vorschau: Startseite und Profil liegen in der Leiste unten. Auf Unterseiten ohne Leiste führt der Pfeil zurück.
+const tabStep = (tab, text, back) => document.querySelector('#tabBar:not([hidden])') ? [[`#tabBar [data-tab="${tab}"]`, text]] : [['#backBtn', back || 'Tippe auf den Pfeil oben links, um zurückzugehen.']];
+const homeStep = (text, back) => tabStep('rollen', text, back);
 /* Einführung beim ersten Start: ein leuchtender Ring zeigt, wohin man tippen soll, eine Sprechblase sagt, was zu tun ist.
    Jeder Schritt geht erst weiter, wenn die Aufgabe erledigt ist. Der Stand liegt in localStorage, damit er ein Neuladen übersteht. */
 const TOUR = (() => {
@@ -14,21 +16,21 @@ const TOUR = (() => {
 
   // Ziel je Schritt: Liste aus [Selektor, Text]; der erste sichtbare Treffer gilt. Ohne Selektor: Blase in der Mitte mit Knopf.
   const STEPS = {
-    profile: () => [['#profBtn', 'Klicke hier, um dein Profil anzusehen.']],
-    fridge: () => hash() === '#/profil' ? [['section.fridge', 'Hier kannst du deine Filme hinzufügen. Tippe auf das Plus und lege einen Film in den Kühlschrank.', '#addFridge']] : [['#profBtn', 'Zurück zum Profil, dort wartet der Filmkühlschrank.']],
+    profile: () => tabStep('profil', 'Klicke hier, um dein Profil anzusehen.'),
+    fridge: () => hash() === '#/profil' ? [['section.fridge', 'Hier kannst du deine Filme hinzufügen. Tippe auf das Plus und lege einen Film in den Kühlschrank.', '#addFridge']] : tabStep('profil', 'Zurück zum Profil, dort wartet der Filmkühlschrank.'),
     fridgeDone: () => [[null, 'Super, dein erster Film liegt im Kühlschrank.', null, 'Weiter']],
     cabinet: () => hash() === '#/profil'
       ? [['section.cabinet.open .cabtile[href="#/schrank/kameras"]', 'Hier kannst du deine Ausrüstung hinzufügen. Tippe auf „Kameras“.'], ['section.cabinet', 'Hier kannst du deine Ausrüstung hinzufügen. Öffne den Kameraschrank.']]
       : hash() === '#/schrank/kameras' ? [['[data-add="kamera"]', 'Tippe auf das Plus und lege eine Kamera an.']]
-      : /^#\/kamera\//.test(hash()) ? [] : [['#profBtn', 'Zurück zum Profil, dort steht der Kameraschrank.']],
+      : /^#\/kamera\//.test(hash()) ? [] : tabStep('profil', 'Zurück zum Profil, dort steht der Kameraschrank.'),
     // Neue Kamera: erst Hersteller und Modell eintragen, dann mit dem Haken speichern
     camEdit: () => hash() === '#/kamera/' + st.cam
       ? (st.named ? [['.donebtn', 'Tippe auf den Haken, um die Kamera zu speichern.']] : [['#cf .fld', 'Trag Hersteller und Modell deiner Kamera ein.']])
       : hash() === '#/schrank/kameras' ? [[`a.crow[href="#/kamera/${st.cam}"]`, 'Öffne deine neue Kamera und trag Hersteller und Modell ein.']]
       : hash() === '#/profil' ? [['section.cabinet.open .cabtile[href="#/schrank/kameras"]', 'Tippe auf „Kameras“ und öffne deine neue Kamera.'], ['section.cabinet', 'Öffne den Kameraschrank und tippe deine neue Kamera an.']]
-      : [['#profBtn', 'Zurück zum Profil, dort steht deine neue Kamera.']],
+      : tabStep('profil', 'Zurück zum Profil, dort steht deine neue Kamera.'),
     ready: () => onHome() ? [] : homeStep('Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe hier, um zur Startseite zu gehen.', 'Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe auf den Pfeil oben links, um zurückzugehen.'),
-    load: () => onHome() ? [['.newroll', 'Tippe auf „Film einlegen“ und lege deinen ersten Film ein.']] : homeStep('Zur Startseite, dort legst du den Film ein.'),
+    load: () => onHome() ? [['#tabBar .tabplus', 'Tippe auf das Plus und lege deinen ersten Film ein.']] : homeStep('Zur Startseite, dort legst du den Film ein.'),
     note: () => hash().startsWith('#/bild/') ? [['#note', 'Trag hier eine Beschreibung zu diesem Bild ein.']]
       : hash().startsWith('#/rolle/' + st.roll) ? [['.cell', 'Tippe ein Bild an und füge zumindest eine Beschreibung hinzu.']] : [],
     dev: () => hash().startsWith('#/bild/') ? [['.donebtn', 'Gut. Mit dem Haken geht es zurück zur Rolle.']]

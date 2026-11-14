@@ -44,6 +44,34 @@ function flashSyncText(cam) {
   return `${n}: Synchronzeit nicht hinterlegt. Im Kameraschrank eintragen.`;
 }
 
+// v236 Vorschau: ein kurzer Lichteinfall zieht über den Bildschirm, wenn eine Rolle ins nächste Stadium wandert
+function leakSweep(stage) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const el = document.createElement('div'); el.className = 'leaksweep st-' + (stage || 'entwurf'); el.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(el); U.haptic && U.haptic([14, 50, 22]);
+  setTimeout(() => el.remove(), 1500);
+}
+// v236 Vorschau: Blendenring. Die Werte laufen als Band unter einer festen Marke durch, jede Raste vibriert kurz.
+function setupDial(row) {
+  if (!row || row.closest('.dialwrap')) return;
+  const wrap = document.createElement('div'); wrap.className = 'dialwrap';
+  row.parentNode.insertBefore(wrap, row); wrap.appendChild(row); row.classList.add('dial');
+  let quiet = 0, last = null, tm = null;
+  const chips = () => [...row.querySelectorAll('.chip')];
+  const nearest = () => { const c = row.scrollLeft + row.clientWidth / 2; let best = null, d = 1e9; for (const b of chips()) { const x = b.offsetLeft + b.offsetWidth / 2, dd = Math.abs(x - c); if (dd < d) { d = dd; best = b; } } return best; };
+  const center = (b, smooth) => { quiet = Date.now() + 700; row.scrollTo({ left: b.offsetLeft + b.offsetWidth / 2 - row.clientWidth / 2, behavior: smooth ? 'smooth' : 'auto' }); };
+  row.addEventListener('scroll', () => {
+    const n = nearest();
+    if (n !== last) { last = n; chips().forEach(b => b.classList.toggle('mid', b === n)); if (Date.now() > quiet) U.haptic && U.haptic(4); }
+    if (Date.now() < quiet) return;
+    clearTimeout(tm); tm = setTimeout(() => { const b = nearest(); if (b && !b.classList.contains('on')) { quiet = Date.now() + 500; b.click(); } }, 140);
+  }, { passive: true });
+  row.addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { clearTimeout(tm); center(b, true); } });
+  const init = () => { const on = row.querySelector('.chip.on') || null; if (on) center(on, false); last = nearest(); chips().forEach(b => b.classList.toggle('mid', b === last)); };
+  requestAnimationFrame(init);
+  // neue Werte (anderes Objektiv): wieder auf den gewählten Wert stellen
+  new MutationObserver(() => requestAnimationFrame(init)).observe(row, { childList: true, subtree: true });
+}
 function nowLocal() {
   const d = new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);   // mit Sekunden
@@ -80,7 +108,7 @@ async function viewRolls() {
   const allFilters = await getFilters();
   const peopleAll = await getPeople();
   rolls.sort((a, b) => (b.loadedAt || b.createdAt || '').localeCompare(a.loadedAt || a.createdAt || ''));
-  let html = hero + `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;
+  let html = rolls.length ? '' : `<div class="homeempty"><a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a></div>`;   // v236 Vorschau: Rollen stehen oben, „Film einlegen“ sitzt als Plus in der Leiste
   if (rolls.length) html += U.hintOnce('home-longpress', 'Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.');
   const order = [['entwurf', 'Film in der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']];
   for (const [g, label] of order) {
@@ -127,7 +155,7 @@ async function viewRolls() {
     try { localStorage.setItem('kb-albumfold-' + b.dataset.rcfold, small ? '1' : '0'); } catch (_) {}
     U.haptic && U.haptic(8);
   }));
-  view.querySelector('.newroll').addEventListener('click', e => { e.preventDefault(); openLoadSheet(e.currentTarget); });
+  view.querySelector('.newroll')?.addEventListener('click', e => { e.preventDefault(); openLoadSheet(e.currentTarget); });
 }
 
 // „Film einlegen“ zieht sich aus dem Knopf zu einer abgerundeten Karte auf; Profilbild und Name bleiben oben sichtbar
@@ -239,7 +267,7 @@ function openPickupModal(roll, done) {
     document.body.appendChild(busy);
     try {
       const n = await assignScans(roll, files);
-      roll.status = 'entwickelt';
+      roll.status = 'entwickelt'; leakSweep(roll.status);
       roll.dev = roll.dev || {};
       if (!roll.dev.backAt && !roll.dev.devDate) roll.dev[roll.dev.mode === 'selbst' ? 'devDate' : 'backAt'] = U.today();
       await DB.put('rolls', roll);
@@ -312,7 +340,7 @@ async function openDevModal(roll, done) {
     } else {
       roll.dev.mode = 'selbst'; roll.dev.sentAt = U.today(); roll.dev.cost = null; roll.dev.scanCost = null;
     }
-    roll.status = 'belichtet';
+    roll.status = 'belichtet'; leakSweep(roll.status);
     roll.finishedAt = roll.finishedAt || U.today();
     await DB.put('rolls', roll);
     close();
@@ -610,7 +638,6 @@ async function viewRoll(id, tab) {
       <div class="rh-art">${await filmArt(stock, 52)}${cam ? await camArt(cam, 66) : ''}${rollIrFilters(roll, await framesOf(roll.id), await getFilters()).map(f => filterArt(f, 38)).join('')}</div>
       <div class="rh-txt"><b>${U.esc(U.stockLabel(stock))}</b><br><span class="sub2">EI ${U.esc(roll.ei || stock?.boxIso || '?')}${camLabel(cam) || roll.camera ? ' · ' + U.esc(camLabel(cam) || roll.camera) : ''}</span>
         <br><span class="stagebadge st-${roll.status || 'entwurf'}">${STATUS[roll.status || 'entwurf'].label}</span></div>
-      ${TRASH_BTN(roll.id).replace('class="trashbtn"', 'class="trashbtn big"')}
     </div>
     <div class="tabs">${tabs.map(([k, t]) => `<a class="tab${tab === k ? ' on' : ''}" href="#/rolle/${id}/${k}">${t}</a>`).join('')}</div>
     <div id="rollbody"></div>`;
@@ -652,6 +679,11 @@ async function rollFrames(body, roll, stock) {
   const hasImgs = fr.some(f => f.imgId);
   let top = '', bottom = '';
   if (st === 'entwurf') {
+    // v236 Vorschau: Schnellerfassung. Ein Tipp legt das nächste freie Bild mit den letzten Werten, Uhrzeit und Ort an.
+    const free = fr.find(f => !(f.shot || f.imgId || f.note || f.aperture || f.shutter));
+    const lastShot = [...fr].reverse().find(f => f.shot && (f.aperture || f.shutter || f.lensId));
+    if (free) top = `<div class="quickshot"><button type="button" class="shutterbtn" id="quickShot" aria-label="Bild ${U.esc(String(frameLabel(free)))} auslösen"><span class="shring"></span><span class="shnum">${U.esc(String(frameLabel(free)))}</span></button>
+      <span class="sub2 shsub">${lastShot ? [lastShot.aperture ? 'f/' + String(lastShot.aperture).replace('.', ',') : '', lastShot.shutter || ''].filter(Boolean).join(' · ') : ''}</span></div>`;
     bottom = `<div class="modewrap"><div class="slidebtn to-dev" id="devSlide">
       <span class="slidelabel">In Entwicklung geben</span>
       <button class="slideknob" aria-label="In Entwicklung geben (zum Bestätigen nach rechts schieben)">${ART.arrow}</button>
@@ -684,6 +716,23 @@ async function rollFrames(body, roll, stock) {
     </div>
     <div class="grid" id="frameGrid">${cells.join('')}</div>
     ${bottom}`;
+  body.querySelector('#quickShot')?.addEventListener('click', async () => {
+    const all = await framesOf(roll.id);
+    const f = all.find(x => !(x.shot || x.imgId || x.note || x.aperture || x.shutter)); if (!f) return;
+    const before = JSON.parse(JSON.stringify(f));
+    const src = [...all].reverse().find(x => x.shot && (x.aperture || x.shutter || x.lensId));
+    if (src) ['aperture', 'shutter', 'lensId', 'iso'].forEach(k => { if (src[k]) f[k] = src[k]; });
+    if (src?.filterIds?.length) f.filterIds = [...src.filterIds];
+    f.date = nowLocal().slice(0, 16) + ':00'; f.dateSet = true; f.shot = true;
+    await DB.put('frames', f); U.haptic && U.haptic([18, 30, 8]);
+    // Ort im Hintergrund nachtragen, ohne zu warten
+    if (navigator.geolocation) navigator.geolocation.getCurrentPosition(async p => {
+      const cur = await DB.get('frames', f.id); if (!cur || !cur.shot || cur.placeLat != null) return;
+      cur.placeLat = +p.coords.latitude.toFixed(5); cur.placeLng = +p.coords.longitude.toFixed(5); await DB.put('frames', cur);
+    }, () => {}, { maximumAge: 120000, timeout: 8000 });
+    await rollFrames(body, roll, stock);
+    U.undo(`Bild ${frameLabel(f)} erfasst`, async () => { await DB.put('frames', before); await rollFrames(body, roll, stock); });
+  });
   const reorder = setupReorder(body, roll, fr);
   const slide = body.querySelector('#devSlide');
   if (slide) setupSlide(slide, () => openDevModal(roll, () => route()));
@@ -727,7 +776,7 @@ async function rollFrames(body, roll, stock) {
     if (!files.length) return;
     const n = await assignScans(roll, files);
     if ((roll.status || 'entwurf') === 'belichtet') {
-      roll.status = 'entwickelt';
+      roll.status = 'entwickelt'; leakSweep(roll.status);
       roll.dev = roll.dev || {};
       if (!roll.dev.backAt && !roll.dev.devDate) roll.dev[roll.dev.mode === 'selbst' ? 'devDate' : 'backAt'] = U.today();
       await DB.put('rolls', roll);
@@ -1146,7 +1195,7 @@ async function viewHandover(id) {
     } else {
       roll.dev.devDate = view.querySelector('#devDate').value;
     }
-    roll.status = 'belichtet';
+    roll.status = 'belichtet'; leakSweep(roll.status);
     roll.finishedAt = roll.finishedAt || U.today();
     await DB.put('rolls', roll);
     U.toast('Film ist in Entwicklung');
@@ -1366,6 +1415,7 @@ async function viewFrame(idWithQuery) {
   </div>`;
 
   renderMedia(view.querySelector('#media'), scanUrl, [phoneUrl, phoneUrl2].filter(Boolean), frame);
+  setupDial(view.querySelector('#apRow')); setupDial(view.querySelector('#shRow'));
   if (cam?.lightLeaks && roll && !roll.leaksMarked && (roll.status || 'entwurf') === 'entwurf' && !frame.imgId) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
 
   // Speichern; beim ersten Eintrag wird der heutige Tag als Aufnahmetag gesetzt
