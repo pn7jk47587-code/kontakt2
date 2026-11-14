@@ -845,3 +845,7 @@ Fehler behoben: War in den Einstellungen unter „Schrift (zum Ausprobieren)“ 
 ## v234: Anrede als kleine Knöpfe w, m, d
 
 In den Einstellungen steht die Anrede jetzt als drei kleine runde Knöpfe w, m und d direkt neben dem Nutzernamen, statt als breite Leiste mit Weiblich, Männlich und Neutral darunter. „d“ steht für divers und entspricht der bisherigen neutralen Anrede, etwa „Kartograf*in“ bei den Abzeichen. Die gespeicherte Wahl bleibt erhalten.
+
+## v235: Produktfoto für Kodak UltraMax 400
+
+Kodak UltraMax 400 zeigt jetzt das freigestellte Foto der gelb-blauen Packung statt der gezeichneten Filmpatrone, in der Filmliste, im Kühlschrank, bei den Rollen und im Filmtagebuch. Ein eigenes Foto im Filmeintrag hat weiterhin Vorrang.
