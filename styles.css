@@ -2863,3 +2863,19 @@ html[data-mood="sun"] .tabbar a.on svg { stroke: #ff7a3d !important; filter: dro
 @keyframes lpspin { from { transform: rotate(-200deg); } }
 .lightpick img.lpin { animation: lpfade .45s ease-out both; }
 @keyframes lpfade { from { opacity: 0; transform: scale(1.04); } }
+/* v247: Lichtblick-Knopf als weiche, fließende Form statt Kreis */
+.lprefresh { width: 58px; height: 46px; border-radius: 72% 28% 64% 36% / 38% 66% 34% 62%; border: 1px solid rgba(255, 220, 190, .45); background: linear-gradient(135deg, rgba(255, 179, 71, .38), rgba(255, 111, 97, .28) 55%, rgba(176, 108, 255, .3)); box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.25); animation: lpblob 9s ease-in-out infinite alternate; }
+@keyframes lpblob { 0% { border-radius: 72% 28% 64% 36% / 38% 66% 34% 62%; } 50% { border-radius: 34% 66% 30% 70% / 62% 36% 64% 38%; } 100% { border-radius: 60% 40% 74% 26% / 46% 70% 30% 54%; } }
+.lprefresh svg { width: 24px; height: 24px; }
+.lprefresh.spin svg { animation: lpflow .55s ease-out; }
+@keyframes lpflow { from { transform: translateX(-6px) rotate(-25deg); opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .lprefresh { animation: none; } }
+/* Form als echte Wolke statt Ellipse: Hintergrund über einen Blob-Umriss, der langsam atmet */
+.lprefresh { border: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; animation: none !important; width: 62px; height: 50px; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
+.lprefresh::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(135deg, rgba(255, 190, 110, .62), rgba(255, 111, 97, .5) 50%, rgba(176, 108, 255, .55)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  clip-path: path("M8 22C6 9 20 2 33 4c10 1.5 21 4 24 14 3 9-1 20-11 25-9 4.5-20 6-29 1C9 40 9.5 32 8 22z"); animation: lpbreathe 7s ease-in-out infinite alternate; }
+.lprefresh::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(180deg, rgba(255,255,255,.35), transparent 45%);
+  clip-path: path("M8 22C6 9 20 2 33 4c10 1.5 21 4 24 14 3 9-1 20-11 25-9 4.5-20 6-29 1C9 40 9.5 32 8 22z"); animation: lpbreathe 7s ease-in-out infinite alternate; }
+@keyframes lpbreathe { 0% { clip-path: path("M8 22C6 9 20 2 33 4c10 1.5 21 4 24 14 3 9-1 20-11 25-9 4.5-20 6-29 1C9 40 9.5 32 8 22z"); } 100% { clip-path: path("M5 26C4 12 16 4 30 5c12 1 24 2 26 13 2 10-3 19-13 23-10 4-21 5-29 0C8 38 5.5 33 5 26z"); } }
+.lprefresh { isolation: isolate; }
+@media (prefers-reduced-motion: reduce) { .lprefresh::before, .lprefresh::after { animation: none; } }

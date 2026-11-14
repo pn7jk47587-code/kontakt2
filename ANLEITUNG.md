@@ -921,3 +921,7 @@ Filmkühlschrank: im Profil in eisigem Hellblau mit Reifkante und blauem Schneek
 Leiste unten: kein abgesetzter Kasten mehr. Die Seite blendet nach unten in einen Verlauf aus, die vier Symbole stehen enger zusammen in der Mitte. Das aktive Symbol leuchtet warm.
 
 Lichtblick: Oben rechts im Foto sitzt ein runder Knopf mit Pfeil. Ein Tipp zeigt ein anderes Foto aus derselben Auswahl. Das neue Foto bleibt bis zum Ende des Tages, danach wählt die App wieder selbst.
+
+## v247: Lichtblick-Knopf in fließender Form
+
+Der Knopf zum Neuwürfeln des Lichtblicks ist kein Kreis mehr, sondern eine weiche, unregelmäßige Form im Farbverlauf von Orange zu Violett. Die Form verändert sich langsam, das Symbol ist ein geschwungener Doppelpfeil. Bei „Bewegung reduzieren“ steht die Form still.
