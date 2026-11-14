@@ -2879,3 +2879,7 @@ html[data-mood="sun"] .tabbar a.on svg { stroke: #ff7a3d !important; filter: dro
 @keyframes lpbreathe { 0% { clip-path: path("M8 22C6 9 20 2 33 4c10 1.5 21 4 24 14 3 9-1 20-11 25-9 4.5-20 6-29 1C9 40 9.5 32 8 22z"); } 100% { clip-path: path("M5 26C4 12 16 4 30 5c12 1 24 2 26 13 2 10-3 19-13 23-10 4-21 5-29 0C8 38 5.5 33 5 26z"); } }
 .lprefresh { isolation: isolate; }
 @media (prefers-reduced-motion: reduce) { .lprefresh::before, .lprefresh::after { animation: none; } }
+/* v248: Knopf wieder rund, der Pfeil darin bleibt offen */
+.lprefresh::before, .lprefresh::after { display: none !important; }
+.lprefresh { width: 46px !important; height: 46px !important; border-radius: 50% !important; filter: none !important; border: 1px solid rgba(255, 225, 200, .5) !important; background: linear-gradient(135deg, rgba(255, 190, 110, .55), rgba(255, 111, 97, .42) 50%, rgba(176, 108, 255, .5)) !important; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 6px 16px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3) !important; }
+.lprefresh.spin svg { animation: lpspin .5s ease-out !important; }

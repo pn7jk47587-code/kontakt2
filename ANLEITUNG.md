@@ -925,3 +925,7 @@ Lichtblick: Oben rechts im Foto sitzt ein runder Knopf mit Pfeil. Ein Tipp zeigt
 ## v247: Lichtblick-Knopf in fließender Form
 
 Der Knopf zum Neuwürfeln des Lichtblicks ist kein Kreis mehr, sondern eine weiche, unregelmäßige Form im Farbverlauf von Orange zu Violett. Die Form verändert sich langsam, das Symbol ist ein geschwungener Doppelpfeil. Bei „Bewegung reduzieren“ steht die Form still.
+
+## v248: Lichtblick-Knopf rund mit offenem Pfeil
+
+Der Knopf zum Neuwürfeln ist wieder rund, im Farbverlauf von Orange zu Violett. Der Pfeil darin ist ein offener Bogen, der sich nicht ganz schließt.
