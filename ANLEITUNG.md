@@ -889,3 +889,7 @@ Bei großen Fotosammlungen stürzte die Seite beim Erstellen der Sicherung ab (�
 Erstellen: Die App baut Teil 1 und zeigt den Knopf „Teil 1 speichern“. Nach dem Speichern, am besten über „In Dateien sichern“ in einen eigenen Ordner, baut sie den nächsten Teil. Das wiederholt sich bis zum letzten Teil. Die Dateien heißen `lightleak-Datum-teil1.zip`, `-teil2.zip` und so weiter. Kleine Sammlungen ergeben wie bisher eine einzige Datei.
 
 Einspielen: „Sicherung einspielen“ antippen und alle Teile zusammen auswählen. Die Reihenfolge ist egal. Fehlt ein Teil, meldet die App, welcher. Jeder Teil enthält alle Angaben zu Rollen, Bildern und Ausrüstung, die Fotos verteilen sich auf die Teile. Ältere Sicherungen aus einer einzigen Datei lassen sich weiter einspielen.
+
+## v241: Überarbeitung aus der Vorschau in die App übernommen
+
+Der Stand der Vorschau (v236, v237, v240) gilt jetzt für die richtige App: Leiste unten mit Rollen, Fotos, Karte und Profil, Startseite ohne Avatar mit „Film einlegen“ über den Rollen, Tippflächen von mindestens 44 Punkt, Namen der Symbolknöpfe bei langem Drücken, keine Hinweiskästen in den Ansichten, kein Papierkorb oben in der Rolle, Profil in drei Gruppen, „Auswertung“ statt „Analytics“, eingeklappte Test- und Zurücksetzen-Bereiche in den Einstellungen, einheitliche Feldkästen, weniger Radien und Schriftgrößen, Schnellerfassung mit dem Auslöser in der Rolle und der Lichteinfall beim Stadienwechsel. Blende und Zeit bleiben antippbare Werte.
