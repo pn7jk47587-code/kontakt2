@@ -893,3 +893,11 @@ Einspielen: „Sicherung einspielen“ antippen und alle Teile zusammen auswähl
 ## v241: Überarbeitung aus der Vorschau in die App übernommen
 
 Der Stand der Vorschau (v236, v237, v240) gilt jetzt für die richtige App: Leiste unten mit Rollen, Fotos, Karte und Profil, Startseite ohne Avatar mit „Film einlegen“ über den Rollen, Tippflächen von mindestens 44 Punkt, Namen der Symbolknöpfe bei langem Drücken, keine Hinweiskästen in den Ansichten, kein Papierkorb oben in der Rolle, Profil in drei Gruppen, „Auswertung“ statt „Analytics“, eingeklappte Test- und Zurücksetzen-Bereiche in den Einstellungen, einheitliche Feldkästen, weniger Radien und Schriftgrößen, Schnellerfassung mit dem Auslöser in der Rolle und der Lichteinfall beim Stadienwechsel. Blende und Zeit bleiben antippbare Werte.
+
+## v242: Eigene Blendenwerte je Objektiv
+
+Manche Objektive haben Blenden außerhalb der Normreihe, etwa 3,5 oder 4,5. Solche Werte lassen sich auf zwei Wegen zum antippbaren Wert machen.
+
+Im Bild: Unter Blende auf „…“ (andere) tippen und den Wert eintragen, zum Beispiel 3,5. Beim Verlassen des Feldes gehört der Wert fest zum gewählten Objektiv und steht ab dann der Größe nach in der Reihe. Eine kurze Meldung bestätigt das.
+
+Im Objektiv: Unter „Blenden am Ring“ steht die ganze Reihe des Objektivs. Ins Feld mit dem Plus einen Wert eintragen fügt ihn hinzu. Eigene Werte sind farbig umrandet und tragen ein ×, ein Tipp entfernt sie wieder. Die Normwerte ergeben sich wie bisher aus Lichtstärke und kleinster Blende.

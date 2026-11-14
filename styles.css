@@ -2802,3 +2802,11 @@ html body .titlefld > input, html body .infofld textarea { padding: 10px 12px !i
 .bkbar { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 12px 0 4px; }
 .bkbar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--teal); transition: width .2s; }
 .bkmodal .modalfoot { justify-content: space-between; align-items: center; }
+
+/* v242: Blenden am Ring im Objektiv */
+.aprow { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.aprow .chip { min-width: 46px; height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 0 10px; }
+.aprow .apstd { opacity: .75; cursor: default; }
+.aprow .apx { border-color: var(--teal) !important; color: var(--text); }
+.aprow .apx span { font-size: 16px; opacity: .7; }
+.aprow .chip-input { width: 64px; height: 44px; text-align: center; }

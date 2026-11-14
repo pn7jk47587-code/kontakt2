@@ -18,7 +18,14 @@ function lensApertures(l) {
   const list = STOPS.filter(x => parseFloat(x) >= lo - 0.05 && parseFloat(x) <= mn + 0.05);
   if (mx && !list.some(x => Math.abs(parseFloat(x) - mx) < 0.05)) list.unshift(String(mx));
   if (!list.some(x => Math.abs(parseFloat(x) - mn) < 0.05)) list.push(String(mn));
-  return list.length ? list : APERTURES;
+  // v242: eigene Werte des Objektivs, die von der Normreihe abweichen (etwa 3,5 oder 4,5), der Größe nach einsortiert
+  const out = list.length ? list : [...APERTURES];
+  for (const x of lensExtraAps(l)) if (!out.some(y => Math.abs(parseFloat(y) - parseFloat(x)) < 0.05)) out.push(x);
+  return out.sort((a, b) => parseFloat(a) - parseFloat(b));
+}
+// Eigene Blendenwerte eines Objektivs als bereinigte Zahlen-Texte („3.5“)
+function lensExtraAps(l) {
+  return [...new Set((l?.extraAps || []).map(v => num(v)).filter(v => v > 0 && v < 200).map(v => String(Math.round(v * 10) / 10)))];
 }
 // Zeiten einer Kamera: kürzeste Zeit zuerst, dann X, B, T (keine Zeitautomatik: keine Kamera im Schrank belichtet automatisch)
 function camShutters(c) {
@@ -1424,6 +1431,21 @@ async function viewFrame(idWithQuery) {
     });
   };
   setChip('apRow', 'apOther', 'aperture');
+  // v242: eine abweichende Blende unter „andere“ wird beim Verlassen des Feldes zum festen Wert dieses Objektivs
+  view.querySelector('#apOther').addEventListener('change', async e => {
+    const lens = curLens(), v = num(e.target.value);
+    if (!lens || !(v > 0) || v >= 200) return;
+    const s = String(Math.round(v * 10) / 10);
+    if (lensApertures(lens).some(x => Math.abs(parseFloat(x) - v) < 0.05)) {
+      frame.aperture = lensApertures(lens).find(x => Math.abs(parseFloat(x) - v) < 0.05);
+    } else {
+      lens.extraAps = [...lensExtraAps(lens), s]; await DB.put('lenses', lens);
+      frame.aperture = s;
+      U.toast(`f/${s.replace('.', ',')} gehört jetzt zum Objektiv`);
+    }
+    view.querySelector('#apChips').innerHTML = chipHtml(apList(), frame.aperture);
+    e.target.value = ''; fitChipRows(view); save(); showRecip();
+  });
   // Wetter zur Aufnahme: erscheint unter Ort und Zeit, sobald beides eingetragen ist (Uhrzeit und Koordinaten)
   let wxReq = 0;
   const showWx = async () => {
@@ -3043,6 +3065,8 @@ async function viewLens(id) {
         ${field('Kleinste Blende', 'minAp')}
         ${field('Filtergewinde ⌀ (mm)', 'filterThread', { attrs: 'inputmode="decimal"' })}
       </div>
+      <div class="qlabel">Blenden am Ring</div>
+      <div class="aprow" id="apRing"></div>
       ${field('Hersteller', 'maker')}
       ${field('Bezeichnung', 'name')}
       <label class="fld"><span>Bajonett</span><select data-f="mount"><option value="">Bitte wählen</option>${MOUNTS.map(m => `<option>${U.esc(m)}</option>`).join('')}</select></label>
@@ -3059,7 +3083,27 @@ async function viewLens(id) {
     </div>
     ${used || FRESH_ID === lens.id ? '' : '<button class="btn danger wide" id="delLens">Objektiv löschen</button>'}`;
     lentWire(view.querySelector('#lf'), lens);
+    // v242: Blendenreihe zeigen, eigene Werte hinzufügen oder per Tipp wieder entfernen
+    const drawRing = () => {
+      const extra = lensExtraAps(lens);
+      view.querySelector('#apRing').innerHTML = lensApertures(lens).map(v => extra.includes(v)
+        ? `<button type="button" class="chip apx" data-rm="${v}" aria-label="Blende ${v.replace('.', ',')} entfernen">${v.replace('.', ',')}<span aria-hidden="true">×</span></button>`
+        : `<span class="chip apstd">${v.replace('.', ',')}</span>`).join('')
+        + `<input class="chip-input" id="apAdd" inputmode="decimal" placeholder="+" aria-label="Blende hinzufügen">`;
+    };
+    drawRing();
+    view.querySelector('#apRing').addEventListener('click', async e => {
+      const b = e.target.closest('[data-rm]'); if (!b) return;
+      lens.extraAps = lensExtraAps(lens).filter(x => x !== b.dataset.rm); await DB.put('lenses', lens); drawRing();
+    });
+    view.querySelector('#apRing').addEventListener('change', async e => {
+      if (e.target.id !== 'apAdd') return;
+      const v = num(e.target.value); if (!(v > 0) || v >= 200) { e.target.value = ''; return; }
+      lens.extraAps = [...lensExtraAps(lens), String(Math.round(v * 10) / 10)]; await DB.put('lenses', lens); drawRing();
+      view.querySelector('#apAdd')?.focus();
+    });
     bind(view.querySelector('#lf'), lens, 'lenses', () => {
+      drawRing();
       view.querySelector('.lensstage').innerHTML = ART.lens(lens, 150);
       setHeader(lensLabel(lens) || 'Objektiv', {});
       view.querySelectorAll('.camcheck').forEach(el => {
