@@ -955,3 +955,7 @@ Der Knopf „Film einlegen“ steht wieder in der früheren Form zwischen Lichtb
 ## v254: Knöpfe der Rollenkarten neu ausgerichtet
 
 Seit der Filmstreifen höher ist, saßen „Entwickeln“, „Fotos hochladen“ und „Ansehen“ zu weit oben auf der unteren Lochreihe. Sie stehen jetzt unter dem Streifen auf Höhe des Rollentitels.
+
+## v255: Ruhigeres Layout der Rollenkarten
+
+Titel und Kamerazeile laufen über die ganze Breite der Karte. Der Knopf („Entwickeln“, „Fotos hochladen“, „Ansehen“) sitzt unten rechts und teilt sich die letzte Zeile mit dem Fortschrittsbalken, dem Labor oder dem Datum. Kein Text reicht mehr an den Knopf heran, zu lange Zeilen werden mit „…“ gekürzt.

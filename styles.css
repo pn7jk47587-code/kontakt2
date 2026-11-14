@@ -2902,3 +2902,16 @@ html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #vie
 /* v254: Aktionsknöpfe der Rollenkarten unter dem höheren Filmstreifen, auf Höhe des Titels */
 #view .rollcard .cardact { top: calc(var(--striph, 56px) + 12px + 14px) !important; bottom: auto !important; right: 14px !important; }
 #view .rollcard.st-belichtet .rc-body { padding-right: 176px !important; } #view .rollcard.st-entwurf .rc-title, #view .rollcard.st-entwurf .rc-sub { padding-right: 0; margin-right: 112px; } #view .rollcard.st-entwurf .rc-body { padding-right: 14px !important; } #view .rollcard.st-entwickelt .rc-body { padding-right: 112px !important; }
+
+/* v255: ruhigeres Kartenlayout. Titel und Kamerazeile laufen über die ganze Breite, der Knopf sitzt unten rechts
+   und teilt sich die letzte Zeile mit Fortschritt, Labor oder Datum. Dadurch berührt kein Text den Knopf. */
+#view .rollcard .cardact { top: auto !important; bottom: 14px !important; right: 14px !important; height: 34px !important; }
+#view .rollcard .rc-body { padding: 12px 16px 14px !important; }
+#view .rollcard.st-entwurf .rc-title, #view .rollcard.st-entwurf .rc-sub { margin-right: 0 !important; }
+#view .rollcard .rc-body > :last-child { min-height: 34px; display: flex; align-items: center; margin-top: 4px; }
+#view .rollcard.st-entwurf .rc-body > :last-child { margin-right: 126px; }
+#view .rollcard.st-belichtet .rc-body > :last-child { margin-right: 168px; }
+#view .rollcard.st-entwickelt .rc-body > :last-child { margin-right: 112px; }
+#view .rollcard .rc-body > .rc-sub:last-child, #view .rollcard .rc-body > .devline:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 34px; }
+#view .rollcard .rcprog { margin-top: 6px; }
+#view .rollcard.st-entwurf .rc-body, #view .rollcard.st-belichtet .rc-body, #view .rollcard.st-entwickelt .rc-body { padding: 12px 16px 14px !important; }
