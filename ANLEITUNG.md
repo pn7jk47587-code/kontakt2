@@ -896,12 +896,14 @@ Der Stand der Vorschau (v236, v237, v240) gilt jetzt für die richtige App: Leis
 
 ## v242: Eigene Blendenwerte je Objektiv
 
-Manche Objektive haben Blenden außerhalb der Normreihe, etwa 3,5 oder 4,5. Solche Werte lassen sich auf zwei Wegen zum antippbaren Wert machen.
-
-Im Bild: Unter Blende auf „…“ (andere) tippen und den Wert eintragen, zum Beispiel 3,5. Beim Verlassen des Feldes gehört der Wert fest zum gewählten Objektiv und steht ab dann der Größe nach in der Reihe. Eine kurze Meldung bestätigt das.
+Manche Objektive haben Blenden außerhalb der Normreihe, etwa 3,5 oder 4,5. Solche Werte legt man im Objektiv fest.
 
 Im Objektiv: Unter „Blenden am Ring“ steht die ganze Reihe des Objektivs. Ins Feld mit dem Plus einen Wert eintragen fügt ihn hinzu. Eigene Werte sind farbig umrandet und tragen ein ×, ein Tipp entfernt sie wieder. Die Normwerte ergeben sich wie bisher aus Lichtstärke und kleinster Blende.
 
 ## v243: Karte startet bei den meisten Fotos
 
 Die Karte zeigte beim Öffnen alle Fotos auf einmal. Lag ein einzelnes Foto in einem anderen Land, war sie dadurch weit herausgezoomt. Jetzt sucht die App die Stelle mit den meisten Fotos im Umkreis von 8 km und zeigt diese Gegend, höchstens bis Straßenebene. Fotos in anderen Städten liegen außerhalb und sind durch Verschieben oder Herauszoomen erreichbar.
+
+## v244: Eigene Blenden nur im Objektiv
+
+Abweichende Blendenwerte legt man nur noch im Objektiv unter „Blenden am Ring“ fest. Ein Wert unter „andere“ im Bild gilt nur für dieses Bild. Im Bild passt sich die Blendenreihe dem gewählten Objektiv an.

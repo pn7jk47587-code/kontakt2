@@ -1431,21 +1431,7 @@ async function viewFrame(idWithQuery) {
     });
   };
   setChip('apRow', 'apOther', 'aperture');
-  // v242: eine abweichende Blende unter „andere“ wird beim Verlassen des Feldes zum festen Wert dieses Objektivs
-  view.querySelector('#apOther').addEventListener('change', async e => {
-    const lens = curLens(), v = num(e.target.value);
-    if (!lens || !(v > 0) || v >= 200) return;
-    const s = String(Math.round(v * 10) / 10);
-    if (lensApertures(lens).some(x => Math.abs(parseFloat(x) - v) < 0.05)) {
-      frame.aperture = lensApertures(lens).find(x => Math.abs(parseFloat(x) - v) < 0.05);
-    } else {
-      lens.extraAps = [...lensExtraAps(lens), s]; await DB.put('lenses', lens);
-      frame.aperture = s;
-      U.toast(`f/${s.replace('.', ',')} gehört jetzt zum Objektiv`);
-    }
-    view.querySelector('#apChips').innerHTML = chipHtml(apList(), frame.aperture);
-    e.target.value = ''; fitChipRows(view); save(); showRecip();
-  });
+  // v244: abweichende Blenden legt man im Objektiv unter „Blenden am Ring“ fest, die Reihe hier folgt dem gewählten Objektiv
   // Wetter zur Aufnahme: erscheint unter Ort und Zeit, sobald beides eingetragen ist (Uhrzeit und Koordinaten)
   let wxReq = 0;
   const showWx = async () => {
