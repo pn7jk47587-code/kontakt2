@@ -965,3 +965,11 @@ Titel und Kamerazeile laufen über die ganze Breite der Karte. Der Knopf („Ent
 Beim Film einlegen gibt es für Kleinbild jetzt auch „24+1“: 24 Bilder plus ein Bonusbild am Rollenanfang (Bild 0), wie bisher bei „36+1“.
 
 Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlinie unter „Bilder“ und „Rolle“ nicht mehr.
+
+## v257: Auslöser in App-Farbe, Leiste in der Rolle, beschriftetes Untermenü, Contact Sheet nur PNG
+
+- Der runde Auslöser in der Rollenansicht hat die Akzentfarbe der App und wechselt mit der Lichtstimmung.
+- „Film einlegen“ ist nur noch so breit wie der Text.
+- In der Bildansicht einer Rolle bleibt die Leiste unten sichtbar (Reiter Rollen aktiv). Oben links bleibt der Zurück-Pfeil.
+- Langes Drücken auf einen Frame: Die Knöpfe unten rechts tragen jetzt ihre Beschriftung („Reihenfolge ändern“, „Werte von N übertragen“) und sitzen über der Leiste.
+- Contact Sheet wird nur noch als PNG gespeichert (je Seite eine Datei, 300 dpi). Die Wahl PDF oder PNG entfällt.

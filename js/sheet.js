@@ -1,4 +1,4 @@
-/* Contact Sheet als PDF, hell oder dunkel: Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
+/* Contact Sheet als PNG (bis v256 auch PDF), hell oder dunkel: Filmstreifen mit echtem Filmnamen am Rand und Bildnummern.
    A4 hoch: alle Bilder auf einer Seite. A5 quer bei Mittelformat: zwei Seiten. Passen die Streifen nicht, werden die Bilder kleiner und der Block mittig gesetzt (v206).
    Jede Seite wird in hoher Auflösung auf ein Canvas gezeichnet und als JPEG ins PDF gelegt (jsPDF 2.5.1, MIT). */
 const SHEET_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.6"/><path d="M7 7h4v3H7zM13 7h4v3h-4zM7 12.5h4v3H7zM13 12.5h4v3h-4z"/></svg>';
@@ -300,7 +300,6 @@ function drawCross(ctx, s, x, y, w, h, seed, k, mode) {
 }
 
 async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMark = '') {
-  await loadJsPdf();
   const d = await albumData(rollId);
   if (!d.frames.length) throw new Error('Keine Fotos im Album');
   const r = d.roll, st = d.stocks.get(r?.stockId), cam = d.cams.get(r?.cameraId);
@@ -326,8 +325,6 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
     sub: [U.stockLabel(st), r?.ei ? 'EI ' + r.ei : '', camLabel(cam) || r?.camera || '', range].filter(Boolean).join(' · '),
     count: `${d.frames.length} Bilder`
   };
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: paper === 'a4' ? 'a4' : [P.w, P.h], orientation: paper === 'a4' ? 'portrait' : 'landscape', compress: true });
   const s = 300 / 72;   // 300 dpi
   const c = document.createElement('canvas'); c.width = Math.round(P.w * s); c.height = Math.round(P.h * s);
   const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
@@ -341,12 +338,11 @@ async function makeContactSheet(rollId, paper, theme = 'dark', perRow = 6, favMa
     pctx.drawImage(c, 0, 0, pv.width, pv.height); previews.push(pv.toDataURL('image/jpeg', 0.82));
     // v217: jede Seite zusätzlich als PNG in 300 dpi, schon jetzt erzeugt, damit das Teilen sofort startet
     pngs.push(await new Promise(r => c.toBlob(r, 'image/png')));
-    if (p) doc.addPage(paper === 'a4' ? 'a4' : [P.w, P.h], paper === 'a4' ? 'portrait' : 'landscape');
-    doc.addImage(c.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, P.w, P.h, undefined, 'FAST');
   }
   imgs.forEach(x => x.src && x.src.close && x.src.close());
-  const name = `Contact Sheet ${(info.title || 'Rolle').replace(/[\\/:*?"<>|]+/g, ' ').trim()} ${paper.toUpperCase()}.pdf`;
-  return { blob: doc.output('blob'), name, pages, previews, pngs, ratio: P.w / P.h };
+  const name = `Contact Sheet ${(info.title || 'Rolle').replace(/[\\/:*?"<>|]+/g, ' ').trim()} ${paper.toUpperCase()}`;
+  // v257: nur noch PNG (je Seite eine Datei in 300 dpi), kein PDF mehr
+  return { blob: pngs[0], name, pages, previews, pngs, ratio: P.w / P.h };
 }
 
 // v221: Instagram Story. Ausgewählte Bilder als kurze Filmstreifen im Raster, 1080 × 1920 Pixel.
@@ -467,7 +463,7 @@ async function openStoryPicker(rollId, onPick, opts = {}) {
 // Die letzte Wahl wird vorausgewählt, beim ersten Mal ist nichts gewählt.
 function openContactSheet(rollId) {
   const ov = document.createElement('div'); ov.className = 'modalbg';
-  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Contact Sheet als PDF">
+  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="Contact Sheet">
     <div class="csopts">
       <button type="button" class="csopt" data-p="a4"><span class="cspage a4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>A4 hoch</b></button>
       <button type="button" class="csopt" data-p="a5"><span class="cspage a5"><i></i><i></i><i></i><i></i></span><b>A5 quer</b></button>
@@ -510,12 +506,12 @@ function openContactSheet(rollId) {
   go.onclick = async () => {
     const favm = ov.querySelector('.csfav').hidden ? '' : fm;
     const all = ov.querySelectorAll('button'); all.forEach(x => x.disabled = true);
-    stEl.textContent = 'PDF wird erstellt …';
+    stEl.textContent = 'Wird erstellt …';
     try {
       const res = await makeContactSheet(rollId, sel.p, sel.t, +sel.r, ov.querySelector('.csfav').hidden ? '' : fm);
       stEl.textContent = '';
       openSheetPreview(res, () => ov.remove());
-    } catch (e) { stEl.textContent = e.message || 'PDF konnte nicht erstellt werden'; }
+    } catch (e) { stEl.textContent = e.message || 'Contact Sheet konnte nicht erstellt werden'; }
     all.forEach(x => x.disabled = false); paint();
   };
 }
@@ -525,13 +521,11 @@ const SHARE_IC = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="t
 // Das Teilen startet erst auf diesen Tipp hin, so bleibt die Nutzergeste für navigator.share frisch.
 function openSheetPreview(res, onDone) {
   let { blob, name, pages, previews, pngs, ratio, story } = res;
-  let fmt = 'pdf';
-  try { if (localStorage.getItem('kb-cs-fmt') === 'png') fmt = 'png'; } catch (_) {}
-  if (story) fmt = 'png';
+  const fmt = 'png';   // v257: Contact Sheet und Story immer als PNG
   const ov = document.createElement('div'); ov.className = 'cspv' + (story ? ' storypv' : '');
   ov.innerHTML = `<div class="cspvpages">${previews.map((u, i) => `<img src="${u}" alt="Seite ${i + 1} von ${pages}" style="aspect-ratio:${ratio}">`).join('')}</div>
     <div class="cspvfoot"><button class="closex" id="pvBack" aria-label="Zurück">${ART.x}</button>
-    ${story ? (res.retheme ? `<div class="seggroup cspvfmt" role="group" aria-label="Papier"><button type="button" class="seg" data-st="light">Hell</button><button type="button" class="seg" data-st="dark">Dunkel</button></div>` : '') : '<div class="seggroup cspvfmt" role="group" aria-label="Dateiformat"><button type="button" class="seg" data-x="pdf">PDF</button><button type="button" class="seg" data-x="png">PNG</button></div>'}
+    ${story ? (res.retheme ? `<div class="seggroup cspvfmt" role="group" aria-label="Papier"><button type="button" class="seg" data-st="light">Hell</button><button type="button" class="seg" data-st="dark">Dunkel</button></div>` : '') : ''}
     <button class="cspvshare" id="pvShare" aria-label="Teilen oder sichern">${SHARE_IC}</button></div>`;
   document.body.appendChild(ov);
   const paint = () => ov.querySelectorAll('[data-x]').forEach(x => x.classList.toggle('on', x.dataset.x === fmt));
@@ -544,7 +538,6 @@ function openSheetPreview(res, onDone) {
     ({ blob, pngs, previews } = r2); ov.querySelector('.cspvpages img').src = previews[0];
   });
   paintSt();
-  ov.querySelectorAll('[data-x]').forEach(x => x.onclick = () => { fmt = x.dataset.x; try { localStorage.setItem('kb-cs-fmt', fmt); } catch (_) {} paint(); });
   paint();
   ov.querySelector('#pvBack').onclick = () => ov.remove();
   ov.querySelector('#pvShare').onclick = async e => {

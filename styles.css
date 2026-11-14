@@ -2917,3 +2917,14 @@ html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #vie
 #view .rollcard.st-entwurf .rc-body, #view .rollcard.st-belichtet .rc-body, #view .rollcard.st-entwickelt .rc-body { padding: 12px 16px 14px !important; }
 /* v256: Auslöser in der Rolle mit Abstand zur Trennlinie der Reiter darüber */
 .quickshot { padding-top: 22px !important; }
+
+/* v257: Auslöser in der Akzentfarbe der App (folgt Tag, Abend und Nacht) statt im eigenen Verlauf */
+.shutterbtn { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--teal) 30%, #fff), var(--teal) 55%, color-mix(in srgb, var(--teal) 72%, #000)) !important; color: var(--onaccent) !important; box-shadow: 0 10px 26px color-mix(in srgb, var(--teal) 35%, transparent), inset 0 -4px 10px rgba(0,0,0,.22) !important; }
+.shutterbtn .shring { border-color: color-mix(in srgb, var(--teal) 55%, transparent) !important; }
+/* v257: „Film einlegen“ nur so breit wie der Text */
+#view .newroll.btn { min-width: 0 !important; width: fit-content !important; padding: 10px 20px !important; }
+/* v257: Untermenü am Frame mit Beschriftung neben dem Symbol, über der Leiste unten */
+.framepop { align-items: flex-end; z-index: 950 !important; }
+body.hastabs .framepop { bottom: calc(84px + var(--safe-b)) !important; }
+.framepop .fpbtn { width: auto !important; border-radius: 999px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; font: 600 15px/1 inherit; font-family: inherit; white-space: nowrap; }
+body.hastabs .pickbar { bottom: calc(84px + var(--safe-b)); }

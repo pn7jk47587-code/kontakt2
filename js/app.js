@@ -220,13 +220,15 @@ function setHeader(title, { action = '', soft = false } = {}) {
   const h = location.hash || '#/';
   // v236 Vorschau: vier Hauptseiten mit Leiste unten. App-Symbol und Profilkreis oben entfallen.
   const tabOf = h === '#/' || h === '#' || h === '' ? 'rollen' : h.startsWith('#/alle-fotos') ? 'fotos' : h.startsWith('#/karte') ? 'karte' : h === '#/profil' ? 'profil' : '';
+  // v257: auch in der Bildansicht einer Rolle bleibt die Leiste unten sichtbar (Reiter Rollen), oben bleibt der Zurück-Pfeil
+  const inRoll = /^#\/rolle\/(?!neu)[^/?]+$/.test(h);
   const top = !!tabOf || h.startsWith('#/willkommen');
   document.getElementById('homeBtn').hidden = true;
   backBtn.hidden = !has || top;
   const bar = document.getElementById('tabBar');
-  bar.hidden = !has || !tabOf;
-  document.body.classList.toggle('hastabs', has && !!tabOf);
-  bar.querySelectorAll('[data-tab]').forEach(a => { const on = a.dataset.tab === tabOf; a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'); });
+  bar.hidden = !has || !(tabOf || inRoll);
+  document.body.classList.toggle('hastabs', has && !!(tabOf || inRoll));
+  bar.querySelectorAll('[data-tab]').forEach(a => { const on = a.dataset.tab === (tabOf || (inRoll ? 'rollen' : '')); a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'); });
   const prof = document.getElementById('profBtn');
   prof.hidden = true;
   prof.classList.toggle('here', location.hash.startsWith('#/profil'));

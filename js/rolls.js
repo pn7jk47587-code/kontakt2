@@ -780,7 +780,7 @@ async function rollFrames(body, roll, stock) {
   const openFramePop = (c, f) => {
     document.querySelector('.framepop')?.remove();
     const pop = document.createElement('div'); pop.className = 'framepop';
-    pop.innerHTML = `<button type="button" class="fpbtn" data-act="move" aria-label="Reihenfolge ändern">${MOVE_IC}</button><button type="button" class="fpbtn" data-act="copy" aria-label="Einstellungen von Frame ${U.esc(frameLabel(f))} übertragen">${COPY_IC}</button>`;
+    pop.innerHTML = `<button type="button" class="fpbtn" data-act="move" ><span>Reihenfolge ändern</span>${MOVE_IC}</button><button type="button" class="fpbtn" data-act="copy" ><span>Werte von ${U.esc(frameLabel(f))} übertragen</span>${COPY_IC}</button>`;
     // unten rechts, wo sonst der Haken sitzt; der gedrückte Frame bleibt markiert, solange die Symbole offen sind
     c.classList.add('lpsel');
     document.body.appendChild(pop);
@@ -1915,7 +1915,7 @@ async function viewAlbum(id) {
   // Fotos nachtragen: füllen zuerst Bilder ohne Foto (nach Dateinamen sortiert), weitere kommen als neue Bilder hinten dran
   const addPhotosBtn = d.roll ? `<label class="roundic" aria-label="Fotos nachtragen" title="Fotos nachtragen">${ART.pickup}<input type="file" accept="image/*" multiple hidden id="albAdd"></label>` : '';
   const phoneBtn = d.roll ? `<label class="roundic" aria-label="Handyfotos als Referenz zuordnen" title="Handyfotos zuordnen">${REF_IMP_IC}<input type="file" accept="image/*" multiple hidden id="albPhone"></label>` : '';
-  const sheetBtn = d.roll && d.frames.length ? `<button type="button" class="roundic" id="albSheet" aria-label="Contact Sheet als PDF" title="Contact Sheet">${SHEET_IC}</button>` : '';
+  const sheetBtn = d.roll && d.frames.length ? `<button type="button" class="roundic" id="albSheet" aria-label="Contact Sheet" title="Contact Sheet">${SHEET_IC}</button>` : '';
   const wireAdd = () => view.querySelector('#albAdd')?.addEventListener('change', async e => {
     const files = [...e.target.files]; if (!files.length) return;
     const n = await assignScans(d.roll, files);
