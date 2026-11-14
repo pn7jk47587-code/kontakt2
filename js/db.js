@@ -42,6 +42,7 @@ const DB = (() => {
   return {
     get: (s, id) => tx(s, 'readonly', os => req(os.get(id))),
     all: (s) => tx(s, 'readonly', os => req(os.getAll())),
+    keys: (s) => tx(s, 'readonly', os => req(os.getAllKeys())),
     put: (s, obj) => tx(s, 'readwrite', os => req(os.put(obj))),
     putMany: (s, arr) => tx(s, 'readwrite', os => Promise.all(arr.map(o => req(os.put(o))))),
     del: (s, id) => tx(s, 'readwrite', os => req(os.delete(id))),

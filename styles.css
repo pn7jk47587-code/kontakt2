@@ -2734,3 +2734,11 @@ button.dtadd { display: flex; align-items: center; justify-content: center; padd
 .genderpick { display: flex; gap: 6px; margin: 0; flex: 0 0 auto; }
 .genderpick .gchip { width: 36px; height: 36px; padding: 0; flex: 0 0 auto; border-radius: 50%; font-size: 15px; font-weight: 700; line-height: 1; display: grid; place-items: center; border: 1.5px solid var(--line); background: var(--card); color: var(--muted); }
 .genderpick .gchip.on { border-color: var(--teal); background: var(--teal); color: #06202a; }
+
+/* v238: Sicherung mit Fortschritt */
+.bkmodal h2 { margin: 0 0 6px; }
+.bkmodal #bkState { min-height: 18px; font-variant-numeric: tabular-nums; }
+.bkmodal #bkState.bkerr { color: #ff8f8f; }
+.bkbar { height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; margin: 12px 0 4px; }
+.bkbar i { display: block; height: 100%; width: 0; border-radius: 999px; background: var(--teal); transition: width .2s; }
+.bkmodal .modalfoot { justify-content: space-between; align-items: center; }

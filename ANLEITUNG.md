@@ -849,3 +849,9 @@ In den Einstellungen steht die Anrede jetzt als drei kleine runde Knöpfe w, m u
 ## v235: Produktfoto für Kodak UltraMax 400
 
 Kodak UltraMax 400 zeigt jetzt das freigestellte Foto der gelb-blauen Packung statt der gezeichneten Filmpatrone, in der Filmliste, im Kühlschrank, bei den Rollen und im Filmtagebuch. Ein eigenes Foto im Filmeintrag hat weiterhin Vorrang.
+
+## v238: Sicherung funktioniert auch mit vielen Fotos
+
+Die Sicherung ist neu gebaut. Bisher lud die App alle Fotos in voller Größe gleichzeitig in den Arbeitsspeicher und legte die ZIP-Datei mehrfach als Kopie an. Auf dem iPhone brach das bei vielen Fotos ohne Meldung ab. Ein einzelner Bildeintrag ohne Bilddaten ließ die Sicherung ebenfalls still scheitern. Außerdem öffnete sich das Teilen-Fenster erst nach dem Zusammenbauen, was iOS nach einigen Sekunden nicht mehr zulässt.
+
+Jetzt verarbeitet die App ein Foto nach dem anderen und zeigt den Fortschritt („Foto 12 von 340“). Ist die Datei fertig, steht ihre Größe da, und der Knopf „Sicherung speichern“ öffnet das Teilen-Fenster. Dort am besten „In Dateien sichern“ wählen. Einträge ohne Bilddaten werden übersprungen und gezählt. Scheitert etwas, steht der Grund im Fenster. Das Format der Sicherung ist unverändert, alte Sicherungen lassen sich weiter einspielen. Die Grenze liegt bei 4 GB je Sicherung.

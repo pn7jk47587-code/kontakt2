@@ -897,30 +897,104 @@ async function viewMore() {
   });
 }
 
+// v238: Sicherung ohne Speicherüberlauf. Vorher lagen alle Fotos gleichzeitig im Arbeitsspeicher und die ZIP-Datei
+// entstand mehrfach als Kopie, auf dem iPhone brach das bei vielen Fotos ohne Meldung ab. Jetzt wird jedes Foto einzeln
+// gelesen und als Teil einer unkomprimierten ZIP-Datei abgelegt. Das Teilen löst ein eigener Knopf aus,
+// weil iOS das Teilen-Fenster nur direkt nach einem Tipp erlaubt.
+const ZIPW = (() => {
+  let table = null;
+  const crc32 = u8 => {
+    if (!table) { table = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; table[n] = c >>> 0; } }
+    let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = table[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  };
+  return () => {
+    const parts = [], central = []; let offset = 0;
+    const enc = new TextEncoder();
+    const now = new Date(), dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1), dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    return {
+      // data: ArrayBuffer, Uint8Array oder Text
+      add(name, data) {
+        const u8 = typeof data === 'string' ? enc.encode(data) : data instanceof Uint8Array ? data : new Uint8Array(data);
+        const nm = enc.encode(name), crc = crc32(u8), size = u8.length;
+        if (offset + size > 0xFFFFFF00) throw new Error('Die Sicherung wäre größer als 4 GB');
+        const h = new DataView(new ArrayBuffer(30));
+        h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+        h.setUint16(10, dosTime, true); h.setUint16(12, dosDate, true); h.setUint32(14, crc, true); h.setUint32(18, size, true); h.setUint32(22, size, true);
+        h.setUint16(26, nm.length, true); h.setUint16(28, 0, true);
+        // als Blob ablegen, damit die Bilddaten nicht im Skript-Speicher liegen bleiben
+        parts.push(new Blob([h.buffer, nm, u8]));
+        const c = new DataView(new ArrayBuffer(46));
+        c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+        c.setUint16(12, dosTime, true); c.setUint16(14, dosDate, true); c.setUint32(16, crc, true); c.setUint32(20, size, true); c.setUint32(24, size, true);
+        c.setUint16(28, nm.length, true); c.setUint32(42, offset, true);
+        central.push(c.buffer, nm);
+        offset += 30 + nm.length + size;
+      },
+      finish() {
+        const n = central.length / 2, cd = new Blob(central), e = new DataView(new ArrayBuffer(22));
+        if (n > 0xFFFE) throw new Error('Zu viele Dateien für eine Sicherung');
+        e.setUint32(0, 0x06054b50, true); e.setUint16(8, n, true); e.setUint16(10, n, true); e.setUint32(12, cd.size, true); e.setUint32(16, offset, true);
+        return new Blob([...parts, cd, e.buffer], { type: 'application/zip' });
+      }
+    };
+  };
+})();
+
 async function exportZip() {
-  U.toast('Erstelle Sicherung …');
-  const zip = new JSZip();
-  const data = { app: 'kontaktbogen', version: 2, exportedAt: new Date().toISOString() };
-  // Version 2: auch die Geräte-Einstellungen aus localStorage (Lichtmodus, Sprache, aufgeklappte Bereiche, Alben, Sortierung, gesehene Hinweise)
-  data.local = {};
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('kb-')) data.local[k] = localStorage.getItem(k); } } catch (_) {}
-  for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) data[s] = await DB.all(s);
-  const imgs = await DB.all('images');
-  data.images = imgs.map(({ blob, thumb, data, tdata, ...rest }) => rest);
-  zip.file('daten.json', JSON.stringify(data, null, 1));
-  for (const i of imgs) {
-    zip.file(`bilder/${i.id}.jpg`, U.recBlob(i));
-    zip.file(`bilder/${i.id}_klein.jpg`, U.recBlob(i, true));
+  const ov = document.createElement('div'); ov.className = 'modalbg';
+  ov.innerHTML = `<div class="modal bkmodal" role="dialog" aria-modal="true" aria-label="Sicherung"><h2>Sicherung</h2>
+    <p class="sub2" id="bkState">Wird vorbereitet …</p><div class="bkbar"><i id="bkBar"></i></div>
+    <div class="modalfoot"><button class="closex" id="bkX" aria-label="Schließen">${ART.x}</button><button class="btn" id="bkSave" hidden>Sicherung speichern</button></div></div>`;
+  document.body.appendChild(ov);
+  let stop = false;
+  const $ = q => ov.querySelector(q), state = t => { $('#bkState').textContent = I18N && I18N.t ? I18N.t(t) : t; };
+  $('#bkX').onclick = () => { stop = true; ov.remove(); };
+  try {
+    const zip = ZIPW();
+    const data = { app: 'kontaktbogen', version: 2, exportedAt: new Date().toISOString() };
+    // Version 2: auch die Geräte-Einstellungen aus localStorage (Lichtmodus, Sprache, aufgeklappte Bereiche, Alben, Sortierung, gesehene Hinweise)
+    data.local = {};
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('kb-')) data.local[k] = localStorage.getItem(k); } } catch (_) {}
+    for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) data[s] = await DB.all(s);
+    data.images = [];
+    const ids = await DB.keys('images');
+    let skipped = 0;
+    for (let n = 0; n < ids.length; n++) {
+      if (stop) return;
+      const rec = await DB.get('images', ids[n]); if (!rec) continue;
+      const { blob, thumb, data: _d, tdata, ...rest } = rec;
+      // neue Einträge liegen als ArrayBuffer vor, ältere als Blob
+      const full = rec.data || (rec.blob && await rec.blob.arrayBuffer()), small = rec.tdata || (rec.thumb && await rec.thumb.arrayBuffer());
+      if (!full) { skipped++; continue; }
+      data.images.push(rest);
+      zip.add(`bilder/${rec.id}.jpg`, full);
+      if (small) zip.add(`bilder/${rec.id}_klein.jpg`, small);
+      $('#bkState').textContent = `Foto ${n + 1} von ${ids.length}`;
+      $('#bkBar').style.width = Math.round((n + 1) / ids.length * 100) + '%';
+      if (n % 5 === 4) await new Promise(r => setTimeout(r, 0));   // Anzeige nachziehen lassen
+    }
+    zip.add('daten.json', JSON.stringify(data, null, 1));
+    const out = zip.finish();
+    const name = `lightleak-${U.today()}.zip`;
+    const mb = out.size / 1048576;
+    $('#bkBar').style.width = '100%';
+    $('#bkState').textContent = `${mb >= 100 ? Math.round(mb) : mb.toFixed(1).replace('.', ',')} MB · ${data.images.length} ${data.images.length === 1 ? 'Foto' : 'Fotos'}${skipped ? ` · ${skipped} ohne Bilddaten übersprungen` : ''}`;
+    const done = async () => { await DB.put('meta', { id: 'backup', at: new Date().toISOString() }); ov.remove(); U.toast('Sicherung erstellt'); if (location.hash.startsWith('#/mehr')) route(); };
+    const btn = $('#bkSave'); btn.hidden = false;
+    btn.onclick = async () => {
+      const file = new File([out], name, { type: 'application/zip' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try { await navigator.share({ files: [file], title: name }); return done(); }
+        catch (e) { if (e.name === 'AbortError') return; }
+      }
+      downloadBlob(out, name); done();
+    };
+  } catch (e) {
+    console.error(e);
+    $('#bkState').textContent = 'Sicherung fehlgeschlagen: ' + (e && e.message ? e.message : e);
+    $('#bkState').classList.add('bkerr');
   }
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-  const name = `lightleak-${U.today()}.zip`;
-  const file = new File([blob], name, { type: 'application/zip' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: name }); }
-    catch (e) { if (e.name !== 'AbortError') downloadBlob(blob, name); else return; }
-  } else downloadBlob(blob, name);
-  await DB.put('meta', { id: 'backup', at: new Date().toISOString() });
-  U.toast('Sicherung erstellt');
 }
 function downloadBlob(blob, name) {
   const a = document.createElement('a');
