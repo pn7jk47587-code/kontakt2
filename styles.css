@@ -2892,3 +2892,6 @@ html[data-mood="sun"] .tabbar a.on svg { stroke: #ff7a3d !important; filter: dro
 #view .rollcard .strip img { border-radius: 6px !important; }
 html[data-mood="sun"] #view .rollcard .strip { background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.25)) !important; }
 html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #view .rollcard .strip::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='6'%3E%3Crect x='4' y='0.5' width='8' height='5' rx='1.8' fill='%23000' fill-opacity='.12'/%3E%3C/svg%3E") !important; }
+/* v251: Lichtblick-Knopf zurückhaltend, damit er nicht vom Foto ablenkt: dunkles, halbdurchsichtiges Glas ohne Farbe */
+.lprefresh { width: 40px !important; height: 40px !important; border: 1px solid rgba(255,255,255,.22) !important; background: rgba(10, 12, 22, .28) !important; box-shadow: none !important; color: rgba(255,255,255,.85) !important; }
+.lprefresh svg { width: 20px !important; height: 20px !important; }

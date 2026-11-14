@@ -939,3 +939,7 @@ Der Pfeil im Lichtblick-Knopf ist so gedreht, dass die Spitze unten rechts sitzt
 ## v250: Pfeil im Lichtblick-Knopf nach Vorlage
 
 Der Pfeil folgt der Vorlage der Nutzerin: ein Bogen, der unten beginnt, links herum über oben nach rechts läuft und dort mit einer nach unten zeigenden Spitze endet. Unten rechts bleibt der Bogen offen.
+
+## v251: Lichtblick-Knopf zurückhaltend
+
+Der Knopf hat keinen Farbverlauf mehr. Er ist kleiner und besteht aus dunklem, halbdurchsichtigem Glas mit dünnem hellen Rand, damit er nicht vom Foto ablenkt.
