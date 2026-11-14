@@ -2895,3 +2895,7 @@ html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #vie
 /* v251: Lichtblick-Knopf zurückhaltend, damit er nicht vom Foto ablenkt: dunkles, halbdurchsichtiges Glas ohne Farbe */
 .lprefresh { width: 40px !important; height: 40px !important; border: 1px solid rgba(255,255,255,.22) !important; background: rgba(10, 12, 22, .28) !important; box-shadow: none !important; color: rgba(255,255,255,.85) !important; }
 .lprefresh svg { width: 20px !important; height: 20px !important; }
+/* v252: Beschriftung des Lichtblicks kleiner und zurückhaltender */
+.lightpick .lptext { padding: 28px 16px 11px !important; gap: 1px !important; background: linear-gradient(transparent, rgba(0,0,0,.55)) !important; }
+.lightpick .lptext b { font-size: 10px !important; letter-spacing: .16em !important; opacity: .85; }
+.lightpick .lptext span { font-size: 12px !important; color: rgba(255,255,255,.78) !important; }

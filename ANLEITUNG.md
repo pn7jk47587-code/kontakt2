@@ -943,3 +943,7 @@ Der Pfeil folgt der Vorlage der Nutzerin: ein Bogen, der unten beginnt, links he
 ## v251: Lichtblick-Knopf zurückhaltend
 
 Der Knopf hat keinen Farbverlauf mehr. Er ist kleiner und besteht aus dunklem, halbdurchsichtigem Glas mit dünnem hellen Rand, damit er nicht vom Foto ablenkt.
+
+## v252: Lichtblick-Beschriftung kleiner
+
+„Lichtblick“ und die Zeile mit Ort, Rolle und Datum stehen kleiner und blasser unten im Foto, der dunkle Verlauf darunter ist schwächer.
