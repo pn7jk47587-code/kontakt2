@@ -875,7 +875,8 @@ async function viewMore() {
     <p>Alle Daten liegen nur auf diesem Gerät. Die Sicherung ist eine ZIP-Datei mit allen Fotos in voller Größe und allem anderen: Rollen, Frames, Notizen, Kameraschrank, Kühlschrank, Favoriten, Reihenfolgen, Labore und Einstellungen. „Sicherung einspielen“ stellt daraus genau diesen Stand wieder her, auch nach einem Zurücksetzen oder auf einem neuen Gerät.</p>
     <p class="hint">Letzte Sicherung: ${lastBackup ? U.fmtDate(lastBackup) : 'noch keine'}</p>
     <button class="btn wide" id="exp">Sicherung erstellen</button>
-    <label class="btn ghost wide">Sicherung einspielen<input type="file" accept=".zip,application/zip" hidden id="imp"></label>
+    <label class="btn ghost wide">Sicherung einspielen<input type="file" accept=".zip,application/zip" multiple hidden id="imp"></label>
+    <p class="hint">Große Sicherungen bestehen aus mehreren Teilen. Beim Einspielen alle Teile zusammen auswählen.</p>
   </div>
   <div class="card">
     <h3 class="sub">Speicher</h3>
@@ -889,7 +890,7 @@ async function viewMore() {
   </div>
   <p class="hint pad">Bibliotheken: JSZip, exifr (Lizenzen im Ordner vendor).</p>`;
   view.querySelector('#exp').addEventListener('click', exportZip);
-  view.querySelector('#imp').addEventListener('change', e => importZip(e.target.files[0]));
+  view.querySelector('#imp').addEventListener('change', e => importZip(e.target.files));
   view.querySelector('#wipe').addEventListener('click', async () => {
     if (!confirm('Wirklich alle Rollen, Bilder und Filme auf diesem Gerät löschen?')) return;
     if (!confirm('Letzte Rückfrage: Ohne Sicherung sind die Daten weg.')) return;
@@ -898,30 +899,135 @@ async function viewMore() {
   });
 }
 
+// v238: Sicherung ohne Speicherüberlauf. Vorher lagen alle Fotos gleichzeitig im Arbeitsspeicher und die ZIP-Datei
+// entstand mehrfach als Kopie, auf dem iPhone brach das bei vielen Fotos ohne Meldung ab. Jetzt wird jedes Foto einzeln
+// gelesen und als Teil einer unkomprimierten ZIP-Datei abgelegt. Das Teilen löst ein eigener Knopf aus,
+// weil iOS das Teilen-Fenster nur direkt nach einem Tipp erlaubt.
+const ZIPW = (() => {
+  let table = null;
+  const crc32 = u8 => {
+    if (!table) { table = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; table[n] = c >>> 0; } }
+    let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = table[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  };
+  return () => {
+    const parts = [], central = []; let offset = 0;
+    const enc = new TextEncoder();
+    const now = new Date(), dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1), dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    return {
+      // data: ArrayBuffer, Uint8Array oder Text
+      add(name, data) {
+        const u8 = typeof data === 'string' ? enc.encode(data) : data instanceof Uint8Array ? data : new Uint8Array(data);
+        const nm = enc.encode(name), crc = crc32(u8), size = u8.length;
+        if (offset + size > 0xFFFFFF00) throw new Error('Die Sicherung wäre größer als 4 GB');
+        const h = new DataView(new ArrayBuffer(30));
+        h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+        h.setUint16(10, dosTime, true); h.setUint16(12, dosDate, true); h.setUint32(14, crc, true); h.setUint32(18, size, true); h.setUint32(22, size, true);
+        h.setUint16(26, nm.length, true); h.setUint16(28, 0, true);
+        // als Blob ablegen, damit die Bilddaten nicht im Skript-Speicher liegen bleiben
+        parts.push(new Blob([h.buffer, nm, u8]));
+        const c = new DataView(new ArrayBuffer(46));
+        c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+        c.setUint16(12, dosTime, true); c.setUint16(14, dosDate, true); c.setUint32(16, crc, true); c.setUint32(20, size, true); c.setUint32(24, size, true);
+        c.setUint16(28, nm.length, true); c.setUint32(42, offset, true);
+        central.push(c.buffer, nm);
+        offset += 30 + nm.length + size;
+      },
+      finish() {
+        const n = central.length / 2, cd = new Blob(central), e = new DataView(new ArrayBuffer(22));
+        if (n > 0xFFFE) throw new Error('Zu viele Dateien für eine Sicherung');
+        e.setUint32(0, 0x06054b50, true); e.setUint16(8, n, true); e.setUint16(10, n, true); e.setUint32(12, cd.size, true); e.setUint32(16, offset, true);
+        return new Blob([...parts, cd, e.buffer], { type: 'application/zip' });
+      }
+    };
+  };
+})();
+
+// v239: Sicherung in Teilen. Jeder Teil ist eine eigene ZIP-Datei von höchstens rund 100 MB und wird gespeichert,
+// bevor der nächste entsteht. So liegt nie die ganze Sammlung im Arbeitsspeicher. Jeder Teil enthält alle Daten
+// außer den Fotos und zusätzlich seine eigenen Fotos, das Einspielen nimmt alle Teile zusammen entgegen.
+const BK_PART = 100 * 1048576;
 async function exportZip() {
-  U.toast('Erstelle Sicherung …');
-  const zip = new JSZip();
-  const data = { app: 'kontaktbogen', version: 2, exportedAt: new Date().toISOString() };
-  // Version 2: auch die Geräte-Einstellungen aus localStorage (Lichtmodus, Sprache, aufgeklappte Bereiche, Alben, Sortierung, gesehene Hinweise)
-  data.local = {};
-  try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('kb-')) data.local[k] = localStorage.getItem(k); } } catch (_) {}
-  for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) data[s] = await DB.all(s);
-  const imgs = await DB.all('images');
-  data.images = imgs.map(({ blob, thumb, data, tdata, ...rest }) => rest);
-  zip.file('daten.json', JSON.stringify(data, null, 1));
-  for (const i of imgs) {
-    zip.file(`bilder/${i.id}.jpg`, U.recBlob(i));
-    zip.file(`bilder/${i.id}_klein.jpg`, U.recBlob(i, true));
+  const ov = document.createElement('div'); ov.className = 'modalbg';
+  ov.innerHTML = `<div class="modal bkmodal" role="dialog" aria-modal="true" aria-label="Sicherung"><h2>Sicherung</h2>
+    <p class="sub2" id="bkState"></p><div class="bkbar"><i id="bkBar"></i></div>
+    <div class="modalfoot"><button class="closex" id="bkX" aria-label="Schließen">${ART.x}</button><button class="btn" id="bkSave" hidden></button></div></div>`;
+  document.body.appendChild(ov);
+  let stop = false;
+  const $ = q => ov.querySelector(q), tr = t => I18N && I18N.t ? I18N.t(t) : t;
+  $('#bkState').textContent = tr('Wird vorbereitet …');
+  $('#bkX').onclick = () => { stop = true; ov.remove(); };
+  const pause = ms => new Promise(r => setTimeout(r, ms));
+  try {
+    const base = { app: 'kontaktbogen', version: 2, exportedAt: new Date().toISOString() };
+    // Version 2: auch die Geräte-Einstellungen aus localStorage (Lichtmodus, Sprache, aufgeklappte Bereiche, Alben, Sortierung, gesehene Hinweise)
+    base.local = {};
+    try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('kb-')) base.local[k] = localStorage.getItem(k); } } catch (_) {}
+    for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) base[s] = await DB.all(s);
+    const ids = await DB.keys('images');
+    base.imagesTotal = ids.length;
+    const stamp = U.today();
+    let n = 0, part = 0, skipped = 0, saved = 0;
+    // einen Teil bauen: Fotos ab Position n, bis die Grenze erreicht ist
+    const build = async () => {
+      const zip = ZIPW(), images = []; let size = 0; part++;
+      while (n < ids.length && (size < (window.__bkPart || BK_PART) || !images.length)) {
+        if (stop) return null;
+        const rec = await DB.get('images', ids[n]); n++;
+        if (!rec) continue;
+        const { blob, thumb, data: _d, tdata, ...rest } = rec;
+        // neue Einträge liegen als ArrayBuffer vor, ältere als Blob
+        const full = rec.data || (rec.blob && await rec.blob.arrayBuffer()), small = rec.tdata || (rec.thumb && await rec.thumb.arrayBuffer());
+        if (!full) { skipped++; continue; }
+        images.push(rest);
+        zip.add(`bilder/${rec.id}.jpg`, full); size += full.byteLength;
+        if (small) { zip.add(`bilder/${rec.id}_klein.jpg`, small); size += small.byteLength; }
+        $('#bkState').textContent = `Foto ${n} von ${ids.length}`;
+        $('#bkBar').style.width = Math.round(n / Math.max(1, ids.length) * 100) + '%';
+        if (n % 4 === 0) await pause(0);   // Anzeige nachziehen und Speicher freigeben lassen
+      }
+      const last = n >= ids.length;
+      zip.add('daten.json', JSON.stringify({ ...base, part, lastPart: last, images }, null, 1));
+      return { out: zip.finish(), count: images.length, last };
+    };
+    const step = async () => {
+      $('#bkSave').hidden = true;
+      const p = await build(); if (!p || stop) return;
+      const single = p.last && part === 1;
+      const name = single ? `lightleak-${stamp}.zip` : `lightleak-${stamp}-teil${part}.zip`;
+      const mb = p.out.size / 1048576, mbTxt = (mb >= 100 ? Math.round(mb) : mb.toFixed(1).replace('.', ',')) + ' MB';
+      $('#bkState').textContent = single
+        ? `${mbTxt} · ${p.count} ${p.count === 1 ? 'Foto' : 'Fotos'}${skipped ? ` · ${skipped} ohne Bilddaten übersprungen` : ''}`
+        : `Teil ${part}${p.last ? ' (letzter)' : ''} · ${mbTxt} · Fotos bis ${n} von ${ids.length}`;
+      const btn = $('#bkSave'); btn.textContent = single ? tr('Sicherung speichern') : `Teil ${part} speichern`; btn.hidden = false;
+      let cur = p;
+      btn.onclick = async () => {
+        const file = new File([cur.out], name, { type: 'application/zip' });
+        let ok = false;
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: name }); ok = true; }
+          catch (e) { if (e.name === 'AbortError') return; }
+        }
+        if (!ok) downloadBlob(cur.out, name);
+        saved++; const wasLast = cur.last; cur = null;   // Teil freigeben, bevor der nächste entsteht
+        if (wasLast) {
+          await DB.put('meta', { id: 'backup', at: new Date().toISOString() }); ov.remove();
+          U.toast(saved > 1 ? `Sicherung erstellt, ${saved} Teile` : 'Sicherung erstellt');
+          if (location.hash.startsWith('#/mehr')) route();
+          return;
+        }
+        $('#bkState').textContent = tr('Wird vorbereitet …');
+        await pause(400);
+        try { await step(); } catch (e) { fail(e); }
+      };
+    };
+    const fail = e => { console.error(e); $('#bkSave').hidden = true; $('#bkState').textContent = 'Sicherung fehlgeschlagen: ' + (e && e.message ? e.message : e); $('#bkState').classList.add('bkerr'); };
+    try { await step(); } catch (e) { fail(e); }
+  } catch (e) {
+    console.error(e);
+    $('#bkState').textContent = 'Sicherung fehlgeschlagen: ' + (e && e.message ? e.message : e);
+    $('#bkState').classList.add('bkerr');
   }
-  const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
-  const name = `lightleak-${U.today()}.zip`;
-  const file = new File([blob], name, { type: 'application/zip' });
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try { await navigator.share({ files: [file], title: name }); }
-    catch (e) { if (e.name !== 'AbortError') downloadBlob(blob, name); else return; }
-  } else downloadBlob(blob, name);
-  await DB.put('meta', { id: 'backup', at: new Date().toISOString() });
-  U.toast('Sicherung erstellt');
 }
 function downloadBlob(blob, name) {
   const a = document.createElement('a');
@@ -930,27 +1036,40 @@ function downloadBlob(blob, name) {
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
 }
 
-async function importZip(file) {
-  if (!file) return;
+// v239: nimmt eine Sicherung oder alle Teile einer Sicherung entgegen
+async function importZip(files) {
+  files = files instanceof File || files instanceof Blob ? [files] : [...(files || [])];
+  if (!files.length) return;
   if (!confirm('Sicherung einspielen? Vorhandene Daten auf diesem Gerät werden dabei ersetzt.')) return;
   try {
     U.toast('Lese Sicherung …');
-    const zip = await JSZip.loadAsync(file);
-    const data = JSON.parse(await zip.file('daten.json').async('string'));
-    if (data.app !== 'kontaktbogen') throw new Error('Keine Lightleak-Sicherung');
-    for (const s of DB.STORES) await DB.clear(s);
-    for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) await DB.putMany(s, data[s] || []);
-    try { for (const [k, v] of Object.entries(data.local || {})) if (k.startsWith('kb-')) localStorage.setItem(k, v); } catch (_) {}
-    let n = 0; const total = (data.images || []).length;
-    for (const meta of data.images || []) {
-      const full = zip.file(`bilder/${meta.id}.jpg`), small = zip.file(`bilder/${meta.id}_klein.jpg`);
-      if (!full) continue;
-      const buf = await full.async('arraybuffer');
-      const tbuf = small ? await small.async('arraybuffer') : buf;
-      await DB.put('images', { ...meta, data: buf, tdata: tbuf, type: meta.type || 'image/jpeg' });
-      if (++n % 10 === 0) U.toast(`Bilder: ${n}/${total}`);
+    let based = false, n = 0, total = null, parts = new Set(), sawLast = false;
+    for (const file of files) {
+      const zip = await JSZip.loadAsync(file);
+      const entry = zip.file('daten.json'); if (!entry) throw new Error('Keine Lightleak-Sicherung');
+      const data = JSON.parse(await entry.async('string'));
+      if (data.app !== 'kontaktbogen') throw new Error('Keine Lightleak-Sicherung');
+      if (!based) {
+        for (const s of DB.STORES) await DB.clear(s);
+        for (const s of ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'meta']) await DB.putMany(s, data[s] || []);
+        try { for (const [k, v] of Object.entries(data.local || {})) if (k.startsWith('kb-')) localStorage.setItem(k, v); } catch (_) {}
+        based = true;
+      }
+      if (data.part) { parts.add(data.part); if (data.lastPart) sawLast = data.part; } else sawLast = true;
+      if (data.imagesTotal != null) total = data.imagesTotal;
+      for (const meta of data.images || []) {
+        const full = zip.file(`bilder/${meta.id}.jpg`), small = zip.file(`bilder/${meta.id}_klein.jpg`);
+        if (!full) continue;
+        const buf = await full.async('arraybuffer');
+        const tbuf = small ? await small.async('arraybuffer') : buf;
+        await DB.put('images', { ...meta, data: buf, tdata: tbuf, type: meta.type || 'image/jpeg' });
+        if (++n % 10 === 0) U.toast(total ? `Bilder: ${n}/${total}` : `Bilder: ${n}`);
+      }
     }
     U._urls.forEach(u => { if (u.startsWith('blob:')) URL.revokeObjectURL(u); }); U._urls.clear();
+    // fehlen Teile? Der letzte Teil kennt seine Nummer, alle davor müssen dabei sein
+    const missing = []; if (parts.size) { const max = sawLast || Math.max(...parts); for (let k = 1; k <= max; k++) if (!parts.has(k)) missing.push(k); }
+    if (parts.size && (!sawLast || missing.length)) alert(`Es fehlen Teile der Sicherung${missing.length ? ': Teil ' + missing.join(', ') : ' (der letzte Teil fehlt)'}. Eingespielt sind ${n} Fotos. Zum Vervollständigen alle Teile zusammen auswählen und noch einmal einspielen.`);
     U.toast('Sicherung eingespielt');
     location.hash = '#/';
     location.reload();

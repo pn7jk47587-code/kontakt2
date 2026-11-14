@@ -876,3 +876,16 @@ Neu
 ## v237 (Vorschau): ohne Plus in der Leiste, ohne Blendenring
 
 Nach Rückmeldung geändert: „Film einlegen“ kommt höchstens einmal pro Woche vor und bekommt deshalb keinen Platz in der Leiste. Der Knopf steht wieder über den Rollen. Blende und Zeit sind wieder antippbare Werte statt eines Bandes zum Schieben, weil sich das mit einer Hand besser bedienen lässt. Die Werte sind 44 Punkt hoch.
+## v238: Sicherung funktioniert auch mit vielen Fotos
+
+Die Sicherung ist neu gebaut. Bisher lud die App alle Fotos in voller Größe gleichzeitig in den Arbeitsspeicher und legte die ZIP-Datei mehrfach als Kopie an. Auf dem iPhone brach das bei vielen Fotos ohne Meldung ab. Ein einzelner Bildeintrag ohne Bilddaten ließ die Sicherung ebenfalls still scheitern. Außerdem öffnete sich das Teilen-Fenster erst nach dem Zusammenbauen, was iOS nach einigen Sekunden nicht mehr zulässt.
+
+Jetzt verarbeitet die App ein Foto nach dem anderen und zeigt den Fortschritt („Foto 12 von 340“). Ist die Datei fertig, steht ihre Größe da, und der Knopf „Sicherung speichern“ öffnet das Teilen-Fenster. Dort am besten „In Dateien sichern“ wählen. Einträge ohne Bilddaten werden übersprungen und gezählt. Scheitert etwas, steht der Grund im Fenster. Das Format der Sicherung ist unverändert, alte Sicherungen lassen sich weiter einspielen. Die Grenze liegt bei 4 GB je Sicherung.
+
+## v239: Sicherung in Teilen
+
+Bei großen Fotosammlungen stürzte die Seite beim Erstellen der Sicherung ab („… ist wiederholt ein Problem aufgetreten“), weil eine einzige ZIP-Datei mit allen Fotos nicht in den Arbeitsspeicher des iPhones passt. Die Sicherung entsteht jetzt in Teilen von je rund 100 MB.
+
+Erstellen: Die App baut Teil 1 und zeigt den Knopf „Teil 1 speichern“. Nach dem Speichern, am besten über „In Dateien sichern“ in einen eigenen Ordner, baut sie den nächsten Teil. Das wiederholt sich bis zum letzten Teil. Die Dateien heißen `lightleak-Datum-teil1.zip`, `-teil2.zip` und so weiter. Kleine Sammlungen ergeben wie bisher eine einzige Datei.
+
+Einspielen: „Sicherung einspielen“ antippen und alle Teile zusammen auswählen. Die Reihenfolge ist egal. Fehlt ein Teil, meldet die App, welcher. Jeder Teil enthält alle Angaben zu Rollen, Bildern und Ausrüstung, die Fotos verteilen sich auf die Teile. Ältere Sicherungen aus einer einzigen Datei lassen sich weiter einspielen.

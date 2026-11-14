@@ -113,6 +113,8 @@ Alle Daten liegen nur auf diesem Gerät. Eine Sicherung als ZIP-Datei schützt v
 Letzte Sicherung: {0}	Last backup: {0}
 noch keine	none yet
 Sicherung erstellen	Create backup
+Sicherung speichern	Save backup
+Wird vorbereitet …	Preparing …
 Sicherung einspielen	Restore backup
 Speicher	Storage
 Als App installiert: {0}	Installed as app: {0}
