@@ -111,11 +111,12 @@ const U = {
   // Ältere Vorschaubilder (480 px, in einem Schritt verkleinert) einmalig im Hintergrund aus dem Original neu rechnen
   async rethumbAll() {
     try { if (localStorage.getItem('kb-rethumb') === '1') return; } catch (_) {}
-    const ids = (await DB.all('images')).filter(r => (r.data || r.blob) && !(r.tw >= U.THUMB)).map(r => r.id);
+    // v245: Einträge einzeln lesen statt alle Fotos auf einmal in den Speicher zu laden (das blockierte den Start)
+    const ids = await DB.keys('images');
     for (const id of ids) {
       await new Promise(r => window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 800 }) : setTimeout(r, 30));
       try {
-        const rec = await DB.get('images', id); if (!rec) continue;
+        const rec = await DB.get('images', id); if (!rec || !(rec.data || rec.blob) || rec.tw >= U.THUMB) continue;
         const blob = U.recBlob(rec, false); if (!blob) continue;
         const dec = await U.decode(blob);
         const t = await U.resize(blob, U.THUMB, 0.84, dec);

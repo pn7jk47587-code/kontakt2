@@ -907,3 +907,11 @@ Die Karte zeigte beim Öffnen alle Fotos auf einmal. Lag ein einzelnes Foto in e
 ## v244: Eigene Blenden nur im Objektiv
 
 Abweichende Blendenwerte legt man nur noch im Objektiv unter „Blenden am Ring“ fest. Ein Wert unter „andere“ im Bild gilt nur für dieses Bild. Im Bild passt sich die Blendenreihe dem gewählten Objektiv an.
+
+## v245: Schnellerer Start, neue Startseite, eisiger Kühlschrank
+
+Schnellerer Start: Kurz nach dem Öffnen prüft die App, ob ältere Fotos noch schärfere Vorschaubilder brauchen. Dafür lud sie bisher alle Fotos in voller Größe auf einmal in den Speicher, was die App mit vielen Fotos sekundenlang anhielt. Jetzt liest sie die Einträge einzeln.
+
+Startseite: Oben steht der „Lichtblick“, ein großes Foto des Tages aus den Bildern mit +4 oder +5 im Fotoalbum (ohne Bewertungen aus den neuesten). Es wechselt einmal am Tag, ein Tipp öffnet das Foto. Die Rolle in der Kamera zeigt einen Fortschrittsbalken mit der Zahl der belichteten Bilder, etwa „14/36“. „Film einlegen“ ist ein kleiner Knopf unter der Rolle in der Kamera.
+
+Filmkühlschrank: im Profil in eisigem Hellblau mit Reifkante und blauem Schneekristall, bei Tag heller.

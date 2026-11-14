@@ -88,13 +88,28 @@ async function viewRolls() {
   setHeader('');
   titleEl.innerHTML = WORDMARK;
   const [rolls, stocks, cams] = [await DB.all('rolls'), await stocksMap(), await DB.all('cameras')];
-  const hero = await profileHero();
   const camMap = new Map(cams.map(c => [c.id, c]));
   const allFrames = await DB.all('frames');
   const allFilters = await getFilters();
   const peopleAll = await getPeople();
   rolls.sort((a, b) => (b.loadedAt || b.createdAt || '').localeCompare(a.loadedAt || a.createdAt || ''));
-  let html = `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;   // v237 Vorschau: ohne Avatar, der Knopf steht wie bisher über den Rollen
+  // v245: Startseite mit „Lichtblick“ oben, einem Foto des Tages aus den gut bewerteten Bildern (sonst den neuesten).
+  // Es wechselt einmal am Tag. „Film einlegen“ steht klein unter dem Film in der Kamera, weil man es selten braucht.
+  let html = '';
+  const albumIds = new Set(rolls.filter(r => r.status === 'entwickelt').map(r => r.id));
+  const pool0 = allFrames.filter(f => f.imgId && albumIds.has(f.rollId));
+  const good = pool0.filter(f => (f.rate ?? 0) >= 4);
+  const pool = good.length ? good : pool0.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 12);
+  if (pool.length) {
+    const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+    const pick = pool[(day * 7919) % pool.length];
+    const u = await U.imgUrl(pick.imgId, true);
+    const pr = rolls.find(r => r.id === pick.rollId);
+    const line = [pick.title || pick.place || '', pr?.title || U.stockLabel(stocks.get(pr?.stockId)), pick.date ? U.fmtDate(String(pick.date).slice(0, 10)) : ''].filter(Boolean).join(' · ');
+    if (u) html += `<a class="lightpick" href="#/foto/${pick.rollId}/${pick.id}" aria-label="Lichtblick des Tages öffnen"><img src="${u}" alt=""><span class="lpleak" aria-hidden="true"></span><span class="lptext"><b>Lichtblick</b><span>${U.esc(line)}</span></span></a>`;
+  }
+  const newRoll = `<a class="btn ghost small newroll" href="#/rolle/neu"><span aria-hidden="true">+</span> Film einlegen</a>`;
+  if (!rolls.some(r => (r.status || 'entwurf') === 'entwurf')) html += newRoll;
   if (rolls.length) html += U.hintOnce('home-longpress', 'Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.');
   const order = [['entwurf', 'Film in der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']];
   for (const [g, label] of order) {
@@ -124,10 +139,11 @@ async function viewRolls() {
             <div class="rc-title">${U.esc(r.title || U.stockLabel(st))}</div>
             <div class="rc-sub">${U.esc(camLabel(cam) || r.camera || '')}${r.loadedAt ? ' · ' + U.fmtDate(r.loadedAt) : ''}</div>
             ${devInfo}
+            ${g === 'entwurf' ? (() => { const n = fr.filter(f => f.shot || f.imgId).length, tot = Math.max(r.exposures || fr.length || 36, n); return `<div class="rcprog" role="img" aria-label="${n} von ${tot} Bildern"><span class="rcbar"><i style="width:${Math.round(n / Math.max(1, tot) * 100)}%"></i></span><span class="rcn">${n}/${tot}</span></div>`; })() : ''}
           </div>
         </a>${act}</div>`;
     }
-    html += (g !== 'entwurf') ? `</div></section>` : `</div>`;
+    html += (g !== 'entwurf') ? `</div></section>` : `</div>${newRoll}`;
   }
   view.innerHTML = html;
   setupFolds(view);
