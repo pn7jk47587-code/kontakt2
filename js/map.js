@@ -37,16 +37,26 @@ async function viewMap() {
   let map;
   try {
     map = new maplibregl.Map({ container: el, style: MAP_STYLE, center: [10.4, 51.2], zoom: 4.5, pitch: 0, maxPitch: 70, attributionControl: { compact: true } });
+    window.__photoMap = map;
   } catch (e) { wrap.insertAdjacentHTML('beforeend', '<p class="mapempty">Karte konnte nicht geladen werden</p>'); return; }
   // Beim Verlassen der Ansicht die Karte freigeben
   const stop = () => { if (!document.body.contains(el)) { try { map.remove(); } catch (_) {} window.removeEventListener('hashchange', later); } };
   const later = () => setTimeout(stop, 0);
   window.addEventListener('hashchange', later);
   // Auf die Fotos zoomen, leicht gekippt, damit nah herangezoomt die Gebäude in 3D erscheinen
+  // v243: Start dort, wo die meisten Fotos liegen. Gesucht wird das Foto mit den meisten Nachbarn im Umkreis von 8 km,
+  // gezeigt werden dieses Foto und seine Nachbarn. Ausreißer in anderen Städten oder Ländern bleiben außerhalb.
   if (pts.length) {
+    const ll = pts.map(p => [+p.f.placeLat, +p.f.placeLng]);
+    const R = 8, km = (a, b) => { const dy = (a[0] - b[0]) * 111.2, dx = (a[1] - b[1]) * 111.2 * Math.cos((a[0] + b[0]) * Math.PI / 360); return Math.hypot(dx, dy); };
+    // bei sehr vielen Fotos nur eine Stichprobe als Mittelpunkte prüfen
+    const step = Math.max(1, Math.floor(ll.length / 400));
+    let best = 0, bestN = -1;
+    for (let i = 0; i < ll.length; i += step) { let n = 0; for (const q of ll) if (km(ll[i], q) <= R) n++; if (n > bestN) { bestN = n; best = i; } }
+    const near = ll.filter(q => km(ll[best], q) <= R);
     const b = new maplibregl.LngLatBounds();
-    pts.forEach(p => b.extend([+p.f.placeLng, +p.f.placeLat]));
-    map.fitBounds(b, { padding: 70, maxZoom: 16, pitch: 50, duration: 0 });
+    near.forEach(q => b.extend([q[1], q[0]]));
+    map.fitBounds(b, { padding: 70, maxZoom: 15, pitch: 50, duration: 0 });
   }
   // Fotos, die auf dem Bildschirm übereinanderliegen, als Stapel mit Zahl zeigen
   let markers = [];
