@@ -2294,7 +2294,7 @@ body.leaving #view { animation: leavelevel .24s ease-in forwards; }
 /* Logo im Tagmodus bunt */
 .nightpick { display: grid !important; grid-template-columns: 1fr 1fr; gap: 6px; }
 /* Schrift (zum Ausprobieren): ersetzt die Systemschrift überall außer im Fotoalbum-Buch */
-html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albtitle, .caption, svg, svg *, .wordmark) { font-family: var(--testfont) !important; }
+html[data-font] body, html[data-font] body :not(.bookphoto *, .booktitle, .albtitle, .caption, svg, svg *, .wordmark, .wordmark *) { font-family: var(--testfont) !important; }
 
 /* Contact Sheet (v168) */
 .csopts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

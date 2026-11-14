@@ -837,3 +837,7 @@ Die Formatwahl beim Instagram-Beitrag bietet jetzt 3:4, 4:5, 1:1 und 1,91:1. Ins
 ## v232: Instagram Story ohne Kopfzeile
 
 Die Story zeigt keine Kopfzeile mit Filmname und Bildanzahl mehr. Der Film steht ohnehin am Rand der Streifen. Die Streifen sitzen mittig auf der Story, der frei gewordene Platz kommt den Bildern zugute, wenn sie sonst in der Höhe begrenzt wären. Das Contact Sheet behält seine Kopfzeile.
+
+## v233: Schriftzug einheitlich in Unbounded
+
+Fehler behoben: War in den Einstellungen unter „Schrift (zum Ausprobieren)“ eine Testschrift gewählt, stand im Schriftzug „light“ in Unbounded und „leak“ in der Testschrift. Der Schriftzug ist jetzt ganz von der Testschrift ausgenommen und steht immer vollständig in Unbounded, oben in der Kopfzeile wie im Profil.
