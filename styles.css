@@ -2883,3 +2883,12 @@ html[data-mood="sun"] .tabbar a.on svg { stroke: #ff7a3d !important; filter: dro
 .lprefresh::before, .lprefresh::after { display: none !important; }
 .lprefresh { width: 46px !important; height: 46px !important; border-radius: 50% !important; filter: none !important; border: 1px solid rgba(255, 225, 200, .5) !important; background: linear-gradient(135deg, rgba(255, 190, 110, .55), rgba(255, 111, 97, .42) 50%, rgba(176, 108, 255, .5)) !important; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 6px 16px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.3) !important; }
 .lprefresh.spin svg { animation: lpspin .5s ease-out !important; }
+
+/* v249: Filmstreifen ohne tiefschwarze Flächen. Der Streifen ist ein getöntes, halbdurchsichtiges Band in der Farbe der Karte,
+   die Perforation sind weiche, abgerundete Löcher statt harter Striche. */
+#view .rollcard .strip { background: linear-gradient(180deg, rgba(10, 12, 28, .38), rgba(10, 12, 28, .22)) !important; padding-top: 11px !important; padding-bottom: 11px !important; height: calc(var(--striph, 74px) + 12px) !important; }
+#view .rollcard .strip::before, #view .rollcard .strip::after { height: 6px !important; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='6'%3E%3Crect x='4' y='0.5' width='8' height='5' rx='1.8' fill='%23fff' fill-opacity='.2'/%3E%3C/svg%3E") repeat-x 0 0 / 16px 6px !important; }
+#view .rollcard .strip::before { top: 3px !important; } #view .rollcard .strip::after { bottom: 3px !important; top: auto !important; }
+#view .rollcard .strip img { border-radius: 6px !important; }
+html[data-mood="sun"] #view .rollcard .strip { background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.25)) !important; }
+html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #view .rollcard .strip::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='6'%3E%3Crect x='4' y='0.5' width='8' height='5' rx='1.8' fill='%23000' fill-opacity='.12'/%3E%3C/svg%3E") !important; }

@@ -175,7 +175,7 @@ async function viewRolls() {
   });
 }
 let LP_STATE = null;
-const LP_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.2 15.4A7.6 7.6 0 1 1 17.6 6.9"/><path d="M18.4 3.2v4.2h-4.2"/></svg>';
+const LP_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g transform="rotate(90 12 12)"><path d="M19.2 15.4A7.6 7.6 0 1 1 17.6 6.9"/><path d="M18.4 3.2v4.2h-4.2"/></g></svg>';
 
 // „Film einlegen“ zieht sich aus dem Knopf zu einer abgerundeten Karte auf; Profilbild und Name bleiben oben sichtbar
 async function openLoadSheet(btn) {

@@ -929,3 +929,9 @@ Der Knopf zum Neuwürfeln des Lichtblicks ist kein Kreis mehr, sondern eine weic
 ## v248: Lichtblick-Knopf rund mit offenem Pfeil
 
 Der Knopf zum Neuwürfeln ist wieder rund, im Farbverlauf von Orange zu Violett. Der Pfeil darin ist ein offener Bogen, der sich nicht ganz schließt.
+
+## v249: Filmstreifen ohne Schwarz, Pfeil unten rechts
+
+Die Rollenkarten behalten den Filmstreifen mit Perforation, aber ohne tiefschwarzes Band. Der Streifen ist jetzt ein leicht abgedunkeltes, durchscheinendes Band, durch das die Farbe der Karte schimmert. Die Löcher sind weiche, abgerundete Rechtecke statt harter Striche. Die Bilder im Streifen haben ihre Größe behalten. Bei Tag ist das Band hell.
+
+Der Pfeil im Lichtblick-Knopf ist so gedreht, dass die Spitze unten rechts sitzt.
