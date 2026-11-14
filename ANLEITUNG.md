@@ -951,3 +951,7 @@ Der Knopf hat keinen Farbverlauf mehr. Er ist kleiner und besteht aus dunklem, h
 ## v253: „Film einlegen“ wieder über der Rolle in der Kamera
 
 Der Knopf „Film einlegen“ steht wieder in der früheren Form zwischen Lichtblick und „Film in der Kamera“.
+
+## v254: Knöpfe der Rollenkarten neu ausgerichtet
+
+Seit der Filmstreifen höher ist, saßen „Entwickeln“, „Fotos hochladen“ und „Ansehen“ zu weit oben auf der unteren Lochreihe. Sie stehen jetzt unter dem Streifen auf Höhe des Rollentitels.

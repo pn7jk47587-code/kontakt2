@@ -2899,3 +2899,6 @@ html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #vie
 .lightpick .lptext { padding: 28px 16px 11px !important; gap: 1px !important; background: linear-gradient(transparent, rgba(0,0,0,.55)) !important; }
 .lightpick .lptext b { font-size: 10px !important; letter-spacing: .16em !important; opacity: .85; }
 .lightpick .lptext span { font-size: 12px !important; color: rgba(255,255,255,.78) !important; }
+/* v254: Aktionsknöpfe der Rollenkarten unter dem höheren Filmstreifen, auf Höhe des Titels */
+#view .rollcard .cardact { top: calc(var(--striph, 56px) + 12px + 14px) !important; bottom: auto !important; right: 14px !important; }
+#view .rollcard.st-belichtet .rc-body { padding-right: 176px !important; } #view .rollcard.st-entwurf .rc-title, #view .rollcard.st-entwurf .rc-sub { padding-right: 0; margin-right: 112px; } #view .rollcard.st-entwurf .rc-body { padding-right: 14px !important; } #view .rollcard.st-entwickelt .rc-body { padding-right: 112px !important; }
