@@ -195,6 +195,7 @@ Anrede	Form of address
 Weiblich	Female
 Männlich	Male
 Neutral	Neutral
+Divers	Non-binary
 Film in den Kühlschrank legen	Put film in the fridge
 Bild ändern	Change picture
 Alle Fotos	All photos

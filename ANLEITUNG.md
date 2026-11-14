@@ -841,3 +841,7 @@ Die Story zeigt keine Kopfzeile mit Filmname und Bildanzahl mehr. Der Film steht
 ## v233: Schriftzug einheitlich in Unbounded
 
 Fehler behoben: War in den Einstellungen unter „Schrift (zum Ausprobieren)“ eine Testschrift gewählt, stand im Schriftzug „light“ in Unbounded und „leak“ in der Testschrift. Der Schriftzug ist jetzt ganz von der Testschrift ausgenommen und steht immer vollständig in Unbounded, oben in der Kopfzeile wie im Profil.
+
+## v234: Anrede als kleine Knöpfe w, m, d
+
+In den Einstellungen steht die Anrede jetzt als drei kleine runde Knöpfe w, m und d direkt neben dem Nutzernamen, statt als breite Leiste mit Weiblich, Männlich und Neutral darunter. „d“ steht für divers und entspricht der bisherigen neutralen Anrede, etwa „Kartograf*in“ bei den Abzeichen. Die gespeicherte Wahl bleibt erhalten.

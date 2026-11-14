@@ -411,8 +411,8 @@ async function openSettings() {
       <h2 id="setTitle">Einstellungen</h2>
       <span class="appver" title="App-Version und letzte Änderung">${typeof APP_VERSION !== 'undefined' ? `Version ${APP_VERSION.replace('kb-v', '')}<br>${(() => { const [d, t] = APP_BUILT.split('T'); const [y, m, dd] = d.split('-'); return `${dd}.${m}.${y}, ${t}`; })()}` : ''}</span>
       <div class="sethead"><span>Profil</span></div>
-      <label class="atname setname"><span class="at" aria-hidden="true">@</span><input id="setName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false" enterkeyhint="done"></label>
-      <div class="seggroup genderpick" id="genderPick" role="group" aria-label="Anrede">${[['f', 'Weiblich'], ['m', 'Männlich'], ['n', 'Neutral']].map(([k, l]) => `<button type="button" class="seg${(PROFILE?.gender || 'n') === k ? ' on' : ''}" data-gender="${k}" aria-pressed="${(PROFILE?.gender || 'n') === k}">${l}</button>`).join('')}</div>
+      <div class="namerow"><label class="atname setname"><span class="at" aria-hidden="true">@</span><input id="setName" value="${U.esc(PROFILE?.name || '')}" aria-label="Nutzername" maxlength="40" autocapitalize="none" spellcheck="false" enterkeyhint="done"></label>
+      <div class="genderpick" id="genderPick" role="group" aria-label="Anrede">${[['f', 'w', 'Weiblich'], ['m', 'm', 'Männlich'], ['n', 'd', 'Divers']].map(([k, l, a]) => `<button type="button" class="seg gchip${(PROFILE?.gender || 'n') === k ? ' on' : ''}" data-gender="${k}" aria-label="${a}" title="${a}" aria-pressed="${(PROFILE?.gender || 'n') === k}">${l}</button>`).join('')}</div></div>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
       <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>

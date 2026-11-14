@@ -2727,3 +2727,10 @@ button.dtadd { display: flex; align-items: center; justify-content: center; padd
 @keyframes albpopin { from { transform: translateY(18px) scale(.6); opacity: 0; } }
 .igov .igratio { flex: 0 1 260px; }
 .igov .igratio .seg { padding-left: 4px; padding-right: 4px; font-size: 14px; }
+
+/* v234: Anrede als kleine Knöpfe w, m, d neben dem Namen */
+.namerow { display: flex; align-items: center; gap: 10px; }
+.namerow .setname { flex: 1; min-width: 0; margin: 0; }
+.genderpick { display: flex; gap: 6px; margin: 0; flex: 0 0 auto; }
+.genderpick .gchip { width: 36px; height: 36px; padding: 0; flex: 0 0 auto; border-radius: 50%; font-size: 15px; font-weight: 700; line-height: 1; display: grid; place-items: center; border: 1.5px solid var(--line); background: var(--card); color: var(--muted); }
+.genderpick .gchip.on { border-color: var(--teal); background: var(--teal); color: #06202a; }
