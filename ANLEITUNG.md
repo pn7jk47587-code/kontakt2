@@ -959,3 +959,9 @@ Seit der Filmstreifen höher ist, saßen „Entwickeln“, „Fotos hochladen“
 ## v255: Ruhigeres Layout der Rollenkarten
 
 Titel und Kamerazeile laufen über die ganze Breite der Karte. Der Knopf („Entwickeln“, „Fotos hochladen“, „Ansehen“) sitzt unten rechts und teilt sich die letzte Zeile mit dem Fortschrittsbalken, dem Labor oder dem Datum. Kein Text reicht mehr an den Knopf heran, zu lange Zeilen werden mit „…“ gekürzt.
+
+## v256: 24+1 Bilder, Auslöser mit Abstand
+
+Beim Film einlegen gibt es für Kleinbild jetzt auch „24+1“: 24 Bilder plus ein Bonusbild am Rollenanfang (Bild 0), wie bisher bei „36+1“.
+
+Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlinie unter „Bilder“ und „Rolle“ nicht mehr.

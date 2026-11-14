@@ -2915,3 +2915,5 @@ html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #vie
 #view .rollcard .rc-body > .rc-sub:last-child, #view .rollcard .rc-body > .devline:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 34px; }
 #view .rollcard .rcprog { margin-top: 6px; }
 #view .rollcard.st-entwurf .rc-body, #view .rollcard.st-belichtet .rc-body, #view .rollcard.st-entwickelt .rc-body { padding: 12px 16px 14px !important; }
+/* v256: Auslöser in der Rolle mit Abstand zur Trennlinie der Reiter darüber */
+.quickshot { padding-top: 22px !important; }

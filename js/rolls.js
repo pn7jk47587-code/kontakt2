@@ -443,7 +443,7 @@ async function wizardStep1(wiz, root = view) {
     // Mittelformat: Anzahl steht durch die Kamera fest, daher kein freies Feld
     root.querySelector('#exp').innerHTML = wiz.format === '120'
       ? (options.length ? options.map(n => `<button type="button" class="chip on" data-n="${n}">${n}</button>`).join('') : '<p class="hint">Wähle zuerst eine Kamera.</p>')
-      : `${options.map(n => `<button type="button" class="chip${n === '36+1' ? ' bonuschip' : ''}${wiz.expChoice === n ? ' on' : ''}" data-n="${n}">${n}</button>`).join('')}
+      : `${options.map(n => `<button type="button" class="chip${/\+1$/.test(n) ? ' bonuschip' : ''}${wiz.expChoice === n ? ' on' : ''}" data-n="${n}">${n}</button>`).join('')}
       <input type="number" id="expN" min="1" max="99" inputmode="numeric" class="chip-input" aria-label="Freie Anzahl" value="${!wiz.expChoice || options.includes(wiz.expChoice) ? '' : U.esc(wiz.expChoice)}">`;
   };
   renderExp();
@@ -529,7 +529,7 @@ async function wizardStep1(wiz, root = view) {
 
 async function wizardStep2(wiz) { location.replace('#/rolle/neu'); }
 
-// Aufnahmen: Kleinbild 24, 36, 36+1 (Bonusbild am Rollenanfang) oder frei. Mittelformat: Bildzahl der Kamera oder frei.
+// Aufnahmen: Kleinbild 24, 24+1, 36, 36+1 (Bonusbild am Rollenanfang) oder frei. Mittelformat: Bildzahl der Kamera oder frei.
 // Mittelformat: Bilder pro Rolle aus der Kamera, sonst aus dem Bildformat (120er-Rolle: 6×4,5 → 15, 6×6 → 12, 6×7 → 10, 6×8 → 9, 6×9 → 8)
 function framesFor120(cam) {
   if (!cam) return 0;
@@ -542,7 +542,7 @@ function expOptions(wiz, cam) {
   const is120 = wiz.format === '120';
   const n120 = is120 ? framesFor120(cam) : 0;
   // Halbformat: doppelt so viele Bilder wie die Kleinbildrolle. Großformat: Planfilmblätter.
-  const options = is120 ? (n120 ? [String(n120)] : []) : wiz.format === 'half' ? ['48', '72'] : wiz.format === 'gross' ? ['1', '2', '4', '10'] : ['24', '36', '36+1'];
+  const options = is120 ? (n120 ? [String(n120)] : []) : wiz.format === 'half' ? ['48', '72'] : wiz.format === 'gross' ? ['1', '2', '4', '10'] : ['24', '24+1', '36', '36+1'];
   const key = wiz.format + (wiz.cameraId || '');
   if (is120) { wiz.expChoice = n120 ? String(n120) : ''; wiz.expFor = key; }
   else if (!wiz.expChoice || wiz.expFor !== key) { wiz.expChoice = wiz.format === 'half' ? '72' : wiz.format === 'gross' ? '2' : '36'; wiz.expFor = key; }
@@ -554,7 +554,7 @@ async function createRoll(wiz, loadedAt) {
   const stock = await DB.get('stocks', wiz.stockId);
   const cam = wiz.cameraId ? await DB.get('cameras', wiz.cameraId) : null;
   const n = parseInt(wiz.expChoice);
-  const bonus = wiz.expChoice === '36+1';
+  const bonus = /\+1$/.test(wiz.expChoice || '');   // v256: 24+1 und 36+1
   const roll = {
     id: U.uid(), stockId: wiz.stockId, cameraId: wiz.cameraId || null, camera: camLabel(cam),
     format: wiz.format, exposures: n, bonus, ei: null, loadedAt: loadedAt || U.today(), title: (wiz.title || '').trim(),
