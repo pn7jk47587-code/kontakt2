@@ -102,11 +102,13 @@ async function viewRolls() {
   const pool = good.length ? good : pool0.slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 12);
   if (pool.length) {
     const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
-    const pick = pool[(day * 7919) % pool.length];
+    // v246: ein neu gewürfelter Lichtblick gilt bis zum Ende des Tages
+    let saved = null; try { saved = JSON.parse(localStorage.getItem('kb-lp') || 'null'); } catch (_) {}
+    const pick = (saved && saved.day === day && pool.find(f => f.id === saved.id)) || pool[(day * 7919) % pool.length];
+    const lpLine = f => { const pr = rolls.find(r => r.id === f.rollId); return [f.title || f.place || '', pr?.title || U.stockLabel(stocks.get(pr?.stockId)), f.date ? U.fmtDate(String(f.date).slice(0, 10)) : ''].filter(Boolean).join(' · '); };
     const u = await U.imgUrl(pick.imgId, true);
-    const pr = rolls.find(r => r.id === pick.rollId);
-    const line = [pick.title || pick.place || '', pr?.title || U.stockLabel(stocks.get(pr?.stockId)), pick.date ? U.fmtDate(String(pick.date).slice(0, 10)) : ''].filter(Boolean).join(' · ');
-    if (u) html += `<a class="lightpick" href="#/foto/${pick.rollId}/${pick.id}" aria-label="Lichtblick des Tages öffnen"><img src="${u}" alt=""><span class="lpleak" aria-hidden="true"></span><span class="lptext"><b>Lichtblick</b><span>${U.esc(line)}</span></span></a>`;
+    LP_STATE = { pool, cur: pick.id, day, line: lpLine };
+    if (u) html += `<div class="lpwrap"><a class="lightpick" href="#/foto/${pick.rollId}/${pick.id}" aria-label="Lichtblick des Tages öffnen"><img src="${u}" alt=""><span class="lpleak" aria-hidden="true"></span><span class="lptext"><b>Lichtblick</b><span>${U.esc(lpLine(pick))}</span></span></a>${pool.length > 1 ? `<button type="button" class="lprefresh" id="lpNext" aria-label="Anderen Lichtblick zeigen">${LP_IC}</button>` : ''}</div>`;
   }
   const newRoll = `<a class="btn ghost small newroll" href="#/rolle/neu"><span aria-hidden="true">+</span> Film einlegen</a>`;
   if (!rolls.some(r => (r.status || 'entwurf') === 'entwurf')) html += newRoll;
@@ -158,7 +160,22 @@ async function viewRolls() {
     U.haptic && U.haptic(8);
   }));
   view.querySelector('.newroll')?.addEventListener('click', e => { e.preventDefault(); openLoadSheet(e.currentTarget); });
+  view.querySelector('#lpNext')?.addEventListener('click', async e => {
+    const st = LP_STATE; if (!st) return;
+    const btn = e.currentTarget; btn.classList.remove('spin'); void btn.offsetWidth; btn.classList.add('spin');
+    const others = st.pool.filter(f => f.id !== st.cur), f = others[Math.floor(Math.random() * others.length)];
+    const u = await U.imgUrl(f.imgId, true); if (!u) return;
+    st.cur = f.id; try { localStorage.setItem('kb-lp', JSON.stringify({ day: st.day, id: f.id })); } catch (_) {}
+    const a = view.querySelector('.lightpick'), old = a.querySelector('img');
+    const img = new Image(); img.src = u; img.alt = ''; img.className = 'lpin';
+    await (img.decode ? img.decode().catch(() => {}) : Promise.resolve());
+    old.after(img); setTimeout(() => old.remove(), 450);
+    a.href = `#/foto/${f.rollId}/${f.id}`; a.querySelector('.lptext span').textContent = st.line(f);
+    U.haptic && U.haptic(8);
+  });
 }
+let LP_STATE = null;
+const LP_IC = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4.5v4.6h-4.6"/></svg>';
 
 // „Film einlegen“ zieht sich aus dem Knopf zu einer abgerundeten Karte auf; Profilbild und Name bleiben oben sichtbar
 async function openLoadSheet(btn) {

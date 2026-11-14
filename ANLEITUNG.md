@@ -915,3 +915,9 @@ Schnellerer Start: Kurz nach dem Öffnen prüft die App, ob ältere Fotos noch s
 Startseite: Oben steht der „Lichtblick“, ein großes Foto des Tages aus den Bildern mit +4 oder +5 im Fotoalbum (ohne Bewertungen aus den neuesten). Es wechselt einmal am Tag, ein Tipp öffnet das Foto. Die Rolle in der Kamera zeigt einen Fortschrittsbalken mit der Zahl der belichteten Bilder, etwa „14/36“. „Film einlegen“ ist ein kleiner Knopf unter der Rolle in der Kamera.
 
 Filmkühlschrank: im Profil in eisigem Hellblau mit Reifkante und blauem Schneekristall, bei Tag heller.
+
+## v246: Leiste unten ohne Kasten, Lichtblick neu würfeln
+
+Leiste unten: kein abgesetzter Kasten mehr. Die Seite blendet nach unten in einen Verlauf aus, die vier Symbole stehen enger zusammen in der Mitte. Das aktive Symbol leuchtet warm.
+
+Lichtblick: Oben rechts im Foto sitzt ein runder Knopf mit Pfeil. Ein Tipp zeigt ein anderes Foto aus derselben Auswahl. Das neue Foto bleibt bis zum Ende des Tages, danach wählt die App wieder selbst.
