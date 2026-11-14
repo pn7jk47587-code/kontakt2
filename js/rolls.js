@@ -51,27 +51,6 @@ function leakSweep(stage) {
   document.body.appendChild(el); U.haptic && U.haptic([14, 50, 22]);
   setTimeout(() => el.remove(), 1500);
 }
-// v236 Vorschau: Blendenring. Die Werte laufen als Band unter einer festen Marke durch, jede Raste vibriert kurz.
-function setupDial(row) {
-  if (!row || row.closest('.dialwrap')) return;
-  const wrap = document.createElement('div'); wrap.className = 'dialwrap';
-  row.parentNode.insertBefore(wrap, row); wrap.appendChild(row); row.classList.add('dial');
-  let quiet = 0, last = null, tm = null;
-  const chips = () => [...row.querySelectorAll('.chip')];
-  const nearest = () => { const c = row.scrollLeft + row.clientWidth / 2; let best = null, d = 1e9; for (const b of chips()) { const x = b.offsetLeft + b.offsetWidth / 2, dd = Math.abs(x - c); if (dd < d) { d = dd; best = b; } } return best; };
-  const center = (b, smooth) => { quiet = Date.now() + 700; row.scrollTo({ left: b.offsetLeft + b.offsetWidth / 2 - row.clientWidth / 2, behavior: smooth ? 'smooth' : 'auto' }); };
-  row.addEventListener('scroll', () => {
-    const n = nearest();
-    if (n !== last) { last = n; chips().forEach(b => b.classList.toggle('mid', b === n)); if (Date.now() > quiet) U.haptic && U.haptic(4); }
-    if (Date.now() < quiet) return;
-    clearTimeout(tm); tm = setTimeout(() => { const b = nearest(); if (b && !b.classList.contains('on')) { quiet = Date.now() + 500; b.click(); } }, 140);
-  }, { passive: true });
-  row.addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { clearTimeout(tm); center(b, true); } });
-  const init = () => { const on = row.querySelector('.chip.on') || null; if (on) center(on, false); last = nearest(); chips().forEach(b => b.classList.toggle('mid', b === last)); };
-  requestAnimationFrame(init);
-  // neue Werte (anderes Objektiv): wieder auf den gewählten Wert stellen
-  new MutationObserver(() => requestAnimationFrame(init)).observe(row, { childList: true, subtree: true });
-}
 function nowLocal() {
   const d = new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);   // mit Sekunden
@@ -108,7 +87,7 @@ async function viewRolls() {
   const allFilters = await getFilters();
   const peopleAll = await getPeople();
   rolls.sort((a, b) => (b.loadedAt || b.createdAt || '').localeCompare(a.loadedAt || a.createdAt || ''));
-  let html = rolls.length ? '' : `<div class="homeempty"><a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a></div>`;   // v236 Vorschau: Rollen stehen oben, „Film einlegen“ sitzt als Plus in der Leiste
+  let html = `<a class="btn glass newroll" href="#/rolle/neu">Film einlegen</a>`;   // v237 Vorschau: ohne Avatar, der Knopf steht wie bisher über den Rollen
   if (rolls.length) html += U.hintOnce('home-longpress', 'Halte eine Karte gedrückt, um Film, Kamera und Daten der Rolle zu sehen.');
   const order = [['entwurf', 'Film in der Kamera'], ['belichtet', 'In Entwicklung'], ['entwickelt', 'Fotoalbum']];
   for (const [g, label] of order) {
@@ -1415,7 +1394,7 @@ async function viewFrame(idWithQuery) {
   </div>`;
 
   renderMedia(view.querySelector('#media'), scanUrl, [phoneUrl, phoneUrl2].filter(Boolean), frame);
-  setupDial(view.querySelector('#apRow')); setupDial(view.querySelector('#shRow'));
+
   if (cam?.lightLeaks && roll && !roll.leaksMarked && (roll.status || 'entwurf') === 'entwurf' && !frame.imgId) { const lv = leakMap(roll, all).get(frame.id); const md = view.querySelector('#media .media'); if (lv && md) md.classList.add('leak', 'l' + lv); }
 
   // Speichern; beim ersten Eintrag wird der heutige Tag als Aufnahmetag gesetzt

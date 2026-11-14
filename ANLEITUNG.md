@@ -855,8 +855,8 @@ Kodak UltraMax 400 zeigt jetzt das freigestellte Foto der gelb-blauen Packung st
 Dieser Stand liegt nur im Zweig `vorschau-ux` und in einer eigenen Vorschau-Seite. Die richtige App bleibt bei v235.
 
 Bedienung
-- Leiste unten mit Rollen, Fotos, Karte und Profil, in der Mitte das Plus für „Film einlegen“. App-Symbol und Profilkreis oben entfallen, Unterseiten haben den Pfeil zurück.
-- Startseite ohne Avatar und Namen, die Rollen stehen oben.
+- Leiste unten mit Rollen, Fotos, Karte und Profil. App-Symbol und Profilkreis oben entfallen, Unterseiten haben den Pfeil zurück.
+- Startseite ohne Avatar und Namen. „Film einlegen“ steht als Knopf über den Rollen.
 - Tippflächen mindestens 44 Punkt (Chips, Umschalter, kleine Knöpfe).
 - Langes Drücken auf einen Symbolknopf zeigt seinen Namen, der Knopf löst dabei nicht aus. Ausgenommen sind die fünf Schalter im Bild, dort öffnet langes Drücken schon die Auswahl.
 - Keine Hinweiskästen mehr in den Ansichten, die Einführung erklärt die Gesten. Meldungen sitzen über der Leiste.
@@ -871,5 +871,8 @@ Gestaltung
 
 Neu
 - Schnellerfassung: runder Auslöser in der Rolle. Ein Tipp legt das nächste freie Bild mit Blende, Zeit, Objektiv und Filtern des letzten Bildes an, trägt die Uhrzeit ein und holt den Ort im Hintergrund. „Rückgängig“ nimmt es zurück.
-- Blendenring: Blende und Zeit laufen als Band unter einer festen Marke, der Wert in der Mitte rastet ein und vibriert. Tippen auf einen Wert geht weiterhin.
 - Lichteinfall: Wandert eine Rolle in die Entwicklung oder ins Fotoalbum, zieht kurz ein Lichtschein über den Bildschirm. Bei „Bewegung reduzieren“ entfällt er.
+
+## v237 (Vorschau): ohne Plus in der Leiste, ohne Blendenring
+
+Nach Rückmeldung geändert: „Film einlegen“ kommt höchstens einmal pro Woche vor und bekommt deshalb keinen Platz in der Leiste. Der Knopf steht wieder über den Rollen. Blende und Zeit sind wieder antippbare Werte statt eines Bandes zum Schieben, weil sich das mit einer Hand besser bedienen lässt. Die Werte sind 44 Punkt hoch.

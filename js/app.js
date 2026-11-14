@@ -1086,5 +1086,3 @@ function growFrom(ov, btn) {
   window.addEventListener('scroll', hide, { passive: true });
 })();
 
-// v236 Vorschau: das Plus in der Leiste öffnet „Film einlegen“ wie bisher der Knopf auf der Startseite
-document.querySelector('#tabBar .tabplus')?.addEventListener('click', e => { if (typeof openLoadSheet === 'function') { e.preventDefault(); openLoadSheet(e.currentTarget); } });

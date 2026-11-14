@@ -2737,22 +2737,19 @@ button.dtadd { display: flex; align-items: center; justify-content: center; padd
 
 /* ===== v236 Vorschau: Bedienung und Gestaltung überarbeitet ===== */
 /* Leiste unten mit vier Zielen und dem Plus für „Film einlegen“ */
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; display: grid; grid-template-columns: repeat(5, 1fr); align-items: center; padding: 6px 10px calc(6px + var(--safe-b)); background: rgba(9, 14, 29, .82); -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); border-top: 1px solid var(--line); }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; padding: 6px 10px calc(6px + var(--safe-b)); background: rgba(9, 14, 29, .82); -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); border-top: 1px solid var(--line); }
 .tabbar[hidden] { display: none; }
 .tabbar a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 48px; color: var(--muted); text-decoration: none; font-size: 11px; font-weight: 600; -webkit-tap-highlight-color: transparent; transition: color .15s, transform .15s; }
 .tabbar a svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .tabbar a.on { color: var(--text); }
 .tabbar a.on svg { stroke: var(--teal); }
 .tabbar a:active { transform: scale(.94); }
-.tabbar .tabplus { justify-self: center; width: 52px; height: 52px; min-height: 52px; border-radius: 50%; color: #1b1030; background: linear-gradient(135deg, #ffb347, #ff6f61 55%, #b06cff); box-shadow: 0 6px 20px rgba(255, 110, 97, .38); }
-.tabbar .tabplus svg { width: 26px; height: 26px; stroke-width: 2.4; }
 body.hastabs #view { padding-bottom: calc(92px + var(--safe-b)); }
 body.hastabs .toast, body.hastabs .undobar { bottom: calc(84px + var(--safe-b)) !important; }
-.homeempty { display: flex; justify-content: center; padding: 28vh 16px 0; }
 
 /* Tippflächen mindestens 44 Punkt */
 .chip, .seg, .btn.small, .langpick button, .sortrow .chip { min-height: 44px; }
-.fitchips:not(.dial) .chip, .fitchips:not(.dial) .chip-input { height: 44px !important; }
+.fitchips .chip, .fitchips .chip-input { height: 44px !important; }
 .seggroup .seg { display: inline-flex; align-items: center; justify-content: center; }
 
 /* Name eines Symbolknopfs bei langem Drücken */
@@ -2788,20 +2785,6 @@ html body .titlefld > input, html body .infofld textarea { padding: 10px 12px !i
 .shutterbtn .shnum { position: relative; font-family: "Unbounded", system-ui, sans-serif; font-weight: 600; font-size: 24px; }
 .shutterbtn:active { transform: scale(.9); box-shadow: 0 3px 10px rgba(255, 120, 90, .3), inset 0 4px 12px rgba(80, 20, 60, .4); }
 .shsub { font-variant-numeric: tabular-nums; min-height: 15px; }
-
-/* Blendenring: Werteband unter fester Marke */
-.dialwrap { position: relative; margin: 2px -4px 6px; }
-.dialwrap::before { content: ""; position: absolute; left: 50%; top: 2px; bottom: 2px; width: 62px; transform: translateX(-50%); border-radius: 12px; border: 1.5px solid var(--teal); background: rgba(163, 182, 255, .12); pointer-events: none; z-index: 1; }
-.dialwrap::after { content: ""; position: absolute; left: 50%; top: -3px; width: 0; height: 0; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid var(--teal); pointer-events: none; z-index: 2; }
-.fitchips.dial { display: flex !important; flex-wrap: nowrap; gap: 0 !important; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 0 calc(50% - 31px); overscroll-behavior-x: contain; touch-action: pan-x; -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
-.fitchips.dial::-webkit-scrollbar { display: none; }
-.fitchips.dial .chipset { display: flex; }
-.fitchips.dial .chip { flex: 0 0 62px; width: 62px !important; height: 48px !important; scroll-snap-align: center; border: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; color: var(--muted); font-size: 15px !important; position: relative; }
-.fitchips.dial .chip::after { content: ""; position: absolute; left: 50%; bottom: 3px; width: 1.5px; height: 6px; background: currentColor; opacity: .45; }
-.fitchips.dial .chip.mid { color: var(--text); }
-.fitchips.dial .chip.on { color: #fff; font-weight: 700; font-size: 17px !important; }
-.fitchips.dial .chip.on::after { background: var(--teal); opacity: 1; height: 8px; }
-.fitchips.dial .chip-input { flex: 0 0 78px; width: 78px !important; height: 40px !important; margin: 4px 0 0 8px; scroll-snap-align: center; }
 
 /* Lichteinfall beim Wechsel ins nächste Stadium */
 .leaksweep { position: fixed; inset: 0; z-index: 4000; pointer-events: none; mix-blend-mode: screen; background: radial-gradient(120% 90% at 0% 100%, rgba(255, 190, 90, .95), rgba(255, 90, 110, .7) 38%, rgba(170, 90, 255, .35) 62%, transparent 78%); transform: translateX(-110%) skewX(-12deg); animation: leaksweep 1.25s cubic-bezier(.3, .1, .2, 1) forwards; }

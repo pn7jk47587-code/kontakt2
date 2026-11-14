@@ -30,7 +30,7 @@ const TOUR = (() => {
       : hash() === '#/profil' ? [['section.cabinet.open .cabtile[href="#/schrank/kameras"]', 'Tippe auf „Kameras“ und öffne deine neue Kamera.'], ['section.cabinet', 'Öffne den Kameraschrank und tippe deine neue Kamera an.']]
       : tabStep('profil', 'Zurück zum Profil, dort steht deine neue Kamera.'),
     ready: () => onHome() ? [] : homeStep('Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe hier, um zur Startseite zu gehen.', 'Super, jetzt bist du bereit, deinen ersten Film in die Kamera zu legen. Tippe auf den Pfeil oben links, um zurückzugehen.'),
-    load: () => onHome() ? [['#tabBar .tabplus', 'Tippe auf das Plus und lege deinen ersten Film ein.']] : homeStep('Zur Startseite, dort legst du den Film ein.'),
+    load: () => onHome() ? [['.newroll', 'Tippe auf „Film einlegen“ und lege deinen ersten Film ein.']] : homeStep('Zur Startseite, dort legst du den Film ein.'),
     note: () => hash().startsWith('#/bild/') ? [['#note', 'Trag hier eine Beschreibung zu diesem Bild ein.']]
       : hash().startsWith('#/rolle/' + st.roll) ? [['.cell', 'Tippe ein Bild an und füge zumindest eine Beschreibung hinzu.']] : [],
     dev: () => hash().startsWith('#/bild/') ? [['.donebtn', 'Gut. Mit dem Haken geht es zurück zur Rolle.']]
