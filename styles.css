@@ -2928,3 +2928,5 @@ html[data-mood="sun"] #view .rollcard .strip::before, html[data-mood="sun"] #vie
 body.hastabs .framepop { bottom: calc(84px + var(--safe-b)) !important; }
 .framepop .fpbtn { width: auto !important; border-radius: 999px; display: flex; align-items: center; gap: 10px; padding: 0 14px 0 18px; font: 600 15px/1 inherit; font-family: inherit; white-space: nowrap; }
 body.hastabs .pickbar { bottom: calc(84px + var(--safe-b)); }
+/* v259: mehr Abstand zwischen Lichtblick und „Film einlegen“ */
+#view .newroll.btn { margin-top: 22px !important; }

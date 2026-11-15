@@ -978,3 +978,7 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 
 - Der große Auslöser in der Rolle zeigt das nächste freie Bild nach dem zuletzt eingetragenen. Wer zum Beispiel nach Bild 3 gleich Bild 8 einträgt, bekommt als Nächstes Bild 9. Die übersprungenen Bilder 4 bis 7 bleiben leer und lassen sich weiter von Hand füllen.
 - Ist das letzte Bild der Rolle eingetragen, verschwindet der Auslöser.
+
+## v259: Abstand unter dem Lichtblick
+
+- Zwischen Lichtblick und „Film einlegen“ ist mehr Platz.
