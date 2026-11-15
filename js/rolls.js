@@ -688,6 +688,11 @@ async function frameCell(f, leak = 0) {
   </a>`;
 }
 
+const frameUsed = f => !!(f.shot || f.imgId || f.note || f.aperture || f.shutter);
+function nextFreeFrame(fr) {
+  let last = -1; fr.forEach((f, i) => { if (frameUsed(f)) last = i; });
+  return fr.slice(last + 1).find(f => !frameUsed(f)) || null;
+}
 async function rollFrames(body, roll, stock) {
   const fr = await framesOf(roll.id);
   const st = roll.status || 'entwurf';
@@ -699,7 +704,8 @@ async function rollFrames(body, roll, stock) {
   let top = '', bottom = '';
   if (st === 'entwurf') {
     // v236 Vorschau: Schnellerfassung. Ein Tipp legt das nächste freie Bild mit den letzten Werten, Uhrzeit und Ort an.
-    const free = fr.find(f => !(f.shot || f.imgId || f.note || f.aperture || f.shutter));
+    // v257: das nächste freie Bild nach dem zuletzt eingetragenen. Übersprungene Bilder davor bleiben leer.
+    const free = nextFreeFrame(fr);
     const lastShot = [...fr].reverse().find(f => f.shot && (f.aperture || f.shutter || f.lensId));
     if (free) top = `<div class="quickshot"><button type="button" class="shutterbtn" id="quickShot" aria-label="Bild ${U.esc(String(frameLabel(free)))} auslösen"><span class="shring"></span><span class="shnum">${U.esc(String(frameLabel(free)))}</span></button>
       <span class="sub2 shsub">${lastShot ? [lastShot.aperture ? 'f/' + String(lastShot.aperture).replace('.', ',') : '', lastShot.shutter || ''].filter(Boolean).join(' · ') : ''}</span></div>`;
@@ -737,7 +743,7 @@ async function rollFrames(body, roll, stock) {
     ${bottom}`;
   body.querySelector('#quickShot')?.addEventListener('click', async () => {
     const all = await framesOf(roll.id);
-    const f = all.find(x => !(x.shot || x.imgId || x.note || x.aperture || x.shutter)); if (!f) return;
+    const f = nextFreeFrame(all); if (!f) return;
     const before = JSON.parse(JSON.stringify(f));
     const src = [...all].reverse().find(x => x.shot && (x.aperture || x.shutter || x.lensId));
     if (src) ['aperture', 'shutter', 'lensId', 'iso'].forEach(k => { if (src[k]) f[k] = src[k]; });

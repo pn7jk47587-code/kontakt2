@@ -973,3 +973,8 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 - In der Bildansicht einer Rolle bleibt die Leiste unten sichtbar (Reiter Rollen aktiv). Oben links bleibt der Zurück-Pfeil.
 - Langes Drücken auf einen Frame: Die Knöpfe unten rechts tragen jetzt ihre Beschriftung („Reihenfolge ändern“, „Werte von N übertragen“) und sitzen über der Leiste.
 - Contact Sheet wird nur noch als PNG gespeichert (je Seite eine Datei, 300 dpi). Die Wahl PDF oder PNG entfällt.
+
+## v258: Auslöser zählt nach dem zuletzt eingetragenen Bild weiter
+
+- Der große Auslöser in der Rolle zeigt das nächste freie Bild nach dem zuletzt eingetragenen. Wer zum Beispiel nach Bild 3 gleich Bild 8 einträgt, bekommt als Nächstes Bild 9. Die übersprungenen Bilder 4 bis 7 bleiben leer und lassen sich weiter von Hand füllen.
+- Ist das letzte Bild der Rolle eingetragen, verschwindet der Auslöser.
