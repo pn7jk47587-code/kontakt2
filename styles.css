@@ -2939,3 +2939,8 @@ body.hastabs .pickbar { bottom: calc(84px + var(--safe-b)); }
 .phonematch .mphslot:has(img) { border: 0; }
 .phonematch .mds.linked { border-color: var(--teal); }
 .phonematch .mds.linked .mphslot { box-shadow: 0 0 0 2px var(--teal); }
+/* v261: Statusanzeigen im Glut-Modus warm statt lila-blau */
+html[data-sky="golden-a"] .toast, html[data-sky="golden-a"] .undobar { background: rgba(62,36,22,.94) !important; color: #fbefe4 !important; box-shadow: 0 10px 30px rgba(255,145,65,.22), 0 0 0 1px rgba(255,205,160,.22) !important; }
+html[data-sky="golden-a"] .toast::before, html[data-sky="golden-a"] .undobar::before { background: radial-gradient(120% 140% at 0% 50%, rgba(255,179,92,.9), rgba(255,111,97,.45) 30%, rgba(255,150,60,.18) 50%, transparent 64%); mix-blend-mode: screen; }
+html[data-sky="golden-a"] .undobar button { background: var(--teal); color: var(--onaccent); }
+html[data-sky="golden-a"] .tabbar { background: linear-gradient(to bottom, rgba(42,25,18,0), rgba(42,25,18,.92) 58%) !important; }
