@@ -142,6 +142,7 @@ async function fridgeRow(e, st, { pick = false, on = false } = {}) {
       <span class="frowchips"><span>${e.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[e.format] || '?'}</span><span>ISO ${U.esc(st?.isoLabel || st?.boxIso || '?')}</span><span>${kind}</span>${e.spooled ? `<span class="spchip">${e.exposures} Bilder · selbst gespult</span>` : ''}</span>
       <span class="frowsub">${e.format === 'bulk' ? BULK.restText(e) : (e.boughtAt ? ageText(e.boughtAt) : 'Kaufdatum offen') + (e.expiresAt ? ` · haltbar bis ${fmtMonth(e.expiresAt)}` : '')}</span>
       ${e.format === 'bulk' ? `<span class="bulkbar"><i style="width:${Math.round(BULK.restM(e) / Math.max(.1, BULK.totalM(e)) * 100)}%"></i></span>` : ''}
+      ${e.format === 'bulk' && !pick && BULK.fits(e, 12) > 0 ? `<span class="spoolbtn">${BULK.IC}<span>Spulen</span></span>` : ''}
     </span>
     <span class="frowcount">${e.format === 'bulk' ? BULK.fmtM(BULK.restM(e)) : '×' + (e.count || 0)}</span>
     ${pick ? '' : `<span class="frowx" role="button" tabindex="0" data-delentry="${e.id}" aria-label="Aus dem Kühlschrank entfernen">${ART.x}</span>`}

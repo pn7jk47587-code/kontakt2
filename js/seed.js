@@ -525,6 +525,12 @@ SEED_STOCKS.push(
   seedStock('rollei-retro400s', 'Rollei', 'Retro 400S', 'sw', 'SW', 400, ['135', '120']),
   seedStock('rollei-superpan200', 'Rollei', 'Superpan 200', 'sw', 'SW', 200, ['135', '120'])
 );
+// v263: Kinofilme mit Remjet-Schicht, die 35mmdealer als 30-m-Rolle führt. Angaben von der Übersichtsseite des Händlers.
+const DEALER_REMJET = 'Kinofilm mit Remjet-Schicht. Er muss in ein Labor, das ECN-2 entwickelt und die Schicht entfernt, ein normales C-41-Labor nimmt ihn nicht an. Die Zahl im Namen ist laut Händler die Nennempfindlichkeit.';
+SEED_STOCKS.push(
+  seedStock('fuji-eterna500t', 'Fujifilm', 'Eterna 500T', 'farbneg', 'ECN-2', 500, ['135'], { makerNote: DEALER_REMJET + ' Kunstlichtfilm. Bei 35mmdealer als Patrone und als 30-m-Rolle.', datasheet: DEALER_URL }),
+  seedStock('fuji-f500', 'Fujifilm', 'F-500', 'farbneg', 'ECN-2', 500, ['135'], { makerNote: DEALER_REMJET + ' Bei 35mmdealer als 30-m-Rolle.', datasheet: DEALER_URL })
+);
 // Meterware (Kleinbild, zum Selbstspulen): Längen in Metern, wie sie im Handel angeboten werden.
 // Quellen: macodirect.de (Foma, Ilford, Kentmere, Rollei), 35mmdealer.de (Dealer's 30 m), Kodak-Händler (Tri-X 30,5 m).
 const SEED_BULK = {
@@ -532,5 +538,5 @@ const SEED_BULK = {
   'ilford-hp5': [17, 30.5], 'ilford-fp4': [30.5], 'ilford-delta100': [30.5], 'ilford-delta400': [30.5],
   'kentmere-100': [30.5], 'kentmere-400': [30.5], 'kodak-trix': [30.5],
   'rollei-rpx100': [30.5], 'rollei-rpx400': [30.5], 'rollei-retro80s': [30.5], 'rollei-retro400s': [17, 30.5], 'rollei-superpan200': [30.5],
-  'dealers-v3-250d': [30], 'dealers-v3-500t': [30], 'dealers-xx': [30]
+  'dealers-v3-250d': [30], 'dealers-v3-500t': [30], 'dealers-xx': [30], 'fuji-eterna500t': [30], 'fuji-f500': [30]
 };

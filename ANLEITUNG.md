@@ -1012,3 +1012,8 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 
 **Alle Fotos**
 - „Archivieren“ steht rechts in der Favoriten-Zeile statt in einer eigenen Zeile oben. Ohne Favoriten bleibt der Knopf oben.
+
+## v263: Knopf „Spulen“, Fuji-Kinofilme als Meterware
+
+- Die Meterware im Kühlschrank hat einen sichtbaren Knopf „Spulen“. Er öffnet „Patronen spulen“, genauso wie ein Tipp auf die Zeile. Ist die Rolle aufgebraucht, verschwindet der Knopf.
+- Neu im Katalog und als Meterware (30 m): Fujifilm Eterna 500T und Fujifilm F-500 von 35mmdealer. Beide haben eine Remjet-Schicht und brauchen ein ECN-2-Labor.
