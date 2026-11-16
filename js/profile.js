@@ -136,7 +136,7 @@ async function fridgeRow(e, st, { pick = false, on = false } = {}) {
     ? `data-fridge="${e.id}" data-stock="${st?.id || ''}" data-format="${e.format || ''}" data-exp="${e.exposures || ''}"`
     : `data-entry="${e.id}"`;
   return `<button type="button" class="frow ${exp.state}${on ? ' on' : ''}" ${attrs} data-q="${U.esc(q)}">
-    <span class="frowart">${await filmArt(st, 42)}</span>
+    <span class="frowart">${await filmArt(st, 42, e.format === 'bulk')}</span>
     <span class="frowmain">
       <span class="frowname">${U.esc(st ? U.stockLabel(st) : 'Unbekannter Film')}${exp.tag ? ' ' + exp.tag.replace('exptag', 'exptag inline') : ''}</span>
       <span class="frowchips"><span>${e.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[e.format] || '?'}</span><span>ISO ${U.esc(st?.isoLabel || st?.boxIso || '?')}</span><span>${kind}</span>${e.spooled ? `<span class="spchip">${e.exposures} Bilder · selbst gespult</span>` : ''}</span>
@@ -525,7 +525,7 @@ async function openFridgeModal(entry, fromBtn) {
   const current = stocks.find(s => s.id === entry.stockId);
   const ov = document.createElement('div');
   ov.className = 'modalbg';
-  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 40)}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${entry.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[entry.format]}</span></span></span>`;
+  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 40, entry.format === 'bulk')}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${entry.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[entry.format]}</span></span></span>`;
   // Kompakt ohne Überschrift: Format oben (bleibt beim Scrollen stehen), gewählter Film als schmale Zeile, Suche mit Lupe links,
   // darunter vier gleich große Felder in zwei Reihen und unten rechts der Haken
   ov.innerHTML = `

@@ -55,7 +55,7 @@ const BULK = (() => {
     try { const f = parseInt(localStorage.getItem('kb-bulk-frames')); if (f > 0 && f < 100) frames = f; } catch (_) {}
     const ov = document.createElement('div'); ov.className = 'modalbg';
     ov.innerHTML = `<div class="modal bulkmodal" role="dialog" aria-modal="true" aria-label="Patronen spulen">
-        <div class="frslot"><span class="frslotart">${await filmArt(st, 40)}</span><span class="frslottxt"><b>${U.esc(st ? U.stockLabel(st) : 'Unbekannter Film')}</b><span class="frowchips"><span>Meterware</span><span>ISO ${U.esc(st?.isoLabel || st?.boxIso || '?')}</span></span></span>
+        <div class="frslot"><span class="frslotart">${await filmArt(st, 40, true)}</span><span class="frslottxt"><b>${U.esc(st ? U.stockLabel(st) : 'Unbekannter Film')}</b><span class="frowchips"><span>Meterware</span><span>ISO ${U.esc(st?.isoLabel || st?.boxIso || '?')}</span></span></span>
           <button type="button" class="roundic small" id="bkEdit" aria-label="Eintrag bearbeiten"><svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="M14.5 6.5l3 3"/></svg></button></div>
         <div class="bulkrest"><span class="bulkbar big"><i id="bkBar"></i><em id="bkTake"></em></span><span class="sub2" id="bkRest"></span></div>
         <div class="fld"><span>Bilder je Patrone</span><div class="chips" id="bkF">${[12, 24, 36].map(x => `<button type="button" class="chip" data-f="${x}">${x}</button>`).join('')}<input type="number" id="bkFN" min="1" max="99" inputmode="numeric" class="chip-input" aria-label="Freie Bildzahl"></div></div>

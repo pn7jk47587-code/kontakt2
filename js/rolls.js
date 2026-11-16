@@ -65,11 +65,12 @@ function nowLocal() {
 function frameLabel(f) { return f.index === 0 ? '0' : String(f.index); }
 function camLabel(c) { return c ? `${c.maker} ${c.name}`.trim() : ''; }
 
-async function filmArt(stock, size = 96) {
+async function filmArt(stock, size = 96, bulk = false) {
   if (stock?.photoId) {
     const u = await U.imgUrl(stock.photoId, true);
     if (u) return `<img class="artimg" src="${u}" alt="" style="width:${size}px;height:${size}px">`;
   }
+  if (bulk && stock && SEED_IMG_BULK[stock.id]) return `<img class="artimg cut" src="${SEED_IMG_BULK[stock.id]}" alt="" style="width:${size}px;height:${size}px">`;
   if (stock && SEED_IMG[stock.id]) return `<img class="artimg cut" src="${SEED_IMG[stock.id]}" alt="" style="width:${size}px;height:${size}px">`;
   return ART.film(stock, size);
 }

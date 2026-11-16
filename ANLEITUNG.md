@@ -1021,3 +1021,10 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 ## v264: Spul-Animation mit Kurbel
 
 - Beim Spulen zeigt die App einen Tageslichtlader: Die Kurbel dreht sich, das Zählwerk läuft bis zur gewählten Bildzahl, danach erscheinen die Patronen einzeln rechts neben dem Lader. Antippen überspringt die Animation.
+
+## v265: Filme von 35mmdealer, Produktfotos
+
+- Neue Filme (Quelle: Übersichtsseite von 35mmdealer, abgerufen 16.11.2026): Dealer's V2 500T, V2 200T, V2 100T, V2 50D, EXR 100T, Fujifilm Reala 500D und Eterna 250T, Reflx Lab 200T und 50D (beide 120). Alle ECN-2 mit Remjet.
+- Nicht aufgenommen: die 65-mm-Rollen von Kodak Vision2, weil die App kein 65-mm-Format kennt.
+- Produktfotos für Dealer's V3 50D, 200T, 250D, 500T, XX und Plus-X.
+- Meterware von V3 250D, V3 500T und XX zeigt im Kühlschrank und im Dialog „Spulen“ die goldene Dose statt der Patrone.

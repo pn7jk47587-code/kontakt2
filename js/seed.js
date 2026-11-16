@@ -407,8 +407,10 @@ const SEED_IMG = Object.fromEntries([
   'harman-phoenix125', 'harman-phoenix2', 'harman-red125', 'harman-switch-azure', 'agfa-color400',
   'rollei-ir400', 'optik-opticolour200', 'lomo-purple', 'kodak-portra160', 'kodak-portra400', 'kodak-portra800', 'kodak-colorplus200', 'kodak-gold200', 'kodak-ultramax400', 'orwo-wolfen-nc500', 'lomo-cn800', 'kodak-trix',
   'ilford-delta100', 'ilford-delta3200', 'ilford-delta400', 'ilford-fp4', 'ilford-hp5', 'ilford-panf', 'ilford-sfx200', 'ilford-xp2',
-  'kentmere-200'
+  'kentmere-200', 'dealers-v3-50d', 'dealers-v3-200t', 'dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx', 'dealers-plusx'
 ].map(id => [id, 'img/' + id + '.webp']));
+// Dosen der 30-m-Rollen von 35mmdealer, für Meterware
+const SEED_IMG_BULK = Object.fromEntries(['dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx'].map(id => [id, 'img/' + id + '-bulk.webp']));
 // Erste Phoenix 200 (rote Packung); die blaue Packung gehört zu Phoenix II
 SEED_IMG['harman-phoenix200'] = 'img/harman-phoenix200-rot.webp';
 
@@ -530,6 +532,18 @@ const DEALER_REMJET = 'Kinofilm mit Remjet-Schicht. Er muss in ein Labor, das EC
 SEED_STOCKS.push(
   seedStock('fuji-eterna500t', 'Fujifilm', 'Eterna 500T', 'farbneg', 'ECN-2', 500, ['135'], { makerNote: DEALER_REMJET + ' Kunstlichtfilm. Bei 35mmdealer als Patrone und als 30-m-Rolle.', datasheet: DEALER_URL }),
   seedStock('fuji-f500', 'Fujifilm', 'F-500', 'farbneg', 'ECN-2', 500, ['135'], { makerNote: DEALER_REMJET + ' Bei 35mmdealer als 30-m-Rolle.', datasheet: DEALER_URL })
+);
+// v265: weitere Filme der Übersichtsseite von 35mmdealer (abgerufen 16.11.2026). Die Seite nennt Name, Empfindlichkeit und Verfahren, sonst nichts.
+SEED_STOCKS.push(
+  seedStock('dealers-v2-500t', "Dealer's", 'V2 500T', 'farbneg', 'ECN-2', 500, ['135'], { makerNote: DEALER_REMJET + ' Umverpackter Kodak Vision2, Kunstlicht.', datasheet: 'https://35mmdealer.de/produkt/kodak-vision2-500t/' }),
+  seedStock('dealers-v2-200t', "Dealer's", 'V2 200T', 'farbneg', 'ECN-2', 200, ['135'], { makerNote: DEALER_REMJET + ' Umverpackter Kodak Vision2, Kunstlicht.', datasheet: 'https://35mmdealer.de/produkt/kodak-vision2-200t/' }),
+  seedStock('dealers-v2-100t', "Dealer's", 'V2 100T', 'farbneg', 'ECN-2', 100, ['135'], { makerNote: DEALER_REMJET + ' Umverpackter Kodak Vision2, Kunstlicht.', datasheet: 'https://35mmdealer.de/produkt/kodak-vision2-100t/' }),
+  seedStock('dealers-v2-50d', "Dealer's", 'V2 50D', 'farbneg', 'ECN-2', 50, ['135'], { makerNote: DEALER_REMJET + ' Umverpackter Kodak Vision2, Tageslicht.', datasheet: 'https://35mmdealer.de/produkt/kodak-vision2-50d-2/' }),
+  seedStock('dealers-exr-100t', "Dealer's", 'EXR 100T', 'farbneg', 'ECN-2', 100, ['135'], { makerNote: DEALER_REMJET + ' Kunstlicht.', datasheet: 'https://35mmdealer.de/produkt/dealers-exr-100t/' }),
+  seedStock('fuji-reala500d', 'Fujifilm', 'Reala 500D', 'farbneg', 'ECN-2', 500, ['135'], { makerNote: DEALER_REMJET + ' Tageslichtfilm. Bei 35mmdealer als Patrone.', datasheet: 'https://35mmdealer.de/produkt/fuji-reala-500d/' }),
+  seedStock('fuji-eterna250t', 'Fujifilm', 'Eterna 250T', 'farbneg', 'ECN-2', 250, ['135'], { makerNote: DEALER_REMJET + ' Kunstlichtfilm. Bei 35mmdealer als Patrone.', datasheet: 'https://35mmdealer.de/produkt/fuji-eterna-250t/' }),
+  seedStock('reflx-200t', 'Reflx Lab', '200T', 'farbneg', 'ECN-2', 200, ['120'], { makerNote: DEALER_REMJET + ' Mittelformat 120, bei 35mmdealer.', datasheet: 'https://35mmdealer.de/produkt/reflx-lab-200t-120/' }),
+  seedStock('reflx-50d', 'Reflx Lab', '50D', 'farbneg', 'ECN-2', 50, ['120'], { makerNote: DEALER_REMJET + ' Mittelformat 120, bei 35mmdealer.', datasheet: 'https://35mmdealer.de/produkt/reflx-lab-50d-120/' })
 );
 // Meterware (Kleinbild, zum Selbstspulen): Längen in Metern, wie sie im Handel angeboten werden.
 // Quellen: macodirect.de (Foma, Ilford, Kentmere, Rollei), 35mmdealer.de (Dealer's 30 m), Kodak-Händler (Tri-X 30,5 m).
