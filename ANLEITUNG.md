@@ -1028,3 +1028,7 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 - Nicht aufgenommen: die 65-mm-Rollen von Kodak Vision2, weil die App kein 65-mm-Format kennt.
 - Produktfotos für Dealer's V3 50D, 200T, 250D, 500T, XX und Plus-X.
 - Meterware von V3 250D, V3 500T und XX zeigt im Kühlschrank und im Dialog „Spulen“ die goldene Dose statt der Patrone.
+
+## v266: Bilder für Meterware
+
+Rollei RPX 100 und 400, Superpan 200, Retro 80S und 400S, Kentmere Pan 400, Fomapan 100, 200, 400 und R 100 sowie Kodak Tri-X zeigen als Meterware ihre Schachtel oder Dose. Fomapan R 100 ist neu als 30,5-m-Rolle wählbar.

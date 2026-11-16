@@ -409,8 +409,8 @@ const SEED_IMG = Object.fromEntries([
   'ilford-delta100', 'ilford-delta3200', 'ilford-delta400', 'ilford-fp4', 'ilford-hp5', 'ilford-panf', 'ilford-sfx200', 'ilford-xp2',
   'kentmere-200', 'dealers-v3-50d', 'dealers-v3-200t', 'dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx', 'dealers-plusx'
 ].map(id => [id, 'img/' + id + '.webp']));
-// Dosen der 30-m-Rollen von 35mmdealer, für Meterware
-const SEED_IMG_BULK = Object.fromEntries(['dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx'].map(id => [id, 'img/' + id + '-bulk.webp']));
+// Dosen und Schachteln der Meterware
+const SEED_IMG_BULK = Object.fromEntries(['dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx', 'rollei-rpx400', 'rollei-rpx100', 'rollei-superpan200', 'kodak-trix', 'rollei-retro80s', 'rollei-retro400s', 'kentmere-400', 'foma-200', 'foma-100', 'foma-r100', 'foma-400'].map(id => [id, 'img/' + id + '-bulk.webp']));
 // Erste Phoenix 200 (rote Packung); die blaue Packung gehört zu Phoenix II
 SEED_IMG['harman-phoenix200'] = 'img/harman-phoenix200-rot.webp';
 
@@ -548,7 +548,7 @@ SEED_STOCKS.push(
 // Meterware (Kleinbild, zum Selbstspulen): Längen in Metern, wie sie im Handel angeboten werden.
 // Quellen: macodirect.de (Foma, Ilford, Kentmere, Rollei), 35mmdealer.de (Dealer's 30 m), Kodak-Händler (Tri-X 30,5 m).
 const SEED_BULK = {
-  'foma-100': [17, 30.5, 50], 'foma-200': [17, 30.5], 'foma-400': [17, 30.5, 50],
+  'foma-100': [17, 30.5, 50], 'foma-r100': [30.5], 'foma-200': [17, 30.5], 'foma-400': [17, 30.5, 50],
   'ilford-hp5': [17, 30.5], 'ilford-fp4': [30.5], 'ilford-delta100': [30.5], 'ilford-delta400': [30.5],
   'kentmere-100': [30.5], 'kentmere-400': [30.5], 'kodak-trix': [30.5],
   'rollei-rpx100': [30.5], 'rollei-rpx400': [30.5], 'rollei-retro80s': [30.5], 'rollei-retro400s': [17, 30.5], 'rollei-superpan200': [30.5],
