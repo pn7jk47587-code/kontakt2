@@ -2930,3 +2930,12 @@ body.hastabs .framepop { bottom: calc(84px + var(--safe-b)) !important; }
 body.hastabs .pickbar { bottom: calc(84px + var(--safe-b)); }
 /* v259: mehr Abstand zwischen Lichtblick und „Film einlegen“ */
 #view .newroll.btn { margin-top: 22px !important; }
+/* v260: Handyfotos zuordnen in zwei Spalten */
+.phonematch .mph .mpmeta { position: absolute; left: 6px; bottom: 6px; display: flex; align-items: center; gap: 3px; padding: 2px 7px 2px 4px; border-radius: 9px; font-size: 12px; font-weight: 600; color: #fff; background: rgba(0,0,0,.6); }
+.phonematch .mph .mpmeta svg { width: 13px; height: 13px; }
+.phonematch .mph img { aspect-ratio: 3 / 4; }
+.phonematch .mphslot { width: 36px; height: 36px; border-radius: 8px; overflow: hidden; margin-left: auto; flex: 0 0 auto; border: 1.5px dashed var(--line); }
+.phonematch .mphslot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.phonematch .mphslot:has(img) { border: 0; }
+.phonematch .mds.linked { border-color: var(--teal); }
+.phonematch .mds.linked .mphslot { box-shadow: 0 0 0 2px var(--teal); }

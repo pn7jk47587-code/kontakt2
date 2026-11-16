@@ -2113,71 +2113,105 @@ async function readExif(file) {
     return e ? { lat: typeof e.latitude === 'number' ? e.latitude : null, lng: typeof e.longitude === 'number' ? e.longitude : null, taken: e.DateTimeOriginal ? new Date(e.DateTimeOriginal).toISOString() : null } : {};
   } catch (_) { return {}; }
 }
-// Mehrere Handyfotos auf einmal den Frames einer Rolle zuordnen
+// v260: Handyfotos zuordnen wie beim Zuordnen der Beschreibungen. Links die gewählten Handyfotos, rechts die Bilder der Rolle,
+// jede Spalte scrollt für sich. Handyfoto antippen, dann das Bild (oder umgekehrt). Beim Speichern übernimmt das Bild
+// Aufnahmezeit und Ort aus dem Handyfoto, aber nur, wenn dort noch nichts selbst eingetragen ist (applyPhoneExif).
 async function openPhoneImport(roll, files) {
   U.toast('Lese Fotos …');
-  const items = await Promise.all(files.map(async file => ({ file, ex: await readExif(file) })));
+  const items = await Promise.all(files.map(async (file, k) => ({ k: String(k), file, ex: await readExif(file) })));
   items.sort((a, b) => (a.ex.taken || '9').localeCompare(b.ex.taken || '9'));
   const frames = await framesOf(roll.id);
-  const withLoc = items.filter(i => i.ex.lat != null).length;
-  const dated = frames.some(f => f.date) && items.some(i => i.ex.taken);
-  let mode = 'seq', start = (frames.find(f => !f.phoneId) || frames[0])?.id;
-  const ov = document.createElement('div');
-  ov.className = 'modalbg';
-  const urls = items.map(i => { try { return URL.createObjectURL(i.file); } catch (_) { return ''; } });
-  const plan = () => {
-    const out = new Map();
-    if (mode === 'time') {
-      const used = new Set();
-      items.forEach((it, k) => {
-        if (!it.ex.taken) return;
-        const t = new Date(it.ex.taken).getTime();
-        let best = null, bd = Infinity;
-        frames.forEach(f => { if (!f.date || used.has(f.id)) return; const d = Math.abs(new Date(f.date).getTime() - t); if (d < bd) { bd = d; best = f; } });
-        if (best) { used.add(best.id); out.set(k, best); }
-      });
-    } else {
-      let j = Math.max(0, frames.findIndex(f => f.id === start));
-      items.forEach((_, k) => { while (j < frames.length && frames[j].phoneId && frames[j].id !== start) j++; if (j < frames.length) out.set(k, frames[j++]); });
-    }
-    return out;
+  if (!frames.length) { U.toast('Die Rolle hat noch keine Bilder'); return; }
+  const lenses = new Map((await DB.all('lenses')).map(l => [l.id, l]));
+  const own = [];
+  const urls = new Map(items.map(it => { let u = ''; try { u = URL.createObjectURL(it.file); own.push(u); } catch (_) {} return [it.k, u]; }));
+  const thumbUrl = async id => { const rec = id && await DB.get('images', id); const b = rec && U.recBlob(rec, true); if (!b) return ''; const u = URL.createObjectURL(b); own.push(u); return u; };
+  const scans = new Map(), phones = new Map();
+  await Promise.all(frames.map(async f => { if (f.imgId) scans.set(f.id, await thumbUrl(f.imgId)); if (f.phoneId) phones.set(f.id, await thumbUrl(f.phoneId)); }));
+  const label = new Map(frames.map(f => [f.id, frameLabel(f)]));
+  const link = new Map(items.map(it => [it.k, null]));   // Handyfoto → Bild
+  const noLoc = items.some(it => it.ex.lat == null);
+  let selP = null, selD = null;
+  const tm = iso => iso ? new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+  const descHtml = f => {
+    const l = lenses.get(f.lensId);
+    const tech = [f.aperture ? 'f/' + String(f.aperture).replace('.', ',') : '', f.shutter || '', l ? (l.focal ? l.focal + ' mm' : lensLabel(l)) : ''].filter(Boolean).join(' · ');
+    const where = [f.place || '', f.date ? fmtShotLong(f.date) : ''].filter(Boolean).join(' · ');
+    return `${tech ? `<span class="mtech">${U.esc(tech)}</span>` : ''}${f.note ? `<span class="mnote">${U.esc(f.note)}</span>` : ''}${where ? `<span class="mwhere">${U.esc(where)}</span>` : ''}`;
   };
-  const tm = iso => iso ? new Date(iso).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '–';
-  const draw = () => {
-    const p = plan();
-    ov.querySelector('#piList').innerHTML = items.map((it, k) => `<div class="pirow"><img src="${urls[k]}" alt=""><span>${tm(it.ex.taken)}</span><span class="pipin${it.ex.lat != null ? ' on' : ''}" aria-label="${it.ex.lat != null ? 'mit Ort' : 'ohne Ort'}">${PIN_IC}</span><span class="pito">${p.has(k) ? 'Bild ' + frameLabel(p.get(k)) : '–'}</span></div>`).join('');
-    ov.querySelector('#piStartRow').hidden = mode !== 'seq';
-    ov.querySelector('#piOk').disabled = !p.size;
-  };
-  ov.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="piTitle">
-    <h2 id="piTitle">Handyfotos zuordnen</h2>
-    <p class="sub2">${items.length} ${items.length === 1 ? 'Foto' : 'Fotos'} · ${withLoc} mit Ort</p>
-    ${withLoc < items.length ? '<p class="hint">Fehlt der Ort, beim Auswählen auf dem iPhone oben „Optionen“ antippen und „Ort“ einschalten.</p>' : ''}
-    ${dated ? `<div class="seggroup" id="piMode"><button type="button" data-m="seq" class="seg on">Der Reihe nach</button><button type="button" data-m="time" class="seg">Nach Uhrzeit</button></div>` : ''}
-    <label class="fld" id="piStartRow"><span>Ab Bild</span><select id="piStart">${frames.map(f => `<option value="${f.id}"${f.id === start ? ' selected' : ''}>${frameLabel(f)}${f.phoneId ? ' (hat Handyfoto)' : ''}</option>`).join('')}</select></label>
-    <div class="pilist" id="piList"></div>
-    <div class="modalfoot"><button class="closex" id="piNo" aria-label="Abbrechen">${ART.x}</button><button class="btn accent" id="piOk">Zuordnen</button></div>
-  </div>`;
+  const ov = document.createElement('div'); ov.className = 'cspv matchov phonematch';
+  ov.innerHTML = `<div class="mcols">
+      <div class="mcol" id="mP"><div class="mhead">Handyfotos</div>${items.map(it => `<button type="button" class="mph free" data-p="${it.k}"><img src="${urls.get(it.k)}" alt="" draggable="false"><span class="mbadge">?</span>${it.ex.taken || it.ex.lat != null ? `<span class="mpmeta">${it.ex.lat != null ? PIN_IC : ''}${U.esc(tm(it.ex.taken))}</span>` : ''}</button>`).join('')}</div>
+      <div class="mcol" id="mD"><div class="mhead">Bilder</div>${frames.map(f => `<button type="button" class="mds" data-d="${f.id}"><span class="mdtop"><span class="mnum">${label.get(f.id)}</span>${scans.get(f.id) ? `<span class="mthumb"><img src="${scans.get(f.id)}" alt="" draggable="false"></span>` : ''}<span class="mphslot">${phones.get(f.id) ? `<img src="${phones.get(f.id)}" alt="" draggable="false">` : ''}</span></span><span class="mdesc">${descHtml(f)}</span></button>`).join('')}</div>
+    </div>
+    <div class="matchbar"><span class="sub2" id="mHint"></span></div>
+    <div class="cspvfoot"><button class="closex" id="mX" aria-label="Abbrechen">${ART.x}</button>
+    <span class="sub2 mcount" id="mCount"></span>
+    <button class="cspvshare" id="mOk" aria-label="Zuordnung speichern" disabled>${ART.check}</button></div>`;
   document.body.appendChild(ov);
-  const close = () => { urls.forEach(u => { try { URL.revokeObjectURL(u); } catch (_) {} }); ov.remove(); };
-  ov.querySelector('#piNo').addEventListener('click', close);
-  ov.querySelector('#piMode')?.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; mode = b.dataset.m; ov.querySelectorAll('#piMode button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
-  ov.querySelector('#piStart').addEventListener('change', e => { start = e.target.value; draw(); });
-  ov.querySelector('#piOk').addEventListener('click', async () => {
-    const p = plan(); const btn = ov.querySelector('#piOk'); btn.disabled = true; btn.textContent = 'Speichere …';
-    const geo = [];
-    for (const [k, f] of p) {
-      const rec = await U.storeImage(items[k].file, 'phone');
+  const $ = q => ov.querySelector(q);
+  const photoOf = did => { for (const [p, d] of link) if (d === did) return p; return null; };
+  const draw = () => {
+    ov.querySelectorAll('.mph').forEach(b => {
+      const d = link.get(b.dataset.p);
+      b.classList.toggle('sel', selP === b.dataset.p); b.classList.toggle('free', !d); b.classList.toggle('changed', !!d);
+      b.querySelector('.mbadge').textContent = d ? label.get(d) : '?';
+    });
+    ov.querySelectorAll('.mds').forEach(b => {
+      const p = photoOf(b.dataset.d), slot = b.querySelector('.mphslot');
+      b.classList.toggle('sel', selD === b.dataset.d || (selP && link.get(selP) === b.dataset.d));
+      b.classList.toggle('linked', !!p);
+      const want = p ? urls.get(p) : (phones.get(b.dataset.d) || '');
+      if (slot.dataset.u !== want) { slot.dataset.u = want; slot.innerHTML = want ? `<img src="${want}" alt="" draggable="false">` : ''; }
+    });
+    ov.classList.toggle('picking', !!(selP || selD));
+    const n = [...link.values()].filter(Boolean).length;
+    $('#mHint').textContent = selP ? 'Jetzt das Bild antippen' : selD ? 'Jetzt das Handyfoto antippen' : n ? '' : noLoc ? 'Ohne Ort: auf dem iPhone beim Auswählen „Optionen“ und „Ort“ einschalten' : 'Handyfoto antippen, dann das Bild';
+    $('#mCount').textContent = n ? `${n} von ${items.length}` : '';
+    $('#mOk').disabled = !n;
+  };
+  const pair = (p, d) => {
+    const old = photoOf(d);
+    if (old && old !== p) link.set(old, null);
+    link.set(p, link.get(p) === d && !selD ? null : d); selP = selD = null;
+    U.haptic && U.haptic([10, 30, 10]); draw();
+  };
+  $('#mP').addEventListener('click', e => {
+    const b = e.target.closest('.mph'); if (!b) return;
+    const p = b.dataset.p;
+    if (selD) return pair(p, selD);
+    selP = selP === p ? null : p; U.haptic && U.haptic(8); draw();
+    const d = selP && link.get(selP);
+    if (d) ov.querySelector(`.mds[data-d="${d}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+  $('#mD').addEventListener('click', e => {
+    const b = e.target.closest('.mds'); if (!b) return;
+    const d = b.dataset.d;
+    if (selP) return pair(selP, d);
+    selD = selD === d ? null : d; U.haptic && U.haptic(8); draw();
+    const p = selD && photoOf(selD);
+    if (p) ov.querySelector(`.mph[data-p="${p}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  });
+  const close = () => { ov.remove(); setTimeout(() => own.forEach(u => { try { URL.revokeObjectURL(u); } catch (_) {} }), 1000); };
+  $('#mX').onclick = close;
+  $('#mOk').onclick = async () => {
+    const btn = $('#mOk'); btn.disabled = true;
+    const geo = []; let n = 0;
+    for (const it of items) {
+      const fid = link.get(it.k); if (!fid) continue;
+      const f = await DB.get('frames', fid); if (!f) continue;
+      const rec = await U.storeImage(it.file, 'phone');
       await deleteImage(f.phoneId); f.phoneId = rec.id;
-      applyPhoneExif(f, rec.exif && rec.exif.taken ? rec.exif : items[k].ex);
-      if (f.placeSrc === 'exif' && !f.place) geo.push(f);
-      await DB.put('frames', f);
+      applyPhoneExif(f, rec.exif && rec.exif.taken ? rec.exif : it.ex);
+      if (f.placeSrc === 'exif' && !f.place) geo.push(f.id);
+      await DB.put('frames', f); n++;
     }
     close();
-    U.toast(`${p.size} ${p.size === 1 ? 'Foto' : 'Fotos'} zugeordnet`);
+    U.toast(`${n} ${n === 1 ? 'Handyfoto' : 'Handyfotos'} zugeordnet`); U.haptic && U.haptic([12, 40, 12]);
     route();
-    for (const f of geo) { const n = await placeName(f.placeLat, f.placeLng); if (n) { const fresh = await DB.get('frames', f.id); if (fresh && !fresh.place) { fresh.place = n; fresh.placeNameAuto = true; if (placeName.cc) fresh.placeCC = placeName.cc; await DB.put('frames', fresh); } } }
-  });
+    for (const id of geo) { const f = await DB.get('frames', id); if (!f || f.place || f.placeLat == null) continue; const nm = await placeName(f.placeLat, f.placeLng); if (nm) { const fresh = await DB.get('frames', id); if (fresh && !fresh.place) { fresh.place = nm; fresh.placeNameAuto = true; if (placeName.cc) fresh.placeCC = placeName.cc; await DB.put('frames', fresh); } } }
+  };
+  window.addEventListener('hashchange', close, { once: true });
   draw();
 }
 async function wirePlace(root, id, obj, persist) {

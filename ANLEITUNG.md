@@ -982,3 +982,9 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 ## v259: Abstand unter dem Lichtblick
 
 - Zwischen Lichtblick und „Film einlegen“ ist mehr Platz.
+
+## v260: Handyfotos zuordnen in zwei Spalten
+
+- Nach dem Auswählen der Handyfotos öffnet sich dieselbe Ansicht wie beim Zuordnen der Beschreibungen. Links stehen die Handyfotos mit Aufnahmezeit und Ortssymbol, rechts die Bilder der Rolle mit Scan, Werten, Notiz, Ort und Zeit. Jede Spalte scrollt für sich.
+- Handyfoto antippen, dann das passende Bild (oder umgekehrt). Das Handyfoto trägt danach die Nummer des Bildes, das Bild zeigt das Handyfoto rechts klein. Nochmals antippen löst die Zuordnung.
+- Mit dem Haken übernimmt jedes zugeordnete Bild das Handyfoto. Aufnahmezeit und Ort aus dem Handyfoto werden nur eingetragen, wenn beim Bild noch keine selbst eingetragen sind. Nicht zugeordnete Handyfotos werden nicht gespeichert.
