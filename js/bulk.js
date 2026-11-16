@@ -20,21 +20,28 @@ const BULK = (() => {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const show = Math.min(n, 12);
     const ov = document.createElement('div'); ov.className = 'spoolfx'; ov.setAttribute('role', 'status');
+    // v264: Tageslichtlader mit Kurbel, das Zählwerk läuft bis zur Bildzahl, die Patronen erscheinen rechts daneben
+    const T = reduce ? 0 : 1800;
     ov.innerHTML = `<div class="spscene" aria-hidden="true">
-        <svg class="spreel" viewBox="0 0 80 80"><circle cx="40" cy="40" r="36" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="40" cy="40" r="22" fill="currentColor" opacity=".22"/><circle cx="40" cy="40" r="6" fill="currentColor"/><g fill="currentColor"><circle cx="40" cy="14" r="5"/><circle cx="40" cy="66" r="5"/><circle cx="14" cy="40" r="5"/><circle cx="66" cy="40" r="5"/></g></svg>
-        <span class="spband"><i></i></span>
-        <span class="spcart">${CART}</span>
+        <svg class="sploader" viewBox="60 90 232 160">
+          <rect x="70" y="100" width="200" height="140" rx="22" fill="var(--solid)" stroke="currentColor" stroke-width="4"/>
+          <circle cx="150" cy="170" r="46" fill="var(--bg)" stroke="currentColor" stroke-width="3"/>
+          <g class="spwin"><circle cx="150" cy="170" r="30" fill="none" stroke="currentColor" stroke-width="12" stroke-dasharray="20 11.4" opacity=".55"/><circle cx="150" cy="170" r="7" fill="currentColor"/></g>
+          <rect x="206" y="112" width="50" height="30" rx="6" fill="var(--bg)" stroke="currentColor" stroke-width="2"/>
+          <svg x="206" y="112" width="50" height="30" viewBox="0 0 50 30"><g class="spdigits" style="--n:${frames};animation-timing-function:steps(${frames})" font-size="19" font-weight="700" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" fill="currentColor">${Array.from({ length: frames + 1 }, (_, i) => `<text x="25" y="${22 + i * 24}">${String(i).padStart(2, '0')}</text>`).join('')}</g></svg>
+          <g class="spcrank"><path d="M236 170h34" stroke="currentColor" stroke-width="7" stroke-linecap="round"/><circle cx="270" cy="170" r="9" fill="currentColor"/><circle cx="236" cy="170" r="8" fill="currentColor"/></g>
+        </svg>
+        <div class="sprow">${Array.from({ length: show }, (_, i) => `<span class="spc" style="animation-delay:${T + 100 + i * 150}ms">${CART}</span>`).join('')}${n > show ? `<b class="spmore">+${n - show}</b>` : ''}</div>
       </div>
-      <div class="sprow">${Array.from({ length: show }, (_, i) => `<span class="spc" style="animation-delay:${reduce ? 0 : 900 + i * 150}ms">${CART}</span>`).join('')}${n > show ? `<b class="spmore">+${n - show}</b>` : ''}</div>
       <p class="sptext"><b id="spN">0</b> ${n === 1 ? 'Patrone' : 'Patronen'} · ${frames} Bilder</p>`;
     document.body.appendChild(ov);
     const num = ov.querySelector('#spN');
     const timers = [];
     for (let i = 1; i <= n; i++) {
-      const at = reduce ? 0 : 900 + Math.min(i - 1, show - 1) * 150;
+      const at = reduce ? 0 : T + 100 + Math.min(i - 1, show - 1) * 150;
       timers.push(setTimeout(() => { num.textContent = i; if (i <= show) U.haptic && U.haptic(12); }, at));
     }
-    const total = reduce ? 1200 : 900 + show * 150 + 1300;
+    const total = reduce ? 1200 : T + 100 + show * 150 + 1300;
     let gone = false;
     const done = () => { if (gone) return; gone = true; timers.forEach(clearTimeout); ov.classList.add('out'); setTimeout(() => { ov.remove(); after && after(); }, 260); };
     timers.push(setTimeout(() => { U.haptic && U.haptic([14, 40, 14, 40, 30]); if (window.FEEL) FEEL.burst(ov.querySelector('.sptext')); }, total - 1200));

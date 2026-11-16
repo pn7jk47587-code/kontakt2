@@ -1017,3 +1017,7 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 
 - Die Meterware im Kühlschrank hat einen sichtbaren Knopf „Spulen“. Er öffnet „Patronen spulen“, genauso wie ein Tipp auf die Zeile. Ist die Rolle aufgebraucht, verschwindet der Knopf.
 - Neu im Katalog und als Meterware (30 m): Fujifilm Eterna 500T und Fujifilm F-500 von 35mmdealer. Beide haben eine Remjet-Schicht und brauchen ein ECN-2-Labor.
+
+## v264: Spul-Animation mit Kurbel
+
+- Beim Spulen zeigt die App einen Tageslichtlader: Die Kurbel dreht sich, das Zählwerk läuft bis zur gewählten Bildzahl, danach erscheinen die Patronen einzeln rechts neben dem Lader. Antippen überspringt die Animation.
