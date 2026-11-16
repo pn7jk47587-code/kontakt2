@@ -26,6 +26,7 @@ const BADGES = (() => {
     { id: 'chamaeleon', name: 'Chamäleon', cls: 'film', lv: [10, 25, 50], txt: '{n} verschiedene Filme belichtet' },
     { id: 'matroschka', name: 'Matroschka', cls: 'film', lv: [1], txt: 'Halbformat, Kleinbild, Mittelformat und Großformat belichtet' },
     { id: 'alchemist', name: 'Alchemistin', cls: 'film', lv: [5, 25, 100], txt: '{n} Rollen selbst entwickelt' },
+    { id: 'raupe', name: 'Seidenraupe', cls: 'film', lv: [10, 50, 150], txt: '{n} Patronen selbst gespult' },
     { id: 'doppel', name: 'Doppelgänger', cls: 'film', lv: [10, 50, 150], txt: '{n} Doppelbelichtungen' },
     { id: 'schnecke', name: 'Schnecke', cls: 'tempo', lv: [6, 12, 24], txt: 'Eine Rolle lag über {n} Monate in der Kamera' },
     { id: 'gepard', name: 'Gepard', cls: 'tempo', lv: [1, 5, 10], txt: '{n} {GR} an einem Tag' },
@@ -84,7 +85,8 @@ const BADGES = (() => {
     v.lerche = lit.filter(x => x.a >= -4 && x.a < 6 && x.h < 12).length;
     // Kühlschrank
     const inFridge = fridge.filter(e => (e.count || 0) > 0);
-    v.elster = inFridge.reduce((n, e) => n + (e.count || 0), 0);
+    v.elster = inFridge.reduce((n, e) => n + (e.format === 'bulk' ? 0 : e.count || 0), 0);
+    v.raupe = (await DB.get('meta', 'bulkstats'))?.spooled || 0;
     v.prepper = Math.max(0, ...inFridge.filter(e => e.boughtAt && !rolls.some(r => r.stockId === e.stockId && String(r.loadedAt || '') >= e.boughtAt)).map(e => Math.floor((Date.now() - day(e.boughtAt)) / (365.25 * 864e5))));
     v.archaeo = rolls.filter(r => r.fridge?.expiresAt && r.loadedAt && day(r.loadedAt) > monthEnd(r.fridge.expiresAt)).length;
     // Ausrüstung

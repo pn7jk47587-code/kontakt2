@@ -2944,3 +2944,50 @@ html[data-sky="golden-a"] .toast, html[data-sky="golden-a"] .undobar { backgroun
 html[data-sky="golden-a"] .toast::before, html[data-sky="golden-a"] .undobar::before { background: radial-gradient(120% 140% at 0% 50%, rgba(255,179,92,.9), rgba(255,111,97,.45) 30%, rgba(255,150,60,.18) 50%, transparent 64%); mix-blend-mode: screen; }
 html[data-sky="golden-a"] .undobar button { background: var(--teal); color: var(--onaccent); }
 html[data-sky="golden-a"] .tabbar { background: linear-gradient(to bottom, rgba(42,25,18,0), rgba(42,25,18,.92) 58%) !important; }
+
+/* v262: Archivieren auf Höhe der Favoriten */
+.favrow { display: flex; align-items: center; gap: 8px; padding-right: 14px; }
+.favrow .favtoggle { flex: 1; width: auto; min-width: 0; }
+.favrow .archlink { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 600; text-decoration: none; flex: 0 0 auto; }
+/* v262: Bulk Loading */
+.fmtpick .seg svg { flex: 0 0 auto; }
+.frowchips .spchip { color: var(--teal); border-color: color-mix(in srgb, var(--teal) 45%, transparent); }
+.bulkbar { display: block; position: relative; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; margin-top: 6px; }
+.bulkbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: var(--teal); transition: width .25s; }
+.bulkbar.big { height: 12px; border-radius: 6px; }
+.bulkbar em { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--teal) 70%, #fff) 0 4px, transparent 4px 8px); transition: left .25s, width .25s; }
+.bulkmodal .frslot { display: flex; align-items: center; gap: 10px; }
+.bulkmodal .frslot .roundic { margin-left: auto; width: 38px; height: 38px; flex: 0 0 auto; }
+.bulkrest { display: flex; flex-direction: column; gap: 6px; margin: 12px 0 14px; }
+.bulkmodal .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bulkmodal .chip-input { width: 74px; padding: 7px 10px; border-radius: 999px; }
+.bulkmodal #bkHint { margin: 10px 0 0; }
+/* Belohnung beim Spulen */
+.spoolfx { position: fixed; inset: 0; z-index: 3000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: color-mix(in srgb, var(--bg) 86%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--teal); animation: spin-in .25s ease-out; transition: opacity .25s; }
+.spoolfx.out { opacity: 0; }
+@keyframes spin-in { from { opacity: 0; } }
+.spscene { display: flex; align-items: center; }
+.spreel { width: 92px; height: 92px; animation: spreel .9s cubic-bezier(.3,0,.2,1) both; filter: drop-shadow(0 0 14px color-mix(in srgb, var(--teal) 50%, transparent)); }
+@keyframes spreel { from { transform: rotate(0); } to { transform: rotate(-720deg); } }
+.spband { width: 86px; height: 20px; margin: 0 -4px; position: relative; overflow: hidden; background: color-mix(in srgb, var(--teal) 28%, transparent); }
+.spband i { position: absolute; inset: 0; background: radial-gradient(circle, var(--bg) 0 2px, transparent 2.5px) 0 2px / 10px 5px repeat-x, radial-gradient(circle, var(--bg) 0 2px, transparent 2.5px) 0 13px / 10px 5px repeat-x; animation: spband .9s linear both; }
+@keyframes spband { from { background-position: 0 2px, 0 13px; } to { background-position: 120px 2px, 120px 13px; } }
+.spcart { width: 46px; animation: spcart .9s ease-in-out both; }
+.spcart svg { width: 100%; display: block; }
+@keyframes spcart { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-4deg); } 75% { transform: rotate(4deg); } }
+.sprow { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 300px; min-height: 44px; align-items: center; }
+.spc { width: 26px; animation: sppop .4s cubic-bezier(.2,1.6,.4,1) both; filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--teal) 45%, transparent)); }
+.spc svg { width: 100%; display: block; }
+.spmore { font-size: 18px; }
+@keyframes sppop { from { transform: translateY(18px) scale(.2); opacity: 0; } }
+.sptext { margin: 0; font-size: 17px; font-weight: 650; color: var(--text); }
+.sptext b { font-size: 34px; color: var(--teal); font-variant-numeric: tabular-nums; margin-right: 4px; }
+@media (prefers-reduced-motion: reduce) { .spreel, .spband i, .spcart, .spc { animation: none; } }
+/* Selbst gespulter Film: Anfang und Ende haben beim Spulen Licht bekommen */
+.cell.tailburn, .cell.headburn { position: relative; }
+.cell.tailburn::after, .cell.headburn::after { content: ""; position: absolute; inset: 0; background: url(burn.png) left center / 100% 100%; pointer-events: none; z-index: 1; border-radius: inherit; }
+.cell.tailburn::after { transform: scaleX(-1); }
+.cell.headburn::after { opacity: .6; }
+:root[data-mood="moon"] .cell.tailburn::after { opacity: .85; }
+:root[data-mood="moon"] .cell.headburn::after { opacity: .5; }
+.cell.tailburn .ph, .cell.headburn .ph, .cell.tailburn .idx, .cell.headburn .idx { position: relative; z-index: 2; }

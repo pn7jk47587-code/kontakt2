@@ -133,16 +133,17 @@ async function fridgeRow(e, st, { pick = false, on = false } = {}) {
   const kind = st ? (SW_TYPES.includes(st.type) ? 'SW' : 'Farbe') : '';
   const q = st ? `${U.stockLabel(st)} ${st.boxIso || ''} ${kind}`.toLowerCase() : '';
   const attrs = pick
-    ? `data-fridge="${e.id}" data-stock="${st?.id || ''}" data-format="${e.format || ''}"`
+    ? `data-fridge="${e.id}" data-stock="${st?.id || ''}" data-format="${e.format || ''}" data-exp="${e.exposures || ''}"`
     : `data-entry="${e.id}"`;
   return `<button type="button" class="frow ${exp.state}${on ? ' on' : ''}" ${attrs} data-q="${U.esc(q)}">
     <span class="frowart">${await filmArt(st, 42)}</span>
     <span class="frowmain">
       <span class="frowname">${U.esc(st ? U.stockLabel(st) : 'Unbekannter Film')}${exp.tag ? ' ' + exp.tag.replace('exptag', 'exptag inline') : ''}</span>
-      <span class="frowchips"><span>${FORMAT_LABEL[e.format] || '?'}</span><span>ISO ${U.esc(st?.isoLabel || st?.boxIso || '?')}</span><span>${kind}</span></span>
-      <span class="frowsub">${e.boughtAt ? ageText(e.boughtAt) : 'Kaufdatum offen'}${e.expiresAt ? ` · haltbar bis ${fmtMonth(e.expiresAt)}` : ''}</span>
+      <span class="frowchips"><span>${e.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[e.format] || '?'}</span><span>ISO ${U.esc(st?.isoLabel || st?.boxIso || '?')}</span><span>${kind}</span>${e.spooled ? `<span class="spchip">${e.exposures} Bilder · selbst gespult</span>` : ''}</span>
+      <span class="frowsub">${e.format === 'bulk' ? BULK.restText(e) : (e.boughtAt ? ageText(e.boughtAt) : 'Kaufdatum offen') + (e.expiresAt ? ` · haltbar bis ${fmtMonth(e.expiresAt)}` : '')}</span>
+      ${e.format === 'bulk' ? `<span class="bulkbar"><i style="width:${Math.round(BULK.restM(e) / Math.max(.1, BULK.totalM(e)) * 100)}%"></i></span>` : ''}
     </span>
-    <span class="frowcount">×${e.count || 0}</span>
+    <span class="frowcount">${e.format === 'bulk' ? BULK.fmtM(BULK.restM(e)) : '×' + (e.count || 0)}</span>
     ${pick ? '' : `<span class="frowx" role="button" tabindex="0" data-delentry="${e.id}" aria-label="Aus dem Kühlschrank entfernen">${ART.x}</span>`}
   </button>`;
 }
@@ -312,7 +313,7 @@ async function viewProfile() {
   try { sortKey = localStorage.getItem('kb-fridge-sort') || 'bought'; } catch (_) {}
   const sorted = sortFridge(entries, stocks, sortKey);
   const cells = await Promise.all(sorted.map(e => fridgeRow(e, stocks.get(e.stockId))));
-  const total = entries.reduce((n, e) => n + (e.count || 0), 0);
+  const total = entries.reduce((n, e) => n + (e.format === 'bulk' ? 0 : e.count || 0), 0);
   const allFr = await DB.all('frames');
   const photos = allFr.filter(f => f.imgId);
   const located = allFr.filter(f => f.placeLat != null).length;
@@ -379,7 +380,8 @@ async function viewProfile() {
       return;
     }
     const b = e.target.closest('[data-entry]'); if (!b) return;
-    openFridgeModal(await DB.get('fridge', b.dataset.entry));
+    const en = await DB.get('fridge', b.dataset.entry);
+    if (en?.format === 'bulk') BULK.open(en); else openFridgeModal(en);
   });
   setupCabinet(view);
   setupDiaryFold(view);
@@ -522,7 +524,7 @@ async function openFridgeModal(entry, fromBtn) {
   const current = stocks.find(s => s.id === entry.stockId);
   const ov = document.createElement('div');
   ov.className = 'modalbg';
-  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 40)}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${FORMAT_LABEL[entry.format]}</span></span></span>`;
+  const slotHtml = async st => `<span class="frslotart">${await filmArt(st, 40)}</span><span class="frslottxt"><b>${U.esc(U.stockLabel(st))}</b><span class="frowchips"><span>ISO ${U.esc(st.isoLabel || st.boxIso || '?')}</span><span>${SW_TYPES.includes(st.type) ? 'SW' : 'Farbe'}</span><span>${entry.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[entry.format]}</span></span></span>`;
   // Kompakt ohne Überschrift: Format oben (bleibt beim Scrollen stehen), gewählter Film als schmale Zeile, Suche mit Lupe links,
   // darunter vier gleich große Felder in zwei Reihen und unten rechts der Haken
   ov.innerHTML = `
@@ -531,16 +533,18 @@ async function openFridgeModal(entry, fromBtn) {
         <button type="button" class="seg${entry.format === '135' ? ' on' : ''}" data-f="135" aria-label="Kleinbild">${ART.fmt135}<span>135</span></button>
         <button type="button" class="seg${entry.format === '120' ? ' on' : ''}" data-f="120" aria-label="Mittelformat">${ART.fmt120}<span>120</span></button>
         <button type="button" class="seg${entry.format === 'gross' ? ' on' : ''}" data-f="gross" aria-label="Planfilm für Großformat">${ART.fmtGross}<span>Planfilm</span></button>
+        <button type="button" class="seg${entry.format === 'bulk' ? ' on' : ''}" data-f="bulk" aria-label="Meterware zum Selbstspulen">${BULK.IC}<span>Meter</span></button>
       </div>
       ${isNew ? `
         <div class="frslot empty" id="frSlot" aria-live="polite" hidden></div>
         <input type="search" placeholder=" " id="frQ" aria-label="Suchen" autocomplete="off">
-        <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>`
+        <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}${SEED_BULK[s.id] || (!s.builtin && (s.formats || ['135']).includes('135')) ? ' bulk' : ''}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>`
       : `<div class="frslot" id="frSlot">${current ? await slotHtml(current) : '<span class="frslottxt">Film</span>'}</div>`}
       <div class="frgrid">
         <div class="fld"><span>Anzahl</span>
           <div class="stepper"><button type="button" id="frMinus" aria-label="weniger">−</button><span id="frCount">${entry.count}</span><button type="button" id="frPlus" aria-label="mehr">+</button></div>
         </div>
+        <label class="fld" id="frLenFld" ${entry.format === 'bulk' ? '' : 'hidden'}><span>Länge (m)</span><input id="frLen" inputmode="decimal" value="${entry.lengthM != null ? String(entry.lengthM).replace('.', ',') : ''}"></label>
         <label class="fld"><span>Preis (€)</span><input id="frPrice" inputmode="decimal" value="${entry.price != null ? String(entry.price).replace('.', ',') : ''}"></label>
         <label class="fld"><span>Gekauft am</span><input type="date" id="frBought" value="${entry.boughtAt || ''}"></label>
         <label class="fld"><span>Läuft ab</span><input type="month" id="frExp" value="${U.esc(entry.expiresAt || '')}"></label>
@@ -592,16 +596,18 @@ async function openFridgeModal(entry, fromBtn) {
     entry.stockId = b.dataset.s;
     ov.querySelectorAll('.fropt').forEach(x => x.classList.toggle('on', x === b));
     $('frSave').disabled = false;
+    if (entry.format === 'bulk') $('frLen').value = String(BULK.defLen(entry.stockId)).replace('.', ',');
     fillSlot(b);
   });
   $('frFmt').addEventListener('click', e => {
     const b = e.target.closest('[data-f]'); if (!b) return;
     entry.format = b.dataset.f;
+    $('frLenFld').hidden = entry.format !== 'bulk';
     ov.querySelectorAll('#frFmt .seg').forEach(x => x.classList.toggle('on', x === b));
     filter();
     const chosen = ov.querySelector('.fropt.on');
     if (chosen && chosen.hidden) { chosen.classList.remove('on'); entry.stockId = null; $('frSave').disabled = true; const sl = $('frSlot'); sl.className = 'frslot empty'; sl.innerHTML = ''; sl.hidden = true; }
-    else { const c = ov.querySelector('#frSlot .frowchips span:last-child'); if (c) c.textContent = FORMAT_LABEL[entry.format]; }
+    else { const c = ov.querySelector('#frSlot .frowchips span:last-child'); if (c) c.textContent = entry.format === 'bulk' ? 'Meterware' : FORMAT_LABEL[entry.format]; }
   });
   filter();
   $('frMinus').addEventListener('click', () => { entry.count = Math.max(1, (entry.count || 1) - 1); $('frCount').textContent = entry.count; });
@@ -610,6 +616,8 @@ async function openFridgeModal(entry, fromBtn) {
   $('frSave').addEventListener('click', async () => {
     const pr = parseFloat($('frPrice').value.replace(',', '.'));
     entry.price = isNaN(pr) ? null : Math.round(pr * 100) / 100;
+    if (entry.format === 'bulk') { const L = parseFloat($('frLen').value.replace(',', '.')); if (!(L > 0)) { U.toast('Länge in Metern eintragen'); return; } entry.lengthM = L; entry.usedM = entry.usedM || 0; }
+    else { delete entry.lengthM; }
     if (isNew) entry.bought = entry.count;
     else if (entry.count > startCount) entry.bought = (entry.bought ?? startCount) + (entry.count - startCount);
     entry.boughtAt = $('frBought').value;

@@ -993,3 +993,22 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 
 - Im Glut-Modus (goldene Stunde) sind die Statusanzeigen nach einer Änderung warmbraun mit bernsteinfarbenem Licht statt lila-blau. „Rückgängig“ hat dunkle Schrift auf Bernstein.
 - Die Leiste unten blendet im Glut-Modus in Warmbraun aus statt in Nachtblau.
+
+## v262: Bulk Loading, Dealer's-Filme, Archivieren neben Favoriten
+
+**Bulk Loading (selbst spulen)**
+- Im Filmkühlschrank gibt es beim Plus ein viertes Format „Meter“. Dort stehen die Filme, die es als Meterware gibt (Foma, Ilford, Kentmere, Kodak Tri-X, Rollei, Dealer's) und eigene Kleinbildfilme. Die Länge wird vorgeschlagen und lässt sich ändern.
+- Die Meterware liegt als eigene Zeile im Kühlschrank, mit Restlänge, Balken und „reicht für N × 36“.
+- Antippen öffnet „Patronen spulen“: Bilder je Patrone (12, 24, 36 oder frei), Anzahl und Zugabe in cm für Anfang und Ende (Standard 28 cm, wird gemerkt). Gerechnet wird mit 38 mm je Bild. Der Stift öffnet den Eintrag zum Bearbeiten (Preis, Datum, Länge, entfernen).
+- Der Haken zieht die Länge ab und legt die Patronen als eigene Zeile „N Bilder · selbst gespult“ in den Kühlschrank. Dazu läuft eine kurze Animation: Die Rolle dreht sich, der Film läuft in die Patrone, die Patronen erscheinen einzeln. Antippen überspringt sie.
+- Bei „Film einlegen“ stehen die selbst gespulten Patronen wie gekaufte Filme zur Wahl, ihre Bildzahl wird übernommen. Meterware selbst lässt sich nicht einlegen.
+- Rollen aus selbst gespulten Patronen zeigen in der Bildansicht einen Brandrand rechts am letzten Bild (das Filmende bekommt beim Spulen Licht) und einen schwächeren links am ersten Bild. Wie die Lightleaks nur, solange das Bild keinen Scan hat.
+- Neues Abzeichen Seidenraupe: 10, 50 und 150 selbst gespulte Patronen.
+- Der Preis der Meterware zählt einmal in den Ausgaben, die gespulten Patronen kosten nichts extra.
+
+**Neue Filme**
+- Dealer's (35mmdealer): V3 250D, V3 500T, V3 200T, V3 50D, XX, Plus-X. Angaben von den Produktseiten des Händlers.
+- Rollei: RPX 100, RPX 400, Retro 80S, Retro 400S, Superpan 200.
+
+**Alle Fotos**
+- „Archivieren“ steht rechts in der Favoriten-Zeile statt in einer eigenen Zeile oben. Ohne Favoriten bleibt der Knopf oben.

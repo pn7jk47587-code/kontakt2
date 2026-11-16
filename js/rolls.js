@@ -503,6 +503,7 @@ async function wizardStep1(wiz, root = view) {
   root.querySelector('#fridgeList')?.addEventListener('click', e => {
     const b = e.target.closest('[data-fridge]'); if (!b) return;
     wiz.stockId = b.dataset.stock; wiz.fridgeId = b.dataset.fridge;
+    if (b.dataset.exp) { wiz.expChoice = b.dataset.exp; renderExp(); }   // v262: selbst gespulte Patrone bringt ihre Bildzahl mit
     root.querySelectorAll('[data-fridge]').forEach(x => x.classList.toggle('on', x === b));
     const nf = root.querySelector('#newFilm'); nf.classList.remove('on');
     nf.querySelector('.plusbox').textContent = '+';
@@ -567,6 +568,7 @@ async function createRoll(wiz, loadedAt) {
     const fe = await DB.get('fridge', wiz.fridgeId);
     if (fe) {
       roll.fridge = { boughtAt: fe.boughtAt || null, expiresAt: fe.expiresAt || null };
+      if (fe.spooled) roll.selfSpooled = true;
       fe.count = Math.max(0, (fe.count || 1) - 1);
       await DB.put('fridge', fe);
     }
@@ -676,11 +678,11 @@ function leakMap(roll, frames) {
   frames.forEach((f, i) => { if (i === next) { m.set(f.id, 1 + Math.floor(rnd() * 4)); next = i + 3 + (rnd() < .5 ? 0 : 1); } });
   return m;
 }
-async function frameCell(f, leak = 0) {
+async function frameCell(f, leak = 0, edge = '') {
   const u = f.imgId ? await U.imgUrl(f.imgId, true) : null;
   const pu = !u && f.phoneId ? await U.imgUrl(f.phoneId, true) : null;
   const flags = [f.double ? ART.double : '', f.phoneId && u ? '<span>▣</span>' : '', f.leak ? '<span class="leakdot" title="Lightleak" aria-label="Lightleak"></span>' : ''].join('');
-  return `<a class="cell${u ? ' has' : ''}${pu ? ' phoneprev' : ''}${f.shot ? ' shot' : ''}${f.bonus ? ' bonus' : ''}${leak ? ' leak l' + leak : ''}" href="#/bild/${f.id}">
+  return `<a class="cell${u ? ' has' : ''}${pu ? ' phoneprev' : ''}${f.shot ? ' shot' : ''}${f.bonus ? ' bonus' : ''}${edge && !f.imgId ? ' ' + edge : ''}${leak ? ' leak l' + leak : ''}" href="#/bild/${f.id}">
     ${pu ? `<img src="${pu}" alt="" class="phoneimg"><span class="phonetag">Handy</span><span class="idx">${frameLabel(f)}</span>` : ''}
     ${u ? `<img src="${u}" alt="">` : pu ? '' : `<div class="ph"><span class="num">${frameLabel(f)}</span>${f.note ? `<span class="pn">${U.esc(f.note.slice(0, 40))}</span>` : ''}${!f.note && (f.aperture || f.shutter) ? `<span class="pn">${f.aperture ? 'f/' + U.esc(f.aperture) : ''} ${U.esc(f.shutter || '')}</span>` : ''}</div>`}
     ${u ? `<span class="idx">${frameLabel(f)}</span>` : ''}
@@ -699,7 +701,10 @@ async function rollFrames(body, roll, stock) {
   const rcam = roll.cameraId ? await DB.get('cameras', roll.cameraId) : null;
   // Simulierte Lightleaks nur, solange die Rolle in der Kamera ist; danach zeigen die Scans, ob es welche gibt
   const leaks = rcam?.lightLeaks && !roll.leaksMarked && (roll.status || 'entwurf') === 'entwurf' ? leakMap(roll, fr) : new Map();
-  const cells = await Promise.all(fr.map(f => frameCell(f, leaks.get(f.id) || 0)));
+  // v262: selbst gespulter Film. Das Filmende hat beim Spulen Licht bekommen (rechter Brandrand am letzten Bild),
+  // der Anfang ebenfalls (linker Brandrand am ersten Bild, wenn es kein Bonusbild 0 gibt).
+  const reg = fr.filter(f => !f.bonus), spEdge = f => !roll.selfSpooled ? '' : f === reg[reg.length - 1] ? 'tailburn' : (f === reg[0] && !fr.some(x => x.bonus)) ? 'headburn' : '';
+  const cells = await Promise.all(fr.map(f => frameCell(f, leaks.get(f.id) || 0, spEdge(f))));
   const hasImgs = fr.some(f => f.imgId);
   let top = '', bottom = '';
   if (st === 'entwurf') {
@@ -2623,7 +2628,10 @@ async function viewAllPhotos() {
   // Favoriten sind die Fotos mit +5 (fünf Leuchtpunkte). Sie stehen zusätzlich oben in einer eigenen Reihe.
   const favs = item ? [] : d.frames.map((f, i) => [f, i]).filter(([f]) => f.rate === 5);
   // Favoriten-Reihe klappt auf und zu; beim Hineinnavigieren ist sie zugeklappt
-  let html = favs.length ? `<button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}"><span class="favdot" aria-hidden="true"></span>Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
+  // v262: „Archivieren“ steht auf der Höhe der Favoriten-Zeile statt in einer eigenen Zeile ganz oben
+  const arLink = `<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a>`;
+  const inRow = favs.length && !sorting;
+  let html = favs.length ? `<div class="favrow"><button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}"><span class="favdot" aria-hidden="true"></span>Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button>${inRow ? arLink : ''}</div><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
   let cur = null;
   d.frames.forEach((f, i) => {
     const gk = order === 'rate' ? 'r' + (f.rate ?? 'x') : f.rollId;
@@ -2639,7 +2647,7 @@ async function viewAllPhotos() {
     }
     html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}"${f.rate === 5 ? ' class="isfav"' : ''} data-film="${U.esc(U.stockLabel(d.stocks.get(d.rolls.get(f.rollId)?.stockId)).toUpperCase())}" aria-label="Bild ${frameLabel(f)}"><span class="apnum" aria-hidden="true">${frameLabel(f)}</span><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : f.rate === 5 ? '<span class="favdot" aria-label="Favorit"></span>' : ''}</a>`;
   });
-  view.innerHTML = arBtn + toolbar + html + '</div>' + (sorting || item ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
+  view.innerHTML = (inRow ? '' : arBtn) + toolbar + html + '</div>' + (sorting || item ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
   view.querySelector('#apOrder')?.addEventListener('change', async e => { try { localStorage.setItem('kb-ap-order', e.target.value); } catch (_) {} await viewAllPhotos(); });
   view.querySelector('#apItem')?.addEventListener('change', async e => { AP_ITEM = e.target.value; await viewAllPhotos(); window.scrollTo(0, 0); });
   view.querySelector('#favToggle')?.addEventListener('click', e => {

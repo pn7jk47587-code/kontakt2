@@ -495,3 +495,42 @@ SEED_STOCKS.push(
   seedStock('lucky-yingzhe100', 'Lucky', 'Yingzhe 100', 'sw', 'SW', 100, ['135'], { makerNote: 'Neuer Schwarzweißfilm von 2026, bisher nur im chinesischen Onlinehandel. Kein Datenblatt. Das Format ist nicht bestätigt, hier vorläufig Kleinbild.', datasheet: 'https://pellica.app/blog/lucky-yingzhe-100-400-new-bw-film-2026/' }),
   seedStock('lucky-yingzhe400', 'Lucky', 'Yingzhe 400', 'sw', 'SW', 400, ['135'], { makerNote: 'Neuer Schwarzweißfilm von 2026, bisher nur im chinesischen Onlinehandel. Kein Datenblatt. Das Format ist nicht bestätigt, hier vorläufig Kleinbild.', datasheet: 'https://pellica.app/blog/lucky-yingzhe-100-400-new-bw-film-2026/' })
 );
+
+/* ---------- v262: Filme von 35mmdealer („Dealer's“), Rollei-Filme und Meterware ---------- */
+// Angaben von den Produktseiten des Händlers (abgerufen 16.11.2026). Typnummern nur, wo die Seite sie nennt.
+const DEALER_URL = 'https://35mmdealer.de/kategorie/filme/';
+const DEALER_C41 = 'Ohne Remjet-Schicht. Laut Händler in jedem Labor in C-41 zu entwickeln, ECN-2 geht ebenfalls, der Farbunterschied sei gering.';
+SEED_STOCKS.push(
+  seedStock('dealers-v3-250d', "Dealer's", 'V3 250D', 'farbneg', 'C-41', 250, ['135'], {
+    makerNote: 'Umverpackter Kodak Vision3 250D (Typ 5207), Tageslicht 5500 K, 36 Aufnahmen. ' + DEALER_C41 + ' Laut Händler von ISO 100 bis 400 ohne Push oder Pull belichtbar, Push bis 800 möglich.',
+    datasheet: 'https://35mmdealer.de/produkt/kodak-vision3-250d/' }),
+  seedStock('dealers-v3-500t', "Dealer's", 'V3 500T', 'farbneg', 'C-41', 500, ['135'], {
+    makerNote: 'Umverpackter Kodak Vision3 500T (Typ 5219), Kunstlicht 3200 K, 36 Aufnahmen. ' + DEALER_C41 + ' Bei Mittagssonne empfiehlt der Händler einen Filter 85B, sonst wird das Bild bläulich. Laut Händler von ISO 200 bis 800 ohne Push oder Pull belichtbar, Push bis 1600 möglich.',
+    datasheet: 'https://35mmdealer.de/produkt/kodak-vision3-500t/' }),
+  seedStock('dealers-v3-200t', "Dealer's", 'V3 200T', 'farbneg', 'C-41', 200, ['135'], {
+    makerNote: 'Umverpackter Kodak Vision3 200T, Kunstlichtfilm mit feinem Korn. Der Händler führt ihn bei den Filmen ohne Remjet-Schicht, die jedes Labor in C-41 entwickelt.',
+    datasheet: 'https://35mmdealer.de/produkt/kodak-vision3-200t/' }),
+  seedStock('dealers-v3-50d', "Dealer's", 'V3 50D', 'farbneg', 'C-41', 50, ['135'], {
+    makerNote: 'Umverpackter Kodak Vision3 50D, Tageslichtfilm mit dem feinsten Korn der Reihe, braucht viel Licht. Der Händler führt ihn bei den Filmen ohne Remjet-Schicht, die jedes Labor in C-41 entwickelt.',
+    datasheet: 'https://35mmdealer.de/produkt/kodak-vision3-50d/' }),
+  seedStock('dealers-xx', "Dealer's", 'XX', 'sw', 'SW', 200, ['135'], {
+    makerNote: 'Umverpackter Kodak Double-X (Typ 5222), Schwarzweiß-Kinofilm, 36 Aufnahmen. Der Händler nennt ISO 200, nutzbar von 100 bis 1600. Ohne Remjet-Schicht, normale SW-Entwicklung. Beispielbilder des Händlers in D-76.',
+    datasheet: 'https://35mmdealer.de/produkt/kodak-double-x/' }),
+  seedStock('dealers-plusx', "Dealer's", 'Plus-X', 'sw', 'SW', 125, ['135'], {
+    makerNote: 'Umverpackter Kodak Plus-X (Typ 5231), 36 Aufnahmen. Kodak hat den Film 2011 eingestellt, der Händler lagert ihn nach eigener Angabe seit 2008 gekühlt. Die Produktseite nennt im Namen 125, in der Tabelle ISO 100. Ohne Remjet-Schicht, normale SW-Entwicklung (Händler empfiehlt HC-110, D-76 oder Rodinal).',
+    datasheet: 'https://35mmdealer.de/produkt/kodak-plus-x-2/' }),
+  seedStock('rollei-rpx100', 'Rollei', 'RPX 100', 'sw', 'SW', 100, ['135', '120'], { datasheet: 'https://www.macodirect.de/en/film/black-white-films/1853/rollei-rpx-100-35mm-x-30.5m' }),
+  seedStock('rollei-rpx400', 'Rollei', 'RPX 400', 'sw', 'SW', 400, ['135', '120'], { datasheet: 'https://www.macodirect.de/en/film/black-white-films/1862/rollei-rpx-400-35mm-x-30.5m' }),
+  seedStock('rollei-retro80s', 'Rollei', 'Retro 80S', 'sw', 'SW', 80, ['135', '120']),
+  seedStock('rollei-retro400s', 'Rollei', 'Retro 400S', 'sw', 'SW', 400, ['135', '120']),
+  seedStock('rollei-superpan200', 'Rollei', 'Superpan 200', 'sw', 'SW', 200, ['135', '120'])
+);
+// Meterware (Kleinbild, zum Selbstspulen): Längen in Metern, wie sie im Handel angeboten werden.
+// Quellen: macodirect.de (Foma, Ilford, Kentmere, Rollei), 35mmdealer.de (Dealer's 30 m), Kodak-Händler (Tri-X 30,5 m).
+const SEED_BULK = {
+  'foma-100': [17, 30.5, 50], 'foma-200': [17, 30.5], 'foma-400': [17, 30.5, 50],
+  'ilford-hp5': [17, 30.5], 'ilford-fp4': [30.5], 'ilford-delta100': [30.5], 'ilford-delta400': [30.5],
+  'kentmere-100': [30.5], 'kentmere-400': [30.5], 'kodak-trix': [30.5],
+  'rollei-rpx100': [30.5], 'rollei-rpx400': [30.5], 'rollei-retro80s': [30.5], 'rollei-retro400s': [17, 30.5], 'rollei-superpan200': [30.5],
+  'dealers-v3-250d': [30], 'dealers-v3-500t': [30], 'dealers-xx': [30]
+};
