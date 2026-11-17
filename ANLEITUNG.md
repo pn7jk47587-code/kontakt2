@@ -1066,3 +1066,7 @@ Neue Töne in js/sound.js ergänzen und mit SND.name() aufrufen.
 ## v272: Ton-Schalter sichtbar
 
 Der Schalter „Töne“ (mit Glockensymbol) steht jetzt direkt unter „Sprache“ in den Einstellungen. Vorher lag er im eingeklappten Bereich „Labor: Entwürfe und Tests“.
+
+## v273: Auslöser-Ton
+
+Der große Knopf in der Frames-Ansicht macht beim Antippen ein Auslösegeräusch (Spiegelschlag, Verschluss, kurzer Aufzug). Es gehört zum Schalter „Töne“ in den Einstellungen.

@@ -41,6 +41,12 @@ const SND = (() => {
     cart(i = 0) { tone(520 + i * 38, 0.09, { type: 'triangle', vol: 0.16 }); tone(780 + i * 57, 0.14, { type: 'sine', vol: 0.1, at: 0.04 }); noise(0.02, { vol: 0.15, hp: 2500 }); },
     // Abschluss beim Spulen: aufsteigende Fanfare
     fanfare() { [523, 659, 784, 1047].forEach((f, i) => { tone(f, 0.28, { type: 'triangle', vol: 0.2, at: i * 0.09 }); tone(f * 2, 0.22, { type: 'sine', vol: 0.06, at: i * 0.09 }); }); tone(1047, 0.7, { type: 'triangle', vol: 0.16, at: 0.4 }); tone(1319, 0.7, { type: 'sine', vol: 0.1, at: 0.4 }); },
+    // Auslöser: Spiegelschlag, kurz danach der Verschluss, dann der Aufzug
+    shutter() {
+      noise(0.035, { vol: 0.5, bp: 700, q: 1.2 }); tone(95, 0.07, { type: 'square', vol: 0.16 });
+      noise(0.025, { vol: 0.42, bp: 2400, q: 2, at: 0.055 }); tone(260, 0.035, { type: 'square', vol: 0.08, at: 0.055 });
+      noise(0.03, { vol: 0.22, bp: 1500, q: 2, at: 0.15 });
+    },
     // Film einlegen: Rückwand schnappt zu, dann Aufzug
     load() { noise(0.05, { vol: 0.4, bp: 900, q: 1.5 }); tone(130, 0.09, { type: 'square', vol: 0.1 }); noise(0.04, { vol: 0.3, bp: 1400, q: 2, at: 0.14 }); tone(220, 0.06, { type: 'square', vol: 0.08, at: 0.14 }); },
     // Abzeichen: zwei helle Glockentöne
