@@ -513,9 +513,12 @@ async function wizardStep1(wiz, root = view) {
     wizSave(wiz); refresh(); toNext();
   });
   root.querySelector('#newFilm').addEventListener('click', () => openStockPicker(async stockId => {
+    // v277: nach der Auswahl zu Anzahl und Name springen. Mehrfach, weil iOS beim Schließen der Tastatur die Seite nach oben schiebt.
+    document.activeElement?.blur?.();
     wiz.stockId = stockId; wiz.fridgeId = null; wizSave(wiz);
     await wizardStep1(wiz, root);
-    setTimeout(() => root.querySelector('#filmSec').scrollIntoView({ block: 'start' }), 50);
+    const go = () => root.querySelector('#expSec')?.scrollIntoView({ block: 'center' });
+    go(); [80, 350, 700].forEach(ms => setTimeout(go, ms));
   }, wiz.format === 'gross' ? null : filmFmt(wiz.format)));
   root.querySelector('#cams').addEventListener('click', e => {
     const b = e.target.closest('[data-cam]'); if (!b) return;

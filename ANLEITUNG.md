@@ -1080,3 +1080,6 @@ Der Ton beim großen Knopf in der Frames-Ansicht ahmt jetzt eine Nikon F3 nach: 
 
 ## v276: Echte Auslösetöne je Kamera
 Der große Knopf in der Frames-Ansicht spielt den Auslöseton der Kamera, die der Rolle zugeordnet ist. Echte Aufnahmen stehen als data-URI in js/sndrec.js (`SND_REC`), weil der Artifact-Host keine Audiodateien ausliefert (bisher: Minolta XG-1). Kameras ohne Aufnahme bekommen den synthetischen F3-Ton. Aufbereitung: Auslösung herausgeschnitten, Rumpeln unter 70 Hz entfernt, Spitze auf etwa −1 dB, AAC 96 kbit/s mono.
+
+## v277: Nach „Neuen Film anlegen“ unten bleiben
+Wählt man beim Film einlegen einen Film, der nicht im Kühlschrank liegt, springt die Ansicht danach zu „Anzahl Frames“ und dem Rollennamen. Vorher landete sie oben bei den Kameras, weil iOS beim Schließen der Tastatur der Suchliste die Seite neu ausrichtet. Der Sprung wird deshalb nach 80, 350 und 700 ms wiederholt.
