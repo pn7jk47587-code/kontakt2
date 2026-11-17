@@ -1062,3 +1062,7 @@ Neue Töne in js/sound.js ergänzen und mit SND.name() aufrufen.
 - Alle Fotos und Karte öffnen sofort. Vorschaubilder laden erst, wenn sie nahe am Bildschirm sind (höchstens vier gleichzeitig), auf der Karte nur für die sichtbaren Stapel. Die Kartenbibliothek lädt parallel zu den Fotodaten.
 - Vorschauen liegen zusätzlich in einem eigenen Speicher („thumbs“, Datenbankversion 5). Vorher las jede Vorschau das volle Foto mit. Beim ersten Öffnen nach dem Update füllt sich der Speicher, außerdem läuft er im Hintergrund nach dem Start. Danach erscheinen die Bilder schnell.
 - w, m und d in den Einstellungen sind wieder Kreise.
+
+## v272: Ton-Schalter sichtbar
+
+Der Schalter „Töne“ (mit Glockensymbol) steht jetzt direkt unter „Sprache“ in den Einstellungen. Vorher lag er im eingeklappten Bereich „Labor: Entwürfe und Tests“.

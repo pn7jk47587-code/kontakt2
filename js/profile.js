@@ -408,11 +408,11 @@ async function openSettings() {
       <div class="genderpick" id="genderPick" role="group" aria-label="Anrede">${[['f', 'w', 'Weiblich'], ['m', 'm', 'Männlich'], ['n', 'd', 'Divers']].map(([k, l, a]) => `<button type="button" class="seg gchip${(PROFILE?.gender || 'n') === k ? ' on' : ''}" data-gender="${k}" aria-label="${a}" title="${a}" aria-pressed="${(PROFILE?.gender || 'n') === k}">${l}</button>`).join('')}</div></div>
       <div class="sethead"><span>Sprache</span></div>
       <div class="langpick" id="setLang">${['de', 'en'].map(l => `<button type="button" data-lang="${l}" class="${I18N.get() === l ? 'on' : ''}">${l.toUpperCase()}</button>`).join('')}</div>
+      <div class="sethead"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg><span>Töne</span></div>
+      <div class="seggroup" id="sndSet">${[['1', 'An'], ['0', 'Aus']].map(([k, l]) => `<button type="button" class="seg${(SND.enabled() ? '1' : '0') === k ? ' on' : ''}" data-snd="${k}">${l}</button>`).join('')}</div>
       <details class="labfold"><summary>Labor: Entwürfe und Tests</summary>
       <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>
       <div class="seggroup" id="apLook">${[['', 'Raster'], ['sheet', 'Contact Sheet'], ['sheet-ring', 'Sheet mit Fettstift']].map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-ap-look') || '') === k ? ' on' : ''}" data-apl="${k}">${l}</button>`).join('')}</div>
-      <div class="sethead"><span>Töne</span></div>
-      <div class="seggroup" id="sndSet">${[['1', 'An'], ['0', 'Aus']].map(([k, l]) => `<button type="button" class="seg${(SND.enabled() ? '1' : '0') === k ? ' on' : ''}" data-snd="${k}">${l}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Licht nach Tageszeit</span></div>
       <div class="seggroup" id="skyTest">${[['', 'Echt'], ['golden', 'Glut'], ['evening', 'Abend'], ['blue', 'Blau']].map(([k, l]) => `<button type="button" class="seg" data-skyt="${k}">${l}</button>`).join('')}</div>
       <div class="qlabel">Blaue Stunde am Morgen (Entwurf)</div>
