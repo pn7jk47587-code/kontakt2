@@ -1079,10 +1079,13 @@ Das Öffnen des Filmkühlschranks klingt jetzt wie ein leiser Frosthauch: gefilt
 Der Ton beim großen Knopf in der Frames-Ansicht ahmt jetzt eine Nikon F3 nach: dumpfer Spiegelschlag, zwei kurze metallische Ticks des Verschlusses, gedämpfter Spiegelrücklauf. Der Aufzugston ist entfallen, weil die F3 von Hand gespannt wird. Der Ton ist synthetisch erzeugt, keine Aufnahme der Kamera.
 
 ## v276: Echte Auslösetöne je Kamera
-Der große Knopf in der Frames-Ansicht spielt den Auslöseton der Kamera, die der Rolle zugeordnet ist. Echte Aufnahmen stehen als data-URI in js/sndrec.js (`SND_REC`), weil der Artifact-Host keine Audiodateien ausliefert (bisher: Minolta XG-1). Kameras ohne Aufnahme bekommen den synthetischen F3-Ton. Aufbereitung: Auslösung herausgeschnitten, Rumpeln unter 70 Hz entfernt, Spitze auf etwa −1 dB, AAC 96 kbit/s mono.
+Der große Knopf in der Frames-Ansicht spielt den Auslöseton der Kamera, die der Rolle zugeordnet ist. Echte Aufnahmen stehen als data-URI in js/sndrec.js (`SND_REC`), weil der Artifact-Host keine Audiodateien ausliefert . Kameras ohne Aufnahme bekommen den synthetischen F3-Ton. Aufbereitung: Auslösung herausgeschnitten, Rumpeln unter 70 Hz entfernt, Spitze auf etwa −1 dB, AAC 96 kbit/s mono.
 
 ## v277: Nach „Neuen Film anlegen“ unten bleiben
 Wählt man beim Film einlegen einen Film, der nicht im Kühlschrank liegt, springt die Ansicht danach zu „Anzahl Frames“ und dem Rollennamen. Vorher landete sie oben bei den Kameras, weil iOS beim Schließen der Tastatur der Suchliste die Seite neu ausrichtet. Der Sprung wird deshalb nach 80, 350 und 700 ms wiederholt.
 
 ## v278: XG-1-Ton ohne Nachklick
 Die XG-1-Aufnahme endete mit einem kurzen Klick etwa 0,27 s nach der Auslösung. Sie ist jetzt kurz davor abgeschnitten (0,27 s Länge) und klingt sanft aus.
+
+## v279: Nikon F3 mit echter Aufnahme
+Die F3 spielt jetzt die eigene Aufnahme (0,3 s, ausgeschnitten ohne den Klick 0,3 s nach der Auslösung). Lautstärke an die XG-1 angeglichen. Echte Aufnahmen bisher: Minolta XG-1, Nikon F3. Neue Aufnahmen: Datei als `<Kamera-ID>.m4a` in /home/claude/kontakt2-snd ablegen und js/sndrec.js aus allen Dateien dort neu erzeugen.
