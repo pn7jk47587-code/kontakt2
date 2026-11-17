@@ -33,7 +33,7 @@ const SND = (() => {
     node.connect(g).connect(c.destination); s.start(t);
   };
   // Echte Aufnahmen der Auslöser, je Kamera. Kameras ohne Aufnahme bekommen den synthetischen Ton.
-  const REC = { 'cam-minolta-xg1': 'snd/cam-minolta-xg1.m4a' };
+  const REC = window.SND_REC || {};
   const bufs = {};
   const loadRec = id => {
     const c = ac(); if (!c || !REC[id]) return Promise.resolve(null);
