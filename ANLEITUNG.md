@@ -1083,3 +1083,6 @@ Der große Knopf in der Frames-Ansicht spielt den Auslöseton der Kamera, die de
 
 ## v277: Nach „Neuen Film anlegen“ unten bleiben
 Wählt man beim Film einlegen einen Film, der nicht im Kühlschrank liegt, springt die Ansicht danach zu „Anzahl Frames“ und dem Rollennamen. Vorher landete sie oben bei den Kameras, weil iOS beim Schließen der Tastatur der Suchliste die Seite neu ausrichtet. Der Sprung wird deshalb nach 80, 350 und 700 ms wiederholt.
+
+## v278: XG-1-Ton ohne Nachklick
+Die XG-1-Aufnahme endete mit einem kurzen Klick etwa 0,27 s nach der Auslösung. Sie ist jetzt kurz davor abgeschnitten (0,27 s Länge) und klingt sanft aus.
