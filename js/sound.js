@@ -32,8 +32,25 @@ const SND = (() => {
     const g = c.createGain(); const t = c.currentTime + at; g.gain.setValueAtTime(vol * VOL, t);
     node.connect(g).connect(c.destination); s.start(t);
   };
+  // Echte Aufnahmen der Auslöser, je Kamera. Kameras ohne Aufnahme bekommen den synthetischen Ton.
+  const REC = { 'cam-minolta-xg1': 'snd/cam-minolta-xg1.m4a' };
+  const bufs = {};
+  const loadRec = id => {
+    const c = ac(); if (!c || !REC[id]) return Promise.resolve(null);
+    if (!bufs[id]) bufs[id] = fetch(REC[id]).then(r => r.arrayBuffer())
+      .then(ab => new Promise((res, rej) => { const p = c.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }))
+      .then(b => (bufs[id] = b), () => { delete bufs[id]; return null; });
+    return Promise.resolve(bufs[id]);
+  };
+  const playRec = id => loadRec(id).then(b => {
+    const c = ac(); if (!c || !b) return;
+    const s = c.createBufferSource(), g = c.createGain(); s.buffer = b; g.gain.value = 0.9 * VOL * 2;
+    s.connect(g).connect(c.destination); s.start();
+  });
   const api = {
     enabled: on,
+    hasRec: id => !!REC[id],
+    prep(camId) { if (on() && REC[camId]) loadRec(camId); },
     set(v) { try { localStorage.setItem('kb-sound', v ? '1' : '0'); } catch (_) {} if (v) api.tick(); },
     // Kurbelklick beim Spulen: kurzes, trockenes Klacken, leicht höher mit jedem Schritt
     crank(i = 0) { noise(0.03, { vol: 0.35, bp: 1800 + (i % 6) * 120, q: 2.5 }); tone(160 + (i % 6) * 14, 0.05, { type: 'triangle', vol: 0.12 }); },
@@ -43,7 +60,8 @@ const SND = (() => {
     fanfare() { [523, 659, 784, 1047].forEach((f, i) => { tone(f, 0.28, { type: 'triangle', vol: 0.2, at: i * 0.09 }); tone(f * 2, 0.22, { type: 'sine', vol: 0.06, at: i * 0.09 }); }); tone(1047, 0.7, { type: 'triangle', vol: 0.16, at: 0.4 }); tone(1319, 0.7, { type: 'sine', vol: 0.1, at: 0.4 }); },
     // Auslöser nach Art der Nikon F3: gut gedämpftes, tiefes „Ka-tschack“. Spiegel hoch (dumpf), Titanverschluss
     // läuft mit zwei kurzen metallischen Ticks ab (Vorhang auf, Vorhang zu), Spiegel fällt gedämpft zurück. Kein Aufzug, die F3 spannt von Hand.
-    shutter() {
+    shutter(camId) {
+      if (camId && REC[camId]) { playRec(camId); return; }
       noise(0.045, { vol: 0.42, lp: 900, q: 0.8 }); tone(78, 0.09, { type: 'sine', f1: 55, vol: 0.28 });
       noise(0.012, { vol: 0.3, bp: 3400, q: 3, at: 0.018 });
       noise(0.014, { vol: 0.34, bp: 2900, q: 3, at: 0.034 }); tone(1650, 0.03, { type: 'sine', vol: 0.025, at: 0.034 });

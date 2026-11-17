@@ -747,8 +747,9 @@ async function rollFrames(body, roll, stock) {
     </div>
     <div class="grid" id="frameGrid">${cells.join('')}</div>
     ${bottom}`;
+  if (body.querySelector('#quickShot')) SND.prep(roll.cameraId);
   body.querySelector('#quickShot')?.addEventListener('click', async () => {
-    SND.shutter();
+    SND.shutter(roll.cameraId);
     const all = await framesOf(roll.id);
     const f = nextFreeFrame(all); if (!f) return;
     const before = JSON.parse(JSON.stringify(f));

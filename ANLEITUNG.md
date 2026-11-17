@@ -1077,3 +1077,6 @@ Das Öffnen des Filmkühlschranks klingt jetzt wie ein leiser Frosthauch: gefilt
 
 ## v275: Nikon-F3-Auslöser
 Der Ton beim großen Knopf in der Frames-Ansicht ahmt jetzt eine Nikon F3 nach: dumpfer Spiegelschlag, zwei kurze metallische Ticks des Verschlusses, gedämpfter Spiegelrücklauf. Der Aufzugston ist entfallen, weil die F3 von Hand gespannt wird. Der Ton ist synthetisch erzeugt, keine Aufnahme der Kamera.
+
+## v276: Echte Auslösetöne je Kamera
+Der große Knopf in der Frames-Ansicht spielt den Auslöseton der Kamera, die der Rolle zugeordnet ist. Echte Aufnahmen liegen in `snd/<Kamera-ID>.m4a` und sind in `REC` in js/sound.js eingetragen (bisher: Minolta XG-1). Kameras ohne Aufnahme bekommen den synthetischen F3-Ton. Aufbereitung: Auslösung herausgeschnitten, Rumpeln unter 70 Hz entfernt, Spitze auf etwa −1 dB, AAC 96 kbit/s mono.
