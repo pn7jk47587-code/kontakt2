@@ -411,6 +411,8 @@ async function openSettings() {
       <details class="labfold"><summary>Labor: Entwürfe und Tests</summary>
       <div class="sethead"><span>Alle Fotos (Entwurf)</span></div>
       <div class="seggroup" id="apLook">${[['', 'Raster'], ['sheet', 'Contact Sheet'], ['sheet-ring', 'Sheet mit Fettstift']].map(([k, l]) => `<button type="button" class="seg${(localStorage.getItem('kb-ap-look') || '') === k ? ' on' : ''}" data-apl="${k}">${l}</button>`).join('')}</div>
+      <div class="sethead"><span>Töne</span></div>
+      <div class="seggroup" id="sndSet">${[['1', 'An'], ['0', 'Aus']].map(([k, l]) => `<button type="button" class="seg${(SND.enabled() ? '1' : '0') === k ? ' on' : ''}" data-snd="${k}">${l}</button>`).join('')}</div>
       <div class="sethead">${ART.sun}<span>Licht nach Tageszeit</span></div>
       <div class="seggroup" id="skyTest">${[['', 'Echt'], ['golden', 'Glut'], ['evening', 'Abend'], ['blue', 'Blau']].map(([k, l]) => `<button type="button" class="seg" data-skyt="${k}">${l}</button>`).join('')}</div>
       <div class="qlabel">Blaue Stunde am Morgen (Entwurf)</div>
@@ -442,6 +444,7 @@ async function openSettings() {
     </div>`;
   document.body.appendChild(ov);
   setupLightSettings(ov);
+  ov.querySelector('#sndSet').addEventListener('click', e => { const b = e.target.closest('[data-snd]'); if (!b) return; SND.set(b.dataset.snd === '1'); ov.querySelectorAll('#sndSet .seg').forEach(x => x.classList.toggle('on', x === b)); });
   ov.querySelector('#apLook').addEventListener('click', e => { const b = e.target.closest('[data-apl]'); if (!b) return; try { b.dataset.apl ? localStorage.setItem('kb-ap-look', b.dataset.apl) : localStorage.removeItem('kb-ap-look'); } catch (_) {} MOOD.apply(); ov.querySelectorAll('#apLook .seg').forEach(x => x.classList.toggle('on', x === b)); });
   // Nutzername nur noch hier änderbar (nicht mehr auf Startseite und Profil)
   { const inp = ov.querySelector('#setName'); let tn;

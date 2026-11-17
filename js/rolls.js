@@ -574,7 +574,7 @@ async function createRoll(wiz, loadedAt) {
       await DB.put('fridge', fe);
     }
   }
-  await DB.put('rolls', roll);
+  await DB.put('rolls', roll); SND.load();
   await DB.putMany('frames', frames);
   try { sessionStorage.removeItem(WIZ_KEY); } catch (_) {}
   FX.film(stock);
@@ -2844,6 +2844,7 @@ function setupFolds(root) {
       if (e.target.closest('button, a, input')) return;
       const open = sec.classList.toggle('open');
       h.setAttribute('aria-expanded', open);
+      if (sec.dataset.fold === 'fridge') SND.ice(open);
       try { localStorage.setItem('kb-fold-' + sec.dataset.fold, open ? '1' : '0'); } catch (_) {}
     };
     h.addEventListener('click', toggle);
@@ -2891,7 +2892,7 @@ function setupFavs(root) {
     const on = await toggleFav(store, id); if (on === null) return;
     st.classList.toggle('on', on); st.setAttribute('aria-pressed', on);
     st.setAttribute('aria-label', on ? 'Aus Favoriten entfernen' : 'Als Favorit markieren');
-    U.haptic && U.haptic(on ? [12, 40, 12] : 10);
+    U.haptic && U.haptic(on ? [12, 40, 12] : 10); SND.fav(on);
     // Zeile innerhalb ihrer Liste nach oben (oder hinter die Favoriten) schieben, ohne neu zu laden
     const row = st.closest('.crow'), list = row?.parentElement;
     if (list) {

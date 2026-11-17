@@ -1046,3 +1046,13 @@ Die Zeilen im Filmtagebuch haben ihren Text jetzt links an einer gemeinsamen Kan
 ## v269: Neue Filme erscheinen bei bestehender Installation
 
 Die eingebauten Filme werden nur beim Anheben der Seed-Version in die Datenbank übernommen. Das war seit v262 nicht geschehen, deshalb fehlten auf bestehenden Installationen Dealer's, Rollei, Fuji Eterna und F-500 sowie die neuen Reala, Eterna 250T und Reflx. Seed-Version 27 trägt sie nach. Eigene Filme und Änderungen bleiben unberührt. Bei jeder neuen eingebauten Filmgruppe die Seed-Version erhöhen.
+
+## v270: Töne
+
+Alle Töne erzeugt die App selbst (Web Audio, js/sound.js), es gibt keine Audiodateien. Schalter „Töne“ An/Aus in den Einstellungen, standardmäßig an. Der Stummschalter am iPhone schaltet die Töne ebenfalls stumm, und der Ton startet erst nach der ersten Berührung.
+- Spulen: Kurbelklicken während der Kurbelphase, Einrasten pro Patrone, Fanfare am Ende.
+- Film einlegen: Rückwand schnappt zu, sobald die Rolle angelegt ist.
+- Abzeichen: zwei helle Glockentöne.
+- Favoriten: Funkeln beim Markieren, leiser Klick beim Entfernen.
+- Filmkühlschrank: beim Aufklappen Luftzug und Eisknistern, beim Zuklappen dumpfes Schließen.
+Neue Töne in js/sound.js ergänzen und mit SND.name() aufrufen.

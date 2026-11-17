@@ -387,6 +387,9 @@ Handy {0}	Phone {0}
 Noch keine Fotos hochgeladen.	No photos uploaded yet.
 Zurück zum Profil	Back to profile
 Kameraschrank	Camera cabinet
+Töne	Sounds
+An	On
+Aus	Off
 Weitwinkel	Wide angle
 Tele	Telephoto
 Bajonett offen	Mount open

@@ -37,14 +37,15 @@ const BULK = (() => {
     document.body.appendChild(ov);
     const num = ov.querySelector('#spN');
     const timers = [];
+    if (!reduce) for (let k = 0; k * 105 < T; k++) timers.push(setTimeout(() => SND.crank(k), k * 105));
     for (let i = 1; i <= n; i++) {
       const at = reduce ? 0 : T + 100 + Math.min(i - 1, show - 1) * 150;
-      timers.push(setTimeout(() => { num.textContent = i; if (i <= show) U.haptic && U.haptic(12); }, at));
+      timers.push(setTimeout(() => { num.textContent = i; if (i <= show) { U.haptic && U.haptic(12); SND.cart(i); } }, at));
     }
     const total = reduce ? 1200 : T + 100 + show * 150 + 1300;
     let gone = false;
     const done = () => { if (gone) return; gone = true; timers.forEach(clearTimeout); ov.classList.add('out'); setTimeout(() => { ov.remove(); after && after(); }, 260); };
-    timers.push(setTimeout(() => { U.haptic && U.haptic([14, 40, 14, 40, 30]); if (window.FEEL) FEEL.burst(ov.querySelector('.sptext')); }, total - 1200));
+    timers.push(setTimeout(() => { U.haptic && U.haptic([14, 40, 14, 40, 30]); SND.fanfare(); if (window.FEEL) FEEL.burst(ov.querySelector('.sptext')); }, total - 1200));
     timers.push(setTimeout(done, total));
     ov.addEventListener('click', done);
   }

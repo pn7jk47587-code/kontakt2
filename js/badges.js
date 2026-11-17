@@ -159,7 +159,7 @@ const BADGES = (() => {
       if (changed && !fresh.length) await DB.put('meta', st);
       if (fresh.length) {
         await DB.put('meta', st);
-        if (!quiet) { const [d, lv] = fresh[0]; U.toast(fresh.length > 1 ? `${fresh.length} neue Abzeichen` : `Neues Abzeichen: ${d.name}${d.lv.length > 1 ? ` · Stufe ${lv}` : ''}`); U.haptic && U.haptic([20, 60, 20]); }
+        if (!quiet) { const [d, lv] = fresh[0]; U.toast(fresh.length > 1 ? `${fresh.length} neue Abzeichen` : `Neues Abzeichen: ${d.name}${d.lv.length > 1 ? ` · Stufe ${lv}` : ''}`); U.haptic && U.haptic([20, 60, 20]); if (typeof SND !== 'undefined') SND.badge(); }
       }
       running = null; return { st, fresh };
     })();
