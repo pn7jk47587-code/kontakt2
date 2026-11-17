@@ -3011,3 +3011,7 @@ html[data-sky="golden-a"] .tabbar { background: linear-gradient(to bottom, rgba(
 
 /* v267: Tab-Leiste bleibt beim Scrollen auf iOS nicht mehr mitten im Bild stehen */
 .tabbar { transform: translate3d(0, 0, 0); -webkit-transform: translate3d(0, 0, 0); will-change: transform; -webkit-backface-visibility: hidden; backface-visibility: hidden; contain: layout paint; }
+
+/* v268: Filmtagebuch, Texte der Zeilen linksbündig an einer Kante */
+.diaryrow > span:nth-child(2) { flex: 1; min-width: 0; text-align: left; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
