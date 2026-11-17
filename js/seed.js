@@ -407,7 +407,7 @@ const SEED_IMG = Object.fromEntries([
   'harman-phoenix125', 'harman-phoenix2', 'harman-red125', 'harman-switch-azure', 'agfa-color400',
   'rollei-ir400', 'optik-opticolour200', 'lomo-purple', 'kodak-portra160', 'kodak-portra400', 'kodak-portra800', 'kodak-colorplus200', 'kodak-gold200', 'kodak-ultramax400', 'orwo-wolfen-nc500', 'lomo-cn800', 'kodak-trix',
   'ilford-delta100', 'ilford-delta3200', 'ilford-delta400', 'ilford-fp4', 'ilford-hp5', 'ilford-panf', 'ilford-sfx200', 'ilford-xp2',
-  'kentmere-200', 'dealers-v3-50d', 'dealers-v3-200t', 'dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx', 'dealers-plusx'
+  'kentmere-200', 'agfa-apx400', 'dealers-v3-50d', 'dealers-v3-200t', 'dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx', 'dealers-plusx'
 ].map(id => [id, 'img/' + id + '.webp']));
 // Dosen und Schachteln der Meterware
 const SEED_IMG_BULK = Object.fromEntries(['dealers-v3-250d', 'dealers-v3-500t', 'dealers-xx', 'rollei-rpx400', 'rollei-rpx100', 'rollei-superpan200', 'kodak-trix', 'rollei-retro80s', 'rollei-retro400s', 'kentmere-400', 'foma-200', 'foma-100', 'foma-r100', 'foma-400'].map(id => [id, 'img/' + id + '-bulk.webp']));

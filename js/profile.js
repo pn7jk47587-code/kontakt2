@@ -131,7 +131,7 @@ function sortFridge(entries, stocks, key) {
 async function fridgeRow(e, st, { pick = false, on = false } = {}) {
   const exp = fridgeExpiry(e);
   const kind = st ? (SW_TYPES.includes(st.type) ? 'SW' : 'Farbe') : '';
-  const q = st ? `${U.stockLabel(st)} ${st.boxIso || ''} ${kind}`.toLowerCase() : '';
+  const q = st ? U.stockQ(st, kind) : '';
   const attrs = pick
     ? `data-fridge="${e.id}" data-stock="${st?.id || ''}" data-format="${e.format || ''}" data-exp="${e.exposures || ''}"`
     : `data-entry="${e.id}"`;
@@ -158,7 +158,7 @@ async function openStockPicker(onPick, format, title) {
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="spTitle">
       <h2 id="spTitle">${U.esc(title || 'Neuer Film')}${format && !title ? ` · ${FORMAT_LABEL[format] || format}` : ''}</h2>
       <input type="search" placeholder=" " id="spQ" aria-label="Suchen" autocomplete="off">
-      <div class="frlist tall" id="spList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>
+      <div class="frlist tall" id="spList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-q="${U.esc(U.stockQ(s))}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>
       <p class="hint">Film fehlt? <a href="#/film/neu">Neu in der Filmliste anlegen</a></p>
       <button class="btn ghost wide" id="spCancel">Abbrechen</button>
     </div>`;
@@ -167,7 +167,7 @@ async function openStockPicker(onPick, format, title) {
   ov.querySelector('#spCancel').addEventListener('click', close);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   ov.querySelector('#spQ').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase().trim();
+    const q = U.nq(e.target.value);
     ov.querySelectorAll('.fropt').forEach(b => { b.hidden = !b.dataset.q.includes(q); });
     const list = ov.querySelector('#spList');
     U.emptyHint(list, q && ![...list.children].some(b => !b.hidden), UPS_FILM);
@@ -539,7 +539,7 @@ async function openFridgeModal(entry, fromBtn) {
       ${isNew ? `
         <div class="frslot empty" id="frSlot" aria-live="polite" hidden></div>
         <input type="search" placeholder=" " id="frQ" aria-label="Suchen" autocomplete="off">
-        <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}${SEED_BULK[s.id] || (!s.builtin && (s.formats || ['135']).includes('135')) ? ' bulk' : ''}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '')).toLowerCase())}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>`
+        <div class="frlist three" id="frList">${stocks.map(s => `<button type="button" class="fropt" data-s="${s.id}" data-fmts="${(s.formats || ['135', '120']).join(' ')}${SEED_BULK[s.id] || (!s.builtin && (s.formats || ['135']).includes('135')) ? ' bulk' : ''}" data-q="${U.esc(U.stockQ(s))}">${U.esc(U.stockLabel(s))}<span class="sub2"> ISO ${U.esc(s.isoLabel || s.boxIso || '?')}</span></button>`).join('')}</div>`
       : `<div class="frslot" id="frSlot">${current ? await slotHtml(current) : '<span class="frslottxt">Film</span>'}</div>`}
       <div class="frgrid">
         <div class="fld"><span>Anzahl</span>
@@ -562,7 +562,7 @@ async function openFridgeModal(entry, fromBtn) {
   $('frCancel').addEventListener('click', close);
   ov.addEventListener('click', e => { if (e.target === ov) close(); });
   const filter = () => {
-    const q = ($('frQ')?.value || '').toLowerCase().trim();
+    const q = U.nq($('frQ')?.value);
     ov.querySelectorAll('.fropt').forEach(b => { b.hidden = !b.dataset.q.includes(q) || (entry.format !== 'gross' && !b.dataset.fmts.split(' ').includes(entry.format)); });
     const list = $('frList');
     if (list) U.emptyHint(list, q && ![...list.children].some(b => !b.hidden), UPS_FILM);

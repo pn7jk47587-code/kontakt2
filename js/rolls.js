@@ -464,7 +464,7 @@ async function wizardStep1(wiz, root = view) {
   root.querySelector('#rollTitle').addEventListener('input', e => { wiz.title = e.target.value; wizSave(wiz); refresh(); });
 
   const filter = (box, q, extra) => box && box.querySelectorAll('[data-q]').forEach(el => {
-    el.hidden = !(el.dataset.q.includes(q.toLowerCase().trim()) && (!extra || extra(el)));
+    el.hidden = !(el.dataset.q.includes(U.nq(q)) && (!extra || extra(el)));
   });
   const fmtOk = el => el.dataset.format === wiz.format;   // Kameras: genau das Aufnahmeformat
   const filmOk = el => el.dataset.format === filmFmt(wiz.format);   // Filme im Kühlschrank: passender Film

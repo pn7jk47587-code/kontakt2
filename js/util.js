@@ -263,6 +263,13 @@ const U = {
     return `<div class="oncehint" data-hint="${key}"><span>${text}</span><button type="button" class="oncex" aria-label="Hinweis schließen">×</button></div>`;
   },
 
+  // Suchtext eines Films: ohne Apostroph, mit dem Kodak-Namen aus der Beschreibung bei umverpackten Filmen („Dealer's“ findet auch „Kodak Vision3“)
+  nq(t) { return String(t || '').toLowerCase().replace(/['’`´]/g, '').trim(); },
+  stockQ(st, extra = '') {
+    if (!st) return '';
+    const orig = /umverpackter\s+(kodak\s+[\w\-]+(?:\s+\d+[dt])?)/i.exec(st.makerNote || '');
+    return U.nq(`${U.stockLabel(st)} ${st.boxIso || ''} ${extra} ${orig ? orig[1] : ''}`);
+  },
   stockLabel(st) {
     return st ? `${st.maker} ${st.name}` : 'Unbekannter Film';
   }

@@ -605,7 +605,7 @@ async function viewStocks() {
   const rolls = await DB.all('rolls');
   const count = id => rolls.filter(r => r.stockId === id).length;
   const items = await Promise.all(stocks.map(async s => `
-      <a class="item stockitem" href="#/film/${s.id}" data-q="${U.esc((U.stockLabel(s) + ' ' + (s.boxIso || '') + ' ' + (TYPES[s.type] || '')).toLowerCase())}">
+      <a class="item stockitem" href="#/film/${s.id}" data-q="${U.esc(U.stockQ(s, TYPES[s.type] || ''))}">
         <span class="stockart">${await filmArt(s, 44)}</span>
         <div><b>${U.esc(U.stockLabel(s))}</b><div class="sub2">${TYPES[s.type] || ''} · ISO ${U.esc(s.isoLabel || s.boxIso || '?')}${s.myIso ? ' · ich: ' + U.esc(s.myIso) : ''}</div></div>
         <span class="cnt">${count(s.id) || ''}</span>
@@ -615,7 +615,7 @@ async function viewStocks() {
     <div class="wizsec"><input type="search" placeholder=" " id="qStock" aria-label="Suchen" autocomplete="off"></div>
     <div class="list" id="stockList">${items.join('')}</div>`;
   view.querySelector('#qStock').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase().trim();
+    const q = U.nq(e.target.value);
     view.querySelectorAll('#stockList .item').forEach(el => { el.hidden = !el.dataset.q.includes(q); });
     const list = view.querySelector('#stockList');
     U.emptyHint(list, q && ![...list.querySelectorAll('.item')].some(el => !el.hidden), UPS_FILM);
@@ -679,9 +679,9 @@ async function viewCalc() {
   $('rcTime').addEventListener('input', e => { cur = U.parseShutter(e.target.value); view.querySelectorAll('#rcChips .chip').forEach(c => c.classList.remove('on')); calc(cur); });
   // Suche: Liste auf passende Filme eingrenzen und den ersten Treffer wählen
   $('rcQ').addEventListener('input', e => {
-    const q = e.target.value.toLowerCase().trim();
+    const q = U.nq(e.target.value);
     let first = null;
-    [...$('rcStock').options].forEach(o => { const hit = !q || o.textContent.toLowerCase().includes(q); o.hidden = !hit; o.disabled = !hit; if (hit && !first) first = o; });
+    [...$('rcStock').options].forEach(o => { const hit = !q || U.nq(o.textContent).includes(q); o.hidden = !hit; o.disabled = !hit; if (hit && !first) first = o; });
     $('rcNone').hidden = !!first;
     if (first && $('rcStock').selectedOptions[0]?.hidden !== false) { $('rcStock').value = first.value; }
     if (first && $('rcStock').value !== first.value && $('rcStock').selectedOptions[0].hidden) $('rcStock').value = first.value;
@@ -1207,3 +1207,13 @@ function growFrom(ov, btn) {
   window.addEventListener('scroll', hide, { passive: true });
 })();
 
+
+// v267: iOS zeichnet die fest stehende Tab-Leiste nach schnellem Scrollen manchmal an alter Stelle. Nach dem Scrollen wird sie neu verankert.
+(() => {
+  const bar = document.getElementById('tabBar'); if (!bar) return;
+  let t = 0;
+  const snap = () => { bar.style.bottom = '0.02px'; requestAnimationFrame(() => { bar.style.bottom = ''; }); };
+  window.addEventListener('scroll', () => { clearTimeout(t); t = setTimeout(snap, 120); }, { passive: true });
+  window.addEventListener('touchend', () => { clearTimeout(t); t = setTimeout(snap, 200); }, { passive: true });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', snap);
+})();

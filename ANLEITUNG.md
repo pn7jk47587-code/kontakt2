@@ -1032,3 +1032,9 @@ Der runde Auslöser in der Rolle hat oben mehr Abstand und berührt die Trennlin
 ## v266: Bilder für Meterware
 
 Rollei RPX 100 und 400, Superpan 200, Retro 80S und 400S, Kentmere Pan 400, Fomapan 100, 200, 400 und R 100 sowie Kodak Tri-X zeigen als Meterware ihre Schachtel oder Dose. Fomapan R 100 ist neu als 30,5-m-Rolle wählbar.
+
+## v267: APX 400, Tab-Leiste
+
+- AgfaPhoto APX 400 zeigt jetzt die Packung statt der Standarddose.
+- Die untere Leiste liegt auf einer eigenen Bildschicht und wird nach dem Scrollen neu verankert, damit sie auf dem iPhone nicht mitten im Bild hängen bleibt. Auf einem echten iPhone nicht reproduzierbar getestet, bitte beobachten.
+- Suche nach Filmen ignoriert den Apostroph („Dealers“ findet „Dealer's“). Umverpackte Filme findet man auch über den Kodak-Namen („Kodak Vision3“, „Double-X“, „Plus-X“). Gilt in der Filmliste, im Kühlschrank, beim Rolle anlegen und im Rechner.

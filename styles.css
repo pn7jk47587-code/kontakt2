@@ -3008,3 +3008,6 @@ html[data-sky="golden-a"] .tabbar { background: linear-gradient(to bottom, rgba(
 @keyframes spout { from { transform: translateX(-46px) scale(.3); opacity: 0; } }
 .spoolfx .spmore { grid-column: 1 / -1; }
 @media (prefers-reduced-motion: reduce) { .sploader .spcrank, .sploader .spwin, .sploader .spdigits, .spoolfx .spc { animation: none; } .sploader .spdigits { transform: translateY(calc(var(--n) * -24px)); } }
+
+/* v267: Tab-Leiste bleibt beim Scrollen auf iOS nicht mehr mitten im Bild stehen */
+.tabbar { transform: translate3d(0, 0, 0); -webkit-transform: translate3d(0, 0, 0); will-change: transform; -webkit-backface-visibility: hidden; backface-visibility: hidden; contain: layout paint; }
