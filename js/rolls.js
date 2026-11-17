@@ -1935,7 +1935,6 @@ async function viewAlbum(id) {
     const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
   });
   if (!d.frames.length) { view.innerHTML = `<div class="albhead">${filmCircle}<span class="albname"></span><div class="albtools">${addPhotosBtn}</div></div><div class="empty">Noch keine Fotos im Album.</div>`; wireAdd(); return; }
-  const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   const leakCam = !!(d.roll && d.cams.get(d.roll.cameraId)?.lightLeaks);
   view.innerHTML = `
     <div class="albhead">${filmCircle}
@@ -2632,7 +2631,7 @@ async function viewAllPhotos() {
   // v262: „Archivieren“ steht auf der Höhe der Favoriten-Zeile statt in einer eigenen Zeile ganz oben
   const arLink = `<a class="archlink" href="#/archiv" aria-label="Archivieren: früher entwickelte Rolle nachtragen">${ARCHIVE_IC}<span>Archivieren</span></a>`;
   const inRow = favs.length && !sorting;
-  let html = favs.length ? `<div class="favrow"><button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}"><span class="favdot" aria-hidden="true"></span>Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button>${inRow ? arLink : ''}</div><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy"></a>`).join('')}</div>` : '';
+  let html = favs.length ? `<div class="favrow"><button type="button" class="rollsep favsep favtoggle${FAV_OPEN ? ' open' : ''}" id="favToggle" aria-expanded="${FAV_OPEN}"><span class="favdot" aria-hidden="true"></span>Favoriten · ${favs.length}<span class="favchev" aria-hidden="true"></span></button>${inRow ? arLink : ''}</div><div class="photogrid favgrid"${FAV_OPEN ? '' : ' hidden'}>${favs.map(([f, i]) => `<a href="#/foto/alle/${f.id}" aria-label="Favorit, Bild ${frameLabel(f)}"><img ${f.imgId ? `data-iid="${f.imgId}"` : ''} alt=""></a>`).join('')}</div>` : '';
   let cur = null;
   d.frames.forEach((f, i) => {
     const gk = order === 'rate' ? 'r' + (f.rate ?? 'x') : f.rollId;
@@ -2646,9 +2645,10 @@ async function viewAllPhotos() {
         html += `<div class="rollsep">${[r?.title, U.stockLabel(st), camLabel(cam)].filter(Boolean).map(U.esc).join(' · ')}</div><div class="photogrid${sorting ? ' sorting' : ''}" data-roll="${cur}">`;
       }
     }
-    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}"${f.rate === 5 ? ' class="isfav"' : ''} data-film="${U.esc(U.stockLabel(d.stocks.get(d.rolls.get(f.rollId)?.stockId)).toUpperCase())}" aria-label="Bild ${frameLabel(f)}"><span class="apnum" aria-hidden="true">${frameLabel(f)}</span><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : f.rate === 5 ? '<span class="favdot" aria-label="Favorit"></span>' : ''}</a>`;
+    html += `<a href="#/foto/alle/${f.id}" data-fid="${f.id}"${f.rate === 5 ? ' class="isfav"' : ''} data-film="${U.esc(U.stockLabel(d.stocks.get(d.rolls.get(f.rollId)?.stockId)).toUpperCase())}" aria-label="Bild ${frameLabel(f)}"><span class="apnum" aria-hidden="true">${frameLabel(f)}</span><img ${f.imgId ? `data-iid="${f.imgId}"` : ''} alt="" draggable="false">${sorting ? `<span class="sortnum">${frameLabel(f)}</span>` : f.rate === 5 ? '<span class="favdot" aria-label="Favorit"></span>' : ''}</a>`;
   });
   view.innerHTML = (inRow ? '' : arBtn) + toolbar + html + '</div>' + (sorting || item ? '' : `<div class="card zipcard"><p>Alle ${d.frames.length} Fotos mit Rollen, Notizen, Favoriten, Reihenfolge und Einstellungen als ZIP-Datei sichern. Unter Einstellungen › Sicherung und Speicher lässt sie sich wieder einspielen.</p><button type="button" class="btn ghost wide" id="apZip">${ART.save}<span>Als ZIP sichern</span></button></div>`);
+  U.lazyImgs(view);
   view.querySelector('#apOrder')?.addEventListener('change', async e => { try { localStorage.setItem('kb-ap-order', e.target.value); } catch (_) {} await viewAllPhotos(); });
   view.querySelector('#apItem')?.addEventListener('change', async e => { AP_ITEM = e.target.value; await viewAllPhotos(); window.scrollTo(0, 0); });
   view.querySelector('#favToggle')?.addEventListener('click', e => {

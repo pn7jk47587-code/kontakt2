@@ -22,17 +22,36 @@ async function mapPhotos() {
     const r = rolls.get(f.rollId);
     return r && r.placeLat != null && (f.imgId || f.shot) ? { ...f, placeLat: r.placeLat, placeLng: r.placeLng, place: f.place || r.place, rough: true } : null;
   }).filter(Boolean);
-  return Promise.all(fr.map(async f => ({ f, url: f.imgId || f.phoneId ? await U.imgUrl(f.imgId || f.phoneId, true) : null })));
+  // v271: Vorschaubilder erst laden, wenn der Stapel auf der Karte erscheint
+  return fr.map(f => ({ f, url: null, iid: f.imgId || f.phoneId || null }));
+}
+
+let _mapQ = [], _mapBusy = 0;
+function mapThumbLoad(p, node) {
+  _mapQ.push([p, node]);
+  const pump = () => {
+    while (_mapBusy < 4 && _mapQ.length) {
+      const [pt, nd] = _mapQ.pop();   // zuletzt gezeichnete zuerst, das ist der aktuelle Ausschnitt
+      if (!nd.isConnected) continue;
+      _mapBusy++;
+      U.imgUrl(pt.iid, true).then(u => {
+        if (!u) return; pt.url = u;
+        const im = nd.querySelector('.mtimg'); if (im && nd.isConnected) { im.classList.remove('mtph'); im.style.backgroundImage = `url('${u}')`; im.innerHTML = ''; }
+      }).catch(() => {}).finally(() => { _mapBusy--; pump(); });
+    }
+  };
+  pump();
 }
 
 async function viewMap() {
   setHeader('Karte');
   document.body.classList.add('mapmode');
   view.innerHTML = `<div class="mapwrap"><div id="photoMap" class="photomap"></div></div>`;
+  const mlReady = loadMapLibre().then(() => null, e => e);   // Kartenbibliothek lädt parallel zu den Fotodaten
   const pts = await mapPhotos();
   const wrap = view.querySelector('.mapwrap');
   if (!pts.length) wrap.insertAdjacentHTML('beforeend', '<p class="mapempty">Noch keine Fotos mit Ort</p>');
-  try { await loadMapLibre(); } catch (e) { wrap.insertAdjacentHTML('beforeend', `<p class="mapempty">${U.esc(e.message)}</p>`); return; }
+  try { const err = await mlReady; if (err) throw err; } catch (e) { wrap.insertAdjacentHTML('beforeend', `<p class="mapempty">${U.esc(e.message)}</p>`); return; }
   const el = view.querySelector('#photoMap'); if (!el) return;
   let map;
   try {
@@ -74,6 +93,8 @@ async function viewMap() {
       node.type = 'button'; node.className = 'mapthumb';
       node.setAttribute('aria-label', (first.f.place || 'Foto') + (g.items.length > 1 ? `, ${g.items.length} Fotos` : ''));
       node.innerHTML = `<span class="mtimg${first.url ? '' : ' mtph'}"${first.url ? ` style="background-image:url('${first.url}')"` : ''}>${first.url ? '' : `<b>${U.esc(frameLabel(first.f))}</b>`}</span>${g.items.length > 1 ? `<span class="mtn">${g.items.length}</span>` : ''}`;
+      // Vorschau nachladen, höchstens vier gleichzeitig; nach dem Laden bleibt sie am Foto
+      if (!first.url && first.iid) mapThumbLoad(first, node);
       node.addEventListener('click', e => {
         e.stopPropagation();
         const lngs = g.items.map(p => +p.f.placeLng), lats = g.items.map(p => +p.f.placeLat);

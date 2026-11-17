@@ -3015,3 +3015,7 @@ html[data-sky="golden-a"] .tabbar { background: linear-gradient(to bottom, rgba(
 /* v268: Filmtagebuch, Texte der Zeilen linksbündig an einer Kante */
 .diaryrow > span:nth-child(2) { flex: 1; min-width: 0; text-align: left; }
 html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+/* v271: w, m, d in den Einstellungen als echte Kreise */
+.genderpick { align-items: center; }
+.genderpick .gchip { width: 40px; height: 40px; min-width: 40px; max-width: 40px; min-height: 40px; max-height: 40px; aspect-ratio: 1 / 1; align-self: center; }

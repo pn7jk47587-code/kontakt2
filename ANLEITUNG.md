@@ -1056,3 +1056,9 @@ Alle Töne erzeugt die App selbst (Web Audio, js/sound.js), es gibt keine Audiod
 - Favoriten: Funkeln beim Markieren, leiser Klick beim Entfernen.
 - Filmkühlschrank: beim Aufklappen Luftzug und Eisknistern, beim Zuklappen dumpfes Schließen.
 Neue Töne in js/sound.js ergänzen und mit SND.name() aufrufen.
+
+## v271: Schnellere Ansichten, runde Anredekreise
+
+- Alle Fotos und Karte öffnen sofort. Vorschaubilder laden erst, wenn sie nahe am Bildschirm sind (höchstens vier gleichzeitig), auf der Karte nur für die sichtbaren Stapel. Die Kartenbibliothek lädt parallel zu den Fotodaten.
+- Vorschauen liegen zusätzlich in einem eigenen Speicher („thumbs“, Datenbankversion 5). Vorher las jede Vorschau das volle Foto mit. Beim ersten Öffnen nach dem Update füllt sich der Speicher, außerdem läuft er im Hintergrund nach dem Start. Danach erscheinen die Bilder schnell.
+- w, m und d in den Einstellungen sind wieder Kreise.

@@ -131,9 +131,19 @@ const U = {
     if (!id) return null;
     const key = id + (thumb ? ':t' : '');
     if (U._urls.has(key)) return U._urls.get(key);
-    const rec = await DB.get('images', id);
-    if (!rec) return null;
-    const blob = U.recBlob(rec, thumb);
+    // v271: Vorschauen liegen zusätzlich in einem eigenen Speicher. Sonst liest jede Vorschau das volle Foto mit.
+    let blob = null;
+    if (thumb) {
+      const t = await DB.get('thumbs', id).catch(() => null);
+      if (t && t.tdata) blob = t.tdata instanceof Blob ? t.tdata : new Blob([t.tdata], { type: t.type || 'image/jpeg' });
+    }
+    if (!blob) {
+      const rec = await DB.get('images', id);
+      if (!rec) return null;
+      blob = U.recBlob(rec, thumb);
+      if (thumb && blob) DB.put('thumbs', { id, tdata: rec.tdata || rec.thumb, type: rec.type || 'image/jpeg' }).catch(() => {});
+    }
+    if (!blob) return null;
     const u = (await U.blobImagesOk()) ? URL.createObjectURL(blob) : await U.fileToDataUrl(blob);
     U._urls.set(key, u);
     return u;
@@ -174,7 +184,34 @@ const U = {
     const reset = () => { s = 1; tx = ty = 0; set(); };
     return { reset, get zoomed() { return s > 1; } };
   },
+  // Vorschaubilder erst laden, wenn sie in die Nähe des Bildschirms kommen. Höchstens vier gleichzeitig.
+  lazyImgs(root) {
+    const imgs = [...root.querySelectorAll('img[data-iid]')]; if (!imgs.length) return;
+    const queue = []; let busy = 0;
+    const pump = () => {
+      while (busy < 4 && queue.length) {
+        const im = queue.shift(); busy++;
+        U.imgUrl(im.dataset.iid, true).then(u => { if (u && im.isConnected) im.src = u; }).catch(() => {}).finally(() => { busy--; pump(); });
+      }
+    };
+    if (!('IntersectionObserver' in window)) { imgs.forEach(i => queue.push(i)); pump(); return; }
+    const io = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); queue.push(e.target); } }); queue.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top); pump(); }, { rootMargin: '700px 0px' });
+    imgs.forEach(i => io.observe(i));
+  },
+  // Vorschauen im Hintergrund in den eigenen Speicher legen, damit sie später schnell erscheinen
+  async warmThumbs() {
+    try {
+      const have = new Set(await DB.keys('thumbs'));
+      for (const id of await DB.keys('images')) {
+        if (have.has(id)) continue;
+        await new Promise(r => window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 1500 }) : setTimeout(r, 60));
+        const rec = await DB.get('images', id); if (!rec || !(rec.tdata || rec.thumb)) continue;
+        await DB.put('thumbs', { id, tdata: rec.tdata || rec.thumb, type: rec.type || 'image/jpeg' });
+      }
+    } catch (_) {}
+  },
   forgetImg(id) {
+    DB.del('thumbs', id).catch(() => {});
     for (const k of [id, id + ':t']) {
       if (U._urls.has(k)) { const u = U._urls.get(k); if (u.startsWith('blob:')) URL.revokeObjectURL(u); U._urls.delete(k); }
     }

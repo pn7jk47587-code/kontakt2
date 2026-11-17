@@ -126,7 +126,7 @@ async function boot() {
   // Fehler sichtbar machen statt still zu scheitern, z. B. wenn ein Bild nicht gespeichert werden kann
   window.addEventListener('unhandledrejection', e => U.toast('Fehler: ' + (e.reason?.message || e.reason)));
   route();
-  setTimeout(() => U.rethumbAll(), 4000);   // schärfere Vorschaubilder für ältere Fotos
+  setTimeout(() => U.rethumbAll().then(() => U.warmThumbs()), 4000);   // schärfere Vorschaubilder für ältere Fotos
 }
 
 // Beispielausrüstung (die Kameras und Objektive der Entwicklerin) für Tests laden. Vorhandene Einträge bleiben unverändert.

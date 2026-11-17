@@ -1,8 +1,8 @@
 // Minimaler IndexedDB-Wrapper. Alle Daten bleiben auf dem Gerät.
 const DB = (() => {
   const NAME = 'kontaktbogen';
-  const VER = 4;
-  const STORES = ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'images', 'meta'];
+  const VER = 5;
+  const STORES = ['stocks', 'cameras', 'lenses', 'fridge', 'rolls', 'frames', 'images', 'thumbs', 'meta'];
   let dbp = null;
 
   function open() {
