@@ -1074,3 +1074,6 @@ Der große Knopf in der Frames-Ansicht macht beim Antippen ein Auslösegeräusch
 ## v274: Kühlschrank-Ton
 
 Das Öffnen des Filmkühlschranks klingt jetzt wie ein leiser Frosthauch: gefiltertes Rauschen schwillt an und klingt aus, dazu ein kaum hörbares, glasiges Flirren. Die Einzelklicks und der Glockenton sind weg. Beim Schließen ein kurzer, leiserer Hauch.
+
+## v275: Nikon-F3-Auslöser
+Der Ton beim großen Knopf in der Frames-Ansicht ahmt jetzt eine Nikon F3 nach: dumpfer Spiegelschlag, zwei kurze metallische Ticks des Verschlusses, gedämpfter Spiegelrücklauf. Der Aufzugston ist entfallen, weil die F3 von Hand gespannt wird. Der Ton ist synthetisch erzeugt, keine Aufnahme der Kamera.
