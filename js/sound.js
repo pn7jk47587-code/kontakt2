@@ -53,12 +53,21 @@ const SND = (() => {
     badge() { [988, 1319].forEach((f, i) => { tone(f, 0.9, { type: 'sine', vol: 0.18, at: i * 0.12 }); tone(f * 2.76, 0.4, { type: 'sine', vol: 0.05, at: i * 0.12 }); }); },
     // Favorit an: Funkeln nach oben, aus: leiser Klick nach unten
     fav(onState = true) { if (onState) [1175, 1568, 2093].forEach((f, i) => tone(f, 0.18, { type: 'sine', vol: 0.12, at: i * 0.05 })); else tone(500, 0.08, { type: 'sine', f1: 300, vol: 0.12 }); },
-    // Kühlschrank auf: Türdichtung, Luftzug, Eisknistern
+    // Kühlschrank auf: leiser, weicher Frosthauch. Gefiltertes Rauschen schwillt an und klingt aus, darüber ein ganz leises, glasiges Flirren. Keine Einzelklicks.
     ice(openState = true) {
-      if (!openState) { noise(0.12, { vol: 0.22, lp: 600 }); tone(110, 0.1, { type: 'sine', vol: 0.14 }); return; }
-      noise(0.28, { vol: 0.18, lp: 900 }); tone(90, 0.12, { type: 'sine', vol: 0.12 });
-      for (let i = 0; i < 7; i++) { const at = 0.12 + Math.random() * 0.45; noise(0.012, { vol: 0.28, hp: 4500, at }); tone(3200 + Math.random() * 2400, 0.04, { type: 'sine', vol: 0.05, at }); }
-      tone(2637, 0.5, { type: 'sine', vol: 0.06, at: 0.1 });
+      const c = ac(); if (!c) return;
+      const air = (dur, peak, f0, f1, at = 0) => {
+        const n = Math.floor(c.sampleRate * dur), buf = c.createBuffer(1, n, c.sampleRate), d = buf.getChannelData(0);
+        for (let k = 0; k < n; k++) d[k] = Math.random() * 2 - 1;
+        const src = c.createBufferSource(); src.buffer = buf;
+        const hp = c.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1800;
+        const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; const t = c.currentTime + at;
+        bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+        const g = c.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak * VOL, t + dur * 0.4); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        src.connect(hp).connect(bp).connect(g).connect(c.destination); src.start(t);
+      };
+      if (openState) { air(0.9, 0.09, 3200, 6500); tone(4200, 0.8, { type: 'sine', vol: 0.012, at: 0.1, attack: 0.25 }); tone(5600, 0.7, { type: 'sine', vol: 0.008, at: 0.2, attack: 0.25 }); }
+      else air(0.45, 0.06, 5000, 2500);
     },
     tick() { tone(880, 0.06, { type: 'sine', vol: 0.12 }); }
   };
