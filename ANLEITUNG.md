@@ -1089,3 +1089,6 @@ Die XG-1-Aufnahme endete mit einem kurzen Klick etwa 0,27 s nach der Auslösung.
 
 ## v279: Nikon F3 mit echter Aufnahme
 Die F3 spielt jetzt die eigene Aufnahme (0,3 s, ausgeschnitten ohne den Klick 0,3 s nach der Auslösung). Lautstärke an die XG-1 angeglichen. Echte Aufnahmen bisher: Minolta XG-1, Nikon F3. Neue Aufnahmen: Datei als `<Kamera-ID>.m4a` in /home/claude/kontakt2-snd ablegen und js/sndrec.js aus allen Dateien dort neu erzeugen.
+
+## v280: Fehler „Can't find variable: thumbs“ im Album behoben
+In v271 war beim Umbau auf Vorschauen nach Bedarf die Zeile mit `thumbs` aus der Albumansicht (viewAlbum) statt aus „Alle Fotos“ entfernt worden. Die Albumansicht brach deshalb mit diesem Fehler ab. Jetzt lädt auch das Album seine Vorschauen nach Bedarf (`data-iid` und `U.lazyImgs`), und „Alle Fotos“ wartet nicht mehr auf alle Vorschauen vorab.

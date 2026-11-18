@@ -1948,7 +1948,7 @@ async function viewAlbum(id) {
     <div class="albtools">${albumToolsHtml(d, sheetBtn, addPhotosBtn, phoneBtn)}</div>
     ${ALBUM_PICK ? '<p class="hint pad sorthint">Tippe die Fotos an, die denselben Ort bekommen sollen.</p>' : ''}
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
-    <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img src="${thumbs[i]}" alt="" loading="lazy" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
+    <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img ${f.imgId ? `data-iid="${f.imgId}"` : ''} alt="" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
     ${leakCam ? `<div class="modewrap"><button class="btn ghost small" id="leakEdit">${d.roll.leaksMarked ? 'Lightleaks ändern' : 'Lightleaks markieren'}</button></div>` : ''}`;
   view.querySelector('#leakEdit')?.addEventListener('click', () => openLeakPicker(d.roll, () => route()));
@@ -1985,6 +1985,7 @@ async function viewAlbum(id) {
     const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
   });
   while (PHOTOSORT_OFF.length) PHOTOSORT_OFF.pop()();
+  U.lazyImgs(view);   // v280: Vorschauen nach Bedarf (v271 hatte hier die Variable thumbs entfernt)
   if (ALBUM_SORT) view.querySelectorAll('.photogrid.sorting').forEach(g => setupPhotoSort(g, () => viewAlbum(id)));
   let pick = null;
   try { pick = sessionStorage.getItem('kb-leakpick'); if (pick === id) sessionStorage.removeItem('kb-leakpick'); } catch (_) {}
@@ -2629,7 +2630,6 @@ async function viewAllPhotos() {
   if (item && !d.frames.some(f => apMatch(d, f, item))) { item = AP_ITEM = ''; }
   d.frames = d.frames.filter(f => apMatch(d, f, item));
   const toolbar = sorting ? '' : `<div class="aptools"><select id="apOrder" aria-label="Rollen sortieren">${[['date', 'Neueste zuerst'], ['dateOld', 'Älteste zuerst'], ['film', 'Film'], ['name', 'Name'], ['cam', 'Kamera'], ['rate', 'Bewertung']].map(([v, t]) => `<option value="${v}"${order === v ? ' selected' : ''}>${t}</option>`).join('')}</select>${itemSel}</div>`;
-  const thumbs = await Promise.all(d.frames.map(f => U.imgUrl(f.imgId, true)));
   // Favoriten sind die Fotos mit +5 (fünf Leuchtpunkte). Sie stehen zusätzlich oben in einer eigenen Reihe.
   const favs = item ? [] : d.frames.map((f, i) => [f, i]).filter(([f]) => f.rate === 5);
   // Favoriten-Reihe klappt auf und zu; beim Hineinnavigieren ist sie zugeklappt
