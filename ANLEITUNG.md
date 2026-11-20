@@ -1099,3 +1099,6 @@ In der Fotoansicht ist „Aufgenommen“ geteilt: links der Tag (Kalender), rech
 
 ## v282: Vorhandener Ort oder Tag bleibt
 Bei „Ort“ und „Tag“ für mehrere Fotos werden nur Fotos ohne diese Angabe gefüllt. Fotos mit Ort (Name oder Koordinaten) bzw. mit Tag bleiben unverändert. Die Meldung nennt beide Zahlen, etwa „Tag bei 3 Fotos eingetragen, 1 Foto unverändert“.
+
+## v283: Ort und Tag für mehrere Fotos mit Haken bestätigen
+„Ort“ und „Tag“ merken die Auswahl nur vor. Die Knöpfe zeigen dann den gewählten Ort bzw. Tag. Über der Leiste steht, wie viele der ausgewählten Fotos die Angabe bekommen („Tag für 3 von 5“). Fotos mit vorhandenem Ort oder Tag behalten ihn, dazu zählen auch Fotos, die beim Fotografieren mit dem großen Knopf schon eine Zeit bekommen haben. Gespeichert wird erst mit dem Haken rechts.

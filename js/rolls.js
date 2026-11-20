@@ -1920,7 +1920,6 @@ async function openPlaceChooser(onPick, opts = {}) {
   };
 }
 let ALBUM_PICK = false, ALBUM_PICKED = new Set();
-const pickToast = (what, n, kept) => { const fo = k => `${k} ${k === 1 ? 'Foto' : 'Fotos'}`; return n ? `${what} bei ${fo(n)} eingetragen${kept ? `, ${fo(kept)} unverändert` : ''}` : `Alle hatten schon einen ${what}`; };
 async function viewAlbum(id) {
   const d = await albumData(id);
   if (!d) { location.replace('#/'); return; }
@@ -1968,27 +1967,33 @@ async function viewAlbum(id) {
     const grid = view.querySelector('.photogrid');
     const bar = document.createElement('div'); bar.className = 'pickbar';
     const pickDay = () => { const f0 = d.frames.find(f => ALBUM_PICKED.has(f.id) && f.date) || d.frames.find(f => f.date); return String(f0?.date || d.roll?.loadedAt || '').slice(0, 10); };
-    const drawBar = () => { bar.innerHTML = `<span>${ALBUM_PICKED.size} ausgewählt</span><button type="button" class="btn small" id="pbAll">${ALBUM_PICKED.size === d.frames.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn accent small" id="pbGo"${ALBUM_PICKED.size ? '' : ' disabled'}>Ort</button><label class="btn accent small pbday${ALBUM_PICKED.size ? '' : ' off'}">Tag<input type="date" id="pbDay" value="${pickDay()}"${ALBUM_PICKED.size ? '' : ' disabled'} aria-label="Tag für die ausgewählten Fotos"></label>`;
-      // v281: Tag für mehrere Fotos. Eine vorhandene Uhrzeit bleibt, sonst 12:00 (gilt als „ohne Uhrzeit“).
-      bar.querySelector('#pbDay').onchange = async e => {
-        const day = e.target.value; if (!day) return; let n = 0;
-        // v282: Fotos, die schon einen Tag haben, behalten ihn
-        let kept = 0;
-        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; if (fr.date) { kept++; continue; } fr.date = `${day}T12:00:00`; fr.dateSet = true; delete fr.wx; await DB.put('frames', fr); n++; }
+    // v283: Ort und Tag werden erst vorgemerkt und mit dem Haken gespeichert. Fotos mit vorhandener Angabe behalten sie (v282).
+    const pend = { place: null, day: '' };
+    const hasPlace = f => !!(f.place || f.placeLat != null);
+    const drawBar = () => {
+      const sel = d.frames.filter(f => ALBUM_PICKED.has(f.id)), on = sel.length > 0;
+      const nP = pend.place ? sel.filter(f => !hasPlace(f)).length : 0, nD = pend.day ? sel.filter(f => !f.date).length : 0;
+      const info = [pend.day ? `Tag für ${nD} von ${sel.length}` : '', pend.place ? `Ort für ${nP} von ${sel.length}` : ''].filter(Boolean).join(' · ');
+      const dd = pend.day ? pend.day.slice(8, 10) + '.' + pend.day.slice(5, 7) + '.' : 'Tag';
+      bar.innerHTML = `${info ? `<p class="pbinfo">${U.esc(info)}</p>` : ''}<span>${ALBUM_PICKED.size}</span><button type="button" class="btn small" id="pbAll">${ALBUM_PICKED.size === d.frames.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn small pbpend${pend.place ? ' set' : ''}" id="pbGo"${on ? '' : ' disabled'}>${pend.place ? U.esc(pend.place.name || 'Karte') : 'Ort'}</button><label class="btn small pbday pbpend${pend.day ? ' set' : ''}${on ? '' : ' off'}">${dd}<input type="date" id="pbDay" value="${pend.day || pickDay()}"${on ? '' : ' disabled'} aria-label="Tag für die ausgewählten Fotos"></label><button type="button" class="okbtn pbok" id="pbOk" aria-label="Speichern"${on && (pend.place || pend.day) ? '' : ' disabled'}>${ART.check}</button>`;
+      bar.querySelector('#pbDay').onchange = e => { pend.day = e.target.value || ''; drawBar(); };
+      bar.querySelector('#pbAll').onclick = () => { if (ALBUM_PICKED.size === d.frames.length) ALBUM_PICKED.clear(); else d.frames.forEach(f => ALBUM_PICKED.add(f.id)); grid.querySelectorAll('[data-fid]').forEach(a => a.classList.toggle('picked', ALBUM_PICKED.has(a.dataset.fid))); drawBar(); };
+      bar.querySelector('#pbGo').onclick = () => openPlaceChooser(p => { pend.place = p; drawBar(); });
+      bar.querySelector('#pbOk').onclick = async () => {
+        let nPl = 0, nDy = 0, kept = 0; const p = pend.place;
+        for (const fid of ALBUM_PICKED) {
+          const fr = await DB.get('frames', fid); if (!fr) continue; let ch = false;
+          if (p && !hasPlace(fr)) { fr.place = p.name || ''; if (p.lat != null) { fr.placeLat = p.lat; fr.placeLng = p.lng; delete fr.placeAcc; fr.placeSrc = p.src || 'map'; if (p.cc) fr.placeCC = p.cc; } fr.placeNameAuto = !!p.auto; nPl++; ch = true; }
+          if (pend.day && !fr.date) { fr.date = `${pend.day}T12:00:00`; fr.dateSet = true; delete fr.wx; nDy++; ch = true; }
+          if (ch) await DB.put('frames', fr); else kept++;
+        }
         ALBUM_PICK = false; ALBUM_PICKED = new Set(); bar.remove();
-        U.toast(pickToast('Tag', n, kept)); U.haptic && U.haptic([12, 40, 12]);
+        const fo = k => `${k} ${k === 1 ? 'Foto' : 'Fotos'}`;
+        const msg = [pend.day ? `Tag bei ${fo(nDy)}` : '', p ? `Ort bei ${fo(nPl)}` : ''].filter(Boolean).join(', ') + ' gespeichert' + (kept ? `, ${fo(kept)} unverändert` : '');
+        U.toast(msg); U.haptic && U.haptic([12, 40, 12]);
         const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
       };
-      bar.querySelector('#pbAll').onclick = () => { if (ALBUM_PICKED.size === d.frames.length) ALBUM_PICKED.clear(); else d.frames.forEach(f => ALBUM_PICKED.add(f.id)); grid.querySelectorAll('[data-fid]').forEach(a => a.classList.toggle('picked', ALBUM_PICKED.has(a.dataset.fid))); drawBar(); };
-      bar.querySelector('#pbGo').onclick = () => openPlaceChooser(async p => {
-        let n = 0;
-        // v282: Fotos, die schon einen Ort haben, behalten ihn
-        let kept = 0;
-        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; if (fr.place || fr.placeLat != null) { kept++; continue; } fr.place = p.name || fr.place || ''; if (p.lat != null) { fr.placeLat = p.lat; fr.placeLng = p.lng; delete fr.placeAcc; fr.placeSrc = p.src || 'map'; if (p.cc) fr.placeCC = p.cc; } fr.placeNameAuto = !!p.auto; await DB.put('frames', fr); n++; }
-        ALBUM_PICK = false; ALBUM_PICKED = new Set(); bar.remove();
-        U.toast(pickToast('Ort', n, kept)); U.haptic && U.haptic([12, 40, 12]);
-        const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
-      }); };
+    };
     drawBar(); document.body.appendChild(bar);
     window.addEventListener('hashchange', () => { bar.remove(); ALBUM_PICK = false; }, { once: true });
     grid.addEventListener('click', e => { const a = e.target.closest('[data-fid]'); if (!a) return; e.preventDefault(); const k = a.dataset.fid; ALBUM_PICKED.has(k) ? ALBUM_PICKED.delete(k) : ALBUM_PICKED.add(k); a.classList.toggle('picked', ALBUM_PICKED.has(k)); U.haptic && U.haptic(8); drawBar(); });
