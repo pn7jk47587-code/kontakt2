@@ -1,3 +1,3 @@
 // App-Version und Zeitpunkt der letzten Änderung (Berliner Zeit). Wird bei jedem Update zusammen mit sw.js hochgezählt.
-const APP_VERSION = 'kb-v280';
-const APP_BUILT = '2026-11-18T09:41';
+const APP_VERSION = 'kb-v281';
+const APP_BUILT = '2026-11-20T17:36';

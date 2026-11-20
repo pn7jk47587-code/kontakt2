@@ -1092,3 +1092,7 @@ Die F3 spielt jetzt die eigene Aufnahme (0,3 s, ausgeschnitten ohne den Klick 0,
 
 ## v280: Fehler „Can't find variable: thumbs“ im Album behoben
 In v271 war beim Umbau auf Vorschauen nach Bedarf die Zeile mit `thumbs` aus der Albumansicht (viewAlbum) statt aus „Alle Fotos“ entfernt worden. Die Albumansicht brach deshalb mit diesem Fehler ab. Jetzt lädt auch das Album seine Vorschauen nach Bedarf (`data-iid` und `U.lazyImgs`), und „Alle Fotos“ wartet nicht mehr auf alle Vorschauen vorab.
+
+## v281: Tag für mehrere Fotos, Uhrzeit einzeln
+Im Album heißt der Auswahlknopf jetzt „Ort und Tag für mehrere Fotos“ (Nadel mit kleiner Uhr). Nach der Auswahl stehen unten „Ort“ und „Tag“. „Tag“ öffnet den Kalender. Vorgabe ist der Tag des ersten ausgewählten Fotos mit Datum, sonst der Einlegetag der Rolle. Eine vorhandene Uhrzeit bleibt erhalten, sonst wird 12:00 gespeichert, das in der App als „ohne Uhrzeit“ gilt.
+In der Fotoansicht ist „Aufgenommen“ geteilt: links der Tag (Kalender), rechts die Uhrzeit (Zeitrad). Die Uhrzeit lässt sich ändern, ohne den Tag neu auszuwählen. Hat das Foto noch keinen Tag, nimmt die Uhrzeit den Einlegetag der Rolle.

@@ -1946,7 +1946,7 @@ async function viewAlbum(id) {
       ${d.roll ? `<label class="rollname albname"><span>Name der Rolle</span><input id="rollName" maxlength="80" value="${U.esc(d.roll.title || '')}" enterkeyhint="done"></label>` : '<span class="albname"></span>'}
     </div>
     <div class="albtools">${albumToolsHtml(d, sheetBtn, addPhotosBtn, phoneBtn)}</div>
-    ${ALBUM_PICK ? '<p class="hint pad sorthint">Tippe die Fotos an, die denselben Ort bekommen sollen.</p>' : ''}
+    ${ALBUM_PICK ? '<p class="hint pad sorthint">Tippe die Fotos an, die denselben Ort oder Tag bekommen sollen.</p>' : ''}
     ${ALBUM_SORT ? '<p class="hint pad sorthint">Halte ein Foto kurz gedrückt und ziehe es an die richtige Stelle. Blende, Zeit, Notiz und alle anderen Einträge wandern mit.</p>' : ''}
     <div class="photogrid${ALBUM_SORT ? ' sorting' : ''}${ALBUM_PICK ? ' picking' : ''}" data-roll="${id}">${d.frames.map((f, i) => `<a href="#/foto/${id}/${f.id}" data-fid="${f.id}" aria-label="Bild ${frameLabel(f)}"><img ${f.imgId ? `data-iid="${f.imgId}"` : ''} alt="" draggable="false">${ALBUM_SORT ? `<span class="sortnum">${frameLabel(f)}</span>` : ALBUM_PICK ? '<span class="pickmark" aria-hidden="true"></span>' : (f.leak ? '<span class="leakdot" title="Lightleak"></span>' : '')}</a>`).join('')}</div>
     <div class="modewrap"><a class="modebtn" href="#/album/${id}/buch"><span class="mbicon">${ART.album}</span><span>Fotoalbum ansehen</span></a></div>
@@ -1966,7 +1966,16 @@ async function viewAlbum(id) {
   if (ALBUM_PICK) {
     const grid = view.querySelector('.photogrid');
     const bar = document.createElement('div'); bar.className = 'pickbar';
-    const drawBar = () => { bar.innerHTML = `<span>${ALBUM_PICKED.size} ausgewählt</span><button type="button" class="btn small" id="pbAll">${ALBUM_PICKED.size === d.frames.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn accent small" id="pbGo"${ALBUM_PICKED.size ? '' : ' disabled'}>Ort wählen</button>`;
+    const pickDay = () => { const f0 = d.frames.find(f => ALBUM_PICKED.has(f.id) && f.date) || d.frames.find(f => f.date); return String(f0?.date || d.roll?.loadedAt || '').slice(0, 10); };
+    const drawBar = () => { bar.innerHTML = `<span>${ALBUM_PICKED.size} ausgewählt</span><button type="button" class="btn small" id="pbAll">${ALBUM_PICKED.size === d.frames.length ? 'Keins' : 'Alle'}</button><button type="button" class="btn accent small" id="pbGo"${ALBUM_PICKED.size ? '' : ' disabled'}>Ort</button><label class="btn accent small pbday${ALBUM_PICKED.size ? '' : ' off'}">Tag<input type="date" id="pbDay" value="${pickDay()}"${ALBUM_PICKED.size ? '' : ' disabled'} aria-label="Tag für die ausgewählten Fotos"></label>`;
+      // v281: Tag für mehrere Fotos. Eine vorhandene Uhrzeit bleibt, sonst 12:00 (gilt als „ohne Uhrzeit“).
+      bar.querySelector('#pbDay').onchange = async e => {
+        const day = e.target.value; if (!day) return; let n = 0;
+        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; const t = String(fr.date || '').slice(11, 16) || '12:00'; fr.date = `${day}T${t}:00`; fr.dateSet = true; delete fr.wx; await DB.put('frames', fr); n++; }
+        ALBUM_PICK = false; ALBUM_PICKED = new Set(); bar.remove();
+        U.toast(`Tag bei ${n} ${n === 1 ? 'Foto' : 'Fotos'} eingetragen`); U.haptic && U.haptic([12, 40, 12]);
+        const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
+      };
       bar.querySelector('#pbAll').onclick = () => { if (ALBUM_PICKED.size === d.frames.length) ALBUM_PICKED.clear(); else d.frames.forEach(f => ALBUM_PICKED.add(f.id)); grid.querySelectorAll('[data-fid]').forEach(a => a.classList.toggle('picked', ALBUM_PICKED.has(a.dataset.fid))); drawBar(); };
       bar.querySelector('#pbGo').onclick = () => openPlaceChooser(async p => {
         let n = 0;
@@ -2046,7 +2055,7 @@ const ALB_ORDER_IC = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidde
 const ALB_STORY_IC = '<svg viewBox="0 0 24 24" width="21" height="21" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M9 8h2.6v2.6H9zM12.4 8H15v2.6h-2.4zM9 11.8h2.6v2.6H9zM12.4 11.8H15v2.6h-2.4z" stroke-width="1.4"/></svg>';
 function albumToolsHtml(d, sheetBtn, addPhotosBtn, phoneBtn) {
   const r = d.roll, many = d.frames.length > 1;
-  const pick = r && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort für mehrere Fotos festlegen" title="Ort für mehrere Fotos">${PIN_IC}</button>` : '';
+  const pick = r && !ALBUM_SORT ? `<button type="button" class="roundic${ALBUM_PICK ? ' on' : ''}" id="albPick" aria-pressed="${ALBUM_PICK}" aria-label="Ort oder Tag für mehrere Fotos festlegen" title="Ort und Tag für mehrere Fotos">${PIN_TIME_IC}</button>` : '';
   const sort = many && !ALBUM_PICK ? `<button type="button" class="roundic${ALBUM_SORT ? ' on' : ''}" id="albSort" aria-pressed="${ALBUM_SORT}" aria-label="Reihenfolge ändern" title="Reihenfolge">${MOVE_IC}</button>` : '';
   // Im Sortier- oder Ortsmodus steht nur der Knopf, der den Modus wieder beendet
   if (ALBUM_SORT) return sort;
@@ -2077,6 +2086,8 @@ function openAlbumGroup(btn) {
   window.addEventListener('hashchange', close, { once: true });
 }
 
+// v281: Ortsnadel mit kleiner Uhr für „Ort und Tag für mehrere Fotos“
+const PIN_TIME_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20s-5.5-5.2-5.5-9.5A5.5 5.5 0 0 1 15.4 9"/><circle cx="10" cy="10.3" r="1.9"/><circle cx="17" cy="16.5" r="4.6"/><path d="M17 14v2.6l1.6 1"/></svg>';
 const PIN_IC = '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11.2A6.5 6.5 0 0 1 12 3.3a6.5 6.5 0 0 1 6.5 6.5C18.5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/></svg>';
 async function placeOptions() { return [...new Set((await DB.all('frames')).map(f => f.place).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de')); }
 function placeFieldHtml(id, value, cls = 'fld', obj = null) {
@@ -2315,7 +2326,7 @@ async function viewPhoto(albumId, frameId) {
         <div class="titlefld raterow"><span>Bewertung</span>${rateHtml(f.rate ?? null, 'phRate')}</div>
         <div class="titlefld peoplerow"><span>Personen</span><div class="pprow"><span class="ppchips" id="phPeople">${await peopleChips(f.people)}</span><button type="button" class="roundic" id="phPeopleBtn" aria-label="Personen benennen">${PERSON_IC}</button></div></div>
         ${placeFieldHtml('phPlace', f.place, 'titlefld', f)}
-        <div class="titlefld phtime"><span>Aufgenommen</span><div class="placefld1"><label class="timeedit2"><span id="phTimeTxt">${f.date ? U.esc(fmtShotLong(f.date)) : ''}</span><input type="datetime-local" id="phTime" value="${U.esc(String(f.date || '').slice(0, 16))}" aria-label="Aufnahmedatum und Uhrzeit"></label><button type="button" class="placepin" id="phTimeNow" aria-label="Jetzige Uhrzeit eintragen">${CLOCK_IC}</button></div></div>
+        <div class="titlefld phtime"><span>Aufgenommen</span><div class="placefld1"><label class="timeedit2 phday"><span id="phDayTxt"></span><input type="date" id="phDay" aria-label="Aufnahmetag"></label><label class="timeedit2 phclock"><span id="phClockTxt"></span><input type="time" id="phClock" aria-label="Uhrzeit"></label><button type="button" class="placepin" id="phTimeNow" aria-label="Jetzige Uhrzeit eintragen">${CLOCK_IC}</button></div></div>
         <label class="titlefld infofld"><span>Infos · nur für dich, erscheinen nicht im Fotoalbum</span><textarea id="phInfo" rows="2">${U.esc(f.info || '')}</textarea></label>
         <div class="phfilters" id="phFilters"></div>
         ${text ? `<p class="phototext">${U.esc(text)}</p>` : ''}
@@ -2337,9 +2348,21 @@ async function viewPhoto(albumId, frameId) {
   wireRate(view, 'phRate', () => f.rate ?? null, async v => { if (v == null) delete f.rate; else f.rate = v; await DB.put('frames', f); });
   view.querySelector('#phPeopleBtn').addEventListener('click', () => openPeoplePicker(f.people, async ids => { f.people = ids; if (!ids.length) delete f.people; await DB.put('frames', f); view.querySelector('#phPeople').innerHTML = await peopleChips(f.people); U.haptic && U.haptic(10); drawMeta(); }));
   // Datum und Uhrzeit nachtragen
-  const showPhTime = () => { view.querySelector('#phTimeTxt').textContent = f.date ? fmtShotLong(f.date) : ''; view.querySelector('#phTime').value = String(f.date || '').slice(0, 16); };
-  view.querySelector('#phTime').addEventListener('change', async e => { const v = e.target.value; f.date = v ? v + ':00' : null; f.dateSet = !!v; delete f.wx; showPhTime(); await DB.put('frames', f); drawMeta(); U.haptic && U.haptic(10); });
-  view.querySelector('#phTimeNow').addEventListener('click', async () => { f.date = nowLocal().slice(0, 16) + ':00'; f.dateSet = true; delete f.wx; showPhTime(); await DB.put('frames', f); drawMeta(); U.haptic && U.haptic(10); });
+  // v281: Tag und Uhrzeit getrennt. Die Uhrzeit lässt sich verstellen, ohne den Tag neu zu suchen. 12:00 heißt „ohne Uhrzeit“.
+  const phDayOf = () => String(f.date || '').slice(0, 10);
+  const phTimeOf = () => { const t = String(f.date || '').slice(11, 16); return t && t !== '12:00' ? t : ''; };
+  const showPhTime = () => {
+    const d = phDayOf(), t = phTimeOf();
+    view.querySelector('#phDayTxt').textContent = d ? U.fmtDate(d) : '--.--.----';
+    view.querySelector('#phClockTxt').textContent = t || '--:--';
+    view.querySelector('#phDayTxt').classList.toggle('dim', !d); view.querySelector('#phClockTxt').classList.toggle('dim', !t);
+    view.querySelector('#phDay').value = d; view.querySelector('#phClock').value = t || '12:00';
+  };
+  const savePhTime = async (day, tm) => { f.date = day ? `${day}T${tm || '12:00'}:00` : null; f.dateSet = !!day; delete f.wx; showPhTime(); await DB.put('frames', f); drawMeta(); U.haptic && U.haptic(10); };
+  showPhTime();
+  view.querySelector('#phDay').addEventListener('change', e => savePhTime(e.target.value, phTimeOf()));
+  view.querySelector('#phClock').addEventListener('change', e => savePhTime(phDayOf() || String((d.rolls?.get?.(f.rollId) || d.roll)?.loadedAt || '').slice(0, 10) || nowLocal().slice(0, 10), e.target.value));
+  view.querySelector('#phTimeNow').addEventListener('click', () => { const n = nowLocal(); savePhTime(n.slice(0, 10), n.slice(11, 16)); });
   // Alle Angaben (Objektiv, Blende, Zeit, Blitz, Filter, Doppelbelichtung …) in der Bildansicht bearbeiten, danach zurück hierher
   view.querySelector('#phEdit').addEventListener('click', async () => { await saveTitle(); try { sessionStorage.setItem('kb-frame-return', location.hash); } catch (_) {} location.hash = '#/bild/' + f.id; });
   const drawMeta = () => photoMeta(view.querySelector('#phMeta'), f, d);

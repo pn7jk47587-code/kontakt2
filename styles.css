@@ -3019,3 +3019,11 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 /* v271: w, m, d in den Einstellungen als echte Kreise */
 .genderpick { align-items: center; }
 .genderpick .gchip { width: 40px; height: 40px; min-width: 40px; max-width: 40px; min-height: 40px; max-height: 40px; aspect-ratio: 1 / 1; align-self: center; }
+
+/* v281: Aufnahmetag und Uhrzeit getrennt in der Fotoansicht, „Tag“ in der Auswahlleiste */
+.phtime .phday { flex: 1 1 auto; }
+.phtime .phclock { flex: 0 0 76px; justify-content: center; border-left: 1px solid var(--line); }
+.phtime .dim { opacity: .45; }
+.pickbar .pbday { position: relative; overflow: hidden; }
+.pickbar .pbday input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; padding: 0; border: 0; }
+.pickbar .pbday.off { opacity: .45; pointer-events: none; }
