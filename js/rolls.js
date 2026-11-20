@@ -1920,6 +1920,7 @@ async function openPlaceChooser(onPick, opts = {}) {
   };
 }
 let ALBUM_PICK = false, ALBUM_PICKED = new Set();
+const pickToast = (what, n, kept) => { const fo = k => `${k} ${k === 1 ? 'Foto' : 'Fotos'}`; return n ? `${what} bei ${fo(n)} eingetragen${kept ? `, ${fo(kept)} unverändert` : ''}` : `Alle hatten schon einen ${what}`; };
 async function viewAlbum(id) {
   const d = await albumData(id);
   if (!d) { location.replace('#/'); return; }
@@ -1971,17 +1972,21 @@ async function viewAlbum(id) {
       // v281: Tag für mehrere Fotos. Eine vorhandene Uhrzeit bleibt, sonst 12:00 (gilt als „ohne Uhrzeit“).
       bar.querySelector('#pbDay').onchange = async e => {
         const day = e.target.value; if (!day) return; let n = 0;
-        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; const t = String(fr.date || '').slice(11, 16) || '12:00'; fr.date = `${day}T${t}:00`; fr.dateSet = true; delete fr.wx; await DB.put('frames', fr); n++; }
+        // v282: Fotos, die schon einen Tag haben, behalten ihn
+        let kept = 0;
+        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; if (fr.date) { kept++; continue; } fr.date = `${day}T12:00:00`; fr.dateSet = true; delete fr.wx; await DB.put('frames', fr); n++; }
         ALBUM_PICK = false; ALBUM_PICKED = new Set(); bar.remove();
-        U.toast(`Tag bei ${n} ${n === 1 ? 'Foto' : 'Fotos'} eingetragen`); U.haptic && U.haptic([12, 40, 12]);
+        U.toast(pickToast('Tag', n, kept)); U.haptic && U.haptic([12, 40, 12]);
         const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
       };
       bar.querySelector('#pbAll').onclick = () => { if (ALBUM_PICKED.size === d.frames.length) ALBUM_PICKED.clear(); else d.frames.forEach(f => ALBUM_PICKED.add(f.id)); grid.querySelectorAll('[data-fid]').forEach(a => a.classList.toggle('picked', ALBUM_PICKED.has(a.dataset.fid))); drawBar(); };
       bar.querySelector('#pbGo').onclick = () => openPlaceChooser(async p => {
         let n = 0;
-        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; fr.place = p.name || fr.place || ''; if (p.lat != null) { fr.placeLat = p.lat; fr.placeLng = p.lng; delete fr.placeAcc; fr.placeSrc = p.src || 'map'; if (p.cc) fr.placeCC = p.cc; } fr.placeNameAuto = !!p.auto; await DB.put('frames', fr); n++; }
+        // v282: Fotos, die schon einen Ort haben, behalten ihn
+        let kept = 0;
+        for (const fid of ALBUM_PICKED) { const fr = await DB.get('frames', fid); if (!fr) continue; if (fr.place || fr.placeLat != null) { kept++; continue; } fr.place = p.name || fr.place || ''; if (p.lat != null) { fr.placeLat = p.lat; fr.placeLng = p.lng; delete fr.placeAcc; fr.placeSrc = p.src || 'map'; if (p.cc) fr.placeCC = p.cc; } fr.placeNameAuto = !!p.auto; await DB.put('frames', fr); n++; }
         ALBUM_PICK = false; ALBUM_PICKED = new Set(); bar.remove();
-        U.toast(`Ort bei ${n} ${n === 1 ? 'Foto' : 'Fotos'} eingetragen`); U.haptic && U.haptic([12, 40, 12]);
+        U.toast(pickToast('Ort', n, kept)); U.haptic && U.haptic([12, 40, 12]);
         const y = window.scrollY; await viewAlbum(id); window.scrollTo(0, y);
       }); };
     drawBar(); document.body.appendChild(bar);

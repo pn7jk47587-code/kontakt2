@@ -1096,3 +1096,6 @@ In v271 war beim Umbau auf Vorschauen nach Bedarf die Zeile mit `thumbs` aus der
 ## v281: Tag für mehrere Fotos, Uhrzeit einzeln
 Im Album heißt der Auswahlknopf jetzt „Ort und Tag für mehrere Fotos“ (Nadel mit kleiner Uhr). Nach der Auswahl stehen unten „Ort“ und „Tag“. „Tag“ öffnet den Kalender. Vorgabe ist der Tag des ersten ausgewählten Fotos mit Datum, sonst der Einlegetag der Rolle. Eine vorhandene Uhrzeit bleibt erhalten, sonst wird 12:00 gespeichert, das in der App als „ohne Uhrzeit“ gilt.
 In der Fotoansicht ist „Aufgenommen“ geteilt: links der Tag (Kalender), rechts die Uhrzeit (Zeitrad). Die Uhrzeit lässt sich ändern, ohne den Tag neu auszuwählen. Hat das Foto noch keinen Tag, nimmt die Uhrzeit den Einlegetag der Rolle.
+
+## v282: Vorhandener Ort oder Tag bleibt
+Bei „Ort“ und „Tag“ für mehrere Fotos werden nur Fotos ohne diese Angabe gefüllt. Fotos mit Ort (Name oder Koordinaten) bzw. mit Tag bleiben unverändert. Die Meldung nennt beide Zahlen, etwa „Tag bei 3 Fotos eingetragen, 1 Foto unverändert“.
